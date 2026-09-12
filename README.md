@@ -174,3 +174,19 @@ java -cp <临时目录> Voxelizer <贴图.png> <输出模型.json> <调色板.pn
 
 （`tools/gen-item-definitions.ps1` 负责写六个物品定义，`tools/check-resources.ps1` 会校验
 3D 模型、调色板贴图与 display_context 分流是否齐全。）
+
+### 手工设计的部分
+
+图标之外，有些武器**没法只靠描图**，这部分用 `tools/ModelBuilder.java`（体素建模 DSL：
+32×32×16 半单位网格、矩形合并、面剔除、调色板贴图、离线预览）在 `tools/WeaponModels.java`
+里按特征重新设计：
+
+- **剑盾**：剑和盾是各自独立的模型，由 `display_context` 按手别分配——**副手持盾、主手持剑**。
+  盾是带金属包边、木面、加强筋和凸起盾心的圆盾；剑是白高光刃 + 护手 + 缠柄 + 配重。
+- **刀**：带剑鞘，有**收鞘 / 拔刀中 / 出鞘**三套模型。右击蓄力触发拔刀动作：物品定义用
+  `using_item` + `use_duration` 切换模型，Java 侧（`SephiriaWeaponItem`）给刀加了 `use` 行为
+  与 SPEAR 持握姿态，所以按住右键会看到刀从鞘中滑出、松开收回。
+- **弩**：改用**原版弩的机制**——`charge_type` 区分已装填、`crossbow/pull` 三档蓄力；
+  模型按原版结构搭（木托、弩臂、弓弦、扳机），弓弦随蓄力沿枪身后移，满弦时弩箭上膛。
+
+其余三把（大剑、匕首、长棍）仍由 `Voxelizer` 从原画直接体素化，特征与原画逐像素一致。
