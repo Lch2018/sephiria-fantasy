@@ -15,6 +15,7 @@ public class Sephiria implements ModInitializer {
 	public void onInitialize() {
 		ModItems.initialize();
 		ModCreativeTabs.initialize();
+		OffHandGuard.register();
 
 		LOGGER.info("[SEPHIRIA] 武器系统已载入：{} 个分支，{} 把基础武器（锻造系统尚未实现）",
 				WeaponBranch.values().length, ModItems.BASE_WEAPONS.size());
