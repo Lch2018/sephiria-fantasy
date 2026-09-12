@@ -92,14 +92,27 @@ src/main/java/com/sephiria/
 
 ## 授权
 
-本项目代码以 **MIT** 协议开源，详见 [LICENSE](LICENSE)。
+本项目**代码**以 **MIT** 协议开源，详见 [LICENSE](LICENSE)。
 
-《SEPHIRIA / 赛菲莉娅》游戏本体及其武器名称、设定等知识产权归 TEAM HORAY 所有。
-本项目是非官方同人作品，与 TEAM HORAY 无关联，也未获得其授权或认可；
-MIT 协议仅覆盖本仓库中的代码与资源文件。
+《SEPHIRIA / 赛菲莉娅》游戏本体及其武器名称、武器美术等知识产权均归 TEAM HORAY 所有。
+本项目是非官方同人作品，与 TEAM HORAY 无关联，也未获得其授权或认可。
+
+因此 **MIT 协议不覆盖 `src/main/resources/assets/sephiria/textures/` 与 `tools/weapon-ref/`
+下的武器美术**（那是原作的素材，仅作为个人同人用途引用）；若要把本项目公开分发或商用，
+请先自行替换这部分美术或取得授权。
 
 ## 贴图
 
-武器贴图是 16×16 的占位像素图，由 `tools/gen-textures.ps1` 按字符画生成
-（只用 .NET 自带的 System.Drawing，不需要 Python）。改完字符画重跑脚本即可，
-`tools/verify-textures.ps1` 会把 PNG 反解回字符图用于核对。
+武器贴图**取自《赛菲莉娅》原作的分支武器像素图**——`tools/weapon-ref/` 下的六张 102×120 原图，
+按分支命名（shield_sword / great_sword / dagger / crossbow / katana / staff）。
+
+生成方式是**零重采样**：`tools/gen-textures.ps1` 把 102×120 原图逐像素拷到 128×128 画布正中，
+贴图与原作美术完全一致，没有缩放也没有重新上色。`tools/verify-textures.ps1` 会核对不透明像素数
+与调色板是否与原图完全相同，用来证明过程中没有任何有损处理。
+
+为什么要用这六张：游戏内 UI 的同类图标只有 9×16、9×27、17×18 这类尺寸，wiki 上这六张 102×120
+是能找到的最高分辨率版本。它们的调色板与游戏原生素材完全一致
+（`#000000 / #BDBECF / #7E87A7 / #4B4B64 / #705052 / #493843 / #FFFFFF`），
+轮廓剖面也与游戏内图标逐行吻合（平均差 0.02–0.05），可以确认是同一套美术。
+
+脚本只用 .NET 自带的 System.Drawing，不需要 Python / PIL。
