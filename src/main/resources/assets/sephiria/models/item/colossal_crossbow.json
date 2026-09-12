@@ -1,5 +1,5 @@
 {
-	"parent": "minecraft:item/handheld",
+	"parent": "sephiria:item/crossbow",
 	"textures": {
 		"layer0": "sephiria:item/colossal_crossbow"
 	}

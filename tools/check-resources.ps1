@@ -37,7 +37,31 @@ foreach ($id in $items) {
     $layer0 = $model.textures.layer0
     $texName = ($layer0 -split ':')[-1] -replace '^item/', ''
     if ($texName -ne $id) { Fail "models/item/$id.json layer0 is '$layer0', expected 'sephiria:item/$id'" }
-    if ($model.parent -ne 'minecraft:item/handheld') { Fail "models/item/$id.json parent is '$($model.parent)'" }
+
+    # our weapons inherit a shared base model that carries the hand display transforms
+    $expectedParent = if ($id -eq 'colossal_crossbow') { 'sephiria:item/crossbow' } else { 'sephiria:item/weapon' }
+    if ($model.parent -ne $expectedParent) { Fail "models/item/$id.json parent is '$($model.parent)', expected '$expectedParent'" }
+}
+
+# base models must exist and define all four hand contexts (this is what keeps the weapons
+# held at the same angle as the vanilla weapon of the same type)
+foreach ($base in @('weapon', 'crossbow')) {
+    $basePath = Join-Path $assets "models\item\$base.json"
+    if (-not (Test-Path $basePath)) { Fail "missing base model models/item/$base.json"; continue }
+
+    $baseJson = ReadJson $basePath
+    $contexts = $baseJson.display.PSObject.Properties.Name
+    foreach ($ctx in @('thirdperson_righthand', 'thirdperson_lefthand', 'firstperson_righthand', 'firstperson_lefthand')) {
+        if ($contexts -notcontains $ctx) { Fail "models/item/$base.json has no display.$ctx" }
+    }
+    if ($baseJson.parent -ne 'minecraft:item/generated') { Fail "models/item/$base.json parent is '$($baseJson.parent)', expected 'minecraft:item/generated'" }
+    foreach ($ctx in $contexts) {
+        $rot = $baseJson.display.$ctx.rotation
+        $scale = $baseJson.display.$ctx.scale
+        if ($null -eq $rot -or $rot.Count -ne 3) { Fail "models/item/$base.json display.$ctx.rotation malformed" }
+        if ($null -eq $scale -or $scale.Count -ne 3) { Fail "models/item/$base.json display.$ctx.scale malformed" }
+    }
+    Ok "base model models/item/$base.json ($($contexts.Count) display contexts)"
 }
 
 # lang files
