@@ -1,6 +1,13 @@
 {
 	"model": {
-		"type": "minecraft:model",
-		"model": "sephiria:item/default_sword_and_shield"
+		"type": "minecraft:select",
+		"property": "minecraft:display_context",
+		"cases": [
+			{
+				"when": [ "gui", "ground", "fixed", "on_shelf" ],
+				"model": { "type": "minecraft:model", "model": "sephiria:item/default_sword_and_shield" }
+			}
+		],
+		"fallback": { "type": "minecraft:model", "model": "sephiria:item/default_sword_and_shield_in_hand" }
 	}
 }
