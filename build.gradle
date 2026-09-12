@@ -42,4 +42,9 @@ java {
 jar {
 	def projectName = project.name
 	inputs.property "projectName", projectName
+
+	// 让发布的 jar 里也带上许可证
+	from("LICENSE") {
+		rename { "${it}_$projectName" }
+	}
 }

@@ -90,6 +90,14 @@ src/main/java/com/sephiria/
 - `ModItems` 的 `sword(...)` / `crossbow(...)` 工厂：变种武器沿用同一套参数
   （显示伤害、显示攻速、耐久），不用再关心原版参数换算。
 
+## 授权
+
+本项目代码以 **MIT** 协议开源，详见 [LICENSE](LICENSE)。
+
+《SEPHIRIA / 赛菲莉娅》游戏本体及其武器名称、设定等知识产权归 TEAM HORAY 所有。
+本项目是非官方同人作品，与 TEAM HORAY 无关联，也未获得其授权或认可；
+MIT 协议仅覆盖本仓库中的代码与资源文件。
+
 ## 贴图
 
 武器贴图是 16×16 的占位像素图，由 `tools/gen-textures.ps1` 按字符画生成

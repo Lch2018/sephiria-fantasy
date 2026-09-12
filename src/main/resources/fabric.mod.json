@@ -8,7 +8,7 @@
 		"SEPHIRIA Mod Team"
 	],
 	"contact": {},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/sephiria/icon.png",
 	"environment": "*",
 	"entrypoints": {
