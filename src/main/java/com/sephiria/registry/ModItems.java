@@ -41,12 +41,13 @@ public final class ModItems {
 	/** 玩家空手的基础攻击力，原版 Player#createAttributes 里是 1.0。 */
 	private static final float PLAYER_BASE_ATTACK_DAMAGE = 1.0F;
 
-	public static final Item DEFAULT_SWORD_AND_SHIELD = sword("default_sword_and_shield", WeaponBranch.SWORD_AND_SHIELD, 6.0F, 1.6F, 250);
-	public static final Item STEEL_GREATSWORD = sword("steel_greatsword", WeaponBranch.GREATSWORD, 9.0F, 1.0F, 600);
-	public static final Item DAGGER = sword("dagger", WeaponBranch.DAGGER, 4.0F, 2.6F, 160);
+	public static final Item DEFAULT_SWORD_AND_SHIELD = sword("default_sword_and_shield", WeaponBranch.SWORD_AND_SHIELD, 6.0F, 1.6F, 250, false);
+	public static final Item STEEL_GREATSWORD = sword("steel_greatsword", WeaponBranch.GREATSWORD, 9.0F, 1.0F, 600, false);
+	public static final Item DAGGER = sword("dagger", WeaponBranch.DAGGER, 4.0F, 2.6F, 160, false);
 	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, 465);
-	public static final Item BLADE = sword("blade", WeaponBranch.KATANA, 5.0F, 2.0F, 320);
-	public static final Item QUARTERSTAFF = sword("quarterstaff", WeaponBranch.STAFF, 5.5F, 1.5F, 300);
+	/** 刀带鞘：右击进入拔刀动作，模型在收鞘 / 拔刀中 / 出鞘之间切换。 */
+	public static final Item BLADE = sword("blade", WeaponBranch.KATANA, 5.0F, 2.0F, 320, true);
+	public static final Item QUARTERSTAFF = sword("quarterstaff", WeaponBranch.STAFF, 5.5F, 1.5F, 300, false);
 
 	/** 全部基础武器，顺序即创造模式标签页里的顺序。 */
 	public static final List<BaseWeapon> BASE_WEAPONS = List.of(
@@ -64,7 +65,7 @@ public final class ModItems {
 	public static void initialize() {
 	}
 
-	private static Item sword(String name, WeaponBranch branch, float attackDamage, float attackSpeed, int durability) {
+	private static Item sword(String name, WeaponBranch branch, float attackDamage, float attackSpeed, int durability, boolean drawAnimation) {
 		ResourceKey<Item> key = key(name);
 		Item.Properties properties = new Item.Properties()
 				.sword(ToolMaterial.IRON,
@@ -72,7 +73,7 @@ public final class ModItems {
 						attackSpeed - (float) Attributes.DEFAULT_ATTACK_SPEED)
 				.durability(durability);
 
-		return register(key, p -> new SephiriaWeaponItem(branch, p), properties);
+		return register(key, p -> new SephiriaWeaponItem(branch, drawAnimation, p), properties);
 	}
 
 	private static Item crossbow(String name, WeaponBranch branch, int durability) {

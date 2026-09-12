@@ -8,6 +8,18 @@
 				"model": { "type": "minecraft:model", "model": "sephiria:item/blade" }
 			}
 		],
-		"fallback": { "type": "minecraft:model", "model": "sephiria:item/blade_in_hand" }
+		"fallback": {
+			"type": "minecraft:condition",
+			"property": "minecraft:using_item",
+			"on_true": {
+				"type": "minecraft:range_dispatch",
+				"property": "minecraft:use_duration",
+				"entries": [
+					{ "threshold": 6, "model": { "type": "minecraft:model", "model": "sephiria:item/katana_in_hand" } }
+				],
+				"fallback": { "type": "minecraft:model", "model": "sephiria:item/katana_drawing" }
+			},
+			"on_false": { "type": "minecraft:model", "model": "sephiria:item/katana_sheathed" }
+		}
 	}
 }

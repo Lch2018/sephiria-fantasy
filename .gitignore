@@ -31,3 +31,6 @@ run/
 hs_err_*.log
 replay_*.log
 *.hprof
+
+# java build output
+*.class

@@ -1,0 +1,11 @@
+{
+	"parent": "sephiria:item/weapon_3d",
+	"textures": {
+		"0": "sephiria:item/katana_drawing",
+		"particle": "sephiria:item/katana_drawing"
+	},
+	"elements": [
+		{ "from": [7, 7, 7.5000], "to": [9, 16, 9.5000], "faces": { "north": { "texture": "#0", "uv": [5, 1, 7, 3] }, "south": { "texture": "#0", "uv": [5, 1, 7, 3] }, "east": { "texture": "#0", "uv": [5, 1, 7, 3] }, "west": { "texture": "#0", "uv": [5, 1, 7, 3] }, "up": { "texture": "#0", "uv": [5, 1, 7, 3] }, "down": { "texture": "#0", "uv": [5, 1, 7, 3] } } },
+		{ "from": [7, 6, 7.5000], "to": [9, 7, 9.5000], "faces": { "north": { "texture": "#0", "uv": [1, 1, 3, 3] }, "south": { "texture": "#0", "uv": [1, 1, 3, 3] }, "east": { "texture": "#0", "uv": [1, 1, 3, 3] }, "west": { "texture": "#0", "uv": [1, 1, 3, 3] }, "up": { "texture": "#0", "uv": [1, 1, 3, 3] }, "down": { "texture": "#0", "uv": [1, 1, 3, 3] } } }
+	]
+}

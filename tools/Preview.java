@@ -62,6 +62,27 @@ final class Preview {
 		ImageIO.write(img, "png", out.toFile());
 	}
 
+	/** two-panel view (front + isometric) for hand-designed models that have no source sprite */
+	static void renderBoxes(List<Voxelizer.Box> boxes, Path out, String caption) throws Exception {
+		int width = MARGIN + (PANEL + GAP) * 2;
+		int height = HEAD + PANEL + MARGIN;
+		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = img.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+		g.setColor(Color.BLACK);
+		g.setFont(new Font("Consolas", Font.BOLD, 14));
+		g.drawString(caption, MARGIN, 20);
+		g.drawString("front", MARGIN, HEAD - 12);
+		g.drawString("isometric", MARGIN + PANEL + GAP, HEAD - 12);
+
+		drawFront(g, boxes, MARGIN, HEAD);
+		drawIsometric(g, boxes, MARGIN + PANEL + GAP, HEAD);
+
+		g.dispose();
+		ImageIO.write(img, "png", out.toFile());
+	}
+
 	private static void drawFront(Graphics2D g, List<Voxelizer.Box> boxes, int offX, int offY) {
 		double scale = PANEL / 16.0;
 		// full white-ish backdrop so transparent areas are obvious

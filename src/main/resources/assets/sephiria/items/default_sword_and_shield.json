@@ -6,8 +6,12 @@
 			{
 				"when": [ "gui", "ground", "fixed", "on_shelf" ],
 				"model": { "type": "minecraft:model", "model": "sephiria:item/default_sword_and_shield" }
+			},
+			{
+				"when": [ "firstperson_lefthand", "thirdperson_lefthand" ],
+				"model": { "type": "minecraft:model", "model": "sephiria:item/shield_in_hand" }
 			}
 		],
-		"fallback": { "type": "minecraft:model", "model": "sephiria:item/default_sword_and_shield_in_hand" }
+		"fallback": { "type": "minecraft:model", "model": "sephiria:item/sword_in_hand" }
 	}
 }

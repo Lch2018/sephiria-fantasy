@@ -48,6 +48,7 @@ public final class Voxelizer {
 		int grid = Integer.parseInt(args[3]);
 		String modelName = args[4];
 		String parent = args[5];
+		int partIndex = args.length > 7 ? Integer.parseInt(args[7]) : -1;
 
 		BufferedImage sprite = ImageIO.read(spritePath.toFile());
 		if (sprite == null) throw new IllegalStateException("cannot read " + spritePath);
@@ -91,7 +92,14 @@ public final class Voxelizer {
 			}
 		}
 
+		boolean[][] wasOutline = new boolean[grid][grid];
+		for (int y = 0; y < grid; y++) {
+			for (int x = 0; x < grid; x++) {
+				wasOutline[y][x] = rgb[y][x] >= 0 && isOutline(rgb[y][x]);
+			}
+		}
 		absorbOutline(rgb, grid);
+		keepOnlyPart(rgb, grid, partIndex, wasOutline);
 		zOffset = assignLayers(rgb, grid);
 
 		for (int y = 0; y < grid; y++) {
@@ -497,6 +505,98 @@ public final class Voxelizer {
 		}
 		Files.createDirectories(path.getParent());
 		ImageIO.write(img, "png", path.toFile());
+	}
+
+	/**
+	 * Keeps only the i-th largest part (0 = largest); -1 keeps everything.
+	 *
+	 * Parts are the connected regions of real material. The black outline is deliberately not
+	 * allowed to bridge them, otherwise the sword and the shield of a single sprite would count
+	 * as one piece because their contours touch. Outline pixels are then attached to whichever
+	 * material region is nearest, so every part keeps its own share of the contour.
+	 */
+	private static void keepOnlyPart(int[][] rgb, int grid, int partIndex, boolean[][] wasOutline) {
+		if (partIndex < 0) return;
+
+		int[][] label = new int[grid][grid];
+		for (int[] row : label) java.util.Arrays.fill(row, -1);
+		List<int[]> sizes = new ArrayList<>();
+		int next = 0;
+		int[][] queue = new int[grid * grid][2];
+		int[][] steps = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
+
+		// 1) connected material regions
+		for (int y = 0; y < grid; y++) {
+			for (int x = 0; x < grid; x++) {
+				if (rgb[y][x] < 0 || wasOutline[y][x] || label[y][x] >= 0) continue;
+				int head = 0, tail = 0;
+				queue[tail][0] = x;
+				queue[tail][1] = y;
+				tail++;
+				label[y][x] = next;
+				int size = 0;
+				while (head < tail) {
+					int cx = queue[head][0];
+					int cy = queue[head][1];
+					head++;
+					size++;
+					for (int[] s : steps) {
+						int nx = cx + s[0];
+						int ny = cy + s[1];
+						if (nx < 0 || ny < 0 || nx >= grid || ny >= grid) continue;
+						if (rgb[ny][nx] < 0 || wasOutline[ny][nx] || label[ny][nx] >= 0) continue;
+						label[ny][nx] = next;
+						queue[tail][0] = nx;
+						queue[tail][1] = ny;
+						tail++;
+					}
+				}
+				sizes.add(new int[] { size, next });
+				next++;
+			}
+		}
+
+		if (sizes.isEmpty()) return;
+		sizes.sort((a, b) -> Integer.compare(b[0], a[0]));
+
+		// 2) grow the regions into the outline, nearest region wins
+		int head = 0, tail = 0;
+		for (int y = 0; y < grid; y++) {
+			for (int x = 0; x < grid; x++) {
+				if (rgb[y][x] >= 0 && label[y][x] >= 0) {
+					queue[tail][0] = x;
+					queue[tail][1] = y;
+					tail++;
+				}
+			}
+		}
+		while (head < tail) {
+			int cx = queue[head][0];
+			int cy = queue[head][1];
+			head++;
+			int id = label[cy][cx];
+			for (int[] s : steps) {
+				int nx = cx + s[0];
+				int ny = cy + s[1];
+				if (nx < 0 || ny < 0 || nx >= grid || ny >= grid) continue;
+				if (rgb[ny][nx] < 0 || label[ny][nx] >= 0) continue;
+				label[ny][nx] = id;
+				queue[tail][0] = nx;
+				queue[tail][1] = ny;
+				tail++;
+			}
+		}
+
+		if (partIndex >= sizes.size()) {
+			throw new IllegalStateException("requested part " + partIndex + " but the sprite has only " + sizes.size() + " parts");
+		}
+		int keep = sizes.get(partIndex)[1];
+
+		for (int y = 0; y < grid; y++) {
+			for (int x = 0; x < grid; x++) {
+				if (rgb[y][x] >= 0 && label[y][x] != keep) rgb[y][x] = -1;
+			}
+		}
 	}
 
 	private static String f(double v) {
