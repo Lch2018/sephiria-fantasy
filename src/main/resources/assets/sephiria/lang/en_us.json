@@ -1,0 +1,16 @@
+{
+	"itemGroup.sephiria.weapons": "SEPHIRIA Weapons",
+	"item.sephiria.default_sword_and_shield": "Default Sword and Shield",
+	"item.sephiria.steel_greatsword": "Steel Greatsword",
+	"item.sephiria.dagger": "Dagger",
+	"item.sephiria.colossal_crossbow": "Colossal Crossbow",
+	"item.sephiria.blade": "Blade",
+	"item.sephiria.quarterstaff": "Quarterstaff",
+	"sephiria.branch.sword_and_shield": "Sword and Shield",
+	"sephiria.branch.greatsword": "Greatsword",
+	"sephiria.branch.dagger": "Dagger",
+	"sephiria.branch.crossbow": "Crossbow",
+	"sephiria.branch.katana": "Blade",
+	"sephiria.branch.staff": "Staff",
+	"tooltip.sephiria.branch": "Branch: %s   Proc: %s"
+}

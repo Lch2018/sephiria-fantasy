@@ -1,0 +1,6 @@
+{
+	"parent": "minecraft:item/handheld",
+	"textures": {
+		"layer0": "sephiria:item/default_sword_and_shield"
+	}
+}

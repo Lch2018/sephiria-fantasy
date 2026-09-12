@@ -1,0 +1,45 @@
+plugins {
+	// 26.1 起 Minecraft 已不再混淆，用的是不带 -remap 后缀的 loom。
+	// 混淆版本（<= 1.21.11）才需要 'net.fabricmc.fabric-loom-remap' + mappings 依赖。
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+repositories {
+	// Loom 会自动加上 Minecraft 与 Fabric 的仓库，这里留给其它模组依赖。
+}
+
+dependencies {
+	// 26.2 是未混淆版本，因此没有 mappings 这一行。
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	// 未混淆版本下依赖用 implementation，而不是 modImplementation。
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+	// 源码里有中文注释与字符串，本机默认编码是 GBK，不显式指定会导致乱码。
+	it.options.encoding = 'UTF-8'
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+	def projectName = project.name
+	inputs.property "projectName", projectName
+}

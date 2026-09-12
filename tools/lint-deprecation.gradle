@@ -1,0 +1,7 @@
+// 临时用：打开 deprecation lint，查清是哪条 API 被标记为过时。
+// 用法：gradlew.bat compileJava --rerun-tasks -I tools\lint-deprecation.gradle
+allprojects {
+	tasks.withType(JavaCompile).configureEach {
+		options.compilerArgs << '-Xlint:deprecation'
+	}
+}

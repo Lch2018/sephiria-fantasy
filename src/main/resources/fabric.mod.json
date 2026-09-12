@@ -1,0 +1,28 @@
+{
+	"schemaVersion": 1,
+	"id": "sephiria",
+	"version": "${version}",
+	"name": "SEPHIRIA",
+	"description": "把《SEPHIRIA（赛菲莉娅）》的武器系统带进 Minecraft。当前版本只包含六大分支的基础武器，锻造系统（武器升级变种）尚未实现。",
+	"authors": [
+		"SEPHIRIA Mod Team"
+	],
+	"contact": {},
+	"license": "CC0-1.0",
+	"icon": "assets/sephiria/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.sephiria.Sephiria"
+		],
+		"client": [
+			"com.sephiria.client.SephiriaClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
