@@ -38,7 +38,7 @@ foreach ($name in $models) {
         $texName = ($texRef -split '/')[-1]
         $texPath = Join-Path $texDir ($texName + '.png')
         if (Test-Path $texPath) {
-            Copy-Item $texPath (Join-Path $outDir ($name + '.png')) -Force
+            Copy-Item $texPath (Join-Path $outDir ($texName + '.png')) -Force
         } else {
             $missing += ($name + ' texture: ' + $texName)
         }
@@ -58,7 +58,7 @@ SEPHIRIA weapon models - for Blockbench
 
 Each pair of files belongs together:
   <name>.json  the model (plain Minecraft Java item model, what the mod loads)
-  <name>.png   the palette texture that model samples its colours from
+  <texture>.png  the palette texture, named EXACTLY as the model references it (e.g. shield_3d.png); Blockbench links a texture to a model by that name
   sprite_*.png the original 2D art the art-derived models were built from
 
 How to open one
