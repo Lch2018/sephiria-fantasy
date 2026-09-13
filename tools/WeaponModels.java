@@ -26,6 +26,7 @@ public final class WeaponModels {
 			crossbow(models, textures, previews, pull);
 		}
 		crossbowLoaded(models, textures, previews);
+		crossbowStandby(models, textures, previews);
 		for (int stage = 0; stage < 3; stage++) {
 			katana(models, textures, previews, stage);
 		}
@@ -190,6 +191,16 @@ public final class WeaponModels {
 		b.box(60, 33, 21, 61, 34, 21, ModelBuilder.STEEL_LIGHT);
 
 		write(b, models, textures, previews, "crossbow_loaded_in_hand", "sephiria:item/crossbow_3d", "crossbow_loaded");
+	}
+
+	/** idle crossbow: relaxed string lying straight between the limb tips */
+	private static void crossbowStandby(Path models, Path textures, Path previews) throws Exception {
+		ModelBuilder b = new ModelBuilder();
+		crossbowBody(b);
+
+		line(b, 59, 41, 59, 21, 21, ModelBuilder.WHITE);
+
+		write(b, models, textures, previews, "colossal_crossbow_in_hand", "sephiria:item/crossbow_3d", "crossbow_standby");
 	}
 
 	/** the parts every crossbow state shares */
