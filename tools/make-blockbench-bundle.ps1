@@ -54,6 +54,14 @@ foreach ($id in @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'col
     if (Test-Path $src) { Copy-Item $src (Join-Path $outDir ('sprite_' + $id + '.png')) -Force }
 }
 
+# local reference material (vanilla assets are Mojang's, so they stay out of the repo and are
+# only copied into this local bundle for side by side comparison)
+$refDir = Join-Path $root 'reference'
+if (Test-Path $refDir) {
+    Get-ChildItem $refDir -Recurse -File | ForEach-Object {
+        Copy-Item $_.FullName (Join-Path $outDir ('ref_' + $_.Name)) -Force
+    }
+}
 $readme = @'
 SEPHIRIA weapon models - for Blockbench
 ======================================
