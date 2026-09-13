@@ -1,0 +1,6 @@
+{
+	"parent": "sephiria:item/weapon",
+	"textures": {
+		"layer0": "sephiria:item/colossal_crossbow"
+	}
+}
