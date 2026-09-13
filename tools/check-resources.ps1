@@ -77,7 +77,7 @@ foreach ($id in $items) {
 }
 
 # display bases used by the hand models
-foreach ($base in @('weapon', 'crossbow', 'weapon_3d', 'crossbow_3d', 'shield_3d')) {
+foreach ($base in @('weapon', 'crossbow', 'weapon_3d', 'crossbow_3d', 'shield_3d', 'greatsword_3d', 'katana_3d')) {
     $basePath = Join-Path $modelsDir ($base + '.json')
     if (-not (Test-Path $basePath)) { Fail "missing base model models/item/$base.json"; continue }
     $json = ReadJson $basePath

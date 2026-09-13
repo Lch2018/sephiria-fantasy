@@ -18,6 +18,7 @@ public final class WeaponModels {
 		Path previews = Path.of(args[2]);
 
 		sword(models, textures, previews);
+		greatsword(models, textures, previews);
 		shield(models, textures, previews);
 		for (int pull = 0; pull < 3; pull++) {
 			crossbow(models, textures, previews, pull);
@@ -141,48 +142,87 @@ public final class WeaponModels {
 
 	/**
 	 * Katana with its scabbard. stage 0 = sheathed, 1 = half drawn, 2 = fully drawn.
-	 * The blade slides out of the scabbard, which is shortened as the blade leaves it.
+	 *
+	 * The sword (blade + tsuba + handle) rises as a unit while the scabbard stays put; the part
+	 * of the blade still inside the scabbard is hidden by it, because the scabbard is a fatter
+	 * box around the same space. The blade is drawn long enough to fill the whole model once
+	 * it is out, which is what makes the drawn katana read as a long blade.
 	 */
 	private static void katana(Path models, Path textures, Path previews, int stage) throws Exception {
 		ModelBuilder b = new ModelBuilder();
 
-		int bladeBottom = 12 + stage * 4;   // blade rises out of the scabbard
-		int bladeTop = bladeBottom + 17;
-
 		if (stage == 2) {
-			// drawn: blade, tsuba, handle; the scabbard is stowed away
-			blade(b, 15, 15, bladeBottom, bladeTop);
-			tsubaAndHandle(b, 11);
+			// fully drawn: the scabbard is stowed, the blade spans most of the model
+			tsuba(b, 12, 13);
+			handle(b, 4, 11);
+			blade(b, 14, 31);
+		} else if (stage == 1) {
+			// half drawn: scabbard shortened, sword lifted so the blade shows above the mouth
+			scabbard(b, 12, 22);
+			tsuba(b, 16, 17);
+			handle(b, 8, 15);
+			b.box(15, 18, 8, 16, 31, 9, ModelBuilder.STEEL_LIGHT);
+			b.box(16, 18, 9, 16, 31, 9, ModelBuilder.WHITE);
+			b.box(15, 18, 8, 15, 31, 8, ModelBuilder.STEEL_MID);
 		} else {
-			// scabbard: slightly fatter than the blade, mouth banded
-			b.box(14, 12, 7, 17, bladeTop + 1, 10, ModelBuilder.NAVY);
-			b.box(14, 12, 7, 17, 13, 10, ModelBuilder.STEEL_LIGHT);
-			if (stage == 1) {
-				// half drawn: the exposed part of the blade sits above the scabbard mouth
-				blade(b, 15, 15, bladeTop, bladeTop + 8);
-				tsubaAndHandle(b, bladeTop - 1);
-			} else {
-				// sheathed: only the handle and tsuba show
-				tsubaAndHandle(b, 11);
-			}
+			// sheathed: only scabbard, tsuba and handle are visible
+			scabbard(b, 12, 26);
+			tsuba(b, 10, 11);
+			handle(b, 2, 9);
 		}
 
 		write(b, models, textures, previews, "katana_" + (stage == 0 ? "sheathed" : stage == 1 ? "drawing" : "in_hand"),
-				"sephiria:item/weapon_3d", "katana_" + stage);
+				"sephiria:item/katana_3d", "katana_" + stage);
 	}
 
-	/** a thin single-edged blade with a white edge highlight */
-	private static void blade(ModelBuilder b, int x1, int x2, int y1, int y2) {
-		b.box(x1, y1, 8, x2, y2, 9, ModelBuilder.STEEL_LIGHT);
-		b.box(x2, y1, 9, x2, y2, 9, ModelBuilder.WHITE);
-		b.box(x1, y1, 8, x1, y2, 8, ModelBuilder.STEEL_MID);
+	/** long two-handed blade: the greatsword gets its own geometry so it can be genuinely long */
+	private static void greatsword(Path models, Path textures, Path previews) throws Exception {
+		ModelBuilder b = new ModelBuilder();
+
+		// blade, 3 units wide, 10.5 units long, tip tapered
+		b.box(13, 11, 6, 18, 29, 9, ModelBuilder.STEEL_LIGHT);
+		b.box(14, 30, 6, 17, 31, 9, ModelBuilder.STEEL_LIGHT);
+		b.box(13, 30, 6, 18, 30, 9, ModelBuilder.STEEL_LIGHT);
+		// raised white fuller down the middle, darker bevels on both edges
+		b.box(15, 12, 9, 16, 29, 9, ModelBuilder.WHITE);
+		b.box(13, 11, 6, 13, 29, 6, ModelBuilder.STEEL_MID);
+		b.box(18, 11, 6, 18, 29, 6, ModelBuilder.STEEL_MID);
+
+		// wide crossguard with a wooden centre
+		b.box(8, 9, 4, 23, 10, 11, ModelBuilder.STEEL_MID);
+		b.box(14, 9, 5, 17, 10, 10, ModelBuilder.WOOD);
+
+		// long grip with a lighter band, then the pommel
+		b.box(14, 2, 7, 17, 8, 8, ModelBuilder.WOOD_DARK);
+		b.box(14, 4, 9, 17, 5, 9, ModelBuilder.STEEL_LIGHT);
+		b.box(13, 0, 6, 18, 1, 9, ModelBuilder.NAVY);
+
+		write(b, models, textures, previews, "steel_greatsword_in_hand", "sephiria:item/greatsword_3d", "greatsword");
 	}
 
-	private static void tsubaAndHandle(ModelBuilder b, int tsubaY) {
-		b.box(12, tsubaY, 6, 19, tsubaY + 1, 11, ModelBuilder.NAVY);
-		b.box(14, tsubaY - 6, 8, 17, tsubaY - 1, 9, ModelBuilder.WOOD_DARK);
-		b.box(14, tsubaY - 4, 9, 17, tsubaY - 4, 9, ModelBuilder.STEEL_MID);
-		b.box(14, tsubaY - 8, 8, 17, tsubaY - 7, 9, ModelBuilder.STEEL_DARK);
+	/** katana blade: 1 unit wide, white edge on the cutting side */
+	private static void blade(ModelBuilder b, int y1, int y2) {
+		b.box(15, y1, 8, 16, y2, 9, ModelBuilder.STEEL_LIGHT);
+		b.box(16, y1, 9, 16, y2, 9, ModelBuilder.WHITE);
+		b.box(15, y1, 8, 15, y2, 8, ModelBuilder.STEEL_MID);
+	}
+
+	/** katana scabbard: fatter than the blade so it can hide the part still inside */
+	private static void scabbard(ModelBuilder b, int y1, int y2) {
+		b.box(14, y1, 7, 17, y2, 10, ModelBuilder.NAVY);
+		b.box(14, y1, 7, 17, y1 + 1, 10, ModelBuilder.STEEL_LIGHT);
+	}
+
+	/** katana guard */
+	private static void tsuba(ModelBuilder b, int y1, int y2) {
+		b.box(12, y1, 6, 19, y2, 11, ModelBuilder.NAVY);
+	}
+
+	/** katana grip with a wrap band and an end cap */
+	private static void handle(ModelBuilder b, int y1, int y2) {
+		b.box(14, y1, 8, 17, y2, 9, ModelBuilder.WOOD_DARK);
+		b.box(14, y1 + 3, 9, 17, y1 + 4, 9, ModelBuilder.STEEL_MID);
+		b.box(14, y1 - 2, 8, 17, y1 - 1, 9, ModelBuilder.STEEL_DARK);
 	}
 
 	/** straight voxel line, used for crossbow strings */
