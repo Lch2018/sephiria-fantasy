@@ -11,6 +11,8 @@ $modelsDir = Join-Path $root 'src\main\resources\assets\sephiria\models\item'
 $texDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\item'
 $outDir = Join-Path $root 'blockbench'
 
+# rebuild from scratch so stale copies of renamed or deleted models cannot linger
+if (Test-Path $outDir) { Remove-Item $outDir -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
 # every model that carries geometry, i.e. what is worth opening in Blockbench
