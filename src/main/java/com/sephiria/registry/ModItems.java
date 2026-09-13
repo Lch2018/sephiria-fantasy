@@ -45,8 +45,8 @@ public final class ModItems {
 	public static final Item STEEL_GREATSWORD = sword("steel_greatsword", WeaponBranch.GREATSWORD, 9.0F, 1.0F, 600, false);
 	public static final Item DAGGER = sword("dagger", WeaponBranch.DAGGER, 4.0F, 2.6F, 160, false);
 	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, 465);
-	/** 刀带鞘：右击进入拔刀动作，模型在收鞘 / 拔刀中 / 出鞘之间切换。 */
-	public static final Item BLADE = sword("blade", WeaponBranch.KATANA, 5.0F, 2.0F, 320, true);
+	/** 刀：平面模型（拔刀动作的三套 3D 模型暂时停用，改回原画贴图）。 */
+	public static final Item BLADE = sword("blade", WeaponBranch.KATANA, 5.0F, 2.0F, 320, false);
 	public static final Item QUARTERSTAFF = sword("quarterstaff", WeaponBranch.STAFF, 5.5F, 1.5F, 300, false);
 
 	/** 全部基础武器，顺序即创造模式标签页里的顺序。 */
