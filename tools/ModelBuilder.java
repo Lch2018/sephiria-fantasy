@@ -18,9 +18,9 @@ import java.util.Map;
  * can never bleed. Preview.render can draw the result without launching the game.
  */
 public class ModelBuilder {
-	public static final int VOX = 32;          // 16 model units at half-unit resolution
-	public static final int DEPTH = 16;        // depth range, centred on z = 8
-	public static final double UNIT = 0.5;     // model units per voxel
+	public static final int VOX = 64;          // 16 model units at quarter-unit resolution
+	public static final int DEPTH = 32;        // depth range, centred on z = 8
+	public static final double UNIT = 0.25;    // model units per voxel
 
 	// palette lifted from the SEPHIRIA art
 	public static final int OUTLINE = 0x000000;

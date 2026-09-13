@@ -1,12 +1,12 @@
 import java.nio.file.Path;
 
 /**
- * Hand-designed voxel models for the weapons whose shape cannot come from the sprite alone:
- * the sword and the shield of the paired weapon are separate objects, the katana has a
- * scabbard with a drawing animation, and the crossbow follows the vanilla crossbow's parts
- * (stock, prod, string, trigger) so its charge animation can move the string.
+ * Hand-designed voxel models for all six weapons.
  *
- * Coordinates are half-unit voxels over the 32x32x16 grid: x right, y up, z depth (front = larger z).
+ * Grid: 64 x 64 x 32 quarter-unit voxels over the 16 x 16 model box (x right, y up, z depth with
+ * the front at larger z). Fine enough for tapered tips, edge bevels, wrap bands, rivets and a
+ * curved katana blade, and every weapon is built from its own feature list rather than traced
+ * from the sprite.
  */
 public final class WeaponModels {
 	private WeaponModels() {
@@ -18,211 +18,261 @@ public final class WeaponModels {
 		Path previews = Path.of(args[2]);
 
 		sword(models, textures, previews);
-		greatsword(models, textures, previews);
 		shield(models, textures, previews);
+		greatsword(models, textures, previews);
+		dagger(models, textures, previews);
+		quarterstaff(models, textures, previews);
 		for (int pull = 0; pull < 3; pull++) {
 			crossbow(models, textures, previews, pull);
 		}
 		crossbowLoaded(models, textures, previews);
-		katana(models, textures, previews, 0);
-		katana(models, textures, previews, 1);
-		katana(models, textures, previews, 2);
+		for (int stage = 0; stage < 3; stage++) {
+			katana(models, textures, previews, stage);
+		}
 	}
 
-	/** main hand of the paired weapon: blade, fuller, guard, grip, pommel */
+	/** main hand of the paired weapon: tapered blade with a raised fuller, guard, wrapped grip */
 	private static void sword(Path models, Path textures, Path previews) throws Exception {
 		ModelBuilder b = new ModelBuilder();
 
-		// blade, 2 units wide and 9.5 units long, tip tapered
-		b.box(14, 12, 6, 17, 29, 9, ModelBuilder.STEEL_LIGHT);
-		b.box(15, 30, 6, 16, 31, 9, ModelBuilder.STEEL_LIGHT);
-		b.box(14, 30, 6, 17, 30, 9, ModelBuilder.STEEL_LIGHT);
-		// raised white highlight down the middle of the blade
-		b.box(15, 13, 9, 16, 29, 9, ModelBuilder.WHITE);
-		// darker bevels along both edges give the blade a cross-section
-		b.box(14, 12, 6, 14, 29, 6, ModelBuilder.STEEL_MID);
-		b.box(17, 12, 6, 17, 29, 6, ModelBuilder.STEEL_MID);
+		// blade: 2 units wide, 9 units long, with a two step taper towards the point
+		b.box(28, 24, 12, 35, 59, 19, ModelBuilder.STEEL_LIGHT);
+		b.box(29, 60, 12, 34, 61, 19, ModelBuilder.STEEL_LIGHT);
+		b.box(31, 62, 12, 32, 63, 19, ModelBuilder.STEEL_LIGHT);
+		// darker cutting edges
+		b.box(28, 24, 12, 28, 59, 19, ModelBuilder.STEEL_MID);
+		b.box(35, 24, 12, 35, 59, 19, ModelBuilder.STEEL_MID);
+		// raised white fuller down the middle, with a ground face line beside it
+		b.box(31, 26, 19, 32, 57, 19, ModelBuilder.WHITE);
+		b.box(29, 26, 19, 29, 57, 19, ModelBuilder.STEEL_LIGHT);
+		b.box(34, 26, 19, 34, 57, 19, ModelBuilder.STEEL_LIGHT);
 
-		// crossguard: steel bar with a wooden centre
-		b.box(10, 10, 5, 21, 11, 10, ModelBuilder.STEEL_MID);
-		b.box(14, 10, 6, 17, 11, 9, ModelBuilder.WOOD);
+		// crossguard: long bar, darker tips, wooden centre block
+		b.box(20, 20, 10, 43, 23, 21, ModelBuilder.STEEL_MID);
+		b.box(20, 20, 10, 22, 23, 21, ModelBuilder.STEEL_DARK);
+		b.box(41, 20, 10, 43, 23, 21, ModelBuilder.STEEL_DARK);
+		b.box(28, 20, 12, 35, 23, 19, ModelBuilder.WOOD);
 
-		// grip with a lighter band
-		b.box(14, 4, 7, 17, 9, 8, ModelBuilder.WOOD_DARK);
-		b.box(14, 6, 8, 17, 7, 8, ModelBuilder.STEEL_LIGHT);
+		// grip with two wrap bands
+		b.box(28, 8, 14, 35, 19, 17, ModelBuilder.WOOD_DARK);
+		b.box(28, 11, 17, 35, 12, 17, ModelBuilder.STEEL_MID);
+		b.box(28, 15, 17, 35, 16, 17, ModelBuilder.STEEL_MID);
 
-		// pommel
-		b.box(13, 2, 6, 18, 3, 9, ModelBuilder.NAVY);
-		b.box(14, 4, 7, 17, 4, 8, ModelBuilder.NAVY);
+		// pommel with a bright band
+		b.box(26, 4, 12, 37, 7, 19, ModelBuilder.NAVY);
+		b.box(27, 5, 19, 36, 6, 19, ModelBuilder.STEEL_LIGHT);
 
 		write(b, models, textures, previews, "sword_in_hand", "sephiria:item/weapon_3d", "sword");
 	}
 
-	/** off hand of the paired weapon: oval shield with steel rim, wooden planks and a boss */
+	/** off hand of the paired weapon: oval shield with rivetted rim, planks, stepped boss */
 	private static void shield(Path models, Path textures, Path previews) throws Exception {
 		ModelBuilder b = new ModelBuilder();
 
-		// plate: steel rim, then the wooden face painted inside it
-		b.disc(16, 16, 9.5, 9.5, 8, 10, ModelBuilder.STEEL_LIGHT);
-		b.disc(16, 16, 7.8, 7.8, 8, 10, ModelBuilder.WOOD);
-		// plank lines
-		b.box(12, 10, 10, 12, 22, 10, ModelBuilder.WOOD_DARK);
-		b.box(19, 10, 10, 19, 22, 10, ModelBuilder.WOOD_DARK);
-		// centre boss, raised
-		b.box(14, 14, 10, 17, 17, 12, ModelBuilder.STEEL_LIGHT);
-		b.box(15, 15, 12, 16, 16, 12, ModelBuilder.WHITE);
+		// steel rim, then the wooden face inside it
+		b.disc(32, 32, 19.0, 19.0, 16, 21, ModelBuilder.STEEL_LIGHT);
+		b.disc(32, 32, 15.5, 15.5, 16, 21, ModelBuilder.WOOD);
+		// rivets around the rim
+		for (int[] r : new int[][] { { 18, 18 }, { 45, 18 }, { 18, 45 }, { 45, 45 } }) {
+			b.box(r[0], r[1], 21, r[0] + 2, r[1] + 2, 21, ModelBuilder.STEEL_DARK);
+		}
+		// plank seams
+		b.box(24, 20, 21, 25, 44, 21, ModelBuilder.WOOD_DARK);
+		b.box(39, 20, 21, 40, 44, 21, ModelBuilder.WOOD_DARK);
+		// stepped centre boss
+		b.box(28, 28, 21, 35, 35, 24, ModelBuilder.STEEL_LIGHT);
+		b.box(30, 30, 24, 33, 33, 25, ModelBuilder.WHITE);
 		// arm straps on the back
-		b.box(15, 11, 6, 16, 21, 7, ModelBuilder.WOOD_DARK);
+		b.box(30, 22, 12, 33, 42, 15, ModelBuilder.WOOD_DARK);
+		b.box(30, 24, 12, 33, 25, 15, ModelBuilder.WOOD);
 
 		write(b, models, textures, previews, "shield_in_hand", "sephiria:item/shield_3d", "shield");
 	}
 
-	/** vanilla-like crossbow: wooden tiller, steel prod, string that travels back with the pull */
-	private static void crossbow(Path models, Path textures, Path previews, int pull) throws Exception {
+	/** two handed blade: wider and longer than the sword, with a broad guard */
+	private static void greatsword(Path models, Path textures, Path previews) throws Exception {
 		ModelBuilder b = new ModelBuilder();
 
-		// tiller and butt
-		b.box(9, 14, 8, 24, 16, 10, ModelBuilder.WOOD);
-		b.box(11, 16, 8, 23, 17, 10, ModelBuilder.WOOD_DARK);
-		b.box(5, 13, 7, 8, 17, 11, ModelBuilder.WOOD_DARK);
-		// grip and trigger
-		b.box(12, 10, 8, 15, 14, 10, ModelBuilder.WOOD_DARK);
-		b.box(17, 12, 9, 19, 14, 10, ModelBuilder.STEEL_DARK);
-		// prod: two arms sweeping forward, stepped to keep the voxel look
-		b.box(24, 16, 9, 26, 17, 10, ModelBuilder.STEEL_DARK);
-		b.box(26, 17, 9, 27, 18, 10, ModelBuilder.STEEL_DARK);
-		b.box(27, 18, 9, 28, 20, 10, ModelBuilder.STEEL_DARK);
-		b.box(24, 15, 9, 26, 16, 10, ModelBuilder.STEEL_DARK);
-		b.box(26, 14, 9, 27, 15, 10, ModelBuilder.STEEL_DARK);
-		b.box(27, 12, 9, 28, 13, 10, ModelBuilder.STEEL_DARK);
-		// limb tips in light steel so the string anchoring reads
-		b.box(28, 19, 9, 28, 20, 10, ModelBuilder.STEEL_LIGHT);
-		b.box(28, 12, 9, 28, 13, 10, ModelBuilder.STEEL_LIGHT);
+		// blade: 3 units wide, 9.5 units long
+		b.box(26, 22, 12, 37, 59, 19, ModelBuilder.STEEL_LIGHT);
+		b.box(27, 60, 12, 36, 61, 19, ModelBuilder.STEEL_LIGHT);
+		b.box(30, 62, 12, 33, 63, 19, ModelBuilder.STEEL_LIGHT);
+		// edges, fuller and the ground faces beside it
+		b.box(26, 22, 12, 26, 59, 19, ModelBuilder.STEEL_MID);
+		b.box(37, 22, 12, 37, 59, 19, ModelBuilder.STEEL_MID);
+		b.box(31, 24, 19, 32, 57, 19, ModelBuilder.WHITE);
+		b.box(29, 24, 19, 29, 57, 19, ModelBuilder.STEEL_LIGHT);
+		b.box(34, 24, 19, 34, 57, 19, ModelBuilder.STEEL_LIGHT);
 
-		// string: from tip to tip, its middle pulled back along the tiller
-		int nut = 24 - pull * 4;
-		line(b, 28, 19, nut, 16, 10, ModelBuilder.WHITE);
-		line(b, 28, 12, nut, 16, 10, ModelBuilder.WHITE);
+		// broad guard with darker tips and a wooden core
+		b.box(16, 18, 8, 47, 21, 23, ModelBuilder.STEEL_MID);
+		b.box(16, 18, 8, 18, 21, 23, ModelBuilder.STEEL_DARK);
+		b.box(45, 18, 8, 47, 21, 23, ModelBuilder.STEEL_DARK);
+		b.box(28, 18, 10, 35, 21, 21, ModelBuilder.WOOD);
 
-		// a nocked bolt once the string is fully back
+		// long grip with two bands, then the pommel
+		b.box(28, 4, 14, 35, 17, 17, ModelBuilder.WOOD_DARK);
+		b.box(28, 8, 17, 35, 9, 17, ModelBuilder.STEEL_MID);
+		b.box(28, 13, 17, 35, 14, 17, ModelBuilder.STEEL_MID);
+		b.box(26, 0, 12, 37, 3, 19, ModelBuilder.NAVY);
+		b.box(27, 1, 19, 36, 2, 19, ModelBuilder.STEEL_LIGHT);
+
+		write(b, models, textures, previews, "steel_greatsword_in_hand", "sephiria:item/greatsword_3d", "greatsword");
+	}
+
+	/** short blade: compact proportions, big highlight, small guard */
+	private static void dagger(Path models, Path textures, Path previews) throws Exception {
+		ModelBuilder b = new ModelBuilder();
+
+		b.box(30, 34, 14, 33, 55, 17, ModelBuilder.STEEL_LIGHT);
+		b.box(31, 56, 14, 32, 57, 17, ModelBuilder.STEEL_LIGHT);
+		b.box(30, 34, 14, 30, 55, 17, ModelBuilder.STEEL_MID);
+		b.box(33, 34, 14, 33, 55, 17, ModelBuilder.STEEL_MID);
+		b.box(31, 36, 17, 32, 53, 17, ModelBuilder.WHITE);
+
+		// small guard
+		b.box(26, 32, 12, 37, 35, 19, ModelBuilder.STEEL_MID);
+		b.box(30, 32, 14, 33, 35, 17, ModelBuilder.WOOD);
+
+		// grip and pommel
+		b.box(30, 22, 15, 33, 31, 18, ModelBuilder.WOOD_DARK);
+		b.box(30, 26, 18, 33, 27, 18, ModelBuilder.STEEL_MID);
+		b.box(28, 20, 14, 35, 21, 19, ModelBuilder.NAVY);
+
+		write(b, models, textures, previews, "dagger_in_hand", "sephiria:item/weapon_3d", "dagger");
+	}
+
+	/** long staff: full height shaft, metal ferrules, wood grain breaks */
+	private static void quarterstaff(Path models, Path textures, Path previews) throws Exception {
+		ModelBuilder b = new ModelBuilder();
+
+		b.box(30, 0, 16, 33, 63, 19, ModelBuilder.WOOD);
+		// grain: darker bands where the wood was cut
+		for (int y : new int[] { 12, 28, 44 }) {
+			b.box(30, y, 19, 33, y + 3, 19, ModelBuilder.WOOD_DARK);
+		}
+		// metal ferrules
+		b.box(30, 8, 16, 33, 11, 19, ModelBuilder.STEEL_MID);
+		b.box(30, 24, 16, 33, 27, 19, ModelBuilder.STEEL_MID);
+		b.box(30, 48, 16, 33, 51, 19, ModelBuilder.STEEL_MID);
+		// dark end caps
+		b.box(30, 0, 16, 33, 3, 19, ModelBuilder.STEEL_DARK);
+		b.box(30, 60, 16, 33, 63, 19, ModelBuilder.STEEL_DARK);
+
+		write(b, models, textures, previews, "quarterstaff_in_hand", "sephiria:item/weapon_3d", "quarterstaff");
+	}
+
+	/** vanilla-like crossbow: tiller, rail, stepped prod, string that travels with the pull */
+	private static void crossbow(Path models, Path textures, Path previews, int pull) throws Exception {
+		ModelBuilder b = new ModelBuilder();
+		crossbowBody(b);
+
+		int nut = 48 - pull * 8;
+		line(b, 59, 41, nut, 31, 21, ModelBuilder.WHITE);
+		line(b, 59, 21, nut, 31, 21, ModelBuilder.WHITE);
+
 		if (pull == 2) {
-			b.box(nut, 15, 9, 30, 16, 9, ModelBuilder.WOOD_DARK);
-			b.box(30, 15, 9, 31, 16, 9, ModelBuilder.STEEL_LIGHT);
+			b.box(nut, 30, 19, 60, 31, 19, ModelBuilder.WOOD_DARK);
+			b.box(60, 30, 19, 61, 31, 19, ModelBuilder.STEEL_LIGHT);
 		}
 
 		write(b, models, textures, previews, "crossbow_pulling_" + pull, "sephiria:item/crossbow_3d", "crossbow_pull" + pull);
 	}
 
-	/** charged crossbow: loaded bolt on the rail */
+	/** charged crossbow: bolt resting on the rail */
 	private static void crossbowLoaded(Path models, Path textures, Path previews) throws Exception {
 		ModelBuilder b = new ModelBuilder();
+		crossbowBody(b);
 
-		b.box(9, 14, 8, 24, 16, 10, ModelBuilder.WOOD);
-		b.box(11, 16, 8, 23, 17, 10, ModelBuilder.WOOD_DARK);
-		b.box(5, 13, 7, 8, 17, 11, ModelBuilder.WOOD_DARK);
-		b.box(12, 10, 8, 15, 14, 10, ModelBuilder.WOOD_DARK);
-		b.box(17, 12, 9, 19, 14, 10, ModelBuilder.STEEL_DARK);
-		b.box(24, 16, 9, 26, 17, 10, ModelBuilder.STEEL_DARK);
-		b.box(26, 17, 9, 27, 18, 10, ModelBuilder.STEEL_DARK);
-		b.box(27, 18, 9, 28, 20, 10, ModelBuilder.STEEL_DARK);
-		b.box(24, 15, 9, 26, 16, 10, ModelBuilder.STEEL_DARK);
-		b.box(26, 14, 9, 27, 15, 10, ModelBuilder.STEEL_DARK);
-		b.box(27, 12, 9, 28, 13, 10, ModelBuilder.STEEL_DARK);
-		b.box(28, 19, 9, 28, 20, 10, ModelBuilder.STEEL_LIGHT);
-		b.box(28, 12, 9, 28, 13, 10, ModelBuilder.STEEL_LIGHT);
-
-		// string back at the nut with a bolt lying on the rail
-		line(b, 28, 19, 24, 16, 10, ModelBuilder.WHITE);
-		line(b, 28, 12, 24, 16, 10, ModelBuilder.WHITE);
-		b.box(15, 16, 10, 30, 17, 10, ModelBuilder.WOOD_DARK);
-		b.box(30, 16, 10, 31, 17, 10, ModelBuilder.STEEL_LIGHT);
+		line(b, 59, 41, 48, 31, 21, ModelBuilder.WHITE);
+		line(b, 59, 21, 48, 31, 21, ModelBuilder.WHITE);
+		b.box(30, 33, 21, 60, 34, 21, ModelBuilder.WOOD_DARK);
+		b.box(60, 33, 21, 61, 34, 21, ModelBuilder.STEEL_LIGHT);
 
 		write(b, models, textures, previews, "crossbow_loaded_in_hand", "sephiria:item/crossbow_3d", "crossbow_loaded");
 	}
 
+	/** the parts every crossbow state shares */
+	private static void crossbowBody(ModelBuilder b) {
+		// tiller, top rail, butt with a steel plate
+		b.box(18, 28, 16, 48, 33, 21, ModelBuilder.WOOD);
+		b.box(22, 33, 18, 46, 35, 21, ModelBuilder.WOOD_DARK);
+		b.box(10, 26, 14, 17, 35, 23, ModelBuilder.WOOD_DARK);
+		b.box(10, 26, 14, 11, 35, 23, ModelBuilder.STEEL_DARK);
+		// grip and trigger
+		b.box(24, 20, 16, 31, 28, 21, ModelBuilder.WOOD_DARK);
+		b.box(34, 24, 18, 39, 28, 21, ModelBuilder.STEEL_DARK);
+		// prod: stepped arms sweeping forward, mirrored above and below the rail
+		b.box(48, 32, 18, 52, 35, 21, ModelBuilder.STEEL_DARK);
+		b.box(52, 34, 18, 55, 37, 21, ModelBuilder.STEEL_DARK);
+		b.box(55, 36, 18, 57, 39, 21, ModelBuilder.STEEL_DARK);
+		b.box(57, 38, 18, 59, 41, 21, ModelBuilder.STEEL_DARK);
+		b.box(59, 40, 18, 60, 42, 21, ModelBuilder.STEEL_LIGHT);
+		b.box(48, 27, 18, 52, 30, 21, ModelBuilder.STEEL_DARK);
+		b.box(52, 25, 18, 55, 28, 21, ModelBuilder.STEEL_DARK);
+		b.box(55, 23, 18, 57, 26, 21, ModelBuilder.STEEL_DARK);
+		b.box(57, 21, 18, 59, 24, 21, ModelBuilder.STEEL_DARK);
+		b.box(59, 20, 18, 60, 22, 21, ModelBuilder.STEEL_LIGHT);
+	}
+
 	/**
-	 * Katana with its scabbard. stage 0 = sheathed, 1 = half drawn, 2 = fully drawn.
-	 *
-	 * The sword (blade + tsuba + handle) rises as a unit while the scabbard stays put; the part
-	 * of the blade still inside the scabbard is hidden by it, because the scabbard is a fatter
-	 * box around the same space. The blade is drawn long enough to fill the whole model once
-	 * it is out, which is what makes the drawn katana read as a long blade.
+	 * Katana with scabbard. stage 0 = sheathed, 1 = half drawn, 2 = fully drawn.
+	 * The blade curves gently; the sword rises as a unit while the scabbard stays put, and the
+	 * part still inside the scabbard is hidden by it.
 	 */
 	private static void katana(Path models, Path textures, Path previews, int stage) throws Exception {
 		ModelBuilder b = new ModelBuilder();
 
 		if (stage == 2) {
-			// fully drawn: the scabbard is stowed, the blade spans most of the model
-			tsuba(b, 12, 13);
-			handle(b, 4, 11);
-			blade(b, 14, 31);
+			katanaBlade(b, 28, 63);
+			tsuba(b, 24, 27);
+			handle(b, 8, 23);
 		} else if (stage == 1) {
-			// half drawn: scabbard shortened, sword lifted so the blade shows above the mouth
-			scabbard(b, 12, 22);
-			tsuba(b, 16, 17);
-			handle(b, 8, 15);
-			b.box(15, 18, 8, 16, 31, 9, ModelBuilder.STEEL_LIGHT);
-			b.box(16, 18, 9, 16, 31, 9, ModelBuilder.WHITE);
-			b.box(15, 18, 8, 15, 31, 8, ModelBuilder.STEEL_MID);
+			scabbard(b, 24, 44);
+			katanaBlade(b, 36, 63);
+			tsuba(b, 32, 35);
+			handle(b, 16, 31);
 		} else {
-			// sheathed: only scabbard, tsuba and handle are visible
-			scabbard(b, 12, 26);
-			tsuba(b, 10, 11);
-			handle(b, 2, 9);
+			scabbard(b, 24, 52);
+			tsuba(b, 20, 23);
+			handle(b, 4, 19);
 		}
 
 		write(b, models, textures, previews, "katana_" + (stage == 0 ? "sheathed" : stage == 1 ? "drawing" : "in_hand"),
 				"sephiria:item/katana_3d", "katana_" + stage);
 	}
 
-	/** long two-handed blade: the greatsword gets its own geometry so it can be genuinely long */
-	private static void greatsword(Path models, Path textures, Path previews) throws Exception {
-		ModelBuilder b = new ModelBuilder();
-
-		// blade, 3 units wide, 10.5 units long, tip tapered
-		b.box(13, 11, 6, 18, 29, 9, ModelBuilder.STEEL_LIGHT);
-		b.box(14, 30, 6, 17, 31, 9, ModelBuilder.STEEL_LIGHT);
-		b.box(13, 30, 6, 18, 30, 9, ModelBuilder.STEEL_LIGHT);
-		// raised white fuller down the middle, darker bevels on both edges
-		b.box(15, 12, 9, 16, 29, 9, ModelBuilder.WHITE);
-		b.box(13, 11, 6, 13, 29, 6, ModelBuilder.STEEL_MID);
-		b.box(18, 11, 6, 18, 29, 6, ModelBuilder.STEEL_MID);
-
-		// wide crossguard with a wooden centre
-		b.box(8, 9, 4, 23, 10, 11, ModelBuilder.STEEL_MID);
-		b.box(14, 9, 5, 17, 10, 10, ModelBuilder.WOOD);
-
-		// long grip with a lighter band, then the pommel
-		b.box(14, 2, 7, 17, 8, 8, ModelBuilder.WOOD_DARK);
-		b.box(14, 4, 9, 17, 5, 9, ModelBuilder.STEEL_LIGHT);
-		b.box(13, 0, 6, 18, 1, 9, ModelBuilder.NAVY);
-
-		write(b, models, textures, previews, "steel_greatsword_in_hand", "sephiria:item/greatsword_3d", "greatsword");
+	/** curved single edged blade with a bright edge; drawn row by row so the curve is smooth */
+	private static void katanaBlade(ModelBuilder b, int y1, int y2) {
+		for (int y = y1; y <= y2; y++) {
+			int shift = (y - y1) / 16;       // the tip leans away from the handle
+			int x1 = 30 + shift;
+			b.box(x1, y, 16, x1 + 3, y, 19, ModelBuilder.STEEL_LIGHT);
+			b.box(x1 + 3, y, 19, x1 + 3, y, 19, ModelBuilder.WHITE);
+			b.box(x1, y, 16, x1, y, 16, ModelBuilder.STEEL_MID);
+		}
 	}
 
-	/** katana blade: 1 unit wide, white edge on the cutting side */
-	private static void blade(ModelBuilder b, int y1, int y2) {
-		b.box(15, y1, 8, 16, y2, 9, ModelBuilder.STEEL_LIGHT);
-		b.box(16, y1, 9, 16, y2, 9, ModelBuilder.WHITE);
-		b.box(15, y1, 8, 15, y2, 8, ModelBuilder.STEEL_MID);
-	}
-
-	/** katana scabbard: fatter than the blade so it can hide the part still inside */
+	/** katana scabbard: fatter than the blade so it hides whatever is still inside */
 	private static void scabbard(ModelBuilder b, int y1, int y2) {
-		b.box(14, y1, 7, 17, y2, 10, ModelBuilder.NAVY);
-		b.box(14, y1, 7, 17, y1 + 1, 10, ModelBuilder.STEEL_LIGHT);
+		b.box(28, y1, 14, 35, y2, 21, ModelBuilder.NAVY);
+		b.box(28, y1, 14, 35, y1 + 3, 21, ModelBuilder.STEEL_LIGHT);
+		b.box(28, y1 + 8, 14, 35, y1 + 9, 21, ModelBuilder.STEEL_MID);
 	}
 
-	/** katana guard */
+	/** tsuba: dark plate with a steel border */
 	private static void tsuba(ModelBuilder b, int y1, int y2) {
-		b.box(12, y1, 6, 19, y2, 11, ModelBuilder.NAVY);
+		b.box(24, y1, 12, 39, y2, 23, ModelBuilder.STEEL_DARK);
+		b.box(25, y1, 13, 38, y2, 22, ModelBuilder.NAVY);
 	}
 
-	/** katana grip with a wrap band and an end cap */
+	/** wrapped grip with alternating bands and an end cap */
 	private static void handle(ModelBuilder b, int y1, int y2) {
-		b.box(14, y1, 8, 17, y2, 9, ModelBuilder.WOOD_DARK);
-		b.box(14, y1 + 3, 9, 17, y1 + 4, 9, ModelBuilder.STEEL_MID);
-		b.box(14, y1 - 2, 8, 17, y1 - 1, 9, ModelBuilder.STEEL_DARK);
+		b.box(28, y1, 16, 35, y2, 19, ModelBuilder.WOOD_DARK);
+		for (int y = y1 + 3; y + 1 < y2; y += 4) {
+			b.box(28, y, 19, 35, y + 1, 19, ModelBuilder.STEEL_MID);
+		}
+		b.box(28, y1 - 2, 16, 35, y1 - 1, 19, ModelBuilder.NAVY);
 	}
 
 	/** straight voxel line, used for crossbow strings */
