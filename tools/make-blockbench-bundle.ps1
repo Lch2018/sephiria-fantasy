@@ -19,7 +19,7 @@ $models = @(
     'steel_greatsword_in_hand', 'dagger_in_hand', 'quarterstaff_in_hand',
     'katana_sheathed', 'katana_drawing', 'katana_in_hand',
     'crossbow_pulling_0', 'crossbow_pulling_1', 'crossbow_pulling_2', 'crossbow_loaded_in_hand',
-    'colossal_crossbow_in_hand', 'default_sword_and_shield_in_hand', 'blade_in_hand'
+    'colossal_crossbow_in_hand'
 )
 
 $copied = 0
