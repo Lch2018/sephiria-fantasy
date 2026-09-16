@@ -29,11 +29,18 @@ public final class DashSkill {
 	public static final double COST = 1.0D;
 	/** 回复量：每满一个间隔回复 1。 */
 	public static final double REGEN_AMOUNT = 1.0D;
-	/** 回复间隔（tick）：1 秒。 */
-	public static final int REGEN_INTERVAL_TICKS = 20;
+	/** 回复间隔（tick）：1.5 秒。 */
+	public static final int REGEN_INTERVAL_TICKS = 30;
 
-	/** 无敌时长（tick）：0.1 秒。 */
-	public static final int INVULNERABLE_TICKS = 2;
+	/**
+	 * 无敌时长（tick）：0.2 秒。
+	 *
+	 * <p>无敌在 {@link #perform} 里<b>按下生效的瞬间</b>授予：即服务端收到按键包、
+	 * 且存储扣费成功之后，紧接着位移开始之前（同一 tick）。窗口按游戏刻计，
+	 * 授予时写的是"到期刻 = 当前刻 + 4"，所以覆盖当前刻起共 4 刻——
+	 * 而位移本身是 {@value #DURATION_TICKS} 刻，也就是说这 0.2 秒护住冲刺的前 2/3。
+	 */
+	public static final int INVULNERABLE_TICKS = 4;
 	/** 位移距离（格）。 */
 	public static final double DISTANCE = 3.0D;
 	/** 位移耗时（tick）：0.3 秒。 */
