@@ -1,6 +1,0 @@
-{
-	"parent": "sephiria:item/colossal_crossbow_in_hand",
-	"textures": {
-		"layer0": "sephiria:item/colossal_crossbow_pulling_0"
-	}
-}

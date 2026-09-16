@@ -15,6 +15,10 @@ dependencies {
 
 	// 未混淆版本下依赖用 implementation，而不是 modImplementation。
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// GeckoLib（骨骼动画）从本地 libs\ 引入：刀的模型/动画由 Blockbench 的 GeckoLib
+	// 格式导出，游戏内播放需要它。文件同时也放在 PCL 的 mods 目录里。
+	implementation files('libs/geckolib-fabric-26.2-5.5.5.jar')
 }
 
 processResources {

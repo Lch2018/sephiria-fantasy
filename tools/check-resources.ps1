@@ -10,7 +10,7 @@ $assets = Join-Path $root 'src\main\resources\assets\sephiria'
 $modelsDir = Join-Path $assets 'models\item'
 $texDir = Join-Path $assets 'textures\item'
 
-$items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'blade', 'quarterstaff')
+$items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'crossbow_bolt', 'blade', 'quarterstaff')
 $branches = @('sword_and_shield', 'greatsword', 'dagger', 'crossbow', 'katana', 'staff')
 
 $errors = 0
@@ -57,7 +57,14 @@ foreach ($file in Get-ChildItem $modelsDir -Filter *.json) {
         foreach ($el in $elements) {
             if ((@($el.from)).Count -ne 3 -or (@($el.to)).Count -ne 3) { Fail "models/item/$name.json: malformed element"; break }
             foreach ($side in $el.faces.PSObject.Properties.Name) {
-                if ((@($el.faces.$side.uv)).Count -ne 4) { Fail "models/item/$name.json: $side face without uv"; break }
+                $uv = @($el.faces.$side.uv)
+                if ($uv.Count -ne 4) { Fail "models/item/$name.json: $side face without uv"; break }
+                # UVs live in a 0..16 space regardless of texture size; Blockbench pixel
+                # coordinates (e.g. 0..32 for a 32x32 palette) must be converted first,
+                # otherwise the game samples outside the sprite and the item fails to bake.
+                foreach ($v in $uv) {
+                    if ($v -lt 0 -or $v -gt 16) { Fail "models/item/$name.json: $side uv $v outside 0..16 (pixel-space uv leaked in?)"; break }
+                }
             }
         }
         $tex = $json.textures.'0'

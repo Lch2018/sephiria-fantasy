@@ -1,0 +1,384 @@
+{
+    "format_version":  "1.8.0",
+    "animations":  {
+                       "animation.idle_unsheathed":  {
+                                                         "loop":  true,
+                                                         "animation_length":  1,
+                                                         "bones":  {
+                                                                       "刀":  {
+                                                                                 "rotation":  {
+                                                                                                  "vector":  [
+                                                                                                                 0,
+                                                                                                                 0,
+                                                                                                                 0
+                                                                                                             ]
+                                                                                              },
+                                                                                 "position":  {
+                                                                                                  "vector":  [
+                                                                                                                 0,
+                                                                                                                 0,
+                                                                                                                 0
+                                                                                                             ]
+                                                                                              }
+                                                                             },
+                                                                       "刀鞘":  {
+                                                                                  "rotation":  {
+                                                                                                   "vector":  [
+                                                                                                                  0,
+                                                                                                                  0,
+                                                                                                                  0
+                                                                                                              ]
+                                                                                               },
+                                                                                  "position":  {
+                                                                                                   "vector":  [
+                                                                                                                  0,
+                                                                                                                  -44.5,
+                                                                                                                  0
+                                                                                                              ]
+                                                                                               },
+                                                                                  "scale":  {
+                                                                                                "vector":  [
+                                                                                                               0,
+                                                                                                               0,
+                                                                                                               0
+                                                                                                           ]
+                                                                                            }
+                                                                              }
+                                                                   }
+                                                     },
+                       "animation.idle_sheathed":  {
+                                                       "loop":  true,
+                                                       "animation_length":  1,
+                                                       "bones":  {
+                                                                     "刀":  {
+                                                                               "rotation":  {
+                                                                                                "vector":  [
+                                                                                                               0,
+                                                                                                               0,
+                                                                                                               180
+                                                                                                           ]
+                                                                                            },
+                                                                               "position":  {
+                                                                                                "vector":  [
+                                                                                                               0,
+                                                                                                               10.5,
+                                                                                                               0
+                                                                                                           ]
+                                                                                            }
+                                                                           },
+                                                                     "刀鞘":  {
+                                                                                "rotation":  {
+                                                                                                 "vector":  [
+                                                                                                                0,
+                                                                                                                0,
+                                                                                                                180
+                                                                                                            ]
+                                                                                             },
+                                                                                "position":  {
+                                                                                                 "vector":  [
+                                                                                                                0,
+                                                                                                                -44.5,
+                                                                                                                0
+                                                                                                            ]
+                                                                                             }
+                                                                            }
+                                                                 }
+                                                   },
+                       "animation.switch_to_sheathed":  {
+                                                            "animation_length":  0.65,
+                                                            "bones":  {
+                                                                          "刀":  {
+                                                                                    "rotation":  {
+                                                                                                     "0.0":  {
+                                                                                                                 "vector":  [
+                                                                                                                                0,
+                                                                                                                                0,
+                                                                                                                                0
+                                                                                                                            ]
+                                                                                                             },
+                                                                                                     "0.2":  {
+                                                                                                                 "vector":  [
+                                                                                                                                0,
+                                                                                                                                0,
+                                                                                                                                90
+                                                                                                                            ]
+                                                                                                             },
+                                                                                                     "0.4":  {
+                                                                                                                 "vector":  [
+                                                                                                                                0,
+                                                                                                                                0,
+                                                                                                                                90
+                                                                                                                            ]
+                                                                                                             },
+                                                                                                     "0.55":  {
+                                                                                                                  "vector":  [
+                                                                                                                                 0,
+                                                                                                                                 0,
+                                                                                                                                 180
+                                                                                                                             ]
+                                                                                                              },
+                                                                                                     "0.65":  {
+                                                                                                                  "vector":  [
+                                                                                                                                 0,
+                                                                                                                                 0,
+                                                                                                                                 180
+                                                                                                                             ]
+                                                                                                              }
+                                                                                                 },
+                                                                                    "position":  {
+                                                                                                     "0.0":  {
+                                                                                                                 "vector":  [
+                                                                                                                                0,
+                                                                                                                                0,
+                                                                                                                                0
+                                                                                                                            ]
+                                                                                                             },
+                                                                                                     "0.2":  {
+                                                                                                                 "vector":  [
+                                                                                                                                0,
+                                                                                                                                0,
+                                                                                                                                0
+                                                                                                                            ]
+                                                                                                             },
+                                                                                                     "0.4":  {
+                                                                                                                 "vector":  [
+                                                                                                                                0,
+                                                                                                                                0,
+                                                                                                                                0
+                                                                                                                            ]
+                                                                                                             },
+                                                                                                     "0.55":  {
+                                                                                                                  "vector":  [
+                                                                                                                                 0,
+                                                                                                                                 10.5,
+                                                                                                                                 0
+                                                                                                                             ]
+                                                                                                              },
+                                                                                                     "0.65":  {
+                                                                                                                  "vector":  [
+                                                                                                                                 0,
+                                                                                                                                 10.5,
+                                                                                                                                 0
+                                                                                                                             ]
+                                                                                                              }
+                                                                                                 }
+                                                                                },
+                                                                          "刀鞘":  {
+                                                                                     "rotation":  {
+                                                                                                      "vector":  [
+                                                                                                                     180,
+                                                                                                                     0,
+                                                                                                                     0
+                                                                                                                 ]
+                                                                                                  },
+                                                                                     "position":  {
+                                                                                                      "vector":  [
+                                                                                                                     0,
+                                                                                                                     -44.5,
+                                                                                                                     0
+                                                                                                                 ]
+                                                                                                  },
+                                                                                     "scale":  {
+                                                                                                   "0.0":  {
+                                                                                                               "vector":  [
+                                                                                                                              0,
+                                                                                                                              0,
+                                                                                                                              0
+                                                                                                                          ]
+                                                                                                           },
+                                                                                                   "0.65":  {
+                                                                                                                "vector":  [
+                                                                                                                               1,
+                                                                                                                               1,
+                                                                                                                               1
+                                                                                                                           ]
+                                                                                                            }
+                                                                                               }
+                                                                                 }
+                                                                      }
+                                                        },
+                       "animation.switch_to_unsheathed":  {
+                                                              "animation_length":  0.65,
+                                                              "bones":  {
+                                                                            "刀":  {
+                                                                                      "rotation":  {
+                                                                                                       "0.1":  {
+                                                                                                                   "vector":  [
+                                                                                                                                  0,
+                                                                                                                                  0,
+                                                                                                                                  180
+                                                                                                                              ]
+                                                                                                               },
+                                                                                                       "0.2":  {
+                                                                                                                   "vector":  [
+                                                                                                                                  0,
+                                                                                                                                  0,
+                                                                                                                                  90
+                                                                                                                              ]
+                                                                                                               },
+                                                                                                       "0.4":  {
+                                                                                                                   "vector":  [
+                                                                                                                                  0,
+                                                                                                                                  0,
+                                                                                                                                  90
+                                                                                                                              ]
+                                                                                                               },
+                                                                                                       "0.55":  {
+                                                                                                                    "vector":  [
+                                                                                                                                   0,
+                                                                                                                                   0,
+                                                                                                                                   0
+                                                                                                                               ]
+                                                                                                                },
+                                                                                                       "0.65":  {
+                                                                                                                    "vector":  [
+                                                                                                                                   0,
+                                                                                                                                   0,
+                                                                                                                                   0
+                                                                                                                               ]
+                                                                                                                }
+                                                                                                   },
+                                                                                      "position":  {
+                                                                                                       "0.1":  {
+                                                                                                                   "vector":  [
+                                                                                                                                  0,
+                                                                                                                                  10.5,
+                                                                                                                                  0
+                                                                                                                              ]
+                                                                                                               },
+                                                                                                       "0.2":  {
+                                                                                                                   "vector":  [
+                                                                                                                                  0,
+                                                                                                                                  0,
+                                                                                                                                  0
+                                                                                                                              ]
+                                                                                                               },
+                                                                                                       "0.4":  {
+                                                                                                                   "vector":  [
+                                                                                                                                  0,
+                                                                                                                                  0,
+                                                                                                                                  0
+                                                                                                                              ]
+                                                                                                               },
+                                                                                                       "0.55":  {
+                                                                                                                    "vector":  [
+                                                                                                                                   0,
+                                                                                                                                   0,
+                                                                                                                                   0
+                                                                                                                               ]
+                                                                                                                },
+                                                                                                       "0.65":  {
+                                                                                                                    "vector":  [
+                                                                                                                                   0,
+                                                                                                                                   0,
+                                                                                                                                   0
+                                                                                                                               ]
+                                                                                                                }
+                                                                                                   }
+                                                                                  },
+                                                                            "刀鞘":  {
+                                                                                       "rotation":  {
+                                                                                                        "vector":  [
+                                                                                                                       0,
+                                                                                                                       0,
+                                                                                                                       180
+                                                                                                                   ]
+                                                                                                    },
+                                                                                       "position":  {
+                                                                                                        "0.0":  {
+                                                                                                                    "vector":  [
+                                                                                                                                   0,
+                                                                                                                                   -44.5,
+                                                                                                                                   0
+                                                                                                                               ]
+                                                                                                                },
+                                                                                                        "0.15":  {
+                                                                                                                     "vector":  [
+                                                                                                                                    0,
+                                                                                                                                    -48.5,
+                                                                                                                                    0
+                                                                                                                                ]
+                                                                                                                 }
+                                                                                                    },
+                                                                                       "scale":  {
+                                                                                                     "0.0":  {
+                                                                                                                 "vector":  [
+                                                                                                                                1,
+                                                                                                                                1,
+                                                                                                                                1
+                                                                                                                            ]
+                                                                                                             },
+                                                                                                     "0.65":  {
+                                                                                                                  "vector":  [
+                                                                                                                                 0,
+                                                                                                                                 0,
+                                                                                                                                 0
+                                                                                                                             ]
+                                                                                                              }
+                                                                                                 }
+                                                                                   }
+                                                                        }
+                                                          },
+                       "animation.idle_sheathed2":  {
+                                                        "loop":  false,
+                                                        "animation_length":  1.25,
+                                                        "bones":  {
+                                                                      "刀":  {
+                                                                                "rotation":  {
+                                                                                                 "vector":  [
+                                                                                                                0,
+                                                                                                                0,
+                                                                                                                180
+                                                                                                            ]
+                                                                                             },
+                                                                                "position":  {
+                                                                                                 "0.0":  {
+                                                                                                             "vector":  [
+                                                                                                                            0,
+                                                                                                                            10.5,
+                                                                                                                            0
+                                                                                                                        ]
+                                                                                                         },
+                                                                                                 "0.0833":  {
+                                                                                                                "vector":  [
+                                                                                                                               0,
+                                                                                                                               20.5,
+                                                                                                                               0
+                                                                                                                           ]
+                                                                                                            },
+                                                                                                 "1.125":  {
+                                                                                                               "vector":  [
+                                                                                                                              0,
+                                                                                                                              20.5,
+                                                                                                                              0
+                                                                                                                          ]
+                                                                                                           },
+                                                                                                 "1.25":  {
+                                                                                                              "vector":  [
+                                                                                                                             0,
+                                                                                                                             10.95,
+                                                                                                                             0
+                                                                                                                         ]
+                                                                                                          }
+                                                                                             }
+                                                                            },
+                                                                      "刀鞘":  {
+                                                                                 "rotation":  {
+                                                                                                  "vector":  [
+                                                                                                                 0,
+                                                                                                                 0,
+                                                                                                                 180
+                                                                                                             ]
+                                                                                              },
+                                                                                 "position":  {
+                                                                                                  "vector":  [
+                                                                                                                 0,
+                                                                                                                 -44.5,
+                                                                                                                 0
+                                                                                                             ]
+                                                                                              }
+                                                                             }
+                                                                  }
+                                                    }
+                   }
+}

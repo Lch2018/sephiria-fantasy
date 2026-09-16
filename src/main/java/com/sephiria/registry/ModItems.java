@@ -2,22 +2,30 @@ package com.sephiria.registry;
 
 import com.sephiria.Sephiria;
 import com.sephiria.weapon.BaseWeapon;
+import com.sephiria.weapon.SephiriaBoltItem;
 import com.sephiria.weapon.SephiriaCrossbowItem;
+import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.SephiriaWeaponItem;
 import com.sephiria.weapon.WeaponBranch;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.util.Unit;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.BlocksAttacks;
 import net.minecraft.world.item.component.ChargedProjectiles;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -40,14 +48,30 @@ import java.util.function.Function;
 public final class ModItems {
 	/** 玩家空手的基础攻击力，原版 Player#createAttributes 里是 1.0。 */
 	private static final float PLAYER_BASE_ATTACK_DAMAGE = 1.0F;
+	/** 弩的攻速：每秒 3 发。 */
+	private static final double CROSSBOW_ATTACK_SPEED = 3.0D;
 
-	public static final Item DEFAULT_SWORD_AND_SHIELD = sword("default_sword_and_shield", WeaponBranch.SWORD_AND_SHIELD, 6.0F, 1.6F, 250, false);
-	public static final Item STEEL_GREATSWORD = sword("steel_greatsword", WeaponBranch.GREATSWORD, 9.0F, 1.0F, 600, false);
-	public static final Item DAGGER = sword("dagger", WeaponBranch.DAGGER, 4.0F, 2.6F, 160, false);
-	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, 465);
-	/** 刀：平面模型（拔刀动作的三套 3D 模型暂时停用，改回原画贴图）。 */
-	public static final Item BLADE = sword("blade", WeaponBranch.KATANA, 5.0F, 2.0F, 320, false);
-	public static final Item QUARTERSTAFF = sword("quarterstaff", WeaponBranch.STAFF, 5.5F, 1.5F, 300, false);
+	public static final Item DEFAULT_SWORD_AND_SHIELD = sword("default_sword_and_shield", WeaponBranch.SWORD_AND_SHIELD, 6.0F, 1.6F, 250, false, true);
+	public static final Item STEEL_GREATSWORD = sword("steel_greatsword", WeaponBranch.GREATSWORD, 9.0F, 1.0F, 600, false, false);
+	public static final Item DAGGER = sword("dagger", WeaponBranch.DAGGER, 4.0F, 2.6F, 160, false, false);
+	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, SephiriaCrossbowItem.MAGAZINE_SIZE);
+	/** 重型弩的专用弹药：弩矢。弩不消耗、也不需要背包里有原版箭矢。 */
+	public static final Item CROSSBOW_BOLT = Registry.register(
+			BuiltInRegistries.ITEM,
+			key("crossbow_bolt"),
+			new SephiriaBoltItem(new Item.Properties().stacksTo(64).setId(key("crossbow_bolt"))));
+	/** 刀：GeckoLib 骨骼模型 + 出鞘/入鞘两态（见 {@link SephiriaKatanaItem}）。 */
+	public static final Item BLADE = register(key("blade"),
+			p -> new SephiriaKatanaItem(WeaponBranch.KATANA, p),
+			new Item.Properties()
+					// sword() 只是为了拿到 Tool 组件（切蛛网、剑类方块加速）和通用属性；
+					// 它写的攻击力/攻速随后被下面按状态的修饰符覆盖，所以这里传 0。
+					.sword(ToolMaterial.IRON, 0.0F, 0.0F)
+					.durability(320)
+					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+					.component(DataComponents.ATTRIBUTE_MODIFIERS, SephiriaKatanaItem.attributeModifiers(false))
+					.component(SephiriaKatanaItem.SHEATHED, Boolean.FALSE));
+	public static final Item QUARTERSTAFF = sword("quarterstaff", WeaponBranch.STAFF, 5.5F, 1.5F, 300, false, false);
 
 	/** 全部基础武器，顺序即创造模式标签页里的顺序。 */
 	public static final List<BaseWeapon> BASE_WEAPONS = List.of(
@@ -65,24 +89,49 @@ public final class ModItems {
 	public static void initialize() {
 	}
 
-	private static Item sword(String name, WeaponBranch branch, float attackDamage, float attackSpeed, int durability, boolean drawAnimation) {
+	private static Item sword(String name, WeaponBranch branch, float attackDamage, float attackSpeed, int durability, boolean drawAnimation, boolean blocks) {
 		ResourceKey<Item> key = key(name);
 		Item.Properties properties = new Item.Properties()
 				.sword(ToolMaterial.IRON,
 						attackDamage - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
 						attackSpeed - (float) Attributes.DEFAULT_ATTACK_SPEED)
-				.durability(durability);
+				.durability(durability)
+				.component(DataComponents.UNBREAKABLE, Unit.INSTANCE);
 
-		return register(key, p -> new SephiriaWeaponItem(branch, drawAnimation, p), properties);
+		if (blocks) {
+			// 剑盾的格挡参数：90° 格挡角、满减伤、按格挡次数掉耐久。
+			// 这里直接构造而不是抄原版盾牌的组件——物品注册发生在组件绑定之前，
+			// 初始化期读 Items.SHIELD 的组件会抛 "Components not bound yet"。
+			properties = properties.component(DataComponents.BLOCKS_ATTACKS, new BlocksAttacks(
+					0.0F,
+					1.0F,
+					List.of(new BlocksAttacks.DamageReduction(90.0F, Optional.empty(), 1.0F, 1.0F)),
+					BlocksAttacks.ItemDamageFunction.DEFAULT,
+					Optional.empty(),
+					Optional.empty(),
+					Optional.empty()));
+		}
+
+		return register(key, p -> new SephiriaWeaponItem(branch, drawAnimation, blocks, p), properties);
 	}
 
 	private static Item crossbow(String name, WeaponBranch branch, int durability) {
 		ResourceKey<Item> key = key(name);
 		// 与原版弩一致：不可堆叠、465 耐久、带一个空的装填组件、附魔能力 1。
+		// 攻速 3 = 每秒 3 发（射击间隔在物品冷却里按 20/3 取整实现）。
 		Item.Properties properties = new Item.Properties()
 				.stacksTo(1)
 				.durability(durability)
+				.component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
 				.component(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.EMPTY)
+				.component(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
+						.add(Attributes.ATTACK_SPEED,
+								new AttributeModifier(
+										Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "crossbow_attack_speed"),
+										CROSSBOW_ATTACK_SPEED - Attributes.DEFAULT_ATTACK_SPEED,
+										AttributeModifier.Operation.ADD_VALUE),
+								EquipmentSlotGroup.MAINHAND)
+						.build())
 				.enchantable(1);
 
 		return register(key, p -> new SephiriaCrossbowItem(branch, p), properties);

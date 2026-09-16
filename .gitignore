@@ -40,3 +40,15 @@ blockbench/
 
 # vanilla reference assets (Mojang's, not redistributable)
 reference/
+
+# 本地临时目录（Blockbench 导出中转、隔离出来的冗余资源、编译输出日志）
+tmp_fix/
+
+# 本地快照备份（tools/snapshot.ps1 生成）
+snapshots/
+# AI 工具链的工作区文件（技能文档、锁文件、临时排查脚本），不属于模组本体
+.agents/
+.claude/
+agent/
+skills-lock.json
+tmp_re/
