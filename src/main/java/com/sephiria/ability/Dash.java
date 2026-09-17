@@ -39,7 +39,7 @@ public final class Dash {
 	}
 
 	/**
-	 * 启动一次突进，初速度由距离/耗时/衰减率反推。
+	 * 启动一次突进，初速度由距离/耗时/衰减率反推。垂直方向交给重力，突进只管水平面。
 	 *
 	 * @param entity        被突进的实体
 	 * @param direction     方向（只取水平分量，垂直方向交给重力）
@@ -51,7 +51,23 @@ public final class Dash {
 		startWithSpeed(entity, direction, initialSpeed(distance, durationTicks, decay), durationTicks, decay);
 	}
 
-	/** 启动一次突进，初速度直接给定。 */
+	/**
+	 * 启动一次<b>含垂直分量</b>的突进：整条方向向量都参与，位移沿着给定方向走
+	 * （比如照准星朝向突进，抬头就会往上冲、低头往下冲）。代价是突进期间垂直速度被接管，
+	 * 重力要等突进结束才会重新把实体往下拉。
+	 */
+	public static void startVertical(Entity entity, Vec3 direction, double distance, int durationTicks, double decay) {
+		Vec3 full = direction.normalize();
+
+		if (full.lengthSqr() < 1.0E-8D || distance <= 0.0D || durationTicks <= 0) {
+			return;
+		}
+
+		ACTIVE.put(entity.getUUID(),
+				new Active(entity, full, initialSpeed(distance, durationTicks, decay), decay, durationTicks, true));
+	}
+
+	/** 启动一次突进，初速度直接给定（水平）。 */
 	public static void startWithSpeed(Entity entity, Vec3 direction, double speed, int durationTicks, double decay) {
 		Vec3 horizontal = new Vec3(direction.x, 0.0D, direction.z);
 
@@ -59,7 +75,8 @@ public final class Dash {
 			return;
 		}
 
-		ACTIVE.put(entity.getUUID(), new Active(entity, horizontal.normalize(), speed, decay, durationTicks));
+		ACTIVE.put(entity.getUUID(),
+				new Active(entity, horizontal.normalize(), speed, decay, durationTicks, false));
 	}
 
 	/** 由位移距离、耗时、衰减率反推初速度。 */
@@ -102,7 +119,9 @@ public final class Dash {
 			}
 
 			Vec3 velocity = entity.getDeltaMovement();
-			entity.setDeltaMovement(dash.direction.x * dash.speed, velocity.y, dash.direction.z * dash.speed);
+			// 含垂直分量的突进连 Y 一起接管，否则保留实体自身的垂直速度（重力照常作用）
+			double vertical = dash.vertical ? dash.direction.y * dash.speed : velocity.y;
+			entity.setDeltaMovement(dash.direction.x * dash.speed, vertical, dash.direction.z * dash.speed);
 			// 玩家的位移是客户端物理执行的，必须把这份速度同步过去才会真的动
 			// ——原版的击退、三叉戟激流用的也是这个标记。
 			entity.hurtMarked = true;
@@ -120,15 +139,17 @@ public final class Dash {
 		final Entity entity;
 		final Vec3 direction;
 		final double decay;
+		final boolean vertical;
 		double speed;
 		int remaining;
 
-		Active(Entity entity, Vec3 direction, double speed, double decay, int remaining) {
+		Active(Entity entity, Vec3 direction, double speed, double decay, int remaining, boolean vertical) {
 			this.entity = entity;
 			this.direction = direction;
 			this.speed = speed;
 			this.decay = decay;
 			this.remaining = remaining;
+			this.vertical = vertical;
 		}
 	}
 }

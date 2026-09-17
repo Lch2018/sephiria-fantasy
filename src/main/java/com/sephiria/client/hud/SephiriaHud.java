@@ -2,8 +2,10 @@ package com.sephiria.client.hud;
 
 import com.sephiria.Sephiria;
 import com.sephiria.ability.DashSkill;
+import com.sephiria.client.InvulnClientData;
 import com.sephiria.client.SkillClientData;
 import com.sephiria.weapon.SephiriaCrossbowItem;
+import com.sephiria.weapon.SephiriaDaggerItem;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.SephiriaWeapon;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
@@ -35,6 +37,10 @@ public final class SephiriaHud implements HudElement {
 	private static final int PANEL_COLOR = 0x90101010;
 	private static final int NAME_COLOR = 0xFFFFFFFF;
 	private static final int PROPERTY_COLOR = 0xFFB8B8B8;
+	/** 无敌条的整宽与高度（像素），以及颜色。 */
+	private static final int BAR_WIDTH = 60;
+	private static final int BAR_HEIGHT = 3;
+	private static final int BAR_COLOR = 0xFFFFFFFF;
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, DeltaTracker delta) {
@@ -47,6 +53,33 @@ public final class SephiriaHud implements HudElement {
 		// 开界面时不需要额外判断：HUD 层在那种情况下本来就不会被绘制
 		renderWeapon(extractor, client);
 		renderDash(extractor, client);
+		renderInvuln(extractor, client);
+	}
+
+	/**
+	 * 无敌条：触发无敌时出现，随无敌时间消耗<b>从两端向中间缩短</b>，归零即消失。
+	 *
+	 * <p>没有外框，就是一条纯色填充；缩短靠"在自身宽度里居中"实现——只要让填充始终以
+	 * 元素中心为中心，两端就会同时收缩。
+	 */
+	private void renderInvuln(GuiGraphicsExtractor extractor, Minecraft client) {
+		float fraction = InvulnClientData.fraction(client.player);
+
+		if (fraction <= 0.0F) {
+			return;
+		}
+
+		int width = Math.max(1, Math.round(BAR_WIDTH * fraction));
+		int left = (BAR_WIDTH - width) / 2;
+		HudConfig.Element config = HudConfig.element(HudConfig.INVULN);
+		Matrix3x2fStack pose = extractor.pose();
+		pose.pushMatrix();
+		pose.translate((float) config.x, (float) config.y);
+		pose.scale((float) config.scale, (float) config.scale);
+
+		extractor.fill(left, 0, left + width, BAR_HEIGHT, BAR_COLOR);
+
+		pose.popMatrix();
 	}
 
 	private void renderWeapon(GuiGraphicsExtractor extractor, Minecraft client) {
@@ -112,6 +145,12 @@ public final class SephiriaHud implements HudElement {
 			return Component.translatable("ui.sephiria.magazine",
 					format(SkillClientData.current(SephiriaCrossbowItem.STORAGE)),
 					format(SkillClientData.max(SephiriaCrossbowItem.STORAGE)));
+		}
+
+		if (stack.getItem() instanceof SephiriaDaggerItem) {
+			return Component.translatable("ui.sephiria.focus",
+					format(SkillClientData.current(SephiriaDaggerItem.FOCUS)),
+					format(SkillClientData.max(SephiriaDaggerItem.FOCUS)));
 		}
 
 		if (stack.getItem() instanceof SephiriaKatanaItem) {

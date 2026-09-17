@@ -4,6 +4,7 @@ import com.sephiria.Sephiria;
 import com.sephiria.weapon.BaseWeapon;
 import com.sephiria.weapon.SephiriaBoltItem;
 import com.sephiria.weapon.SephiriaCrossbowItem;
+import com.sephiria.weapon.SephiriaDaggerItem;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.SephiriaWeaponItem;
 import com.sephiria.weapon.WeaponBranch;
@@ -53,7 +54,15 @@ public final class ModItems {
 
 	public static final Item DEFAULT_SWORD_AND_SHIELD = sword("default_sword_and_shield", WeaponBranch.SWORD_AND_SHIELD, 6.0F, 1.6F, 250, false, true);
 	public static final Item STEEL_GREATSWORD = sword("steel_greatsword", WeaponBranch.GREATSWORD, 9.0F, 1.0F, 600, false, false);
-	public static final Item DAGGER = sword("dagger", WeaponBranch.DAGGER, 4.0F, 2.6F, 160, false, false);
+	/** 匕首：右键是招架/狂怒两段技能（见 {@link SephiriaDaggerItem}）。 */
+	public static final Item DAGGER = register(key("dagger"),
+			p -> new SephiriaDaggerItem(WeaponBranch.DAGGER, p),
+			new Item.Properties()
+					.sword(ToolMaterial.IRON,
+							4.0F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
+							3.0F - (float) Attributes.DEFAULT_ATTACK_SPEED)
+					.durability(160)
+					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
 	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, SephiriaCrossbowItem.MAGAZINE_SIZE);
 	/** 重型弩的专用弹药：弩矢。弩不消耗、也不需要背包里有原版箭矢。 */
 	public static final Item CROSSBOW_BOLT = Registry.register(

@@ -4,7 +4,8 @@
 	"package": "com.sephiria.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"OffHandHideMixin"
+		"OffHandHideMixin",
+		"InvulnerableGlowMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

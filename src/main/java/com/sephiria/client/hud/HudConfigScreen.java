@@ -24,7 +24,7 @@ public class HudConfigScreen extends Screen {
 		int y = this.height / 4;
 		int step = 24;
 
-		for (String key : new String[]{HudConfig.WEAPON, HudConfig.DASH}) {
+		for (String key : new String[]{HudConfig.WEAPON, HudConfig.DASH, HudConfig.INVULN}) {
 			HudConfig.Element element = HudConfig.element(key);
 
 			addRenderableWidget(slider(element, true, 0.0D, this.width - 20.0D, y, key));

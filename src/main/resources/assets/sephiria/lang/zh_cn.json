@@ -27,5 +27,7 @@
     "screen.sephiria.hud.dash":  "冲刺 UI",
     "screen.sephiria.hud.x":  "%s　X：%s",
     "screen.sephiria.hud.y":  "%s　Y：%s",
-    "screen.sephiria.hud.scale":  "%s　缩放：%s"
+    "screen.sephiria.hud.scale":  "%s　缩放：%s",
+    "screen.sephiria.hud.invuln":  "无敌条",
+    "ui.sephiria.focus":  "专注：%s/%s"
 }

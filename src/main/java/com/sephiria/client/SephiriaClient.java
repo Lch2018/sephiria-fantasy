@@ -3,6 +3,7 @@ package com.sephiria.client;
 import com.sephiria.client.hud.HudConfigScreen;
 import com.sephiria.client.hud.SephiriaHud;
 import com.sephiria.network.DashPayload;
+import com.sephiria.network.InvulnerablePayload;
 import com.sephiria.network.ReloadPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.weapon.SephiriaCrossbowItem;
@@ -63,10 +64,14 @@ public class SephiriaClient implements ClientModInitializer {
 		// 服务端推来的存储量，HUD 读它
 		ClientPlayNetworking.registerGlobalReceiver(SkillSyncPayload.TYPE,
 				(payload, context) -> SkillClientData.accept(payload));
+		ClientPlayNetworking.registerGlobalReceiver(InvulnerablePayload.TYPE,
+				(payload, context) -> InvulnClientData.accept(payload));
 
 		HudElementRegistry.addLast(SephiriaHud.ID, new SephiriaHud());
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			InvulnClientData.tick();
+
 			// consumeClick 会把这期间累积的按键次数一次取出，避免连点丢事件
 			while (DASH_KEY.consumeClick()) {
 				if (client.player != null) {

@@ -27,5 +27,7 @@
     "screen.sephiria.hud.dash":  "Dash UI",
     "screen.sephiria.hud.x":  "%s  X: %s",
     "screen.sephiria.hud.y":  "%s  Y: %s",
-    "screen.sephiria.hud.scale":  "%s  Scale: %s"
+    "screen.sephiria.hud.scale":  "%s  Scale: %s",
+    "screen.sephiria.hud.invuln":  "Invulnerability Bar",
+    "ui.sephiria.focus":  "Focus: %s/%s"
 }

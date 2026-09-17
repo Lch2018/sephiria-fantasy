@@ -27,6 +27,8 @@ public final class HudConfig {
 	public static final String WEAPON = "weapon";
 	/** 冲刺 UI（左下角）。 */
 	public static final String DASH = "dash";
+	/** 无敌条（准星下方居中）。 */
+	public static final String INVULN = "invuln";
 
 	/** 一个界面元素的位置与缩放。 */
 	public static final class Element {
@@ -35,19 +37,30 @@ public final class HudConfig {
 		public double scale = 1.0D;
 		public boolean placed;
 
-		/** 没落过位就按角落放好。 */
+		/** 没落过位就按角落放好；center 表示"屏幕水平居中、准星下方一点"。 */
 		void placeFrom(String corner, int guiWidth, int guiHeight) {
 			if (this.placed) {
 				return;
 			}
-			this.x = "bottom_right".equals(corner) ? guiWidth - 150.0D : 8.0D;
-			this.y = guiHeight - 40.0D;
+
+			if ("center".equals(corner)) {
+				this.x = guiWidth / 2.0D - 30.0D;
+				this.y = guiHeight / 2.0D + 18.0D;
+			}
+			else {
+				this.x = "bottom_right".equals(corner) ? guiWidth - 150.0D : 8.0D;
+				this.y = guiHeight - 40.0D;
+			}
+
 			this.placed = true;
 		}
 	}
 
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-	private static final Map<String, String> CORNERS = Map.of(WEAPON, "bottom_right", DASH, "bottom_left");
+	private static final Map<String, String> CORNERS = Map.of(
+			WEAPON, "bottom_right",
+			DASH, "bottom_left",
+			INVULN, "center");
 	private static final Map<String, Element> ELEMENTS = new LinkedHashMap<>();
 
 	private static boolean loaded;
