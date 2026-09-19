@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,9 +41,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *       {@value #DASH_TICKS} tick（0.2 秒），期间无敌；位移结束后以<b>自身为中心</b>
  *       结算一次范围伤害（半径同横扫之刃 II，即原版横扫的两倍），伤害 {@value #PARRY_DAMAGE}。
  *       冷却 {@value #PARRY_COOLDOWN} tick（0.8 秒）。<br>
- *       无敌窗口内挨到攻击判定为<b>招架成功</b>，获得一层专注——判定写在 {@link #register()}
- *       的伤害拦截里，所以它必须注册在 {@link Invulnerability} 之前（Fabric 的事件按注册顺序
- *       派发，后者会把伤害直接吃掉、不再往后传）。</li>
+ *       无敌窗口内挨到攻击判定为<b>招架成功</b>：获得一层专注并<b>刷新技能冷却</b>，可以立刻接狂怒——判定与减伤都写在 {@link #register()}
+ *       的伤害拦截里（自包含，不依赖其它无敌实现的注册顺序），奖励延后一刻发放。</li>
  *   <li><b>狂怒</b>（有专注时）：消耗一层专注，朝准星方向突进 {@value #FURY_DISTANCE} 格、
  *       同样耗时 {@value #DASH_TICKS} tick 且无敌；位移结束后对<b>突进路径上</b>的敌人
  *       造成 {@value #FURY_DAMAGE} 范围伤害。冷却 {@value #FURY_COOLDOWN} tick（0.2 秒）。</li>
@@ -58,20 +58,21 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	/** 专注上限：默认 1 层。 */
 	public static final double FOCUS_MAX = 1.0D;
 
-	/** 两段位移的距离与无敌时长。 */
+	/** 两段位移的距离；无敌时长 {@value #INVULNERABLE_TICKS} 刻比位移多 2 刻，落地后仍有一点容错。 */
 	private static final double PARRY_DISTANCE = 1.5D;
-	private static final double FURY_DISTANCE = 5.0D;
+	private static final double FURY_DISTANCE = 8.0D;
 	private static final int DASH_TICKS = 4;
-	private static final int INVULNERABLE_TICKS = 4;
+	private static final int INVULNERABLE_TICKS = 6;
 
-	/** 招架的范围（横扫之刃 II = 原版横扫的两倍）与伤害。 */
-	private static final double PARRY_RANGE = 2.0D;
-	private static final double PARRY_HEIGHT = 0.5D;
-	private static final double PARRY_MAX_DISTANCE = 6.0D;
+	/** 招架范围的放大倍数：1.0 = 横扫之刃 II，当前取 1.8。 */
+	private static final double PARRY_RANGE_SCALE = 1.8D;
+	/** 招架的范围与伤害：横扫之刃 II 的基础（原版横扫的 2 倍）再放大 {@value #PARRY_RANGE_SCALE} 倍。 */
+	private static final double PARRY_RANGE = 2.0D * PARRY_RANGE_SCALE;
+	private static final double PARRY_HEIGHT = 0.5D * PARRY_RANGE_SCALE;
 	private static final float PARRY_DAMAGE = 8.0F;
 
-	/** 狂怒：路径两侧的判定半径与伤害。 */
-	private static final double FURY_PATH_RADIUS = 1.5D;
+	/** 狂怒：路径两侧的判定半径（原判定半径的 2 倍）与伤害。 */
+	private static final double FURY_PATH_RADIUS = 3.0D;
 	private static final float FURY_DAMAGE = 14.0F;
 
 	/** 冷却（tick）：0.8 秒 / 0.2 秒。 */
@@ -80,6 +81,8 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 
 	/** 招架窗口的到期刻：窗口内挨打就算招架成功。 */
 	private static final Map<UUID, Long> PARRY_UNTIL = new ConcurrentHashMap<>();
+	/** 刚判定招架成功、等待下一刻发奖励的玩家。 */
+	private static final Set<UUID> PENDING_FOCUS = ConcurrentHashMap.newKeySet();
 	/** 待结算的范围伤害。 */
 	private static final List<Pending> PENDING = new ArrayList<>();
 
@@ -95,20 +98,23 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		return this.branch;
 	}
 
-	/** 注册专注存储、结算推进器与招架判定（必须早于 {@link Invulnerability#register()}）。 */
+	/** 注册专注存储、结算推进器与招架判定（招架窗口内的伤害由本处理器直接取消，与注册顺序无关）。 */
 	public static void register() {
 		SkillStorage.registerManual(FOCUS, FOCUS_MAX);
 		ServerTickEvents.END_SERVER_TICK.register(SephiriaDaggerItem::tick);
 
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
 			if (entity instanceof ServerPlayer player && isParrying(player)) {
-				// 招架成功：给一层专注，并结束这次招架窗口（一次招架只算一次）
+				// 招架成功：结束这次窗口（一次招架只算一次），并直接取消这次伤害——
+				// 不再指望后面注册的 Invulnerability 处理器代劳，招架窗口自己就能挡住。
+				// 奖励也挪到下一刻发（见 tick）：在伤害事件里改技能存储、发包容易把
+				// 后续处理器搅乱，之前「招架成功却仍然掉血」就是这么来的。
 				PARRY_UNTIL.remove(player.getUUID());
-				SkillStorage.regenerate(player, FOCUS, FOCUS_MAX);
-				player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-						SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0F, 1.4F);
+				PENDING_FOCUS.add(player.getUUID());
+				return false;
 			}
-			return true;   // 伤害拦不拦由 Invulnerability 决定
+
+			return true;
 		});
 	}
 
@@ -145,7 +151,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		Dash.startVertical(player, direction, PARRY_DISTANCE, DASH_TICKS, Dash.DEFAULT_DECAY);
 		player.getCooldowns().addCooldown(stack, PARRY_COOLDOWN);
 
-		PENDING.add(Pending.aura(player, DASH_TICKS, PARRY_DAMAGE, PARRY_RANGE, PARRY_HEIGHT, PARRY_MAX_DISTANCE));
+		PENDING.add(Pending.aura(player, DASH_TICKS, PARRY_DAMAGE, PARRY_RANGE, PARRY_HEIGHT));
 	}
 
 	/** 狂怒：长突进 + 无敌，落地后结算突进路径上的范围伤害，并消耗一层专注。 */
@@ -164,19 +170,62 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		return player.getLookAngle();
 	}
 
+	/**
+	 * 招架成功的奖励：一层专注、一声格挡音，外加<b>刷新技能冷却</b>——
+	 * 冷却清掉之后可以立刻接狂怒，形成招架→狂怒的连段。
+	 */
+	private static void rewardParry(ServerPlayer player) {
+		SkillStorage.regenerate(player, FOCUS, FOCUS_MAX);
+		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+				SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0F, 1.4F);
+
+		ItemStack dagger = heldDagger(player);
+
+		if (dagger != null) {
+			// 冷却是按冷却组记账的，要从物品解析出组 id 再清
+			player.getCooldowns().removeCooldown(player.getCooldowns().getCooldownGroup(dagger));
+		}
+	}
+
+	/** 玩家手上（主手或副手）的匕首，没有就返回 null。 */
+	private static ItemStack heldDagger(ServerPlayer player) {
+		for (InteractionHand hand : InteractionHand.values()) {
+			ItemStack stack = player.getItemInHand(hand);
+
+			if (stack.getItem() instanceof SephiriaDaggerItem) {
+				return stack;
+			}
+		}
+
+		return null;
+	}
+
 	private static boolean isParrying(ServerPlayer player) {
 		Long until = PARRY_UNTIL.get(player.getUUID());
 		return until != null && player.level().getGameTime() < until;
 	}
 
 	private static void tick(MinecraftServer server) {
-		PARRY_UNTIL.entrySet().removeIf(entry -> entry.getValue() <= 0);
+		long now = server.overworld().getGameTime();
+		// 到期刻是绝对游戏刻，要和当前刻比较（之前误写成 <= 0，等于从不清理）
+		PARRY_UNTIL.entrySet().removeIf(entry -> entry.getValue() <= now);
+
+		if (!PENDING_FOCUS.isEmpty()) {
+			for (UUID id : PENDING_FOCUS) {
+				ServerPlayer player = server.getPlayerList().getPlayer(id);
+
+				if (player != null) {
+					rewardParry(player);
+				}
+			}
+
+			PENDING_FOCUS.clear();
+		}
 
 		if (PENDING.isEmpty()) {
 			return;
 		}
 
-		long now = server.overworld().getGameTime();
 		Iterator<Pending> iterator = PENDING.iterator();
 
 		while (iterator.hasNext()) {
@@ -191,36 +240,44 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		}
 	}
 
-	/** 一次待结算的范围伤害；位置在施放时定格，所以位移结束后仍然准确。 */
+	/**
+	 * 一次待结算的范围伤害。
+	 *
+	 * <p>两种区域：{@code followsPlayer} 为真表示以自身为中心，位置在<b>结算那一刻</b>取
+	 * （也就是位移结束后的落点）；否则用释放时定格的 {@code area}——狂怒要打的是整条突进路径，
+	 * 那必须在起跳时就把路径框出来。
+	 */
 	private static final class Pending {
 		private final ServerPlayer player;
-		private final Vec3 origin;
-		private final Vec3 direction;
 		private final long dueTick;
 		private final float damage;
 		private final AABB area;
+		private final boolean followsPlayer;
+		private final double range;
+		private final double height;
 
-		private Pending(ServerPlayer player, Vec3 origin, Vec3 direction, long dueTick, float damage, AABB area) {
+		private Pending(ServerPlayer player, long dueTick, float damage, AABB area,
+				boolean followsPlayer, double range, double height) {
 			this.player = player;
-			this.origin = origin;
-			this.direction = direction;
 			this.dueTick = dueTick;
 			this.damage = damage;
 			this.area = area;
+			this.followsPlayer = followsPlayer;
+			this.range = range;
+			this.height = height;
 		}
 
-		/** 以自身为中心的一块区域。 */
-		static Pending aura(ServerPlayer player, int delay, float damage, double range, double height, double maxDistance) {
-			AABB area = player.getBoundingBox().inflate(range, height, range);
-			return new Pending(player, player.position(), Vec3.ZERO, player.level().getGameTime() + delay, damage, area);
+		/** 以自身为中心的一块区域（结算时跟随自身位置）。 */
+		static Pending aura(ServerPlayer player, int delay, float damage, double range, double height) {
+			return new Pending(player, player.level().getGameTime() + delay, damage, null, true, range, height);
 		}
 
-		/** 沿突进路径的一条带状区域。 */
+		/** 沿突进路径的一条带状区域（释放时定格）。 */
 		static Pending path(ServerPlayer player, Vec3 direction, double distance, int delay, float damage, double radius) {
 			Vec3 start = player.position();
 			Vec3 end = start.add(direction.scale(distance));
 			AABB area = new AABB(start, end).inflate(radius, 1.5D, radius);
-			return new Pending(player, start, direction, player.level().getGameTime() + delay, damage, area);
+			return new Pending(player, player.level().getGameTime() + delay, damage, area, false, 0.0D, 0.0D);
 		}
 
 		void resolve() {
@@ -228,7 +285,10 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 				return;
 			}
 
-			List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, area);
+			AABB box = this.followsPlayer
+					? player.getBoundingBox().inflate(this.range, this.height, this.range)
+					: this.area;
+			List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, box);
 			boolean hitAnyone = false;
 
 			for (LivingEntity victim : victims) {

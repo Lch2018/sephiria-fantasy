@@ -5,6 +5,7 @@ import com.sephiria.weapon.BaseWeapon;
 import com.sephiria.weapon.SephiriaBoltItem;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaDaggerItem;
+import com.sephiria.weapon.SephiriaGreatswordItem;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.SephiriaWeaponItem;
 import com.sephiria.weapon.WeaponBranch;
@@ -53,7 +54,15 @@ public final class ModItems {
 	private static final double CROSSBOW_ATTACK_SPEED = 3.0D;
 
 	public static final Item DEFAULT_SWORD_AND_SHIELD = sword("default_sword_and_shield", WeaponBranch.SWORD_AND_SHIELD, 6.0F, 1.6F, 250, false, true);
-	public static final Item STEEL_GREATSWORD = sword("steel_greatsword", WeaponBranch.GREATSWORD, 9.0F, 1.0F, 600, false, false);
+	/** 钢铁巨剑：左键横扫 + 右键蓄力「旋风」（见 {@link SephiriaGreatswordItem}）。 */
+	public static final Item STEEL_GREATSWORD = register(key("steel_greatsword"),
+			p -> new SephiriaGreatswordItem(WeaponBranch.GREATSWORD, p),
+			new Item.Properties()
+					.sword(ToolMaterial.IRON,
+							9.0F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
+							SephiriaGreatswordItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
+					.durability(600)
+					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
 	/** 匕首：右键是招架/狂怒两段技能（见 {@link SephiriaDaggerItem}）。 */
 	public static final Item DAGGER = register(key("dagger"),
 			p -> new SephiriaDaggerItem(WeaponBranch.DAGGER, p),

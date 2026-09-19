@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,6 +30,9 @@ public final class HudConfig {
 	public static final String DASH = "dash";
 	/** 无敌条（准星下方居中）。 */
 	public static final String INVULN = "invuln";
+
+	/** 全部可调的 HUD 模块，顺序即设置界面里的顺序；新增模块在这里登记。 */
+	public static final List<String> MODULES = List.of(WEAPON, DASH, INVULN);
 
 	/** 一个界面元素的位置与缩放。 */
 	public static final class Element {

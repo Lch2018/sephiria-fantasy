@@ -68,13 +68,13 @@ import java.util.function.Consumer;
  * {@link #registerEvents()} 里的攻击回调自己实现，参数按状态取。
  *
  * <p>切换状态会播放 {@code switch_to_sheathed} / {@code switch_to_unsheathed}，
- * 切换开始后的 {@value #BLOCK_TICKS} tick（0.2 秒）内玩家处于格挡状态，免疫一切伤害。
+ * 切换开始后的 {@value #BLOCK_TICKS} tick（0.3 秒）内玩家处于格挡状态，免疫一切伤害。
  */
 public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon {
 	/** 切换动画的时长（tick）：0.65 秒，期间不能再次切换。 */
 	public static final int SWITCH_TICKS = 13;
-	/** 切换开始后的格挡窗口（tick）：0.2 秒免疫一切伤害。 */
-	public static final int BLOCK_TICKS = 4;
+	/** 切换开始后的格挡窗口（tick）：0.3 秒免疫一切伤害。 */
+	public static final int BLOCK_TICKS = 6;
 
 	/** 玩家空手的基础攻击力 / 攻速（原版 {@code Player#createAttributes}）。 */
 	private static final float PLAYER_BASE_ATTACK_DAMAGE = 1.0F;
@@ -188,7 +188,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 
 	/** 注册伤害拦截与攻击回调（由 {@link Sephiria#onInitialize()} 调用）。 */
 	public static void registerEvents() {
-		// 切换状态的 0.2 秒无敌由 Invulnerability 统一处理，见 Sephiria#onInitialize。
+		// 切换状态的 0.3 秒无敌由 Invulnerability 统一处理，见 Sephiria#onInitialize。
 		// 两个状态都打横扫，参数按状态取；主目标仍然吃正常伤害，所以返回 PASS。
 		AttackEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
 			ItemStack stack = player.getItemInHand(hand);

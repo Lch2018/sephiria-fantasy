@@ -29,5 +29,7 @@
     "screen.sephiria.hud.y":  "%s　Y：%s",
     "screen.sephiria.hud.scale":  "%s　缩放：%s",
     "screen.sephiria.hud.invuln":  "无敌条",
-    "ui.sephiria.focus":  "专注：%s/%s"
+    "ui.sephiria.focus":  "专注：%s/%s",
+    "screen.sephiria.hud.current":  "当前模块：%s　（点击切换）",
+    "ui.sephiria.whirlwind":  "旋风："
 }

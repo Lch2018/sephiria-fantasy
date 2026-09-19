@@ -12,6 +12,7 @@ import com.sephiria.registry.ModCreativeTabs;
 import com.sephiria.registry.ModItems;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaDaggerItem;
+import com.sephiria.weapon.SephiriaGreatswordItem;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.WeaponBranch;
 import net.fabricmc.api.ModInitializer;
@@ -33,8 +34,9 @@ public class Sephiria implements ModInitializer {
 		SephiriaKatanaItem.registerEvents();
 
 		// 固有技能系统：无敌窗口 + 通用突进 + 技能存储，冲刺/装填由客户端按键包触发。
-		// 匕首的招架判定要在 Invulnerability 之前注册：后者会把伤害直接吃掉，事件按注册顺序派发
+		// 匕首：招架/狂怒两段技能（招架窗口自行挡伤害，奖励延后一刻发放）
 		SephiriaDaggerItem.register();
+		SephiriaGreatswordItem.register();
 		Invulnerability.register();
 		Dash.register();
 		DashSkill.register();

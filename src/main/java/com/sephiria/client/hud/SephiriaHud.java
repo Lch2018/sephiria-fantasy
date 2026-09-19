@@ -6,6 +6,7 @@ import com.sephiria.client.InvulnClientData;
 import com.sephiria.client.SkillClientData;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaDaggerItem;
+import com.sephiria.weapon.SephiriaGreatswordItem;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.SephiriaWeapon;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
@@ -41,6 +42,10 @@ public final class SephiriaHud implements HudElement {
 	private static final int BAR_WIDTH = 60;
 	private static final int BAR_HEIGHT = 3;
 	private static final int BAR_COLOR = 0xFFFFFFFF;
+	/** 武器面板里的蓄力条宽度（像素）。 */
+	private static final int CHARGE_BAR_WIDTH = 60;
+	private static final int CHARGE_BAR_HEIGHT = 4;
+	private static final int BAR_BACK_COLOR = 0x60000000;
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, DeltaTracker delta) {
@@ -92,10 +97,17 @@ public final class SephiriaHud implements HudElement {
 		Font font = client.font;
 		Component name = stack.getHoverName();
 		Component property = propertyLine(stack);
+		float bar = propertyBar(client, stack);
 
 		int textWidth = font.width(name);
 		if (property != null) {
-			textWidth = Math.max(textWidth, font.width(property));
+			int propertyWidth = font.width(property);
+
+			if (!Float.isNaN(bar)) {
+				propertyWidth += CHARGE_BAR_WIDTH + 2;
+			}
+
+			textWidth = Math.max(textWidth, propertyWidth);
 		}
 
 		int width = textWidth + PAD * 3 + ICON;
@@ -114,6 +126,19 @@ public final class SephiriaHud implements HudElement {
 
 		if (property != null) {
 			extractor.text(font, property, PAD, PAD + LINE, PROPERTY_COLOR, true);
+		}
+
+		if (!Float.isNaN(bar)) {
+			// 进度条型属性：标签后面跟一条随蓄力增长的条
+			int barLeft = PAD + font.width(property) + 2;
+			int barTop = PAD + LINE + (LINE - CHARGE_BAR_HEIGHT) / 2;
+			int filled = Math.round(CHARGE_BAR_WIDTH * Math.max(0.0F, Math.min(1.0F, bar)));
+
+			extractor.fill(barLeft, barTop, barLeft + CHARGE_BAR_WIDTH, barTop + CHARGE_BAR_HEIGHT, BAR_BACK_COLOR);
+
+			if (filled > 0) {
+				extractor.fill(barLeft, barTop, barLeft + filled, barTop + CHARGE_BAR_HEIGHT, BAR_COLOR);
+			}
 		}
 
 		pose.popMatrix();
@@ -139,12 +164,37 @@ public final class SephiriaHud implements HudElement {
 		pose.popMatrix();
 	}
 
+	/**
+	 * 进度条型特有属性的当前占比（0~1）；该武器没有进度条时返回 NaN。
+	 *
+	 * <p>蓄力进度不需要任何同步包：客户端自己就知道有没有在使用、还剩多少使用刻。
+	 */
+	private static float propertyBar(Minecraft client, ItemStack stack) {
+		if (!(stack.getItem() instanceof SephiriaGreatswordItem) || client.player == null) {
+			return Float.NaN;
+		}
+
+		ItemStack using = client.player.getUseItem();
+
+		if (!client.player.isUsingItem() || using.getItem() != stack.getItem()) {
+			return 0.0F;
+		}
+
+		int charge = SephiriaGreatswordItem.chargeTicks(using, client.player,
+				client.player.getUseItemRemainingTicks());
+		return Math.min(1.0F, charge / (float) SephiriaGreatswordItem.CHARGE_TICKS);
+	}
+
 	/** 武器的特有属性行；没有特有属性的武器返回 null（先留空）。 */
 	private static Component propertyLine(ItemStack stack) {
 		if (stack.getItem() instanceof SephiriaCrossbowItem) {
 			return Component.translatable("ui.sephiria.magazine",
 					format(SkillClientData.current(SephiriaCrossbowItem.STORAGE)),
 					format(SkillClientData.max(SephiriaCrossbowItem.STORAGE)));
+		}
+
+		if (stack.getItem() instanceof SephiriaGreatswordItem) {
+			return Component.translatable("ui.sephiria.whirlwind");
 		}
 
 		if (stack.getItem() instanceof SephiriaDaggerItem) {

@@ -9,7 +9,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 冲刺：固有技能，默认绑在鼠标侧键上（键位可以在设置菜单里改）。
  *
- * <p>按下后消耗一次技能存储，立刻获得 {@value #INVULNERABLE_TICKS} tick（0.1 秒）无敌，
+ * <p>按下后消耗一次技能存储，立刻获得 {@value #INVULNERABLE_TICKS} tick（0.3 秒）无敌，
  * 并沿准星朝向的<b>水平投影</b>方向突进 {@value #DISTANCE} 格、耗时
  * {@value #DURATION_TICKS} tick（0.3 秒）。方向只有准星方向，不能后退或横移。
  *
@@ -33,14 +33,14 @@ public final class DashSkill {
 	public static final int REGEN_INTERVAL_TICKS = 30;
 
 	/**
-	 * 无敌时长（tick）：0.2 秒。
+	 * 无敌时长（tick）：0.3 秒。
 	 *
 	 * <p>无敌在 {@link #perform} 里<b>按下生效的瞬间</b>授予：即服务端收到按键包、
 	 * 且存储扣费成功之后，紧接着位移开始之前（同一 tick）。窗口按游戏刻计，
-	 * 授予时写的是"到期刻 = 当前刻 + 4"，所以覆盖当前刻起共 4 刻——
-	 * 而位移本身是 {@value #DURATION_TICKS} 刻，也就是说这 0.2 秒护住冲刺的前 2/3。
+	 * 授予时写的是"到期刻 = 当前刻 + {@value #INVULNERABLE_TICKS}"，所以覆盖当前刻起共该刻数——
+	 * 它比位移本身（{@value #DURATION_TICKS} 刻）还长一点，足够把整段冲刺包住。
 	 */
-	public static final int INVULNERABLE_TICKS = 4;
+	public static final int INVULNERABLE_TICKS = 6;
 	/** 位移距离（格）。 */
 	public static final double DISTANCE = 3.0D;
 	/** 位移耗时（tick）：0.3 秒。 */
