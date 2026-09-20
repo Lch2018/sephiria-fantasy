@@ -27,6 +27,7 @@ import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.component.BlocksAttacks;
 import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.component.UseEffects;
 
 import java.util.List;
 import java.util.Optional;
@@ -62,6 +63,10 @@ public final class ModItems {
 							3.0F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
 							3.2F - (float) Attributes.DEFAULT_ATTACK_SPEED)
 					.durability(250)
+					// 原版使用物品期间会把人拖到 20% 移速（UseEffects.DEFAULT 的 speed_multiplier=0.2）。
+					// 防御是持续按住的姿态，被拖慢会让"举盾走位"完全没法玩，所以这里显式改成不减速、
+					// 也允许疾跑——这是原版给的开关，不用去 mixin 里改移动逻辑。
+					.component(DataComponents.USE_EFFECTS, new UseEffects(true, true, 1.0F))
 					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
 	/** 钢铁巨剑：左键横扫 + 右键蓄力「旋风」（见 {@link SephiriaGreatswordItem}）。 */
 	public static final Item STEEL_GREATSWORD = register(key("steel_greatsword"),

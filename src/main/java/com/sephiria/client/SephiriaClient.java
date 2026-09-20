@@ -7,8 +7,10 @@ import com.sephiria.client.gui.StatsScreen;
 import com.sephiria.network.InvulnerablePayload;
 import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.network.ReloadPayload;
+import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.weapon.SephiriaCrossbowItem;
+import com.sephiria.weapon.SephiriaShieldItem;
 import com.sephiria.weapon.SephiriaWeapon;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
@@ -20,6 +22,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -109,6 +112,25 @@ public class SephiriaClient implements ClientModInitializer {
 		});
 
 		HudElementRegistry.addLast(SephiriaHud.ID, new SephiriaHud());
+
+		// 防御中的左键：原版在使用物品期间会把左键整个吞掉（handleKeybinds 的 isUsingItem 分支
+		// 只 consumeClick、既不 startAttack 也不发包），所以这里抢在它前面把这次点击取走，
+		// 改成给服务端发一个「防御中横扫」的请求。START 刻在这个 tick 的按键处理之前，抢得到。
+		ClientTickEvents.START_CLIENT_TICK.register(client -> {
+			if (client.player == null || !SephiriaShieldItem.isDefending(client.player)) {
+				return;
+			}
+
+			if (client.options.keyAttack.consumeClick()) {
+				// 这一 tick 里累积的连点只发一次：服务端有 1 秒冷却，多发没有意义
+				while (client.options.keyAttack.consumeClick()) {
+					// 丢弃剩余的点击次数
+				}
+
+				client.player.swing(InteractionHand.MAIN_HAND);
+				ClientPlayNetworking.send(ShieldSweepPayload.INSTANCE);
+			}
+		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			InvulnClientData.tick();

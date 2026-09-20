@@ -294,25 +294,39 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 		private final float damage;
 		private final double range;
 		private final double height;
+		/**
+		 * 这一段是不是「第二段回击的触发」。
+		 *
+		 * <p>必须是一个明确的布尔值：早先用 followUpMultiplier 的正负当标记，而范围伤害那段的
+		 * 标记值恰好也满足判定，于是每段范围伤害都会当成第二段触发，触发出来的第二段又排一段
+		 * 范围伤害——自我循环，玩家会一直无冷却地突进斩击。
+		 */
+		private final boolean followUp;
 		private final double followUpMultiplier;
 
-		private Pending(ServerPlayer player, long dueTick, float damage, double range, double height, double followUpMultiplier) {
+		private Pending(ServerPlayer player, long dueTick, float damage, double range, double height,
+				boolean followUp, double followUpMultiplier) {
 			this.player = player;
 			this.dueTick = dueTick;
 			this.damage = damage;
 			this.range = range;
 			this.height = height;
+			this.followUp = followUp;
 			this.followUpMultiplier = followUpMultiplier;
 		}
 
 		/** 以自身为原点的范围伤害（结算时取自身位置，所以打的是落点）。 */
 		static Pending aura(ServerPlayer player, int delay, float damage, double range, double height) {
-			return new Pending(player, player.level().getGameTime() + delay, damage, range, height, 0.0D);
+			return new Pending(player, player.level().getGameTime() + delay, damage, range, height, false, 1.0D);
 		}
 
-		/** 第二段回击：再突进一段并结算更大的范围。 */
+		/**
+		 * 第二段回击：再突进一段并结算更大的范围。
+		 *
+		 * <p>它结算时只排「范围伤害」，绝不再排第二段——否则两段互相触发就是死循环。
+		 */
 		static Pending followUp(ServerPlayer player, double damageMultiplier, int delay) {
-			return new Pending(player, player.level().getGameTime() + delay, 0.0F, 0.0D, 0.0D, damageMultiplier);
+			return new Pending(player, player.level().getGameTime() + delay, 0.0F, 0.0D, 0.0D, true, damageMultiplier);
 		}
 
 		void resolve() {
@@ -320,7 +334,7 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 				return;
 			}
 
-			if (this.followUpMultiplier >= 0.0D) {
+			if (this.followUp) {
 				secondStep(level, this.followUpMultiplier);
 				return;
 			}

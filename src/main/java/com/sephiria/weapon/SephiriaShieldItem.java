@@ -5,6 +5,7 @@ import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -42,6 +43,8 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	private static final int SWEEP_COOLDOWN_TICKS = 20;
 	private static final double SWEEP_RANGE = 3.3D;
 	private static final double SWEEP_HEIGHT = 0.825D;
+	/** 攻击充能下限：与普通攻击同一套判据（原版横扫之刃也是 0.9）。 */
+	private static final float SWEEP_CHARGE_THRESHOLD = 0.9F;
 
 	private final WeaponBranch branch;
 
@@ -55,6 +58,16 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 		return this.branch;
 	}
 
+	@Override
+	public java.util.List<Component> detailLines(ItemStack stack) {
+		return java.util.List.of(
+				Component.translatable("tooltip.sephiria.shield.defend",
+						format(DEFEND_REDUCTION * 100.0F)),
+				Component.translatable("tooltip.sephiria.shield.sweep",
+						format(PlayerStats.DEFAULT_STRENGTH * SWEEP_DAMAGE_RATIO), format(SWEEP_DAMAGE_RATIO * 100.0F),
+						seconds(SWEEP_COOLDOWN_TICKS), format(SWEEP_RANGE), format(SWEEP_HEIGHT)));
+	}
+
 	/** 某玩家此刻是否在用它防御（右键按住期间，原版的使用状态就是判据）。 */
 	public static boolean isDefending(LivingEntity entity) {
 		return entity.isUsingItem() && entity.getUseItem().getItem() instanceof SephiriaShieldItem;
@@ -62,25 +75,45 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 
 	/** 注册"防御中攻击释放横扫"的判定（由 {@link Sephiria#onInitialize()} 调用）。 */
 	public static void register() {
+		// 这一条是兜底：正常玩法下防御中的左键会被客户端吞掉，走不到攻击回调（见 tryDefendSweep）。
+		// 留着是为了覆盖非常规来源的攻击包——冷却会挡住重复触发，不会打出两次。
 		AttackEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
 			ItemStack stack = player.getItemInHand(hand);
 
 			if (!(stack.getItem() instanceof SephiriaShieldItem)
 					|| !(player instanceof ServerPlayer serverPlayer)
-					|| !(level instanceof ServerLevel serverLevel)
 					|| !isDefending(serverPlayer)) {
 				return InteractionResult.PASS;
 			}
 
-			// 冷却中或该次攻击还没充能完，就当普通攻击处理
-			if (serverPlayer.getCooldowns().isOnCooldown(stack)
-					|| serverPlayer.getAttackStrengthScale(0.5F) <= 0.9F) {
-				return InteractionResult.PASS;
-			}
-
-			sweep(serverPlayer, serverLevel, stack);
+			tryDefendSweep(serverPlayer);
 			return InteractionResult.PASS;
 		});
+	}
+
+	/**
+	 * 防御中按左键 → 横扫。由客户端按键包（{@link com.sephiria.network.ShieldSweepPayload}）驱动。
+	 *
+	 * <p>冷却是 1 秒；攻击充能没满或不在防御状态就直接不作数（客户端可能连点，服务端每次都要重新判定）。
+	 */
+	public static void tryDefendSweep(ServerPlayer player) {
+		if (!(player.level() instanceof ServerLevel level) || !isDefending(player)) {
+			return;
+		}
+
+		ItemStack stack = player.getUsedItemHand() == InteractionHand.MAIN_HAND
+				? player.getMainHandItem()
+				: player.getOffhandItem();
+
+		if (!(stack.getItem() instanceof SephiriaShieldItem)
+				|| player.getCooldowns().isOnCooldown(stack)
+				|| player.getAttackStrengthScale(0.5F) <= SWEEP_CHARGE_THRESHOLD) {
+			return;
+		}
+
+		sweep(player, level, stack);
+		// 和普通攻击一样把充能清零：不然充能这一条判定等于没写
+		player.resetAttackStrengthTicker();
 	}
 
 	private static void sweep(ServerPlayer player, ServerLevel level, ItemStack stack) {

@@ -46,8 +46,9 @@
     "tooltip.sephiria.katana.sheathed":  "Sheathed",
     "tooltip.sephiria.katana.drawn":  "Drawn",
     "tooltip.sephiria.katana.switch":  "Right-click: cooldown %s s, invulnerable %s s",
-    "tooltip.sephiria.katana.intent":  "Intent: +%s per landed hit, up to %s (hits only, air swings count for nothing)",
+    "tooltip.sephiria.katana.intent":  "Intent: +%s per landed hit, up to %s (hits only, air swings count for nothing); 0.3 s between gains",
     "tooltip.sephiria.katana.slash":  "Powerful Slash: left click while sheathed at full intent; damage at full %s, cooldown %s s, dash %s, range %s (vertical +/-%s)",
+    "tooltip.sephiria.katana.guard":  "Taking a hit during the switch invulnerability: immune as usual, plus %s intent",
     "ui.sephiria.katana":  "%s  Intent:",
     "tooltip.sephiria.dagger.parry":  "Parry: dash %s, damage %s, range %s, cooldown %s s, invulnerable %s s",
     "tooltip.sephiria.dagger.fury":  "Fury: dash %s, damage %s, path radius %s, cooldown %s s, invulnerable %s s",
@@ -61,6 +62,7 @@
     "tooltip.sephiria.staff.reduction":  "After the invulnerability: half damage taken for %s s",
     "tooltip.sephiria.crossbow.fire":  "Right click: cooldown %s s, magazine %s",
     "tooltip.sephiria.crossbow.reload":  "R reload: %s s to fill",
-    "tooltip.sephiria.shield.block":  "Right-click block: full reduction within 90 degrees",
+    "tooltip.sephiria.shield.defend":  "Defend: holding right click halves all damage taken (final reduction %s%%), movement is unaffected",
+    "tooltip.sephiria.shield.sweep":  "Sweep (left click while defending): damage %s (%s%%), cooldown %s s, range %s blocks (self-centred, vertical +/-%s)",
     "screen.sephiria.stats.attack_speed":  "Attack Speed: %s"
 }

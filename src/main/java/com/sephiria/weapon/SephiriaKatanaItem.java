@@ -5,6 +5,7 @@ import com.sephiria.ability.Dash;
 import com.sephiria.ability.Invulnerability;
 import com.sephiria.ability.SkillStorage;
 import com.sephiria.client.SkillClientData;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import com.sephiria.stats.PlayerStats;
@@ -54,6 +55,10 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -116,6 +121,14 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	public static final Identifier SWORD_INTENT = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sword_intent");
 	public static final double INTENT_MAX = 100.0D;
 	private static final double INTENT_PER_HIT = 20.0D;
+	/**
+	 * 命中给剑意的内置冷却：0.3 秒。
+	 *
+	 * <p>刀本身攻速就快，不设冷却的话连点两下就能把层数刷上去，"攒剑意"这件事就没有意义了。
+	 */
+	private static final int INTENT_GAIN_TICKS = 6;
+	/** 切换状态的无敌窗口里挨打一次的补偿：50 层（判定方式同匕首的招架成功）。 */
+	private static final double INTENT_SWITCH_BONUS = 50.0D;
 
 	/**
 	 * 强力斩击：向准星突进 1 格，落地后以自身为原点劈一圈。
@@ -140,6 +153,13 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	/** 剑意满层时的提示音：音符盒放在金块上的"铃铛"，清脆且和战斗音效不撞。 */
 	private static final float INTENT_FULL_VOLUME = 0.9F;
 	private static final float INTENT_FULL_PITCH = 1.5F;
+
+	/** 命中给剑意的冷却到期刻（见 {@link #INTENT_GAIN_TICKS}）。 */
+	private static final Map<UUID, Long> INTENT_GAIN_UNTIL = new ConcurrentHashMap<>();
+	/** 切换状态的"格挡窗口"到期刻：窗口内挨打算白刃相接，补偿 50 层剑意。 */
+	private static final Map<UUID, Long> SWITCH_GUARD_UNTIL = new ConcurrentHashMap<>();
+	/** 刚在切换窗口里挨了打、等下一刻补剑意的玩家（见 {@link #register()} 里的说明）。 */
+	private static final Set<UUID> PENDING_INTENT = ConcurrentHashMap.newKeySet();
 
 	private static final Identifier DAMAGE_MODIFIER_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "katana_attack_damage");
 	private static final Identifier SPEED_MODIFIER_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "katana_attack_speed");
@@ -213,7 +233,8 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 						format(INTENT_PER_HIT), format(INTENT_MAX)),
 				Component.translatable("tooltip.sephiria.katana.slash",
 						format(POWERFUL_DAMAGE_AT_FULL), seconds(POWERFUL_COOLDOWN),
-						format(POWERFUL_DISTANCE), format(POWERFUL_RANGE), format(POWERFUL_HEIGHT)));
+						format(POWERFUL_DISTANCE), format(POWERFUL_RANGE), format(POWERFUL_HEIGHT)),
+				Component.translatable("tooltip.sephiria.katana.guard", format(INTENT_SWITCH_BONUS)));
 	}
 
 
@@ -256,6 +277,8 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 		WeaponStats.refresh(player);
 		player.getCooldowns().addCooldown(stack, SWITCH_TICKS);
 		Invulnerability.grant(player, BLOCK_TICKS);
+		// 无敌窗口同时也算是"格挡窗口"：这段时间里挨到攻击会补 50 层剑意
+		SWITCH_GUARD_UNTIL.put(player.getUUID(), player.level().getGameTime() + BLOCK_TICKS);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.ARMOR_EQUIP_IRON, SoundSource.PLAYERS, 1.0F, sheathed ? 0.8F : 1.2F);
 		if (stack.getItem() instanceof SephiriaKatanaItem katana) {
@@ -278,13 +301,42 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 
 	// ------------------------------------------------------------------ 格挡与横扫
 
-	/** 注册伤害拦截与攻击回调（由 {@link Sephiria#onInitialize()} 调用）。 */
-	/** 注册剑意存储与斩击结算轮询（由 {@link Sephiria#onInitialize()} 调用）。 */
+	/** 注册剑意存储、切换格挡窗口与斩击结算轮询（由 {@link Sephiria#onInitialize()} 调用）。 */
 	public static void register() {
 		// 剑意只来自命中，不会随时间回复，所以用 registerManual；开局是 0 层而不是满层，
 		// 否则第一次挥刀就直接变成强力斩击了
 		SkillStorage.registerManual(SWORD_INTENT, INTENT_MAX, 0.0D);
 		ServerTickEvents.END_SERVER_TICK.register(SephiriaKatanaItem::tick);
+
+		// 切换状态的无敌窗口里挨打 → 白送 50 层剑意（判定方式与匕首招架成功一致）。
+		// 伤害在这里直接取消，不依赖 Invulnerability 那套实现的注册顺序；奖励延后一刻发，
+		// 免得在伤害事件里改技能存储、发包搅乱后续处理器——匕首那边就是这么踩的坑。
+		// 这个处理器必须注册在 Invulnerability 之前（见 Sephiria#onInitialize 的说明）。
+		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+			if (entity instanceof ServerPlayer player && isSwitchGuarding(player)) {
+				SWITCH_GUARD_UNTIL.remove(player.getUUID());
+				PENDING_INTENT.add(player.getUUID());
+				player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+						SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0F, 1.5F);
+				return false;
+			}
+
+			return true;
+		});
+	}
+
+	/** 是否处在切换状态的无敌窗口内（窗口到期即失效）。 */
+	private static boolean isSwitchGuarding(ServerPlayer player) {
+		Long until = SWITCH_GUARD_UNTIL.get(player.getUUID());
+		return until != null && player.level().getGameTime() < until;
+	}
+
+	/** 攒满时响一声：只在"这一下刚好补满"时响，已经满层再打不会重复响。 */
+	private static void playFullSoundIfFilled(ServerPlayer player, double before) {
+		if (before < INTENT_MAX && SkillStorage.current(player, SWORD_INTENT) >= INTENT_MAX) {
+			player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+					SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, INTENT_FULL_VOLUME, INTENT_FULL_PITCH);
+		}
 	}
 
 	public static void registerEvents() {
@@ -314,13 +366,15 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				return InteractionResult.FAIL;
 			}
 
-			// 命中才给剑意：这个回调只在真正打到实体时触发，挥空不计
-			SkillStorage.regenerate(serverPlayer, SWORD_INTENT, INTENT_PER_HIT);
+			// 命中才给剑意（这个回调只在真正打到实体时触发，挥空不计），但有 0.3 秒内置冷却：
+			// 冷却内的连续命中不再叠加，逼着玩家按节奏打，而不是贴着目标连点刷层。
+			long now = serverLevel.getGameTime();
+			Long gainUntil = INTENT_GAIN_UNTIL.get(serverPlayer.getUUID());
 
-			// 刚好攒满的这一刀给个提示音（再攒也不会超过上限，所以只会响这一次）
-			if (intent < INTENT_MAX && SkillStorage.current(serverPlayer, SWORD_INTENT) >= INTENT_MAX) {
-				serverLevel.playSound(null, serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(),
-						SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, INTENT_FULL_VOLUME, INTENT_FULL_PITCH);
+			if (gainUntil == null || now >= gainUntil) {
+				INTENT_GAIN_UNTIL.put(serverPlayer.getUUID(), now + INTENT_GAIN_TICKS);
+				SkillStorage.regenerate(serverPlayer, SWORD_INTENT, INTENT_PER_HIT);
+				playFullSoundIfFilled(serverPlayer, intent);
 			}
 
 			if (!canSweep(serverPlayer)) {
@@ -397,11 +451,27 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	}
 
 	private static void tick(MinecraftServer server) {
-		if (PENDING.isEmpty()) {
-			return;
+		// 切换窗口里挨打的那批：补偿延后到这一刻发（见 register 里的说明）
+		if (!PENDING_INTENT.isEmpty()) {
+			for (UUID id : new ArrayList<>(PENDING_INTENT)) {
+				PENDING_INTENT.remove(id);
+				ServerPlayer player = server.getPlayerList().getPlayer(id);
+
+				if (player != null) {
+					double before = SkillStorage.current(player, SWORD_INTENT);
+					SkillStorage.regenerate(player, SWORD_INTENT, INTENT_SWITCH_BONUS);
+					playFullSoundIfFilled(player, before);
+				}
+			}
 		}
 
 		long now = server.overworld().getGameTime();
+		SWITCH_GUARD_UNTIL.entrySet().removeIf(entry -> entry.getValue() <= now);
+		INTENT_GAIN_UNTIL.entrySet().removeIf(entry -> entry.getValue() <= now);
+
+		if (PENDING.isEmpty()) {
+			return;
+		}
 
 		// 快照遍历：resolve() 现在不会往列表里加东西，但和其它武器保持一致，避免以后再踩坑
 		for (Pending pending : new ArrayList<>(PENDING)) {

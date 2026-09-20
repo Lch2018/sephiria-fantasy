@@ -7,6 +7,7 @@ import com.sephiria.ability.SkillStorage;
 import com.sephiria.network.DashPayload;
 import com.sephiria.network.InvulnerablePayload;
 import com.sephiria.network.ReloadPayload;
+import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.stats.PlayerStats;
@@ -47,6 +48,9 @@ public class Sephiria implements ModInitializer {
 		SephiriaStaffItem.register();
 		WeaponSweep.register();
 		SephiriaShieldItem.register();
+		// 注意注册顺序：ALLOW_DAMAGE 的调用器是"第一个返回 false 的处理器直接短路"，
+		// 所以各武器自己的格挡窗口（刀的切换、匕首的招架、长棍的回击）必须排在
+		// Invulnerability 这个"通用无敌"之前，否则它们收不到事件、奖励也就发不出来。
 		Invulnerability.register();
 		Dash.register();
 		DashSkill.register();
@@ -56,6 +60,7 @@ public class Sephiria implements ModInitializer {
 
 		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(ShieldSweepPayload.TYPE, ShieldSweepPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
@@ -64,6 +69,8 @@ public class Sephiria implements ModInitializer {
 				(payload, context) -> DashSkill.perform(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(ReloadPayload.TYPE,
 				(payload, context) -> SephiriaCrossbowItem.tryReload(context.player()));
+		ServerPlayNetworking.registerGlobalReceiver(ShieldSweepPayload.TYPE,
+				(payload, context) -> SephiriaShieldItem.tryDefendSweep(context.player()));
 
 		// 进服时把各技能的存储量推给客户端，HUD 才有初始值
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

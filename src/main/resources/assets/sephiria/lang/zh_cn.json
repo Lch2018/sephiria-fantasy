@@ -46,8 +46,9 @@
     "tooltip.sephiria.katana.sheathed":  "入鞘",
     "tooltip.sephiria.katana.drawn":  "出鞘",
     "tooltip.sephiria.katana.switch":  "右键切换：冷却 %s 秒，无敌 %s 秒",
-    "tooltip.sephiria.katana.intent":  "剑意：命中 +%s，上限 %s 层（只算命中，挥空不计）",
+    "tooltip.sephiria.katana.intent":  "剑意：命中 +%s，上限 %s 层（只算命中，挥空不计）；两次累积之间有 0.3 秒冷却",
     "tooltip.sephiria.katana.slash":  "强力斩击：满层剑意且入鞘时左键触发；满层伤害 %s，冷却 %s 秒，突进 %s 格，范围 %s 格（垂直 ±%s 格）",
+    "tooltip.sephiria.katana.guard":  "切换状态的无敌期间若被打中：伤害照旧免疫，并额外获得 %s 层剑意",
     "ui.sephiria.katana":  "%s　剑意：",
     "tooltip.sephiria.dagger.parry":  "招架：突进 %s 格，伤害 %s，范围 %s 格，冷却 %s 秒，无敌 %s 秒",
     "tooltip.sephiria.dagger.fury":  "狂怒：突进 %s 格，伤害 %s，路径半径 %s 格，冷却 %s 秒，无敌 %s 秒",
@@ -61,6 +62,7 @@
     "tooltip.sephiria.staff.reduction":  "无敌结束后：受到的伤害减半，持续 %s 秒",
     "tooltip.sephiria.crossbow.fire":  "右键射击：冷却 %s 秒，弹匣 %s 发",
     "tooltip.sephiria.crossbow.reload":  "R 装填：%s 秒装满",
-    "tooltip.sephiria.shield.block":  "右键格挡：90° 范围内满额减伤",
+    "tooltip.sephiria.shield.defend":  "防御：按住右键期间受到的一切伤害减半（最终伤害减免 %s%%），移动不受影响",
+    "tooltip.sephiria.shield.sweep":  "横扫（防御中左键）：伤害 %s（%s%%），冷却 %s 秒，范围 %s 格（以自身为中心，垂直 ±%s 格）",
     "screen.sephiria.stats.attack_speed":  "攻击速度：%s"
 }
