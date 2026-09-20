@@ -60,6 +60,12 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	public static final double FOCUS_MAX = 1.0D;
 
 	/** 两段位移的距离；无敌时长 {@value #INVULNERABLE_TICKS} 刻比位移多 2 刻，落地后仍有一点容错。 */
+	/** 攻速目标值（供物品注册使用）。 */
+	public static final float ATTACK_SPEED = 6.4F;
+	/** 伤害目标值（供物品注册使用）。 */
+	public static final float ATTACK_DAMAGE = 2.05F;
+
+	/** 招架：突进距离、范围、伤害。 */
 	private static final double PARRY_DISTANCE = 1.5D;
 	private static final double FURY_DISTANCE = 8.0D;
 	private static final int DASH_TICKS = 4;
@@ -102,13 +108,17 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
-				Component.translatable("tooltip.sephiria.dagger.parry",
-						format(PARRY_DISTANCE), format(PARRY_DAMAGE), format(PARRY_RANGE),
-						seconds(PARRY_COOLDOWN), seconds(INVULNERABLE_TICKS)),
-				Component.translatable("tooltip.sephiria.dagger.fury",
-						format(FURY_DISTANCE), format(FURY_DAMAGE), format(FURY_PATH_RADIUS),
-						seconds(FURY_COOLDOWN), seconds(INVULNERABLE_TICKS)),
-				Component.translatable("tooltip.sephiria.dagger.focus", format(FOCUS_MAX)));
+				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, WeaponSweep.RANGE).build(),
+				Line.titled("tooltip.sephiria.skill.parry")
+						.damage(PARRY_DAMAGE).cooldownTicks(PARRY_COOLDOWN)
+						.range(PARRY_RANGE).distance(PARRY_DISTANCE).build(),
+				desc("tooltip.sephiria.skill.parry", "tooltip.sephiria.desc.parry"),
+				Line.titled("tooltip.sephiria.skill.fury")
+						.damage(FURY_DAMAGE).cooldownTicks(FURY_COOLDOWN)
+						.range(FURY_PATH_RADIUS).distance(FURY_DISTANCE).build(),
+				desc("tooltip.sephiria.skill.fury", "tooltip.sephiria.desc.fury"),
+				Line.titled("tooltip.sephiria.skill.focus")
+						.stat("tooltip.sephiria.part.max", FOCUS_MAX, COLOR_RANGE).build());
 	}
 
 

@@ -36,19 +36,11 @@ import java.util.function.Function;
 /**
  * SEPHIRIA 的物品注册表。当前只有「基础武器」——六大分支各一把，还没有锻造系统。
  *
- * <p>数值按原作的分支命中倍率换算，以剑与盾为基准（6.0 伤害 / 1.6 攻速 / 250 耐久）：
- * <pre>
- * 分支        武器        伤害   攻速   耐久   倍率
- * 剑与盾      标准剑盾     6.0   1.6    250   100%
- * 大剑        钢铁巨剑     9.0   1.0    600   150%
- * 匕首        匕首         4.0   2.6    160   68.75%
- * 弩          重型弩       —     —      465   120%（远程，伤害取决于弹药）
- * 刀          刀           5.0   2.0    320   82.5%
- * 法杖/长棍   长棍         5.5   1.5    300   90%
- * </pre>
+ * <p>各武器的当前数值以 {@code 武器数据表.txt} 为准，物品注册只负责把那些数值写进
+ * 数据组件（伤害/攻速尽可能引用武器类自己的常量，避免两处各写一份）。
  *
- * <p>换算时要用的是「原版参数」，不是工具栏里显示的数字：显示的伤害 = 1（玩家基础）
- * + 材质加成 + 传入 {@code sword()} 的值，显示的攻速 = 4（玩家基础）+ 传入值。
+ * <p>要注意传进 {@code sword()} 的是「原版参数」，不是工具栏里显示的数字：
+ * 显示的伤害 = 1（玩家基础）+ 材质加成 + 传入值，显示的攻速 = 4（玩家基础）+ 传入值。
  */
 public final class ModItems {
 	/** 玩家空手的基础攻击力，原版 Player#createAttributes 里是 1.0。 */
@@ -60,8 +52,8 @@ public final class ModItems {
 			p -> new SephiriaShieldItem(WeaponBranch.SWORD_AND_SHIELD, p),
 			new Item.Properties()
 					.sword(ToolMaterial.IRON,
-							3.0F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
-							3.2F - (float) Attributes.DEFAULT_ATTACK_SPEED)
+							SephiriaShieldItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
+							SephiriaShieldItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
 					.durability(250)
 					// 原版使用物品期间会把人拖到 20% 移速（UseEffects.DEFAULT 的 speed_multiplier=0.2）。
 					// 防御是持续按住的姿态，被拖慢会让"举盾走位"完全没法玩，所以这里显式改成不减速、
@@ -73,7 +65,7 @@ public final class ModItems {
 			p -> new SephiriaGreatswordItem(WeaponBranch.GREATSWORD, p),
 			new Item.Properties()
 					.sword(ToolMaterial.IRON,
-							6.0F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
+							SephiriaGreatswordItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
 							SephiriaGreatswordItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
 					.durability(600)
 					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
@@ -82,8 +74,8 @@ public final class ModItems {
 			p -> new SephiriaDaggerItem(WeaponBranch.DAGGER, p),
 			new Item.Properties()
 					.sword(ToolMaterial.IRON,
-							2.05F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
-							6.4F - (float) Attributes.DEFAULT_ATTACK_SPEED)
+							SephiriaDaggerItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
+							SephiriaDaggerItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
 					.durability(160)
 					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
 	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, SephiriaCrossbowItem.MAGAZINE_SIZE);

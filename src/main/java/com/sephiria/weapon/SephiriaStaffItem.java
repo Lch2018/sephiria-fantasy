@@ -129,22 +129,17 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
-		double riposte1 = RIPOSTE1_DAMAGE;
-
 		return java.util.List.of(
-				Component.translatable("tooltip.sephiria.staff.sweep",
-						format(ATTACK_DAMAGE), format(ATTACK_SPEED),
-						format(VANILLA_SWEEP_RANGE * SWEEP_RANGE_SCALE)),
-				Component.translatable("tooltip.sephiria.staff.riposte1",
-						format(STEP1_DISTANCE), format(riposte1), format(PARRY_RANGE),
-						seconds(INVULNERABLE_TICKS)),
-				Component.translatable("tooltip.sephiria.staff.riposte2",
-						format(STEP2_DISTANCE), format(RIPOSTE2_DAMAGE),
-						format(RIPOSTE2_RANGE), seconds(COOLDOWN_TICKS)),
-				Component.translatable("tooltip.sephiria.staff.riposte3",
-						format(RIPOSTE3_DAMAGE),
-						format(RIPOSTE3_RANGE)),
-				Component.translatable("tooltip.sephiria.staff.reduction", seconds(REDUCTION_TICKS)));
+				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, VANILLA_SWEEP_RANGE * SWEEP_RANGE_SCALE).build(),
+				Line.titled("tooltip.sephiria.skill.riposte1")
+						.damage(RIPOSTE1_DAMAGE).cooldownTicks(COOLDOWN_TICKS)
+						.range(PARRY_RANGE).distance(STEP1_DISTANCE).build(),
+				Line.titled("tooltip.sephiria.skill.riposte2")
+						.damage(RIPOSTE2_DAMAGE).cooldownSame()
+						.range(RIPOSTE2_RANGE).distance(STEP2_DISTANCE).build(),
+				Line.titled("tooltip.sephiria.skill.riposte3")
+						.damage(RIPOSTE3_DAMAGE).cooldownSame().range(RIPOSTE3_RANGE).build(),
+				desc("tooltip.sephiria.skill.riposte", "tooltip.sephiria.desc.riposte"));
 	}
 
 

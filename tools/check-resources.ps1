@@ -104,7 +104,24 @@ foreach ($lang in @('en_us', 'zh_cn')) {
     foreach ($b in $branches) {
         if ($keys -notcontains "sephiria.branch.$b") { Fail "lang/$lang.json missing key sephiria.branch.$b" }
     }
-    if (([regex]::Matches($json.'tooltip.sephiria.branch', '%s')).Count -ne 2) { Fail "lang/$lang.json tooltip needs 2 placeholders" }
+    # 提示框的格式（颜色、斜杠分隔、括号说明）都靠这几个键拼，占位符数量写错就会显示成 %s
+    $placeholders = @{
+        'tooltip.sephiria.tip.label'         = 1
+        'tooltip.sephiria.tip.attack_state'  = 1
+        'tooltip.sephiria.tip.desc'          = 2
+        'tooltip.sephiria.part.damage'       = 2
+        'tooltip.sephiria.part.attack_speed' = 2
+        'tooltip.sephiria.part.range'        = 2
+        'tooltip.sephiria.part.cooldown'     = 1
+        'tooltip.sephiria.part.distance'     = 1
+    }
+    foreach ($key in $placeholders.Keys) {
+        $line = $json.$key
+        if (-not $line) { Fail "lang/$lang.json missing key $key"; continue }
+        if (([regex]::Matches($line, '%s')).Count -ne $placeholders[$key]) {
+            Fail "lang/$lang.json $key needs $($placeholders[$key]) placeholders"
+        }
+    }
     Ok "lang/$lang.json checked ($($keys.Count) keys)"
 }
 

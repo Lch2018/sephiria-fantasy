@@ -66,17 +66,14 @@ public class SephiriaClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
-			if (stack.getItem() instanceof SephiriaWeapon weapon) {
-				lines.add(weapon.tooltipLine());
-			}
 			if (stack.getItem() instanceof SephiriaWeapon detail) {
-				// 详细描述：空行分隔，逐条灰色显示技能数值
-				java.util.List<Component> lines2 = detail.detailLines(stack);
+				// 详细描述：空行分隔，逐条显示。外层套灰，行内的数值用自己的颜色覆盖它。
+				java.util.List<Component> detailLines = detail.detailLines(stack);
 
-				if (!lines2.isEmpty()) {
+				if (!detailLines.isEmpty()) {
 					lines.add(Component.empty());
 
-					for (Component line : lines2) {
+					for (Component line : detailLines) {
 						lines.add(line.copy().withStyle(ChatFormatting.GRAY));
 					}
 				}

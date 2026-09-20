@@ -47,9 +47,8 @@ public class SephiriaWeaponItem extends Item implements SephiriaWeapon {
 
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
-		return this.blocks
-				? java.util.List.of(Component.translatable("tooltip.sephiria.shield.block"))
-				: java.util.List.of();
+		// 详细描述由各自的武器类报告（这个通用实现没有具体数值可说）
+		return java.util.List.of();
 	}
 
 

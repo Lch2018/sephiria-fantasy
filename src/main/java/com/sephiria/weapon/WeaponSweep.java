@@ -24,7 +24,7 @@ import net.minecraft.world.phys.AABB;
  */
 public final class WeaponSweep {
 	/** 原版横扫的基准：以命中目标为中心 inflate(1.0, 0.25, 1.0)，离玩家不超过 3 格。 */
-	private static final double RANGE = 1.0D;
+	public static final double RANGE = 1.0D;
 	private static final double HEIGHT = 0.25D;
 	private static final double MAX_DISTANCE = 3.0D;
 	/** 对其它目标的伤害系数。 */
@@ -37,7 +37,9 @@ public final class WeaponSweep {
 	public static void register() {
 		AttackEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
 			var stack = player.getItemInHand(hand);
-			boolean sweeps = stack.getItem() instanceof SephiriaWeaponItem
+			// 剑盾与匕首是 ×1 那一档（见类注释）。这里原本判的是 SephiriaWeaponItem，
+			// 但已经没有武器继承它了，于是剑盾的普通攻击一直没打出过横扫。
+			boolean sweeps = stack.getItem() instanceof SephiriaShieldItem
 					|| stack.getItem() instanceof SephiriaDaggerItem;
 
 			if (!sweeps || !(player instanceof ServerPlayer serverPlayer) || !(level instanceof ServerLevel serverLevel)) {

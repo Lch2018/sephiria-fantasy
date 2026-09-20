@@ -61,6 +61,9 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 	public static final int RELOAD_TICKS = 40;
 	/** 射击间隔（tick）：攻速 3 → 20/3 取整。 */
 	public static final int FIRE_COOLDOWN_TICKS = 4;
+	/** 近战数值：弩没有近战加成，等同于空手（伤害 1、攻速 4）。 */
+	public static final float MELEE_DAMAGE = 1.0F;
+	public static final float MELEE_ATTACK_SPEED = 4.0F;
 	/** 与原版弩一致的出膛速度。 */
 	private static final float ARROW_SPEED = 3.15F;
 
@@ -82,9 +85,15 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
-				Component.translatable("tooltip.sephiria.crossbow.fire",
-						seconds(FIRE_COOLDOWN_TICKS), format(MAGAZINE_SIZE)),
-				Component.translatable("tooltip.sephiria.crossbow.reload", seconds(RELOAD_TICKS)));
+				// 弩没有近战加成（等同空手），远程也不触发横扫，所以这一行不写范围
+				Line.attackRanged(MELEE_DAMAGE, MELEE_ATTACK_SPEED).build(),
+				Line.titled("tooltip.sephiria.skill.fire")
+						.damage(SephiriaBoltArrow.FIXED_DAMAGE).cooldownTicks(FIRE_COOLDOWN_TICKS)
+						.stat("tooltip.sephiria.part.magazine", MAGAZINE_SIZE, COLOR_RANGE).build(),
+				desc("tooltip.sephiria.skill.fire", "tooltip.sephiria.desc.fire"),
+				Line.titled("tooltip.sephiria.skill.reload")
+						.stat("tooltip.sephiria.part.reload", RELOAD_TICKS / 20.0D, COLOR_COOLDOWN).build(),
+				desc("tooltip.sephiria.skill.reload", "tooltip.sephiria.desc.reload"));
 	}
 
 

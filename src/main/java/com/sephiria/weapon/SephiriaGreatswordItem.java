@@ -54,6 +54,9 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	/** 攻速目标值（供物品注册使用）。 */
 	public static final float ATTACK_SPEED = 1.6F;
 
+	/** 伤害目标值（供物品注册使用）。 */
+	public static final float ATTACK_DAMAGE = 6.0F;
+
 	private static final double KATANA_SHEATHED_SWEEP_HEIGHT = 0.5D;
 	/** 横扫对其它目标的伤害系数；右键技能的伤害倍数。 */
 	private static final double SWEEP_RATIO = 0.5D;
@@ -92,10 +95,12 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
-				Component.translatable("tooltip.sephiria.greatsword.sweep",
-						format(KATANA_SHEATHED_SWEEP_RANGE * SWEEP_RANGE_SCALE), format(ATTACK_SPEED)),
-				Component.translatable("tooltip.sephiria.greatsword.whirlwind",
-						seconds(CHARGE_TICKS), format(DASH_DISTANCE), format(WHIRLWIND_DAMAGE)));
+				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, KATANA_SHEATHED_SWEEP_RANGE * SWEEP_RANGE_SCALE).build(),
+				Line.titled("tooltip.sephiria.skill.whirlwind")
+						.damage(WHIRLWIND_DAMAGE)
+						.stat("tooltip.sephiria.part.charge", CHARGE_TICKS / 20.0D, COLOR_COOLDOWN)
+						.range(RING_RADIUS).distance(DASH_DISTANCE).build(),
+				desc("tooltip.sephiria.skill.whirlwind", "tooltip.sephiria.desc.whirlwind"));
 	}
 
 

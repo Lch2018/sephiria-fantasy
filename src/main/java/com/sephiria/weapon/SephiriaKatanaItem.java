@@ -218,23 +218,28 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
-		boolean sheathed = isSheathed(stack);
-		float damage = sheathed ? SHEATHED_DAMAGE : UNSHEATHED_DAMAGE;
-		float speed = VANILLA_SWORD_ATTACK_SPEED * (sheathed ? SHEATHED_CHARGE_SCALE : UNSHEATHED_CHARGE_SCALE);
-		double range = sheathed ? SHEATHED_SWEEP_RANGE : UNSHEATHED_SWEEP_RANGE;
+		double sheathedSpeed = VANILLA_SWORD_ATTACK_SPEED * SHEATHED_CHARGE_SCALE;
+		double drawnSpeed = VANILLA_SWORD_ATTACK_SPEED * UNSHEATHED_CHARGE_SCALE;
+		double sheathedRange = VANILLA_SWEEP_RANGE * SHEATHED_SWEEP_RANGE;
+		double drawnRange = VANILLA_SWEEP_RANGE * UNSHEATHED_SWEEP_RANGE;
 
 		return java.util.List.of(
-				Component.translatable("tooltip.sephiria.katana.state",
-						Component.translatable(sheathed ? "tooltip.sephiria.katana.sheathed" : "tooltip.sephiria.katana.drawn"),
-						format(damage), format(speed), format(range)),
-				Component.translatable("tooltip.sephiria.katana.switch",
-						seconds(SWITCH_TICKS), seconds(BLOCK_TICKS)),
-				Component.translatable("tooltip.sephiria.katana.intent",
-						format(INTENT_PER_HIT), format(INTENT_MAX)),
-				Component.translatable("tooltip.sephiria.katana.slash",
-						format(POWERFUL_DAMAGE_AT_FULL), seconds(POWERFUL_COOLDOWN),
-						format(POWERFUL_DISTANCE), format(POWERFUL_RANGE), format(POWERFUL_HEIGHT)),
-				Component.translatable("tooltip.sephiria.katana.guard", format(INTENT_SWITCH_BONUS)));
+				// 出鞘是默认状态，所以放在前面，和数据表一致
+				Line.attack("tooltip.sephiria.katana.drawn", UNSHEATHED_DAMAGE, drawnSpeed, drawnRange).build(),
+				Line.attack("tooltip.sephiria.katana.sheathed", SHEATHED_DAMAGE, sheathedSpeed, sheathedRange).build(),
+				Line.titled("tooltip.sephiria.skill.toggle")
+						.cooldownTicks(SWITCH_TICKS)
+						.stat("tooltip.sephiria.part.invuln", BLOCK_TICKS / 20.0D, COLOR_RANGE).build(),
+				desc("tooltip.sephiria.skill.toggle", "tooltip.sephiria.desc.toggle"),
+				Line.titled("tooltip.sephiria.skill.intent")
+						.stat("tooltip.sephiria.part.per_hit", INTENT_PER_HIT, COLOR_DAMAGE)
+						.stat("tooltip.sephiria.part.max", INTENT_MAX, COLOR_RANGE)
+						.stat("tooltip.sephiria.part.block_bonus", INTENT_SWITCH_BONUS, COLOR_DAMAGE).build(),
+				desc("tooltip.sephiria.skill.intent", "tooltip.sephiria.desc.intent"),
+				Line.titled("tooltip.sephiria.skill.slash")
+						.damage(POWERFUL_DAMAGE_AT_FULL).cooldownTicks(POWERFUL_COOLDOWN)
+						.range(POWERFUL_RANGE).distance(POWERFUL_DISTANCE).build(),
+				desc("tooltip.sephiria.skill.slash", "tooltip.sephiria.desc.slash"));
 	}
 
 

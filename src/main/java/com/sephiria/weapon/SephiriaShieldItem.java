@@ -38,6 +38,11 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	/** 防御时的最终伤害减免。 */
 	private static final float DEFEND_REDUCTION = 0.5F;
 
+	/** 攻速目标值（供物品注册使用）。 */
+	public static final float ATTACK_SPEED = 3.2F;
+	/** 伤害目标值（供物品注册使用）。 */
+	public static final float ATTACK_DAMAGE = 3.0F;
+
 	/** 防御中攻击的横扫参数。 */
 	private static final double SWEEP_DAMAGE_RATIO = 0.5D;
 	private static final int SWEEP_COOLDOWN_TICKS = 20;
@@ -61,11 +66,14 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
-				Component.translatable("tooltip.sephiria.shield.defend",
-						format(DEFEND_REDUCTION * 100.0F)),
-				Component.translatable("tooltip.sephiria.shield.sweep",
-						format(PlayerStats.DEFAULT_STRENGTH * SWEEP_DAMAGE_RATIO), format(SWEEP_DAMAGE_RATIO * 100.0F),
-						seconds(SWEEP_COOLDOWN_TICKS), format(SWEEP_RANGE), format(SWEEP_HEIGHT)));
+				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, WeaponSweep.RANGE).build(),
+				Line.titled("tooltip.sephiria.skill.defend")
+						.stat("tooltip.sephiria.part.reduction", DEFEND_REDUCTION * 100.0F, COLOR_RANGE).build(),
+				desc("tooltip.sephiria.skill.defend", "tooltip.sephiria.desc.defend"),
+				Line.titled("tooltip.sephiria.skill.shield_sweep")
+						.damage(PlayerStats.DEFAULT_STRENGTH * SWEEP_DAMAGE_RATIO)
+						.cooldownTicks(SWEEP_COOLDOWN_TICKS).range(SWEEP_RANGE).build(),
+				desc("tooltip.sephiria.skill.shield_sweep", "tooltip.sephiria.desc.shield_sweep"));
 	}
 
 	/** 某玩家此刻是否在用它防御（右键按住期间，原版的使用状态就是判据）。 */
