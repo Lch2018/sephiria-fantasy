@@ -120,7 +120,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	/** 剑意：每次命中累积，满层且入鞘时下一刀会消耗全部剑意变成「强力斩击」。 */
 	public static final Identifier SWORD_INTENT = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sword_intent");
 	public static final double INTENT_MAX = 100.0D;
-	private static final double INTENT_PER_HIT = 20.0D;
+	private static final double INTENT_PER_HIT = 12.0D;
 	/**
 	 * 命中给剑意的内置冷却：0.3 秒。
 	 *

@@ -52,10 +52,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>伤害与范围都以匕首的「招架」为基准：招架伤害 {@value #PARRY_DAMAGE}、范围
  * {@value #PARRY_RANGE}（水平半径，垂直 {@value #PARRY_HEIGHT}）。
- * 回击 1 = 招架伤害的 ×{@value #RIPOSTE1_DAMAGE_SCALE} 倍、同范围；
+ * 回击 1 = {@value #RIPOSTE1_DAMAGE} 点（与招架同伤害）、同范围；
  * 回击 2 = {@value #RIPOSTE2_DAMAGE} 点、半径 {@value #RIPOSTE2_RANGE} 格；
  * 回击 3 = {@value #RIPOSTE3_DAMAGE} 点、半径 {@value #RIPOSTE3_RANGE} 格。
- * 二、三段的伤害与范围都是绝对值（不是回击 1 的倍数），便于单独调平衡。
+ * 三段的伤害与范围都是绝对值，便于单独调平衡。
  */
 public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 	/** 出鞘状态下的刀的基准值。 */
@@ -87,8 +87,8 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 	private static final double PARRY_RANGE = 2.0D * 1.8D;
 	private static final double PARRY_HEIGHT = 0.5D * 1.8D;
 
-	/** 回击三段的派生比例。 */
-	private static final double RIPOSTE1_DAMAGE_SCALE = 1.1D;
+	/** 回击三段的伤害与范围：都是绝对值（不是前一段的倍数），便于单独调平衡。 */
+	private static final float RIPOSTE1_DAMAGE = 8.0F;
 	private static final float RIPOSTE2_DAMAGE = 11.0F;
 	private static final double RIPOSTE2_RANGE = 5.0D;
 	private static final double RIPOSTE2_HEIGHT = RIPOSTE2_RANGE * 0.25D;
@@ -103,8 +103,8 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 	private static final int INVULNERABLE_TICKS = 6;
 	private static final int REDUCTION_TICKS = 6;
 	private static final int STEP2_DELAY_TICKS = 8;
-	/** 技能冷却：1 秒。比整段（0.5 秒）长，避免连点把无敌无限续上。 */
-	private static final int COOLDOWN_TICKS = 20;
+	/** 技能冷却：1.8 秒。比整段（0.5 秒）长得多，避免连点把无敌无限续上。 */
+	private static final int COOLDOWN_TICKS = 36;
 
 	/** 回击期间"格挡窗口"的到期刻：窗口内挨打算完美防御（伤害由本类自己取消）。 */
 	private static final Map<UUID, Long> GUARD_UNTIL = new ConcurrentHashMap<>();
@@ -129,7 +129,7 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
-		double riposte1 = PARRY_DAMAGE * RIPOSTE1_DAMAGE_SCALE;
+		double riposte1 = RIPOSTE1_DAMAGE;
 
 		return java.util.List.of(
 				Component.translatable("tooltip.sephiria.staff.sweep",
@@ -237,7 +237,7 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 		serverPlayer.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0F, 1.2F);
 
-		double step1Damage = PARRY_DAMAGE * RIPOSTE1_DAMAGE_SCALE * PlayerStats.damageMultiplier(serverPlayer);
+		double step1Damage = RIPOSTE1_DAMAGE * PlayerStats.damageMultiplier(serverPlayer);
 		PENDING.add(Pending.aura(serverPlayer, STEP_DASH_TICKS, (float) step1Damage, PARRY_RANGE, PARRY_HEIGHT));
 		PENDING.add(Pending.followUp(serverPlayer, PlayerStats.damageMultiplier(serverPlayer), STEP2_DELAY_TICKS));
 		return InteractionResult.CONSUME;
