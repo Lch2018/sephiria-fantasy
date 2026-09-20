@@ -46,6 +46,9 @@ public final class SephiriaHud implements HudElement {
 	private static final int CHARGE_BAR_WIDTH = 60;
 	private static final int CHARGE_BAR_HEIGHT = 4;
 	private static final int BAR_BACK_COLOR = 0x60000000;
+	/** 刀的剑意条配色：平时浅青，满层金色（和物品栏图标上的条同一套颜色）。 */
+	private static final int INTENT_COLOR = 0xFF6FD8FF;
+	private static final int INTENT_FULL_COLOR = 0xFFFFD24A;
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, DeltaTracker delta) {
@@ -137,7 +140,8 @@ public final class SephiriaHud implements HudElement {
 			extractor.fill(barLeft, barTop, barLeft + CHARGE_BAR_WIDTH, barTop + CHARGE_BAR_HEIGHT, BAR_BACK_COLOR);
 
 			if (filled > 0) {
-				extractor.fill(barLeft, barTop, barLeft + filled, barTop + CHARGE_BAR_HEIGHT, BAR_COLOR);
+				extractor.fill(barLeft, barTop, barLeft + filled, barTop + CHARGE_BAR_HEIGHT,
+						propertyBarColor(stack, bar));
 			}
 		}
 
@@ -165,11 +169,30 @@ public final class SephiriaHud implements HudElement {
 	}
 
 	/**
+	 * 进度条的颜色：默认纯白，刀按剑意分色（满层金色，和物品栏里的剑意条一致）。
+	 */
+	private static int propertyBarColor(ItemStack stack, float fraction) {
+		if (stack.getItem() instanceof SephiriaKatanaItem) {
+			return fraction >= 1.0F ? INTENT_FULL_COLOR : INTENT_COLOR;
+		}
+
+		return BAR_COLOR;
+	}
+
+	/**
 	 * 进度条型特有属性的当前占比（0~1）；该武器没有进度条时返回 NaN。
 	 *
 	 * <p>蓄力进度不需要任何同步包：客户端自己就知道有没有在使用、还剩多少使用刻。
+	 * 刀则是读剑意的客户端镜像——层数每次变化服务端都会推一份过来。
 	 */
 	private static float propertyBar(Minecraft client, ItemStack stack) {
+		if (stack.getItem() instanceof SephiriaKatanaItem) {
+			double max = SkillClientData.max(SephiriaKatanaItem.SWORD_INTENT);
+			return max <= 0.0D
+					? 0.0F
+					: (float) Math.min(1.0D, SkillClientData.current(SephiriaKatanaItem.SWORD_INTENT) / max);
+		}
+
 		if (!(stack.getItem() instanceof SephiriaGreatswordItem) || client.player == null) {
 			return Float.NaN;
 		}
@@ -204,9 +227,11 @@ public final class SephiriaHud implements HudElement {
 		}
 
 		if (stack.getItem() instanceof SephiriaKatanaItem) {
-			return Component.translatable(SephiriaKatanaItem.isSheathed(stack)
-					? "ui.sephiria.sheathed"
-					: "ui.sephiria.unsheathed");
+			// 状态 + 剑意：层数用进度条表示（和旋风同一种画法），满层条会转金色
+			return Component.translatable("ui.sephiria.katana",
+					Component.translatable(SephiriaKatanaItem.isSheathed(stack)
+							? "ui.sephiria.sheathed"
+							: "ui.sephiria.unsheathed"));
 		}
 
 		return null;

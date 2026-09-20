@@ -2,6 +2,7 @@ package com.sephiria.weapon;
 
 import com.sephiria.Sephiria;
 import com.sephiria.ability.Dash;
+import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.core.particles.ParticleTypes;
@@ -17,6 +18,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.level.Level;
@@ -24,7 +26,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -48,14 +49,12 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	private static final double KATANA_SHEATHED_SWEEP_RANGE = 2.0D;
 
 	/** 左键横扫：范围是入鞘刀的 80%，攻速是它的 140%。 */
-	private static final double SWEEP_RANGE_SCALE = 0.8D;
+	private static final double SWEEP_RANGE_SCALE = 1.5D;
 	private static final double ATTACK_SPEED_SCALE = 1.4D;
 	/** 攻速目标值（供物品注册使用）。 */
-	public static final float ATTACK_SPEED = (float) (KATANA_SHEATHED_SPEED * ATTACK_SPEED_SCALE);
+	public static final float ATTACK_SPEED = 1.6F;
 
 	private static final double KATANA_SHEATHED_SWEEP_HEIGHT = 0.5D;
-	/** 横扫的扫描盒相对玩家的最远距离（原版是 3 格，同样按比例缩放）。 */
-	private static final double VANILLA_SWEEP_MAX_DISTANCE = 3.0D;
 	/** 横扫对其它目标的伤害系数；右键技能的伤害倍数。 */
 	private static final double SWEEP_RATIO = 0.5D;
 	private static final double DAMAGE_SCALE = 1.75D;
@@ -68,6 +67,7 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	private static final double DASH_DISTANCE = 5.0D;
 	private static final int DASH_TICKS = 4;
 	/** 环形斩击的垂直半径（水平半径取玩家的实体交互距离）。 */
+	private static final double RING_RADIUS = 4.0D;
 	private static final double RING_HEIGHT = 1.5D;
 	/** 蓄力期间每隔这么多 tick 响一声蓄力音。 */
 	private static final int CHARGE_SOUND_INTERVAL = 6;
@@ -88,6 +88,16 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	public WeaponBranch branch() {
 		return this.branch;
 	}
+
+	@Override
+	public java.util.List<Component> detailLines(ItemStack stack) {
+		return java.util.List.of(
+				Component.translatable("tooltip.sephiria.greatsword.sweep",
+						format(KATANA_SHEATHED_SWEEP_RANGE * SWEEP_RANGE_SCALE), format(ATTACK_SPEED)),
+				Component.translatable("tooltip.sephiria.greatsword.whirlwind",
+						seconds(CHARGE_TICKS), format(DASH_DISTANCE), format(WHIRLWIND_DAMAGE)));
+	}
+
 
 	/** 注册横扫判定与环形斩击的推进器（由 {@link Sephiria#onInitialize()} 调用）。 */
 	public static void register() {
@@ -116,19 +126,15 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 
 	/** 左键横扫：以命中目标为中心扫一圈，参数按巨剑的比例。 */
 	private static void sweep(ServerPlayer player, ServerLevel level, ItemStack stack, Entity target) {
-		double range = KATANA_SHEATHED_SWEEP_RANGE * SWEEP_RANGE_SCALE;
-		double height = KATANA_SHEATHED_SWEEP_HEIGHT * SWEEP_RANGE_SCALE;
-		double reach = VANILLA_SWEEP_MAX_DISTANCE * range;
+		double rangeMul = PlayerStats.rangeMultiplier(player);
+		double range = KATANA_SHEATHED_SWEEP_RANGE * SWEEP_RANGE_SCALE * rangeMul;
+		double height = KATANA_SHEATHED_SWEEP_HEIGHT * SWEEP_RANGE_SCALE * rangeMul;
 		float mainDamage = (float) player.getAttributeValue(Attributes.ATTACK_DAMAGE);
 		float sweepDamage = 1.0F + (float) (SWEEP_RATIO * mainDamage);
 		AABB area = target.getBoundingBox().inflate(range, height, range);
 
 		for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {
 			if (victim == player || victim == target || victim.isAlliedTo(player)) {
-				continue;
-			}
-
-			if (player.distanceToSqr(victim) >= reach * reach) {
 				continue;
 			}
 
@@ -207,7 +213,7 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 		Dash.startVertical(player, direction, DASH_DISTANCE, DASH_TICKS, Dash.DEFAULT_DECAY);
 		serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2F, 0.7F);
-		PENDING.add(Pending.ring(player, DASH_TICKS, WHIRLWIND_DAMAGE, RING_HEIGHT));
+		PENDING.add(Pending.ring(player, DASH_TICKS, (float) (WHIRLWIND_DAMAGE * PlayerStats.damageMultiplier(player)), RING_HEIGHT));
 		return true;
 	}
 
@@ -227,16 +233,14 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 		}
 
 		long now = server.overworld().getGameTime();
-		Iterator<Pending> iterator = PENDING.iterator();
-
-		while (iterator.hasNext()) {
-			Pending pending = iterator.next();
-
+		// 用快照遍历：resolve() 里可能往 PENDING 追加新的一段（比如回击的第二段），
+		// 直接在原列表上迭代会抛 ConcurrentModificationException。
+		for (Pending pending : new ArrayList<>(PENDING)) {
 			if (pending.dueTick > now) {
 				continue;
 			}
 
-			iterator.remove();
+			PENDING.remove(pending);
 			pending.resolve();
 		}
 	}
@@ -269,8 +273,8 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 				return;
 			}
 
-			// 水平半径取玩家的实体交互距离（手能打到多远，斩击就打到多远）
-			double reach = player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
+			// 水平半径是固定值（4 格），再乘近战攻击范围属性
+			double reach = RING_RADIUS * PlayerStats.rangeMultiplier(player);
 			AABB area = player.getBoundingBox().inflate(reach, height, reach);
 
 			for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {

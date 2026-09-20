@@ -1,6 +1,6 @@
 package com.sephiria.weapon;
 
-import com.sephiria.registry.ModItems;
+import com.sephiria.damage.SephiriaDamage;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
@@ -23,7 +23,7 @@ public class SephiriaBoltItem extends ArrowItem {
 
 	@Override
 	public AbstractArrow createArrow(Level level, ItemStack ammo, LivingEntity shooter, ItemStack weapon) {
-		Arrow arrow = new Arrow(level, shooter, new ItemStack(ModItems.CROSSBOW_BOLT), weapon);
+		Arrow arrow = new SephiriaBoltArrow(level, shooter, weapon);
 		// 与原版「无限」附魔射出的箭一样：不可拾取。
 		arrow.pickup = AbstractArrow.Pickup.DISALLOWED;
 		return arrow;

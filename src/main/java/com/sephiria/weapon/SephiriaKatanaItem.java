@@ -1,7 +1,14 @@
 package com.sephiria.weapon;
 
 import com.sephiria.Sephiria;
+import com.sephiria.ability.Dash;
 import com.sephiria.ability.Invulnerability;
+import com.sephiria.ability.SkillStorage;
+import com.sephiria.client.SkillClientData;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.server.MinecraftServer;
+import com.sephiria.stats.PlayerStats;
+import com.sephiria.stats.WeaponStats;
 import com.geckolib.animatable.GeoItem;
 import com.geckolib.animatable.client.GeoRenderProvider;
 import com.geckolib.animatable.instance.AnimatableInstanceCache;
@@ -39,11 +46,14 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -83,10 +93,10 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	private static final float VANILLA_SWORD_ATTACK_SPEED = 1.6F;
 
 	/** 出鞘：伤害低、充能快（原版剑的 2 倍）。 */
-	private static final float UNSHEATHED_DAMAGE = 5.0F;
-	private static final float UNSHEATHED_CHARGE_SCALE = 2.0F;
+	private static final float UNSHEATHED_DAMAGE = 2.52F;
+	private static final float UNSHEATHED_CHARGE_SCALE = 2.6F;
 	/** 出鞘的横扫范围/伤害比：等同原版一般附魔水平。 */
-	private static final double UNSHEATHED_SWEEP_RANGE = 1.0D;
+	private static final double UNSHEATHED_SWEEP_RANGE = 2.0D;
 	private static final double UNSHEATHED_SWEEP_RATIO = 0.5D;
 
 	/** 入鞘：伤害高、范围 2 倍，但充能只有原版剑的 0.7 倍。 */
@@ -99,9 +109,37 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	/** 原版横扫的扫描盒：以命中目标为中心 {@code inflate(1.0, 0.25, 1.0)}，离玩家不超过 3 格。 */
 	private static final double VANILLA_SWEEP_RANGE = 1.0D;
 	private static final double VANILLA_SWEEP_HEIGHT = 0.25D;
-	private static final double VANILLA_SWEEP_MAX_DISTANCE = 3.0D;
 	/** 原版横扫要求的充能下限（{@code getAttackStrengthScale(0.5F) > 0.9F}）。 */
 	private static final float SWEEP_CHARGE_THRESHOLD = 0.9F;
+
+	/** 剑意：每次命中累积，满层且入鞘时下一刀会消耗全部剑意变成「强力斩击」。 */
+	public static final Identifier SWORD_INTENT = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sword_intent");
+	public static final double INTENT_MAX = 100.0D;
+	private static final double INTENT_PER_HIT = 20.0D;
+
+	/**
+	 * 强力斩击：向准星突进 1 格，落地后以自身为原点劈一圈。
+	 *
+	 * <p>倍率 = 120% × (消耗的剑意 ÷ {@value #INTENT_MAX})，满层就是 24——
+	 * 也就是物理强度基准（20）的 120%，再乘物理强度换算。
+	 */
+	private static final double POWERFUL_DISTANCE = 1.0D;
+	private static final int POWERFUL_DASH_TICKS = 4;
+	private static final int POWERFUL_COOLDOWN = 4;
+	private static final double POWERFUL_RANGE = 5.5D;
+	private static final double POWERFUL_HEIGHT = 1.375D;
+	private static final float POWERFUL_DAMAGE_AT_FULL = 24.0F;
+
+	/** 待结算的斩击：突进结束才结算，所以范围到那时候再按落点现算。 */
+	private static final List<Pending> PENDING = new ArrayList<>();
+
+	/** 剑意条（物品栏里占耐久条的位置）的颜色：平时浅青，满层金色。 */
+	private static final int INTENT_BAR_COLOR = 0xFF6FD8FF;
+	private static final int INTENT_BAR_FULL_COLOR = 0xFFFFD24A;
+
+	/** 剑意满层时的提示音：音符盒放在金块上的"铃铛"，清脆且和战斗音效不撞。 */
+	private static final float INTENT_FULL_VOLUME = 0.9F;
+	private static final float INTENT_FULL_PITCH = 1.5F;
 
 	private static final Identifier DAMAGE_MODIFIER_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "katana_attack_damage");
 	private static final Identifier SPEED_MODIFIER_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "katana_attack_speed");
@@ -122,10 +160,62 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 		GeoItem.registerSyncedAnimatable(this);
 	}
 
+	// ------------------------------------------------------------------ 耐久条 = 剑意条
+	//
+	// 赛菲利亚武器都带 UNBREAKABLE，而 26.2 的 ItemStack#isDamageableItem() 排除了不可破坏的
+	// 物品，于是原版耐久条本来永远不会绘制。这里照弩显示弹匣的做法，把耐久条的三个方法
+	// 改成读剑意层数。数值取自客户端镜像（见 SkillClientData）——这三个方法只有客户端
+	// 渲染物品栏时会调，服务端跑不到。
+
+	/** 有剑意才显示：0 层时挂一条空条，看着像装备坏了。 */
+	@Override
+	public boolean isBarVisible(ItemStack stack) {
+		return intentRatio() > 0.0F;
+	}
+
+	/** 条的长度 = 剑意占比（原版是 13 像素满格）。 */
+	@Override
+	public int getBarWidth(ItemStack stack) {
+		return Math.round(13.0F * intentRatio());
+	}
+
+	/** 平时浅青，满层转金色——和满层音效一起做"可以放了"的提示。 */
+	@Override
+	public int getBarColor(ItemStack stack) {
+		return intentRatio() >= 1.0F ? INTENT_BAR_FULL_COLOR : INTENT_BAR_COLOR;
+	}
+
+	/** 剑意的当前占比（0~1）；客户端还没收到同步时按 0 算。 */
+	private static float intentRatio() {
+		double max = SkillClientData.max(SWORD_INTENT);
+		return max <= 0.0D ? 0.0F : (float) (SkillClientData.current(SWORD_INTENT) / max);
+	}
+
 	@Override
 	public WeaponBranch branch() {
 		return this.branch;
 	}
+
+	@Override
+	public java.util.List<Component> detailLines(ItemStack stack) {
+		boolean sheathed = isSheathed(stack);
+		float damage = sheathed ? SHEATHED_DAMAGE : UNSHEATHED_DAMAGE;
+		float speed = VANILLA_SWORD_ATTACK_SPEED * (sheathed ? SHEATHED_CHARGE_SCALE : UNSHEATHED_CHARGE_SCALE);
+		double range = sheathed ? SHEATHED_SWEEP_RANGE : UNSHEATHED_SWEEP_RANGE;
+
+		return java.util.List.of(
+				Component.translatable("tooltip.sephiria.katana.state",
+						Component.translatable(sheathed ? "tooltip.sephiria.katana.sheathed" : "tooltip.sephiria.katana.drawn"),
+						format(damage), format(speed), format(range)),
+				Component.translatable("tooltip.sephiria.katana.switch",
+						seconds(SWITCH_TICKS), seconds(BLOCK_TICKS)),
+				Component.translatable("tooltip.sephiria.katana.intent",
+						format(INTENT_PER_HIT), format(INTENT_MAX)),
+				Component.translatable("tooltip.sephiria.katana.slash",
+						format(POWERFUL_DAMAGE_AT_FULL), seconds(POWERFUL_COOLDOWN),
+						format(POWERFUL_DISTANCE), format(POWERFUL_RANGE), format(POWERFUL_HEIGHT)));
+	}
+
 
 	// ------------------------------------------------------------------ 状态
 
@@ -162,6 +252,8 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 		boolean sheathed = !isSheathed(stack);
 		stack.set(SHEATHED, sheathed);
 		stack.set(DataComponents.ATTRIBUTE_MODIFIERS, attributeModifiers(sheathed));
+		// 状态换了、物品上的属性修饰符也换了，立刻重算一次属性换算，不必等定期检查
+		WeaponStats.refresh(player);
 		player.getCooldowns().addCooldown(stack, SWITCH_TICKS);
 		Invulnerability.grant(player, BLOCK_TICKS);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -187,6 +279,14 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	// ------------------------------------------------------------------ 格挡与横扫
 
 	/** 注册伤害拦截与攻击回调（由 {@link Sephiria#onInitialize()} 调用）。 */
+	/** 注册剑意存储与斩击结算轮询（由 {@link Sephiria#onInitialize()} 调用）。 */
+	public static void register() {
+		// 剑意只来自命中，不会随时间回复，所以用 registerManual；开局是 0 层而不是满层，
+		// 否则第一次挥刀就直接变成强力斩击了
+		SkillStorage.registerManual(SWORD_INTENT, INTENT_MAX, 0.0D);
+		ServerTickEvents.END_SERVER_TICK.register(SephiriaKatanaItem::tick);
+	}
+
 	public static void registerEvents() {
 		// 切换状态的 0.3 秒无敌由 Invulnerability 统一处理，见 Sephiria#onInitialize。
 		// 两个状态都打横扫，参数按状态取；主目标仍然吃正常伤害，所以返回 PASS。
@@ -203,6 +303,26 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				((SephiriaKatanaItem) stack.getItem()).triggerAnim(serverPlayer,
 						GeoItem.getOrAssignId(stack, serverLevel), "main", "attack_sheathed");
 			}
+			// 入鞘且满层：这一刀不再是普通攻击，而是消耗全部剑意放强力斩击。
+			// 读的是这一刀结算之前的层数，所以"刚好打满"的那一刀不会立刻触发，得再按一次左键。
+			double intent = SkillStorage.current(serverPlayer, SWORD_INTENT);
+
+			if (isSheathed(stack) && intent >= INTENT_MAX) {
+				SkillStorage.consume(serverPlayer, SWORD_INTENT, intent);
+				powerfulSlash(serverPlayer, serverLevel, stack, intent);
+				// 返回 FAIL 顶掉这次普通攻击：主目标由斩击的范围伤害来吃
+				return InteractionResult.FAIL;
+			}
+
+			// 命中才给剑意：这个回调只在真正打到实体时触发，挥空不计
+			SkillStorage.regenerate(serverPlayer, SWORD_INTENT, INTENT_PER_HIT);
+
+			// 刚好攒满的这一刀给个提示音（再攒也不会超过上限，所以只会响这一次）
+			if (intent < INTENT_MAX && SkillStorage.current(serverPlayer, SWORD_INTENT) >= INTENT_MAX) {
+				serverLevel.playSound(null, serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(),
+						SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, INTENT_FULL_VOLUME, INTENT_FULL_PITCH);
+			}
+
 			if (!canSweep(serverPlayer)) {
 				return InteractionResult.PASS;
 			}
@@ -232,11 +352,11 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 
 		// 原版公式：1 + 横扫伤害比 × 主伤害
 		float sweepDamage = 1.0F + (float) (ratio * mainDamage);
-		double reach = VANILLA_SWEEP_MAX_DISTANCE * rangeScale;
+		double rangeMul = PlayerStats.rangeMultiplier(player);
 		AABB area = target.getBoundingBox().inflate(
-				VANILLA_SWEEP_RANGE * rangeScale,
-				VANILLA_SWEEP_HEIGHT * rangeScale,
-				VANILLA_SWEEP_RANGE * rangeScale);
+				VANILLA_SWEEP_RANGE * rangeScale * rangeMul,
+				VANILLA_SWEEP_HEIGHT * rangeScale * rangeMul,
+				VANILLA_SWEEP_RANGE * rangeScale * rangeMul);
 		DamageSource source = level.damageSources().playerAttack(player);
 
 		for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {
@@ -244,9 +364,6 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				continue;
 			}
 			if (victim instanceof ArmorStand stand && stand.isMarker()) {
-				continue;
-			}
-			if (player.distanceToSqr(victim) >= reach * reach) {
 				continue;
 			}
 			if (victim.hurtServer(level, source, sweepDamage)) {
@@ -264,6 +381,81 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 		level.sendParticles(ParticleTypes.SWEEP_ATTACK,
 				player.getX() + dx, player.getY(0.5D), player.getZ() + dz,
 				0, dx, 0.0D, dz, 0.0D);
+	}
+
+	private static void powerfulSlash(ServerPlayer player, ServerLevel level, ItemStack stack, double intent) {
+		float damage = (float) (POWERFUL_DAMAGE_AT_FULL * (intent / INTENT_MAX) * PlayerStats.damageMultiplier(player));
+
+		// 突进走 3D 版本：准星朝上/朝下时也要能斜着窜出去
+		Dash.startVertical(player, player.getLookAngle(), POWERFUL_DISTANCE, POWERFUL_DASH_TICKS, Dash.DEFAULT_DECAY);
+		player.getCooldowns().addCooldown(stack, POWERFUL_COOLDOWN);
+		level.playSound(null, player.getX(), player.getY(), player.getZ(),
+				SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 0.6F);
+
+		// 冷却和突进同为 4 tick：冷却一解除，斩击也刚好落地结算完
+		PENDING.add(Pending.burst(player, POWERFUL_DASH_TICKS, damage, POWERFUL_RANGE, POWERFUL_HEIGHT));
+	}
+
+	private static void tick(MinecraftServer server) {
+		if (PENDING.isEmpty()) {
+			return;
+		}
+
+		long now = server.overworld().getGameTime();
+
+		// 快照遍历：resolve() 现在不会往列表里加东西，但和其它武器保持一致，避免以后再踩坑
+		for (Pending pending : new ArrayList<>(PENDING)) {
+			if (pending.dueTick > now) {
+				continue;
+			}
+
+			PENDING.remove(pending);
+			pending.resolve();
+		}
+	}
+
+	/** 一次待结算的斩击。范围在结算时才按落点拼，所以突进多远都不影响判定。 */
+	private static final class Pending {
+		private final ServerPlayer player;
+		private final long dueTick;
+		private final float damage;
+		private final double range;
+		private final double height;
+
+		private Pending(ServerPlayer player, long dueTick, float damage, double range, double height) {
+			this.player = player;
+			this.dueTick = dueTick;
+			this.damage = damage;
+			this.range = range;
+			this.height = height;
+		}
+
+		static Pending burst(ServerPlayer player, int delay, float damage, double range, double height) {
+			return new Pending(player, player.level().getGameTime() + delay, damage, range, height);
+		}
+
+		void resolve() {
+			if (player.isRemoved() || !(player.level() instanceof ServerLevel level)) {
+				return;
+			}
+
+			double mul = PlayerStats.rangeMultiplier(player);
+			AABB area = player.getBoundingBox().inflate(range * mul, height * mul, range * mul);
+			DamageSource source = level.damageSources().playerAttack(player);
+
+			for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {
+				if (victim == player || victim.isAlliedTo(player)) {
+					continue;
+				}
+
+				victim.hurtServer(level, source, damage);
+			}
+
+			level.playSound(null, player.getX(), player.getY(), player.getZ(),
+					SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 0.8F);
+			level.sendParticles(ParticleTypes.SWEEP_ATTACK,
+					player.getX(), player.getY(0.5D), player.getZ(), 12, 1.6D, 0.3D, 1.6D, 0.0D);
+		}
 	}
 
 	private static boolean isGuarding(Player player) {

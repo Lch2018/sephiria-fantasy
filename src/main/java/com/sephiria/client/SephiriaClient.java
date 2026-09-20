@@ -3,7 +3,9 @@ package com.sephiria.client;
 import com.sephiria.client.hud.HudConfigScreen;
 import com.sephiria.client.hud.SephiriaHud;
 import com.sephiria.network.DashPayload;
+import com.sephiria.client.gui.StatsScreen;
 import com.sephiria.network.InvulnerablePayload;
+import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.network.ReloadPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.weapon.SephiriaCrossbowItem;
@@ -15,7 +17,13 @@ import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
@@ -30,6 +38,10 @@ import org.lwjgl.glfw.GLFW;
  * 三个都能在「选项 → 控制」里改。按键只负责发包，数值全在服务端算。
  */
 public class SephiriaClient implements ClientModInitializer {
+	/** 原版背包面板的尺寸（宽 × 高），用来把标签贴在它上沿。 */
+	private static final int INVENTORY_WIDTH = 176;
+	private static final int INVENTORY_HEIGHT = 166;
+
 	private static final KeyMapping DASH_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 			"key.sephiria.dash",
 			InputConstants.Type.MOUSE,
@@ -54,6 +66,19 @@ public class SephiriaClient implements ClientModInitializer {
 			if (stack.getItem() instanceof SephiriaWeapon weapon) {
 				lines.add(weapon.tooltipLine());
 			}
+			if (stack.getItem() instanceof SephiriaWeapon detail) {
+				// 详细描述：空行分隔，逐条灰色显示技能数值
+				java.util.List<Component> lines2 = detail.detailLines(stack);
+
+				if (!lines2.isEmpty()) {
+					lines.add(Component.empty());
+
+					for (Component line : lines2) {
+						lines.add(line.copy().withStyle(ChatFormatting.GRAY));
+					}
+				}
+			}
+
 			if (stack.getItem() instanceof SephiriaCrossbowItem) {
 				lines.add(Component.translatable("tooltip.sephiria.magazine",
 						Component.literal(format(SkillClientData.current(SephiriaCrossbowItem.STORAGE))),
@@ -66,6 +91,22 @@ public class SephiriaClient implements ClientModInitializer {
 				(payload, context) -> SkillClientData.accept(payload));
 		ClientPlayNetworking.registerGlobalReceiver(InvulnerablePayload.TYPE,
 				(payload, context) -> InvulnClientData.accept(payload));
+		ClientPlayNetworking.registerGlobalReceiver(StatsSyncPayload.TYPE,
+				(payload, context) -> ClientStats.accept(payload));
+
+		// 背包界面顶部加一个「属性」标签：贴着背包面板上沿，点了切到属性面板
+		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+			if (!(screen instanceof InventoryScreen)) {
+				return;
+			}
+
+			int left = (scaledWidth - INVENTORY_WIDTH) / 2;
+			int top = (scaledHeight - INVENTORY_HEIGHT) / 2;
+			Screens.getWidgets(screen).add(Button.builder(Component.translatable("screen.sephiria.stats"),
+							button -> Minecraft.getInstance().setScreenAndShow(new StatsScreen()))
+					.bounds(left, top - 20, 60, 18)
+					.build());
+		});
 
 		HudElementRegistry.addLast(SephiriaHud.ID, new SephiriaHud());
 

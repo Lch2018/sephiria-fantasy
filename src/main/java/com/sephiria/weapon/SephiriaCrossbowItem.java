@@ -19,6 +19,7 @@ import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.ArrowItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.level.Level;
@@ -59,7 +60,7 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 	/** 装填耗时（tick）：2 秒。 */
 	public static final int RELOAD_TICKS = 40;
 	/** 射击间隔（tick）：攻速 3 → 20/3 取整。 */
-	public static final int FIRE_COOLDOWN_TICKS = 7;
+	public static final int FIRE_COOLDOWN_TICKS = 4;
 	/** 与原版弩一致的出膛速度。 */
 	private static final float ARROW_SPEED = 3.15F;
 
@@ -77,6 +78,15 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 	public WeaponBranch branch() {
 		return this.branch;
 	}
+
+	@Override
+	public java.util.List<Component> detailLines(ItemStack stack) {
+		return java.util.List.of(
+				Component.translatable("tooltip.sephiria.crossbow.fire",
+						seconds(FIRE_COOLDOWN_TICKS), format(MAGAZINE_SIZE)),
+				Component.translatable("tooltip.sephiria.crossbow.reload", seconds(RELOAD_TICKS)));
+	}
+
 
 	/** 注册存储配置与装填推进器（由 {@link Sephiria#onInitialize()} 调用）。 */
 	public static void register() {

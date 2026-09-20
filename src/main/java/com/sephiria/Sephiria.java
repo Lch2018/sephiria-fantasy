@@ -8,11 +8,17 @@ import com.sephiria.network.DashPayload;
 import com.sephiria.network.InvulnerablePayload;
 import com.sephiria.network.ReloadPayload;
 import com.sephiria.network.SkillSyncPayload;
+import com.sephiria.network.StatsSyncPayload;
+import com.sephiria.stats.PlayerStats;
+import com.sephiria.stats.WeaponStats;
 import com.sephiria.registry.ModCreativeTabs;
 import com.sephiria.registry.ModItems;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaDaggerItem;
 import com.sephiria.weapon.SephiriaGreatswordItem;
+import com.sephiria.weapon.SephiriaShieldItem;
+import com.sephiria.weapon.SephiriaStaffItem;
+import com.sephiria.weapon.WeaponSweep;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.WeaponBranch;
 import net.fabricmc.api.ModInitializer;
@@ -32,21 +38,27 @@ public class Sephiria implements ModInitializer {
 		ModCreativeTabs.initialize();
 		OffHandGuard.register();
 		SephiriaKatanaItem.registerEvents();
+		SephiriaKatanaItem.register();
 
 		// 固有技能系统：无敌窗口 + 通用突进 + 技能存储，冲刺/装填由客户端按键包触发。
 		// 匕首：招架/狂怒两段技能（招架窗口自行挡伤害，奖励延后一刻发放）
 		SephiriaDaggerItem.register();
 		SephiriaGreatswordItem.register();
+		SephiriaStaffItem.register();
+		WeaponSweep.register();
+		SephiriaShieldItem.register();
 		Invulnerability.register();
 		Dash.register();
 		DashSkill.register();
 		SephiriaCrossbowItem.register();
 		SkillStorage.registerTicker();
+		WeaponStats.register();
 
 		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(DashPayload.TYPE,
 				(payload, context) -> DashSkill.perform(context.player()));
@@ -54,7 +66,11 @@ public class Sephiria implements ModInitializer {
 				(payload, context) -> SephiriaCrossbowItem.tryReload(context.player()));
 
 		// 进服时把各技能的存储量推给客户端，HUD 才有初始值
-		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> SkillStorage.syncAll(handler.player));
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+			SkillStorage.syncAll(handler.player);
+			PlayerStats.syncOnJoin(handler.player);
+			WeaponStats.refresh(handler.player);
+		});
 
 		LOGGER.info("[SEPHIRIA] 武器系统已载入：{} 个分支，{} 把基础武器（锻造系统尚未实现）",
 				WeaponBranch.values().length, ModItems.BASE_WEAPONS.size());

@@ -5,6 +5,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.level.Level;
@@ -43,6 +44,14 @@ public class SephiriaWeaponItem extends Item implements SephiriaWeapon {
 	public WeaponBranch branch() {
 		return this.branch;
 	}
+
+	@Override
+	public java.util.List<Component> detailLines(ItemStack stack) {
+		return this.blocks
+				? java.util.List.of(Component.translatable("tooltip.sephiria.shield.block"))
+				: java.util.List.of();
+	}
+
 
 	@Override
 	public InteractionResult use(Level level, Player player, InteractionHand hand) {

@@ -4,6 +4,7 @@ import com.sephiria.Sephiria;
 import com.sephiria.ability.Dash;
 import com.sephiria.ability.Invulnerability;
 import com.sephiria.ability.SkillStorage;
+import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.ParticleTypes;
@@ -19,13 +20,13 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,7 +66,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	private static final int INVULNERABLE_TICKS = 6;
 
 	/** 招架范围的放大倍数：1.0 = 横扫之刃 II，当前取 1.8。 */
-	private static final double PARRY_RANGE_SCALE = 1.8D;
+	private static final double PARRY_RANGE_SCALE = 1.65D;
 	/** 招架的范围与伤害：横扫之刃 II 的基础（原版横扫的 2 倍）再放大 {@value #PARRY_RANGE_SCALE} 倍。 */
 	private static final double PARRY_RANGE = 2.0D * PARRY_RANGE_SCALE;
 	private static final double PARRY_HEIGHT = 0.5D * PARRY_RANGE_SCALE;
@@ -97,6 +98,19 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	public WeaponBranch branch() {
 		return this.branch;
 	}
+
+	@Override
+	public java.util.List<Component> detailLines(ItemStack stack) {
+		return java.util.List.of(
+				Component.translatable("tooltip.sephiria.dagger.parry",
+						format(PARRY_DISTANCE), format(PARRY_DAMAGE), format(PARRY_RANGE),
+						seconds(PARRY_COOLDOWN), seconds(INVULNERABLE_TICKS)),
+				Component.translatable("tooltip.sephiria.dagger.fury",
+						format(FURY_DISTANCE), format(FURY_DAMAGE), format(FURY_PATH_RADIUS),
+						seconds(FURY_COOLDOWN), seconds(INVULNERABLE_TICKS)),
+				Component.translatable("tooltip.sephiria.dagger.focus", format(FOCUS_MAX)));
+	}
+
 
 	/** 注册专注存储、结算推进器与招架判定（招架窗口内的伤害由本处理器直接取消，与注册顺序无关）。 */
 	public static void register() {
@@ -151,7 +165,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		Dash.startVertical(player, direction, PARRY_DISTANCE, DASH_TICKS, Dash.DEFAULT_DECAY);
 		player.getCooldowns().addCooldown(stack, PARRY_COOLDOWN);
 
-		PENDING.add(Pending.aura(player, DASH_TICKS, PARRY_DAMAGE, PARRY_RANGE, PARRY_HEIGHT));
+		PENDING.add(Pending.aura(player, DASH_TICKS, (float) (PARRY_DAMAGE * PlayerStats.damageMultiplier(player)), PARRY_RANGE, PARRY_HEIGHT));
 	}
 
 	/** 狂怒：长突进 + 无敌，落地后结算突进路径上的范围伤害，并消耗一层专注。 */
@@ -162,7 +176,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		player.getCooldowns().addCooldown(stack, FURY_COOLDOWN);
 
 		SkillStorage.consume(player, FOCUS, 1.0D);
-		PENDING.add(Pending.path(player, direction, FURY_DISTANCE, DASH_TICKS, FURY_DAMAGE, FURY_PATH_RADIUS));
+		PENDING.add(Pending.path(player, direction, FURY_DISTANCE, DASH_TICKS, (float) (FURY_DAMAGE * PlayerStats.damageMultiplier(player)), FURY_PATH_RADIUS));
 	}
 
 	/** 完整的准星朝向：匕首沿真正的视线突进，抬头会向上冲、低头会向下冲。 */
@@ -226,16 +240,14 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 			return;
 		}
 
-		Iterator<Pending> iterator = PENDING.iterator();
-
-		while (iterator.hasNext()) {
-			Pending pending = iterator.next();
-
+		// 用快照遍历：resolve() 里可能往 PENDING 追加新的一段（比如回击的第二段），
+		// 直接在原列表上迭代会抛 ConcurrentModificationException。
+		for (Pending pending : new ArrayList<>(PENDING)) {
 			if (pending.dueTick > now) {
 				continue;
 			}
 
-			iterator.remove();
+			PENDING.remove(pending);
 			pending.resolve();
 		}
 	}
@@ -269,14 +281,16 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 
 		/** 以自身为中心的一块区域（结算时跟随自身位置）。 */
 		static Pending aura(ServerPlayer player, int delay, float damage, double range, double height) {
-			return new Pending(player, player.level().getGameTime() + delay, damage, null, true, range, height);
+			double mul = PlayerStats.rangeMultiplier(player);
+			return new Pending(player, player.level().getGameTime() + delay, damage, null, true, range * mul, height * mul);
 		}
 
 		/** 沿突进路径的一条带状区域（释放时定格）。 */
 		static Pending path(ServerPlayer player, Vec3 direction, double distance, int delay, float damage, double radius) {
 			Vec3 start = player.position();
 			Vec3 end = start.add(direction.scale(distance));
-			AABB area = new AABB(start, end).inflate(radius, 1.5D, radius);
+			double mul = PlayerStats.rangeMultiplier(player);
+			AABB area = new AABB(start, end).inflate(radius * mul, 1.5D * mul, radius * mul);
 			return new Pending(player, player.level().getGameTime() + delay, damage, area, false, 0.0D, 0.0D);
 		}
 

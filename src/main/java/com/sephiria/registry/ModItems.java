@@ -6,6 +6,8 @@ import com.sephiria.weapon.SephiriaBoltItem;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaDaggerItem;
 import com.sephiria.weapon.SephiriaGreatswordItem;
+import com.sephiria.weapon.SephiriaShieldItem;
+import com.sephiria.weapon.SephiriaStaffItem;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.SephiriaWeaponItem;
 import com.sephiria.weapon.WeaponBranch;
@@ -53,13 +55,20 @@ public final class ModItems {
 	/** 弩的攻速：每秒 3 发。 */
 	private static final double CROSSBOW_ATTACK_SPEED = 3.0D;
 
-	public static final Item DEFAULT_SWORD_AND_SHIELD = sword("default_sword_and_shield", WeaponBranch.SWORD_AND_SHIELD, 6.0F, 1.6F, 250, false, true);
+	public static final Item DEFAULT_SWORD_AND_SHIELD = register(key("default_sword_and_shield"),
+			p -> new SephiriaShieldItem(WeaponBranch.SWORD_AND_SHIELD, p),
+			new Item.Properties()
+					.sword(ToolMaterial.IRON,
+							3.0F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
+							3.2F - (float) Attributes.DEFAULT_ATTACK_SPEED)
+					.durability(250)
+					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
 	/** 钢铁巨剑：左键横扫 + 右键蓄力「旋风」（见 {@link SephiriaGreatswordItem}）。 */
 	public static final Item STEEL_GREATSWORD = register(key("steel_greatsword"),
 			p -> new SephiriaGreatswordItem(WeaponBranch.GREATSWORD, p),
 			new Item.Properties()
 					.sword(ToolMaterial.IRON,
-							9.0F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
+							6.0F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
 							SephiriaGreatswordItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
 					.durability(600)
 					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
@@ -68,8 +77,8 @@ public final class ModItems {
 			p -> new SephiriaDaggerItem(WeaponBranch.DAGGER, p),
 			new Item.Properties()
 					.sword(ToolMaterial.IRON,
-							4.0F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
-							3.0F - (float) Attributes.DEFAULT_ATTACK_SPEED)
+							2.05F - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
+							6.4F - (float) Attributes.DEFAULT_ATTACK_SPEED)
 					.durability(160)
 					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
 	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, SephiriaCrossbowItem.MAGAZINE_SIZE);
@@ -89,7 +98,15 @@ public final class ModItems {
 					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
 					.component(DataComponents.ATTRIBUTE_MODIFIERS, SephiriaKatanaItem.attributeModifiers(false))
 					.component(SephiriaKatanaItem.SHEATHED, Boolean.FALSE));
-	public static final Item QUARTERSTAFF = sword("quarterstaff", WeaponBranch.STAFF, 5.5F, 1.5F, 300, false, false);
+	/** 长棍：左键横扫 + 右键两段「回击」（见 {@link SephiriaStaffItem}）。 */
+	public static final Item QUARTERSTAFF = register(key("quarterstaff"),
+			p -> new SephiriaStaffItem(WeaponBranch.STAFF, p),
+			new Item.Properties()
+					.sword(ToolMaterial.IRON,
+							SephiriaStaffItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
+							SephiriaStaffItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
+					.durability(300)
+					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
 
 	/** 全部基础武器，顺序即创造模式标签页里的顺序。 */
 	public static final List<BaseWeapon> BASE_WEAPONS = List.of(

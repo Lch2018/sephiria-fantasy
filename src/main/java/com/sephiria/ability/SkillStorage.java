@@ -31,7 +31,7 @@ import java.util.UUID;
  */
 public final class SkillStorage {
 	/** 每个技能的配置。 */
-	private record Config(double max, double regenAmount, int regenIntervalTicks) {
+	private record Config(double max, double regenAmount, int regenIntervalTicks, double initial) {
 	}
 
 	private static final Map<Identifier, Config> CONFIGS = new LinkedHashMap<>();
@@ -49,7 +49,17 @@ public final class SkillStorage {
 	 * @param regenIntervalTicks 回复间隔（tick）
 	 */
 	public static void register(Identifier skill, double max, double regenAmount, int regenIntervalTicks) {
-		CONFIGS.put(skill, new Config(max, regenAmount, regenIntervalTicks));
+		register(skill, max, regenAmount, regenIntervalTicks, max);
+	}
+
+	/**
+	 * 同上，但可以指定开局值。
+	 *
+	 * <p>次数型资源（冲刺、弹匣）开局就该是满的，所以默认满仓；而「要攒起来」的资源
+	 * （刀的剑意）开局必须是空的，否则第一次挥刀就直接放技能了。
+	 */
+	public static void register(Identifier skill, double max, double regenAmount, int regenIntervalTicks, double initial) {
+		CONFIGS.put(skill, new Config(max, regenAmount, regenIntervalTicks, initial));
 	}
 
 	/**
@@ -57,7 +67,12 @@ public final class SkillStorage {
 	 * （弩的装填就是这种——只有换弹完成才加弹）。
 	 */
 	public static void registerManual(Identifier skill, double max) {
-		register(skill, max, 0.0D, 0);
+		registerManual(skill, max, max);
+	}
+
+	/** 不自动回复，且开局是空的（见 {@link #register} 的重载）。 */
+	public static void registerManual(Identifier skill, double max, double initial) {
+		register(skill, max, 0.0D, 0, initial);
 	}
 
 	/** 注册回复推进器（由 {@link com.sephiria.Sephiria#onInitialize()} 调用）。 */
@@ -111,7 +126,13 @@ public final class SkillStorage {
 	private static Pool pool(ServerPlayer player, Identifier skill) {
 		return POOLS
 				.computeIfAbsent(player.getUUID(), uuid -> new HashMap<>())
-				.computeIfAbsent(skill, id -> new Pool(max(id)));
+				.computeIfAbsent(skill, id -> new Pool(initial(id)));
+	}
+
+	/** 某个技能的开局值；没注册过的技能从 0 开始。 */
+	private static double initial(Identifier skill) {
+		Config config = CONFIGS.get(skill);
+		return config == null ? 0.0D : config.initial();
 	}
 
 	private static void tick(MinecraftServer server) {
@@ -150,9 +171,9 @@ public final class SkillStorage {
 		private double current;
 		private int timer;
 
-		Pool(double max) {
-			// 首次访问按满仓算，这样新玩家一进来就有完整的次数
-			this.current = max;
+		Pool(double initial) {
+			// 默认按满仓算，这样新玩家一进来就有完整的次数（剑意那种从 0 攒的另说）
+			this.current = initial;
 		}
 
 		void tick(Config config) {
