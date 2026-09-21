@@ -46,7 +46,6 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	private static final int BORDER_DARK = 0xFF1A1A1E;
 	private static final int SLOT_COLOR = 0xFF2A2A30;
 	private static final int SLOT_EDGE = 0xFF15151A;
-	private static final int SUBTITLE_COLOR = 0xFF9A9AA2;
 	private static final int HEADER_COLOR = 0xFFFFD24A;
 	private static final int TEXT_COLOR = 0xFFFFFFFF;
 	private static final int TAB_HEIGHT = 20;
@@ -66,13 +65,11 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	private static final int COMBO_ICON = 16;
 
 	private final int rows;
-	private final Component subtitle;
 
 	public ArtifactBackpackScreen(ArtifactBackpackMenu menu, Inventory inventory, Component title) {
 		super(menu, inventory, title, ArtifactBackpackMenu.IMAGE_WIDTH,
 				ArtifactBackpackMenu.imageHeight(ArtifactBackpack.DEFAULT_HEIGHT));
 		this.rows = ArtifactBackpack.DEFAULT_HEIGHT;
-		this.subtitle = Component.translatable("screen.sephiria.backpack.subtitle");
 		this.inventoryLabelY = ArtifactBackpackMenu.playerRowsY(this.rows) - 11;
 	}
 
@@ -232,25 +229,40 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		return null;
 	}
 
+	/** 不画标题与「物品栏」标签——这两行在背包页上是多余的。 */
 	@Override
 	protected void extractLabels(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
-		super.extractLabels(extractor, mouseX, mouseY);
-
-		Font font = this.font;
-		extractor.text(font, this.subtitle, this.titleLabelX + font.width(this.title) + 6, this.titleLabelY,
-				SUBTITLE_COLOR);
 	}
 
 	/** 格子里的等级显示：有神器就显示「等级/上限」，否则显示格子等级。 */
 	@Override
 	protected void extractSlot(GuiGraphicsExtractor extractor, Slot slot, int mouseX, int mouseY) {
-		super.extractSlot(extractor, slot, mouseX, mouseY);
+		ItemStack shown = slot.getItem();
+
+		if (shown.getItem() instanceof SlateItem slate && SlateItem.rotationOf(shown) != 0) {
+			// 石板：按朝向把图标一起转过来（绕着格子中心转），这样一眼能看出它朝哪边
+			// 这里自己画，所以不调 super（否则会再画一遍没转的图标）
+			Matrix3x2fStack pose = extractor.pose();
+			pose.pushMatrix();
+			pose.translate(slot.x + 8.0F, slot.y + 8.0F);
+			// 屏幕坐标 y 向下：负角度才是视觉上的逆时针，与 SlateItem#rotateOffset 的方向一致
+			pose.rotate(-SlateItem.rotationOf(shown) * ((float) Math.PI / 2.0F));
+			pose.translate(-8.0F, -8.0F);
+			extractor.item(shown, 0, 0);
+			pose.popMatrix();
+		} else {
+			super.extractSlot(extractor, slot, mouseX, mouseY);
+		}
 
 		if (!this.menu.isBackpackSlot(slot)) {
 			return;
 		}
 
-		ItemStack stack = slot.getItem();
+		drawLevelText(extractor, slot, shown);
+	}
+
+	/** 格子左上角的等级文字（0.6 倍大小）。 */
+	private void drawLevelText(GuiGraphicsExtractor extractor, Slot slot, ItemStack stack) {
 		Component text;
 		int colour;
 

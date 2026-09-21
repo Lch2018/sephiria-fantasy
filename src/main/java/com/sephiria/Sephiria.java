@@ -98,6 +98,9 @@ public class Sephiria implements ModInitializer {
 
 			if (stack.getItem() instanceof SlateItem) {
 				SlateItem.rotate(stack);
+				// 朝向变了：让背包重算格子等级（缓存里存着上次的结果），并把新组件同步给客户端
+				menu.container().setChanged();
+				menu.broadcastChanges();
 			}
 		});
 		// 附魔面板：点「升级 N 级」——从附魔币栏扣币，把神器升上去（不会溢出）
