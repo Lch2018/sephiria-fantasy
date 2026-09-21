@@ -52,3 +52,6 @@ snapshots/
 agent/
 skills-lock.json
 tmp_re/
+
+# 探针脚本在仓库根目录跑，log4j 会在这里生成 logs/
+logs/

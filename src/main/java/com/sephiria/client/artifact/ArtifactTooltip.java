@@ -73,9 +73,14 @@ public final class ArtifactTooltip {
 		lines.add(Component.translatable("artifact.sephiria.slate.rarity_line",
 						Component.translatable(slate.rarity().translationKey()).withColor(slate.rarity().color()))
 				.withStyle(ChatFormatting.GRAY));
-		lines.add(Component.translatable("artifact.sephiria.slate.rotation",
-						Numbers.format(com.sephiria.slate.SlateItem.rotationOf(stack)))
-				.withStyle(ChatFormatting.DARK_GRAY));
+
+		// 不可旋转的石板没有朝向可言（永远是 0），这一行就不写了
+		if (slate.rotatable()) {
+			lines.add(Component.translatable("artifact.sephiria.slate.rotation",
+							Numbers.format(com.sephiria.slate.SlateItem.rotationOf(stack)))
+					.withStyle(ChatFormatting.DARK_GRAY));
+		}
+
 		lines.add(Component.translatable(slate.flavorKey()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 		return lines;
 	}

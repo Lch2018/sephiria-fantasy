@@ -64,7 +64,13 @@ public final class ModCreativeTabs {
 			FabricCreativeModeTab.builder()
 					.title(Component.translatable("itemGroup.sephiria.slates"))
 					.icon(() -> new ItemStack(ModItems.SLATE_TAB_ICON))
-					.displayItems((parameters, output) -> output.accept(ModItems.SLATE_OF_FUTURE))
+					.displayItems((parameters, output) -> {
+						output.accept(ModItems.SLATE_OF_FUTURE);
+						output.accept(ModItems.SLATE_OF_OATH);
+						output.accept(ModItems.SLATE_OF_BELIEF);
+						output.accept(ModItems.SLATE_OF_ENTRANCE);
+						output.accept(ModItems.SLATE_OF_COMPETITION);
+					})
 					.build());
 
 	/** Items tab: the enchant coin, its own icon. */

@@ -351,12 +351,19 @@ HUD 布局设置             H
                  比较时用<b>不含该加成</b>的数值（否则加成自己会改变谁最高）；并列按 物理 → 火 → 冰 → 电 取前者。
                  加在物理强度上时，属性面板的算式里算神器那一份（黄字）。
 
-【石板】
-未来             品质   高级
-                 效果   让范围内的格子等级 +1：所在格的正上方三格 + 左侧一格（共 4 格）
-                 旋转   鼠标放在石板上按 R：逆时针 90°，朝向存在物品组件里，影响范围跟着转
-                 说明   石板之间互相影响，格子等级 = 基础等级 + 所有石板效果之和，可以为负；
-                        格子等级显示在格子左上角（+1 绿 / -1 红），神器放上去后盖住不显示
+【石板】品质看名字颜色（石板最高是永恒 = 粉）；数值与范围集中在 slate/Slates.java
+名称            品质      效果（相对石板所在格的偏移，dx 右为正、dy 下为正；不含自己那一格）
+未来            高级(蓝)  正上方三格 + 左侧一格，各 +1（4 格）
+誓言            稀有(黄)  正上方 +2、再上一格 +1，左右各 +1，正下方 +1（5 格）
+信念            永恒(粉)  正上方一格 +5（1 格）
+入口            高级(蓝)  正上方一排 +1 / +2 / +1（3 格）——<b>不可旋转</b>
+竞争            高级(蓝)  左上方与正上方各 -1，正下方 +3（3 格）
+
+旋转             鼠标放在石板上按 R：逆时针 90°，朝向存在物品组件里，影响范围跟着转；
+                 「入口」是固定石板（不可旋转），提示框里直接写「不可旋转」，按 R 也没反应
+说明             石板之间互相影响，格子等级 = 基础等级 + 所有石板效果之和，可以为负；
+                 格子等级显示在格子左上角（+1 绿 / -1 红），神器放上去后盖住不显示；
+                 负等级格子上的神器失效（不参与任何统计）
 
 【已做：特殊攻击伤害 + 三本教材 / 乐谱 + 风之歌连击】
 
@@ -454,7 +461,7 @@ HUD 布局设置             H
 HUD 与界面               src/main/java/com/sephiria/client/hud/
                          src/main/java/com/sephiria/client/gui/
 神器：物品与效果         src/main/java/com/sephiria/artifact/（ArtifactItem / 各神器 / ArtifactEffects / ArtifactCombo）
-石板                     src/main/java/com/sephiria/slate/（SlateItem / FutureSlateItem）
+石板：范围与数值         src/main/java/com/sephiria/slate/（SlateItem / PatternSlateItem / Slates）
 附魔面板                 src/main/java/com/sephiria/backpack/EnchantMenu.java
 赛菲利亚背包             src/main/java/com/sephiria/backpack/（ArtifactBackpack / ArtifactBackpackMenu）
 神器提示框与背包界面     src/main/java/com/sephiria/client/artifact/、client/backpack/

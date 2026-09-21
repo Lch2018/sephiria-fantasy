@@ -1,7 +1,7 @@
 package com.sephiria.artifact;
 
 import com.sephiria.registry.ModItems;
-import com.sephiria.slate.FutureSlateItem;
+import com.sephiria.slate.SlateItem;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -51,7 +51,8 @@ public final class ArtifactLoot {
 	}
 
 	private static List<Item> slates() {
-		return List.of(ModItems.SLATE_OF_FUTURE);
+		return List.of(ModItems.SLATE_OF_FUTURE, ModItems.SLATE_OF_OATH, ModItems.SLATE_OF_BELIEF,
+				ModItems.SLATE_OF_ENTRANCE, ModItems.SLATE_OF_COMPETITION);
 	}
 
 	/** 抽 {@code count} 件互不重复的神器（{@code withSlates} 时把石板也放进池子）。 */
@@ -116,7 +117,7 @@ public final class ArtifactLoot {
 			return artifact.rarity();
 		}
 
-		if (item instanceof FutureSlateItem slate) {
+		if (item instanceof SlateItem slate) {
 			return slate.rarity();
 		}
 

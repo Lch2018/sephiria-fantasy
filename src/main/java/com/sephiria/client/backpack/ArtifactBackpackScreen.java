@@ -79,13 +79,13 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		SephiriaTabs.add(this, this.leftPos, this.topPos - TAB_HEIGHT, SephiriaTab.BACKPACK);
 	}
 
-	/** 按 R 旋转鼠标下的石板（默认逆时针 90°）。 */
+	/** 按 R 旋转鼠标下的石板（默认逆时针 90°）；写着「不可旋转」的石板不响应。 */
 	@Override
 	public boolean keyPressed(KeyEvent event) {
 		if (event.key() == GLFW.GLFW_KEY_R) {
 			Slot hovered = hoveredBackpackSlot();
 
-			if (hovered != null && hovered.getItem().getItem() instanceof SlateItem) {
+			if (hovered != null && hovered.getItem().getItem() instanceof SlateItem slate && slate.rotatable()) {
 				ClientPlayNetworking.send(new RotateSlatePayload(this.menu.slots.indexOf(hovered)));
 				return true;
 			}

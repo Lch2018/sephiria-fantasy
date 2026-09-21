@@ -119,6 +119,26 @@ function Get-Bounds([hashtable]$cells) {
     return @($minX, $minY, $maxX, $maxY)
 }
 
+# Cut one region out of a reference and write it to the temp folder, so a job can point at a
+# mock-up (the slate sheets: the icon sits on a small plate in the top-right corner) instead of a
+# pre-cropped file. The box has to line up with the reference's 3px art grid.
+function Crop-Region([string]$file, [string]$label, $box) {
+    $src = [System.Drawing.Bitmap]::FromFile($file)
+    $w = [int]$box.w
+    $h = [int]$box.h
+    $crop = New-Object System.Drawing.Bitmap($w, $h)
+    $g = [System.Drawing.Graphics]::FromImage($crop)
+    $g.DrawImage($src, (New-Object System.Drawing.Rectangle(0, 0, $w, $h)),
+        (New-Object System.Drawing.Rectangle([int]$box.x, [int]$box.y, $w, $h)), [System.Drawing.GraphicsUnit]::Pixel)
+    $g.Dispose()
+    $src.Dispose()
+
+    $out = Join-Path ([System.IO.Path]::GetTempPath()) ('sephiria_crop_' + $label + '.png')
+    $crop.Save($out, [System.Drawing.Imaging.ImageFormat]::Png)
+    $crop.Dispose()
+    return $out
+}
+
 # ------------------------------------------------------------------ native paste
 
 # rule: 'outline-or-bright' = the pouch, drawn on the cache's dark checkerboard
@@ -333,7 +353,23 @@ $jobs = @(
        mode = 'native'; cell = 3; canvas = 16; rule = 'ring'; dir = 'item' },
     # the coin's gem is 22x21: pasting it natively keeps the art exact, Minecraft scales it down
     @{ name = 'enchant_coin'; source = 'image-479fa47d5d5c63efb1b9e9b6fee3de20.png';
-       mode = 'native'; cell = 3; canvas = 24; rule = 'ring'; dir = 'item' }
+       mode = 'native'; cell = 3; canvas = 24; rule = 'ring'; dir = 'item' },
+
+    # batch 3: the four new slates. Each reference is a mock-up sheet, so the icon is cut out of
+    # the plate in its top-right corner first (boxes found by flood filling the plate interior and
+    # insetting 3 art pixels, so the ring around the crop is pure plate backdrop).
+    @{ name = 'slate_of_oath'; source = '473eefe96403343ba97ee4c90490137f.png'; root = 'wechat';
+       crop = @{ x = 348; y = 17; w = 60; h = 60 };
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'slate_of_belief'; source = 'ee5062d34f17e0384d7de517f8b6c364.png'; root = 'wechat';
+       crop = @{ x = 346; y = 17; w = 60; h = 60 };
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'slate_of_entrance'; source = 'c08ae89bd31045af000f8435bf4cab3a.png'; root = 'wechat';
+       crop = @{ x = 350; y = 9; w = 60; h = 57 };
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'slate_of_competition'; source = '79d2a42f662d9109b1b0e7c5b5c40841.png'; root = 'wechat';
+       crop = @{ x = 362; y = 11; w = 60; h = 60 };
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' }
 )
 
 foreach ($job in $jobs) {
@@ -343,6 +379,10 @@ foreach ($job in $jobs) {
 
     if (-not (Test-Path $file)) {
         throw "reference image not found: $file"
+    }
+
+    if ($job.crop) {
+        $file = Crop-Region $file $name $job.crop
     }
 
     $outDir = if ($job.dir -eq 'gui') { $guiDir } else { $texDir }

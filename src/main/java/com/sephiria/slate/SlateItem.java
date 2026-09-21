@@ -40,14 +40,23 @@ public abstract class SlateItem extends Item implements BackpackStorable {
 		return Mth.clamp(stack.getOrDefault(ROTATION, 0), 0, ROTATIONS - 1);
 	}
 
-	/** 逆时针转 90°。 */
+	/** 逆时针转 90°；不可旋转的石板（入口）什么都不做。 */
 	public static void rotate(ItemStack stack) {
+		if (stack.getItem() instanceof SlateItem slate && !slate.rotatable()) {
+			return;
+		}
+
 		stack.set(ROTATION, (rotationOf(stack) + 1) % ROTATIONS);
 	}
 
 	public abstract ArtifactRarity rarity();
 
 	public abstract String flavorKey();
+
+	/** 能不能按 R 旋转；固定石板（入口）返回 false。 */
+	public boolean rotatable() {
+		return true;
+	}
 
 	/** 这个朝向下的影响范围说明（提示框用）。 */
 	public abstract java.util.List<Component> effectLines();

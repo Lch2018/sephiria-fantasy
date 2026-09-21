@@ -13,7 +13,9 @@ import com.sephiria.artifact.PressureBandageItem;
 import com.sephiria.artifact.ProjectionSwordItem;
 import com.sephiria.artifact.WandererNecklaceItem;
 import com.sephiria.artifact.WarriorsProofItem;
-import com.sephiria.slate.FutureSlateItem;
+import com.sephiria.artifact.ArtifactRarity;
+import com.sephiria.slate.PatternSlateItem;
+import com.sephiria.slate.Slates;
 import com.sephiria.weapon.BaseWeapon;
 import com.sephiria.weapon.SephiriaBoltItem;
 import com.sephiria.weapon.SephiriaCrossbowItem;
@@ -140,9 +142,32 @@ public final class ModItems {
 			new Item.Properties().stacksTo(1));
 
 	/** 石板「未来」（稀有品质）：让周围格子等级 +1，可按 R 旋转。 */
-	public static final Item SLATE_OF_FUTURE = register(key("slate_of_future"),
-			p -> new FutureSlateItem(p),
-			new Item.Properties().stacksTo(1));
+	public static final Item SLATE_OF_FUTURE = registerSlate("slate_of_future", ArtifactRarity.ADVANCED,
+			Slates.FUTURE, true);
+
+	/** 石板 · 誓言（稀有）：正上方 +2 / +1、左右与下方各 +1。 */
+	public static final Item SLATE_OF_OATH = registerSlate("slate_of_oath", ArtifactRarity.RARE,
+			Slates.OATH, true);
+
+	/** 石板 · 信念（永恒）：正上方一格 +5。 */
+	public static final Item SLATE_OF_BELIEF = registerSlate("slate_of_belief", ArtifactRarity.ETERNAL,
+			Slates.BELIEF, true);
+
+	/** 石板 · 入口（高级）：正上方一排 +1 / +2 / +1，<b>不可旋转</b>。 */
+	public static final Item SLATE_OF_ENTRANCE = registerSlate("slate_of_entrance", ArtifactRarity.ADVANCED,
+			Slates.ENTRANCE, false);
+
+	/** 石板 · 竞争（高级）：左上方与正上方各 -1，正下方 +3。 */
+	public static final Item SLATE_OF_COMPETITION = registerSlate("slate_of_competition", ArtifactRarity.ADVANCED,
+			Slates.COMPETITION, true);
+
+	/** 石板统一走通用实现：范围与增量都在 Slates 里，这里只挑品质与风味文本。 */
+	private static Item registerSlate(String name, ArtifactRarity rarity, java.util.List<PatternSlateItem.Cell> pattern,
+			boolean rotatable) {
+		return register(key(name),
+				p -> new PatternSlateItem(p, rarity, "artifact.sephiria." + name + ".flavor", pattern, rotatable),
+				new Item.Properties().stacksTo(1));
+	}
 
 	/** 神器附魔币（赛菲利亚道具）：右键打开附魔面板。 */
 	public static final Item ENCHANT_COIN = register(key("enchant_coin"),
