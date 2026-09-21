@@ -4,10 +4,11 @@
 
 ## 构建与实装
 
-- 改动完成后**直接实装**：运行 `tools/deploy.ps1`。它做两件事——Gradle 构建，然后把
-  `build/libs/sephiria-0.1.0.jar` 复制到 PCL 实例的 mods 目录。
-- PCL 实例：`D:\PCL\.minecraft\versions\26.2-Fabric 0.19.5\`，模组 jar 落在
-  `mods\sephiria-0.1.0.jar`。
+- 改动完成后**直接实装**：运行 `tools/deploy.ps1`。它做三件事——Gradle 构建、清掉 mods 里
+  其它名字的旧 jar（同 mod id 有两个 jar 会报重复 mod）、把新 jar 复制到 PCL 实例的 mods 目录。
+- jar 名字跟 `gradle.properties` 里的 `version` 走（当前 `0.1.0-a`，a = A 测），
+  所以是 `build/libs/sephiria-0.1.0-a.jar` → `mods\sephiria-0.1.0-a.jar`；改版本号只要改那一处。
+- PCL 实例：`D:\PCL\.minecraft\versions\26.2-Fabric 0.19.5\`。
 - **不要自动启动游戏。** 用户自己从 PCL2 打开实例测试。开发客户端 `gradlew.bat runClient`
   只在用户明确要求时使用（例如需要看 `run/logs/latest.log` 排查渲染问题）。
 - 实装后可以扫一遍 `run/logs/latest.log`（如果用户跑过）确认没有异常，但不要为此启动游戏。
