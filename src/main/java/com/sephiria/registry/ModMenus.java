@@ -4,6 +4,7 @@ import com.sephiria.Sephiria;
 import com.sephiria.backpack.ArtifactBackpackMenu;
 import com.sephiria.backpack.ChestMenu;
 import com.sephiria.backpack.EnchantMenu;
+import com.sephiria.shop.ShopMenu;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -42,6 +43,14 @@ public final class ModMenus {
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "chest"),
 			new ExtendedMenuType<ChestMenu, Unit>(
 					(id, inventory, data) -> new ChestMenu(id, inventory),
+					Unit.STREAM_CODEC));
+
+	/** 商店页面（原版背包里的「商店」标签页）。 */
+	public static final MenuType<ShopMenu> SHOP = Registry.register(
+			BuiltInRegistries.MENU,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "shop"),
+			new ExtendedMenuType<ShopMenu, Unit>(
+					(id, inventory, data) -> new ShopMenu(id, inventory),
 					Unit.STREAM_CODEC));
 
 	private ModMenus() {

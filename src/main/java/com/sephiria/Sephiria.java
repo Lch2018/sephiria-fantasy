@@ -10,9 +10,11 @@ import com.sephiria.backpack.EnchantMenu;
 import com.sephiria.network.DashPayload;
 import com.sephiria.network.InvulnerablePayload;
 import com.sephiria.network.OpenBackpackPayload;
+import com.sephiria.network.OpenShopPayload;
 import com.sephiria.network.RotateSlatePayload;
 import com.sephiria.network.UpgradeArtifactPayload;
 import com.sephiria.network.ReloadPayload;
+import com.sephiria.network.SellItemPayload;
 import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.StatsSyncPayload;
@@ -26,6 +28,8 @@ import com.sephiria.weapon.SephiriaDaggerItem;
 import com.sephiria.weapon.SephiriaGreatswordItem;
 import com.sephiria.weapon.SephiriaShieldItem;
 import com.sephiria.weapon.SephiriaStaffItem;
+import com.sephiria.shop.ShopMenu;
+import com.sephiria.shop.ShopStock;
 import com.sephiria.slate.SlateItem;
 import com.sephiria.weapon.WeaponSweep;
 import com.sephiria.weapon.SephiriaKatanaItem;
@@ -73,6 +77,8 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.serverboundPlay().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ShieldSweepPayload.TYPE, ShieldSweepPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(OpenShopPayload.TYPE, OpenShopPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(SellItemPayload.TYPE, SellItemPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RotateSlatePayload.TYPE, RotateSlatePayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
@@ -103,6 +109,16 @@ public class Sephiria implements ModInitializer {
 				menu.broadcastChanges();
 			}
 		});
+		// 商店也是容器菜单（货架在服务端），同样只能由服务端打开
+		ServerPlayNetworking.registerGlobalReceiver(OpenShopPayload.TYPE,
+				(payload, context) -> context.player().openMenu(ShopMenu.provider(context.player())));
+		// 商店页面点「出售」：卖出售栏里的东西，按原价 3 折换树叶
+		ServerPlayNetworking.registerGlobalReceiver(SellItemPayload.TYPE, (payload, context) -> {
+			if (context.player().containerMenu instanceof ShopMenu menu) {
+				menu.sell(context.player());
+			}
+		});
+
 		// 附魔面板：点「升级 N 级」——从附魔币栏扣币，把神器升上去（不会溢出）
 		ServerPlayNetworking.registerGlobalReceiver(UpgradeArtifactPayload.TYPE,
 				(payload, context) -> {
@@ -122,7 +138,10 @@ public class Sephiria implements ModInitializer {
 		});
 
 		// 退出时把背包从缓存里放掉（附件里已经是最新状态，下次进来重新读）
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> ArtifactBackpack.forget(handler.player));
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			ArtifactBackpack.forget(handler.player);
+			ShopStock.forget(handler.player);
+		});
 
 		LOGGER.info("[SEPHIRIA] 武器系统已载入：{} 个分支，{} 把基础武器（锻造系统尚未实现）",
 				WeaponBranch.values().length, ModItems.BASE_WEAPONS.size());

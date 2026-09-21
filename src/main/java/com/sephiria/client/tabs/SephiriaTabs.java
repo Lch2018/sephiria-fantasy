@@ -3,6 +3,7 @@ package com.sephiria.client.tabs;
 import com.sephiria.client.gui.StatsScreen;
 import net.minecraft.client.gui.components.Button;
 import com.sephiria.network.OpenBackpackPayload;
+import com.sephiria.network.OpenShopPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.Minecraft;
@@ -13,10 +14,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * 三个页面的标签栏：原版背包（木箱）/ 赛菲利亚背包 / 属性。
+ * 四个页面的标签栏：原版背包（木箱）/ 赛菲利亚背包 / 属性 / 商店。
  *
- * <p>原版背包、赛菲利亚背包（容器菜单）、属性面板是三个不同的界面，所以每个界面都在同一位置
- * 画出这三个标签，当前页那一格高亮；这样从任意一页都能直接切到另外两页。
+ * <p>原版背包、赛菲利亚背包与商店（后两者都是容器菜单）、属性面板是四个不同的界面，所以每个界面
+ * 都在同一位置画出这一排标签，当前页那一格高亮；这样从任意一页都能直接切到另外几页。
  */
 public final class SephiriaTabs {
 	private static final int GAP = 1;
@@ -49,13 +50,14 @@ public final class SephiriaTabs {
 			case VANILLA -> TabButton.item(x, y, new ItemStack(Items.CHEST), tab.title(), active, press);
 			case BACKPACK -> TabButton.texture(x, y, TabButton.BACKPACK_ICON, tab.title(), active, press);
 			case ATTRIBUTES -> TabButton.texture(x, y, TabButton.ATTRIBUTES_ICON, tab.title(), active, press);
+			case SHOP -> TabButton.texture(x, y, TabButton.SHOP_ICON, tab.title(), active, press);
 		};
 	}
 
 	/**
 	 * 切到某一页。
 	 *
-	 * <p>离开容器菜单（背包 / 附魔面板）前必须先把容器在<b>服务端</b>也关掉：只换客户端界面的话，
+	 * <p>离开容器菜单（背包 / 附魔面板 / 商店）前必须先把容器在<b>服务端</b>也关掉：只换客户端界面的话，
 	 * 服务端还认为玩家开着那个菜单，会继续往里同步格子，客户端菜单对不上号就直接崩
 	 * （踩过：服务端按背包菜单发 slot 62，而客户端开着创造物品栏只有 46 格 → IndexOutOfBounds）。
 	 */
@@ -66,7 +68,10 @@ public final class SephiriaTabs {
 			return;
 		}
 
-		if (tab != SephiriaTab.BACKPACK && client.player.containerMenu != client.player.inventoryMenu) {
+		// 目标是容器菜单（背包 / 商店）时不用先关：服务端会用 openMenu 顶掉当前那个
+		boolean containerTarget = tab == SephiriaTab.BACKPACK || tab == SephiriaTab.SHOP;
+
+		if (!containerTarget && client.player.containerMenu != client.player.inventoryMenu) {
 			// closeContainer() 会发关闭包、顺手关掉当前界面，下面再切到目标界面
 			client.player.closeContainer();
 		}
@@ -75,9 +80,10 @@ public final class SephiriaTabs {
 			case VANILLA -> client.setScreenAndShow(client.player.isCreative()
 					? new CreativeModeInventoryScreen(client.player, client.player.connection.enabledFeatures(), false)
 					: new InventoryScreen(client.player));
-			// 背包是容器菜单，只能由服务端打开，所以这里发包
+			// 背包与商店都是容器菜单，只能由服务端打开，所以这里发包
 			case BACKPACK -> ClientPlayNetworking.send(OpenBackpackPayload.INSTANCE);
 			case ATTRIBUTES -> client.setScreenAndShow(new StatsScreen());
+			case SHOP -> ClientPlayNetworking.send(OpenShopPayload.INSTANCE);
 		}
 	}
 }

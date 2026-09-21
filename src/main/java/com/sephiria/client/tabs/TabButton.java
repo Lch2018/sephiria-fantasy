@@ -25,6 +25,10 @@ public class TabButton extends Button {
 	public static final Identifier ATTRIBUTES_ICON =
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "textures/gui/attributes_tab.png");
 
+	/** 商店页的图标。 */
+	public static final Identifier SHOP_ICON =
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "textures/gui/shop_tab.png");
+
 	public static final int SIZE = 20;
 	private static final int ICON_SIZE = 20;
 	/** 当前页那一格的高亮描边。 */

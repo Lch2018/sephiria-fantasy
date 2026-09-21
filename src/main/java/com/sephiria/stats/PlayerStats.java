@@ -236,6 +236,21 @@ public final class PlayerStats {
 		return of(player).leaves;
 	}
 
+	/**
+	 * 直接给树叶（商店出售这类非经验来源）。
+	 *
+	 * <p>和 {@link #addLeaves} 的区别：这里不推进「每 1000 经验一个升级宝箱」的计数——
+	 * 卖东西不是赚经验。
+	 */
+	public static void grantLeaves(ServerPlayer player, double amount) {
+		if (amount <= 0.0D) {
+			return;
+		}
+
+		of(player).leaves += amount;
+		sync(player);
+	}
+
 	/** 花掉树叶；不够则返回 false。 */
 	public static boolean spendLeaves(ServerPlayer player, double amount) {
 		Values values = of(player);
