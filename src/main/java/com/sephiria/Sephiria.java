@@ -4,8 +4,14 @@ import com.sephiria.ability.Dash;
 import com.sephiria.ability.DashSkill;
 import com.sephiria.ability.Invulnerability;
 import com.sephiria.ability.SkillStorage;
+import com.sephiria.backpack.ArtifactBackpack;
+import com.sephiria.backpack.ArtifactBackpackMenu;
+import com.sephiria.backpack.EnchantMenu;
 import com.sephiria.network.DashPayload;
 import com.sephiria.network.InvulnerablePayload;
+import com.sephiria.network.OpenBackpackPayload;
+import com.sephiria.network.RotateSlatePayload;
+import com.sephiria.network.UpgradeArtifactPayload;
 import com.sephiria.network.ReloadPayload;
 import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
@@ -14,11 +20,13 @@ import com.sephiria.stats.PlayerStats;
 import com.sephiria.stats.WeaponStats;
 import com.sephiria.registry.ModCreativeTabs;
 import com.sephiria.registry.ModItems;
+import com.sephiria.registry.ModMenus;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaDaggerItem;
 import com.sephiria.weapon.SephiriaGreatswordItem;
 import com.sephiria.weapon.SephiriaShieldItem;
 import com.sephiria.weapon.SephiriaStaffItem;
+import com.sephiria.slate.SlateItem;
 import com.sephiria.weapon.WeaponSweep;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.WeaponBranch;
@@ -37,6 +45,8 @@ public class Sephiria implements ModInitializer {
 	public void onInitialize() {
 		ModItems.initialize();
 		ModCreativeTabs.initialize();
+		ModMenus.initialize();
+		ArtifactBackpack.register();
 		OffHandGuard.register();
 		SephiriaKatanaItem.registerEvents();
 		SephiriaKatanaItem.register();
@@ -61,6 +71,9 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ShieldSweepPayload.TYPE, ShieldSweepPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(RotateSlatePayload.TYPE, RotateSlatePayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
@@ -71,6 +84,9 @@ public class Sephiria implements ModInitializer {
 				(payload, context) -> SephiriaCrossbowItem.tryReload(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(ShieldSweepPayload.TYPE,
 				(payload, context) -> SephiriaShieldItem.tryDefendSweep(context.player()));
+		// 赛菲利亚背包是容器菜单，必须由服务端打开（客户端只负责画那个标签页按钮）
+		ServerPlayNetworking.registerGlobalReceiver(OpenBackpackPayload.TYPE,
+				(payload, context) -> context.player().openMenu(ArtifactBackpackMenu.provider(context.player())));
 
 		// 进服时把各技能的存储量推给客户端，HUD 才有初始值
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
@@ -78,6 +94,9 @@ public class Sephiria implements ModInitializer {
 			PlayerStats.syncOnJoin(handler.player);
 			WeaponStats.refresh(handler.player);
 		});
+
+		// 退出时把背包从缓存里放掉（附件里已经是最新状态，下次进来重新读）
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> ArtifactBackpack.forget(handler.player));
 
 		LOGGER.info("[SEPHIRIA] 武器系统已载入：{} 个分支，{} 把基础武器（锻造系统尚未实现）",
 				WeaponBranch.values().length, ModItems.BASE_WEAPONS.size());

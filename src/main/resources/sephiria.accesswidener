@@ -1,0 +1,9 @@
+accessWidener	v2	official
+
+# 26.2 把菜单类型与「菜单 → 界面」的注册都收成了私有/包私有：
+#   - MenuType 的构造函数私有 —— 用 Fabric 的 ExtendedMenuType 绕开（它的构造函数是公开的）；
+#   - MenuScreens.register 与 ScreenConstructor 包私有 —— 只能靠访问拓宽打开，
+#     否则自定义容器菜单在客户端没有界面（收到开屏包时只会警告 "Failed to create screen"）。
+accessible	class	net/minecraft/client/gui/screens/MenuScreens$ScreenConstructor
+accessible	method	net/minecraft/client/gui/screens/MenuScreens	register	(Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/client/gui/screens/MenuScreens$ScreenConstructor;)V
+accessible	method	net/minecraft/client/gui/screens/MenuScreens$ScreenConstructor	create	(Lnet/minecraft/world/inventory/AbstractContainerMenu;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/network/chat/Component;)Lnet/minecraft/client/gui/screens/Screen;

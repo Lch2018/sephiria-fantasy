@@ -1,6 +1,10 @@
 package com.sephiria.registry;
 
 import com.sephiria.Sephiria;
+import com.sephiria.artifact.CharmOfStrengthItem;
+import com.sephiria.artifact.EnchantCoinItem;
+import com.sephiria.artifact.WarriorsProofItem;
+import com.sephiria.slate.FutureSlateItem;
 import com.sephiria.weapon.BaseWeapon;
 import com.sephiria.weapon.SephiriaBoltItem;
 import com.sephiria.weapon.SephiriaCrossbowItem;
@@ -113,6 +117,38 @@ public final class ModItems {
 			new BaseWeapon(WeaponBranch.CROSSBOW, COLOSSAL_CROSSBOW),
 			new BaseWeapon(WeaponBranch.KATANA, BLADE),
 			new BaseWeapon(WeaponBranch.STAFF, QUARTERSTAFF));
+
+	// ------------------------------------------------------------------ 神器
+
+	/** 力量护符（坚固）：【唯一】物理伤害 +2/3/4/6。 */
+	public static final Item CHARM_OF_STRENGTH = register(key("charm_of_strength"),
+			p -> new CharmOfStrengthItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 战士的证明（坚固，高级品质）：【唯一】物理伤害 +1..8、攻击速度 +5..10%。 */
+	public static final Item WARRIORS_PROOF = register(key("warriors_proof"),
+			p -> new WarriorsProofItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 石板「未来」（稀有品质）：让周围格子等级 +1，可按 R 旋转。 */
+	public static final Item SLATE_OF_FUTURE = register(key("slate_of_future"),
+			p -> new FutureSlateItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 神器附魔币（赛菲利亚道具）：右键打开附魔面板。 */
+	public static final Item ENCHANT_COIN = register(key("enchant_coin"),
+			p -> new EnchantCoinItem(p),
+			new Item.Properties());
+
+	/**
+	 * 神器标签页的图标物品。
+	 *
+	 * <p>创造模式的标签页图标只能用物品栈，而设计要求用「袋子」那张图，所以注册一个只用于图标的
+	 * 隐藏物品（不出现在任何标签页里，也不可获取）。
+	 */
+	public static final Item ARTIFACT_TAB_ICON = register(key("artifact_tab_icon"),
+			Item::new,
+			new Item.Properties());
 
 	private ModItems() {
 	}

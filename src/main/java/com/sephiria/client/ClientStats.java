@@ -19,6 +19,9 @@ public final class ClientStats {
 	private static double defense = PlayerStats.DEFAULT_DEFENSE;
 	private static double attackSpeed = PlayerStats.DEFAULT_ATTACK_SPEED;
 	private static double meleeRange = PlayerStats.DEFAULT_MELEE_RANGE;
+	private static double physicalAmp = 0.0D;
+	private static PlayerStats.PhysicalBreakdown breakdown = new PlayerStats.PhysicalBreakdown(
+			PlayerStats.DEFAULT_STRENGTH, 0.0D, 0.0D, 0.0D, 0.0D);
 
 	private ClientStats() {
 	}
@@ -33,6 +36,19 @@ public final class ClientStats {
 		defense = payload.defense();
 		attackSpeed = payload.attackSpeed();
 		meleeRange = payload.meleeRange();
+		physicalAmp = payload.physicalAmp();
+		breakdown = new PlayerStats.PhysicalBreakdown(payload.physicalBase(), payload.artifactFlat(),
+				payload.potionFlat(), payload.artifactPercent(), payload.potionPercent());
+	}
+
+	/** 物理伤害增幅（%），默认 0。 */
+	public static double physicalAmp() {
+		return physicalAmp;
+	}
+
+	/** 物理强度的来源明细（面板悬停时显示算式）。 */
+	public static PlayerStats.PhysicalBreakdown physicalBreakdown() {
+		return breakdown;
 	}
 
 	public static double mp() {

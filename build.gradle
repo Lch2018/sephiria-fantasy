@@ -52,3 +52,9 @@ jar {
 		rename { "${it}_$projectName" }
 	}
 }
+
+// 访问拓宽：26.2 把 MenuScreens 的注册方法收成了包私有，自定义容器菜单要靠它打开。
+// fabric.mod.json 里的 accessWidener 字段负责运行时，这里显式声明一份给 Loom（编译期与开发环境）。
+loom {
+	accessWidenerPath = file("src/main/resources/sephiria.accesswidener")
+}

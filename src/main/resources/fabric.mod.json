@@ -11,6 +11,7 @@
 	"license": "MIT",
 	"icon": "assets/sephiria/icon.png",
 	"environment": "*",
+	"accessWidener": "sephiria.accesswidener",
 	"entrypoints": {
 		"main": [
 			"com.sephiria.Sephiria"

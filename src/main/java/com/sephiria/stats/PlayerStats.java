@@ -1,5 +1,6 @@
 package com.sephiria.stats;
 
+import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.network.StatsSyncPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,28 +48,84 @@ public final class PlayerStats {
 		public double meleeRange = DEFAULT_MELEE_RANGE;
 	}
 
-	/** 鐗╃悊寮哄害鍊嶇巼锛?.0 = 榛樿鍊?20銆?*/
+	/**
+	 * 伤害倍率：所有 SEPHIRIA 伤害都是物理伤害，所以这里 = 物理强度倍率 ×（1 + 物理伤害增幅）。
+	 *
+	 * <p>物理伤害增幅是独立的一条乘算项（默认 0 = 没有增幅），不是加在物理强度上的。
+	 */
 	public static double damageMultiplier(ServerPlayer player) {
-		return of(player).physical / DEFAULT_STRENGTH;
+		return physicalTotal(player) / DEFAULT_STRENGTH * (1.0D + physicalAmpPercent(player) / 100.0D);
 	}
 
-	/** 杩戞垬鏀诲嚮鑼冨洿鍊嶇巼锛?.0 = 榛樿鍊?100%銆?*/
+	/**
+	 * 物理强度的实际值：{@code (基础值 + 固定加成) × (1 + 百分比加成)}。
+	 *
+	 * <p>「物理伤害 +N」「物理强度 +N」这类固定值先加在基础值上；「物理强度 +x%」这类百分比
+	 * 加成先把多个来源加起来，再整体乘上去（不是各自乘一次）。
+	 */
+	public static double physicalTotal(ServerPlayer player) {
+		return physicalBreakdown(player).total();
+	}
+
+	/**
+	 * 物理伤害增幅（%）：作为独立的一条乘算项，直接作用在最终物理伤害上
+	 * （不是加在物理强度上）。默认 0，也就是没有增幅。
+	 */
+	public static double physicalAmpPercent(ServerPlayer player) {
+		return ArtifactEffects.physicalAmpPercent(player);
+	}
+
+	/**
+	 * 物理强度的来源明细，供面板按来源分色显示，也供结算复用。
+	 *
+	 * <p>目前只有神器一个来源；药水、树根祝福等来源接进来时在这里各加一项即可。
+	 */
+	public static PhysicalBreakdown physicalBreakdown(ServerPlayer player) {
+		return new PhysicalBreakdown(of(player).physical, ArtifactEffects.physicalBonus(player), 0.0D,
+				ArtifactEffects.physicalPercentBonus(player), 0.0D);
+	}
+
+	/** 物理强度的构成：基础 + 各来源固定值，再乘各来源百分比。 */
+	public record PhysicalBreakdown(double base, double artifactFlat, double potionFlat,
+			double artifactPercent, double potionPercent) {
+		/** 括号里那一段（各固定值之和）。 */
+		public double flat() {
+			return this.base + this.artifactFlat + this.potionFlat;
+		}
+
+		/** 百分比那段（各来源百分比之和，单位 %）。 */
+		public double percent() {
+			return this.artifactPercent + this.potionPercent;
+		}
+
+		public double total() {
+			return flat() * (1.0D + percent() / 100.0D);
+		}
+	}
+
+	/** 近战攻击范围倍率：1.0 = 默认值 100%。 */
 	public static double rangeMultiplier(ServerPlayer player) {
 		return of(player).meleeRange / DEFAULT_MELEE_RANGE;
 	}
 
-	/** 鏀诲嚮閫熷害鍊嶇巼锛?.0 = 榛樿鍊?100%銆?*/
+	/** 攻击速度倍率：1.0 = 默认值 100%。 */
 	public static double attackSpeedMultiplier(ServerPlayer player) {
-		return of(player).attackSpeed / DEFAULT_ATTACK_SPEED;
+		return attackSpeedTotal(player) / DEFAULT_ATTACK_SPEED;
+	}
+
+	/** 攻击速度的实际值（%）：面板值 + 神器加成。 */
+	public static double attackSpeedTotal(ServerPlayer player) {
+		return of(player).attackSpeed + ArtifactEffects.attackSpeedBonus(player);
 	}
 
 	public static Values of(ServerPlayer player) {
 		return STATS.computeIfAbsent(player.getUUID(), uuid -> new Values());
 	}
 
-	/** 改完属性后调用：把最新数值推给客户端。 */
+	/** 改完属性后调用：把最新数值推给客户端（物理强度与攻速都用含神器加成的总值）。 */
 	public static void sync(ServerPlayer player) {
-		ServerPlayNetworking.send(player, StatsSyncPayload.of(of(player)));
+		ServerPlayNetworking.send(player, StatsSyncPayload.of(of(player), physicalTotal(player),
+				attackSpeedTotal(player), physicalAmpPercent(player), physicalBreakdown(player)));
 	}
 
 	/** 进服时推一次，面板才有初始值。 */

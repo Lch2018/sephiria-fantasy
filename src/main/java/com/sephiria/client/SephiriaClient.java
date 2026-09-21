@@ -1,14 +1,19 @@
 package com.sephiria.client;
 
+import com.sephiria.client.artifact.ArtifactTooltip;
+import com.sephiria.client.backpack.ArtifactBackpackScreen;
+import com.sephiria.client.backpack.EnchantScreen;
 import com.sephiria.client.hud.HudConfigScreen;
 import com.sephiria.client.hud.SephiriaHud;
+import com.sephiria.client.tabs.SephiriaTab;
+import com.sephiria.client.tabs.SephiriaTabs;
 import com.sephiria.network.DashPayload;
-import com.sephiria.client.gui.StatsScreen;
 import com.sephiria.network.InvulnerablePayload;
 import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.network.ReloadPayload;
 import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
+import com.sephiria.registry.ModMenus;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaShieldItem;
 import com.sephiria.weapon.SephiriaWeapon;
@@ -24,7 +29,8 @@ import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -65,6 +71,10 @@ public class SephiriaClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		// 容器菜单的界面：26.2 的 MenuScreens.register 是包私有的，走访问拓宽（sephiria.accesswidener）
+		MenuScreens.register(ModMenus.ARTIFACT_BACKPACK, ArtifactBackpackScreen::new);
+		MenuScreens.register(ModMenus.ARTIFACT_ENCHANT, EnchantScreen::new);
+
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
 			if (stack.getItem() instanceof SephiriaWeapon detail) {
 				// 详细描述：空行分隔，逐条显示。外层套灰，行内的数值用自己的颜色覆盖它。
@@ -77,6 +87,14 @@ public class SephiriaClient implements ClientModInitializer {
 						lines.add(line.copy().withStyle(ChatFormatting.GRAY));
 					}
 				}
+			}
+
+			// 神器：连招、【唯一】、词条、稀有度、背景描述
+			java.util.List<Component> artifactLines = ArtifactTooltip.lines(stack);
+
+			if (!artifactLines.isEmpty()) {
+				lines.add(Component.empty());
+				lines.addAll(artifactLines);
 			}
 
 			if (stack.getItem() instanceof SephiriaCrossbowItem) {
@@ -94,18 +112,19 @@ public class SephiriaClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(StatsSyncPayload.TYPE,
 				(payload, context) -> ClientStats.accept(payload));
 
-		// 背包界面顶部加一个「属性」标签：贴着背包面板上沿，点了切到属性面板
+		// 背包界面顶部的标签栏：原版背包 / 赛菲利亚背包 / 属性。
+		// 生存与创造用的是两个不同的界面类，所以两种都挂——之前只挂了生存的，创造模式下看不到。
 		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
-			if (!(screen instanceof InventoryScreen)) {
+			if (!(screen instanceof InventoryScreen) && !(screen instanceof CreativeModeInventoryScreen)) {
 				return;
 			}
 
 			int left = (scaledWidth - INVENTORY_WIDTH) / 2;
 			int top = (scaledHeight - INVENTORY_HEIGHT) / 2;
-			Screens.getWidgets(screen).add(Button.builder(Component.translatable("screen.sephiria.stats"),
-							button -> Minecraft.getInstance().setScreenAndShow(new StatsScreen()))
-					.bounds(left, top - 20, 60, 18)
-					.build());
+			// 创造模式面板上沿那一整条被原版的物品栏标签页占着（顶到面板上方约 28 像素），
+			// 所以这一排要再往上让一层，免得被压在原版标签下面。
+			int rowY = screen instanceof CreativeModeInventoryScreen ? top - 48 : top - 20;
+			SephiriaTabs.add(screen, left, rowY, SephiriaTab.VANILLA);
 		});
 
 		HudElementRegistry.addLast(SephiriaHud.ID, new SephiriaHud());
