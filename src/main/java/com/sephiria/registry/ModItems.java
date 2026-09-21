@@ -152,8 +152,8 @@ public final class ModItems {
 	public static final Item SLATE_OF_OATH = registerSlate("slate_of_oath", ArtifactRarity.RARE,
 			Slates.OATH, true);
 
-	/** 石板 · 信念（永恒）：正上方一格 +5。 */
-	public static final Item SLATE_OF_BELIEF = registerSlate("slate_of_belief", ArtifactRarity.ETERNAL,
+	/** 石板 · 信念（传说）：正上方一格 +5。 */
+	public static final Item SLATE_OF_BELIEF = registerSlate("slate_of_belief", ArtifactRarity.LEGENDARY,
 			Slates.BELIEF, true);
 
 	/** 石板 · 入口（高级）：正上方一排 +1 / +2 / +1，<b>不可旋转</b>。 */

@@ -28,7 +28,8 @@ import net.minecraft.world.item.ItemStack;
  * {@link ShopStock}，客户端拿到的是原版同步过来的空壳容器，所以价格不用同步（{@link ShopPrices}
  * 是纯函数，两边算出来一样），只有「每格买过几次」走数据槽。
  *
- * <p>刷新：骰子栏里放一颗骰子就重刷一批货（见 {@link #refreshByDice}）。
+ * <p>刷新：骰子栏里放骰子，再点界面上的「刷新」按钮（{@link #refresh}）——不会放上去就自动刷，
+ * 免得手滑白白浪费一颗骰子。
  * 出售：把赛菲利亚的东西放进出售栏，再点界面上的「出售」按钮（{@link #sell}）。
  */
 public class ShopMenu extends AbstractContainerMenu {
@@ -48,6 +49,8 @@ public class ShopMenu extends AbstractContainerMenu {
 	/** 骰子栏与出售栏在菜单里的下标。 */
 	public static final int DICE_SLOT = ShopStock.SLOT_COUNT;
 	public static final int SELL_SLOT = ShopStock.SLOT_COUNT + 1;
+	/** 「刷新」按钮的位置（相对面板左上角）：放在出售按钮左边。 */
+	public static final int REFRESH_BUTTON_X = 74;
 	/** 「出售」按钮的位置（相对面板左上角）：放在出售栏正下方，不压到第二排的格子。 */
 	public static final int BUTTON_X = 118;
 	public static final int BUTTON_Y = 84;
@@ -191,40 +194,32 @@ public class ShopMenu extends AbstractContainerMenu {
 			return;
 		}
 
-		// 放骰子进来要刷新货架：先记住放进来之前有几颗，再让原版把东西放好。
-		// 用「变多了」判断而不是「格子里有骰子」，这样一颗骰子只刷新一次、也不会因为
-		// 点别的地方就再刷一次（Shift 快速移动、数字键换位这些路径都会经过 clicked）。
-		int diceBefore = diceCount();
 		super.clicked(slotId, button, input, player);
-
-		if (player instanceof ServerPlayer serverPlayer && diceCount() > diceBefore) {
-			refreshByDice(serverPlayer);
-		}
 	}
 
-	private int diceCount() {
+	/** 骰子栏里还有没有骰子（刷新按钮的可用状态看它）。 */
+	public boolean canRefresh() {
 		ItemStack stack = this.dice.getItem(0);
-		return stack.getItem() == ModItems.DICE ? stack.getCount() : 0;
+		return stack.getItem() == ModItems.DICE && stack.getCount() > 0;
 	}
 
 	/**
-	 * 用一颗骰子刷新货架。
+	 * 刷新货架：吃掉骰子栏里的一颗骰子，重刷一批货（由界面上的「刷新」按钮触发）。
 	 *
-	 * <p>一次只吃一颗：一次放进来多颗也只刷新一次，多出来的留在骰子栏里（关界面时还给玩家）。
+	 * <p>一次只吃一颗：栏里放着好几颗时，按几次按钮就刷几次，多的留着下次用。
 	 */
-	private void refreshByDice(ServerPlayer player) {
-		ItemStack stack = this.dice.getItem(0);
-
-		if (stack.isEmpty() || !(this.stock instanceof ShopStock shopStock)) {
-			return;
+	public boolean refresh(ServerPlayer player) {
+		if (!canRefresh() || !(this.stock instanceof ShopStock shopStock)) {
+			return false;
 		}
 
-		stack.shrink(1);
+		this.dice.getItem(0).shrink(1);
 		this.dice.setChanged();
 		shopStock.refresh(player.getRandom());
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.NOTE_BLOCK_BELL, SoundSource.PLAYERS, 0.7F, 0.9F);
 		broadcastChanges();
+		return true;
 	}
 
 	private void buy(ServerPlayer player, ShopStock shopStock, int index) {

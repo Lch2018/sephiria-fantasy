@@ -13,6 +13,7 @@ import com.sephiria.network.OpenBackpackPayload;
 import com.sephiria.network.OpenShopPayload;
 import com.sephiria.network.RotateSlatePayload;
 import com.sephiria.network.UpgradeArtifactPayload;
+import com.sephiria.network.RefreshShopPayload;
 import com.sephiria.network.ReloadPayload;
 import com.sephiria.network.SellItemPayload;
 import com.sephiria.network.ShieldSweepPayload;
@@ -84,6 +85,7 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.serverboundPlay().register(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(OpenShopPayload.TYPE, OpenShopPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(SellItemPayload.TYPE, SellItemPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(RefreshShopPayload.TYPE, RefreshShopPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RotateSlatePayload.TYPE, RotateSlatePayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
@@ -117,6 +119,13 @@ public class Sephiria implements ModInitializer {
 		// 商店也是容器菜单（货架在服务端），同样只能由服务端打开
 		ServerPlayNetworking.registerGlobalReceiver(OpenShopPayload.TYPE,
 				(payload, context) -> context.player().openMenu(ShopMenu.provider(context.player())));
+		// 商店页面点「刷新」：吃掉骰子栏里的一颗骰子，重刷一批货
+		ServerPlayNetworking.registerGlobalReceiver(RefreshShopPayload.TYPE, (payload, context) -> {
+			if (context.player().containerMenu instanceof ShopMenu menu) {
+				menu.refresh(context.player());
+			}
+		});
+
 		// 商店页面点「出售」：卖出售栏里的东西，按原价 3 折换树叶
 		ServerPlayNetworking.registerGlobalReceiver(SellItemPayload.TYPE, (payload, context) -> {
 			if (context.player().containerMenu instanceof ShopMenu menu) {

@@ -3,6 +3,7 @@ package com.sephiria.client.shop;
 import com.sephiria.client.ClientStats;
 import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.client.tabs.SephiriaTabs;
+import com.sephiria.network.RefreshShopPayload;
 import com.sephiria.network.SellItemPayload;
 import com.sephiria.shop.ShopMenu;
 import com.sephiria.shop.ShopPrices;
@@ -45,6 +46,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 	/** 小字缩放（价格与状态行）。 */
 	private static final float SMALL_TEXT_SCALE = 0.75F;
 
+	/** 「刷新」按钮：骰子栏有骰子时才可点。 */
+	private Button refreshButton;
+
 	public ShopScreen(ShopMenu menu, Inventory inventory, Component title) {
 		super(menu, inventory, title, ShopMenu.IMAGE_WIDTH, ShopMenu.imageHeight());
 		this.inventoryLabelY = ShopMenu.playerRowsY() - 11;
@@ -55,12 +59,30 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 		super.init();
 		SephiriaTabs.add(this, this.leftPos, this.topPos - TAB_HEIGHT, SephiriaTab.SHOP);
 
+		Button refresh = Button.builder(Component.translatable("screen.sephiria.shop.refresh_button"),
+						pressed -> ClientPlayNetworking.send(RefreshShopPayload.INSTANCE))
+				.bounds(this.leftPos + ShopMenu.REFRESH_BUTTON_X, this.topPos + ShopMenu.BUTTON_Y,
+						ShopMenu.BUTTON_WIDTH, ShopMenu.BUTTON_HEIGHT)
+				.build();
+		this.refreshButton = refresh;
+		addRenderableWidget(refresh);
+
 		Button sell = Button.builder(Component.translatable("screen.sephiria.shop.sell_button"),
 						pressed -> ClientPlayNetworking.send(SellItemPayload.INSTANCE))
 				.bounds(this.leftPos + ShopMenu.BUTTON_X, this.topPos + ShopMenu.BUTTON_Y,
 						ShopMenu.BUTTON_WIDTH, ShopMenu.BUTTON_HEIGHT)
 				.build();
 		addRenderableWidget(sell);
+	}
+
+	/** 骰子栏空着时「刷新」置灰（服务端也会再判一次，这里只是显示）。 */
+	@Override
+	public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
+		if (this.refreshButton != null) {
+			this.refreshButton.active = this.menu.canRefresh();
+		}
+
+		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 	}
 
 	@Override
