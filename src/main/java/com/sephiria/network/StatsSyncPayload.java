@@ -57,12 +57,16 @@ public record StatsSyncPayload(double mp, double mpRegen, double physical, doubl
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble()));
 
-	/** {@code physicalTotal} / {@code attackSpeedTotal} 是含神器加成的总值（面板显示这两个数）。 */
-	public static StatsSyncPayload of(PlayerStats.Values values, double physicalTotal, double attackSpeedTotal,
-			double physicalAmp, PlayerStats.PhysicalBreakdown breakdown,
-			PlayerStats.PhysicalBreakdown attackBreakdown, double weaponDamageTotal, double specialAttackTotal) {
-		return new StatsSyncPayload(values.mp, values.mpRegen, physicalTotal, values.fire, values.ice,
-				values.lightning, values.defense, attackSpeedTotal, values.meleeRange, physicalAmp,
+	/**
+	 * {@code physicalTotal} / {@code attackSpeedTotal} 与三个元素值都是含神器加成的总值
+	 * （面板显示的就是这些）；元素值里已经含「最高元素伤害」那一条。
+	 */
+	public static StatsSyncPayload of(PlayerStats.Values values, double physicalTotal, double fireTotal,
+			double iceTotal, double lightningTotal, double attackSpeedTotal, double physicalAmp,
+			PlayerStats.PhysicalBreakdown breakdown, PlayerStats.PhysicalBreakdown attackBreakdown,
+			double weaponDamageTotal, double specialAttackTotal) {
+		return new StatsSyncPayload(values.mp, values.mpRegen, physicalTotal, fireTotal, iceTotal,
+				lightningTotal, values.defense, attackSpeedTotal, values.meleeRange, physicalAmp,
 				breakdown.base(), breakdown.artifactFlat(), breakdown.potionFlat(),
 				breakdown.artifactPercent(), breakdown.potionPercent(), attackBreakdown.base(),
 				attackBreakdown.artifactFlat(), attackBreakdown.potionFlat(),

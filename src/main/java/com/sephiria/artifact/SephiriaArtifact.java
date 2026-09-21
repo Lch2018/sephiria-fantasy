@@ -41,6 +41,25 @@ public interface SephiriaArtifact {
 		return 0.0D;
 	}
 
+	/** 该等级给的冲刺存储上限加成（次）。 */
+	default int dashChargesBonus(int level) {
+		return 0;
+	}
+
+	/** 该等级给的冲刺恢复速度加成（百分点，100 = 100%）。 */
+	default double dashRegenPercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/**
+	 * 该等级给的「最高元素伤害」加成（点）。
+	 *
+	 * <p>加在物理强度 / 火 / 冰 / 电这四项里<b>数值最高</b>的那一项上。
+	 */
+	default double highestElementBonus(int level) {
+		return 0.0D;
+	}
+
 	/** 该等级给的特殊攻击伤害加成（百分点，100 = 100%）：只影响武器技能。 */
 	default double specialAttackBonus(int level) {
 		return 0.0D;

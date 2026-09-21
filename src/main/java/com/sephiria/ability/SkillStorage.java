@@ -37,6 +37,8 @@ public final class SkillStorage {
 	private static final Map<Identifier, Config> CONFIGS = new LinkedHashMap<>();
 	/** 按玩家的上限加成（风之歌 10 级给冲刺 +1 次这种）。 */
 	private static final Map<Identifier, java.util.function.ToIntFunction<ServerPlayer>> MAX_BONUS = new LinkedHashMap<>();
+	/** 按玩家的回复速度加成（压迫绷带的冲刺恢复速度 +x%）。 */
+	private static final Map<Identifier, java.util.function.ToIntFunction<ServerPlayer>> REGEN_BONUS = new LinkedHashMap<>();
 	private static final Map<UUID, Map<Identifier, Pool>> POOLS = new HashMap<>();
 
 	private SkillStorage() {
@@ -89,6 +91,29 @@ public final class SkillStorage {
 	 */
 	public static void registerMaxBonus(Identifier skill, java.util.function.ToIntFunction<ServerPlayer> bonus) {
 		MAX_BONUS.put(skill, bonus);
+	}
+
+	/**
+	 * 给某个技能注册「按玩家的回复速度加成」（单位 %，正数 = 更快）。
+	 *
+	 * <p>配置里写的是<b>间隔</b>，而词条写的是<b>速度</b>，所以实际间隔 = 间隔 ÷ (1 + 加成)。
+	 * 每秒刻数取整（向上），否则 10% 这种小加成会被向下取整直接吃掉。
+	 */
+	public static void registerRegenBonus(Identifier skill, java.util.function.ToIntFunction<ServerPlayer> bonus) {
+		REGEN_BONUS.put(skill, bonus);
+	}
+
+	/** 某个玩家在该技能上的实际回复间隔（tick）。 */
+	private static int regenInterval(ServerPlayer player, Identifier skill, Config config) {
+		java.util.function.ToIntFunction<ServerPlayer> bonus = REGEN_BONUS.get(skill);
+		int base = config.regenIntervalTicks();
+
+		if (bonus == null || base <= 0) {
+			return base;
+		}
+
+		int percent = bonus.applyAsInt(player);
+		return percent == 0 ? base : Math.max(1, (int) Math.ceil(base * 100.0D / (100.0D + percent)));
 	}
 
 	/** 某个玩家在该技能上的实际上限：注册值 + 加成。 */
@@ -173,7 +198,7 @@ public final class SkillStorage {
 
 				Pool pool = entry.getValue();
 				double before = pool.current;
-				pool.tick(config, max(player, entry.getKey()));
+				pool.tick(config, max(player, entry.getKey()), regenInterval(player, entry.getKey(), config));
 
 				// 自动回复改了数值也要推给客户端，否则 HUD 会停在扣掉之后的值
 				if (pool.current != before) {
@@ -193,9 +218,9 @@ public final class SkillStorage {
 			this.current = initial;
 		}
 
-		void tick(Config config, double max) {
+		void tick(Config config, double max, int regenIntervalTicks) {
 			// 不自动回复的技能（回复间隔 <= 0）跳过：它的回复由调用方自己触发
-			if (config.regenIntervalTicks() <= 0 || config.regenAmount() <= 0.0D) {
+			if (regenIntervalTicks <= 0 || config.regenAmount() <= 0.0D) {
 				return;
 			}
 
@@ -205,7 +230,7 @@ public final class SkillStorage {
 				return;
 			}
 
-			if (++this.timer >= config.regenIntervalTicks()) {
+			if (++this.timer >= regenIntervalTicks) {
 				this.timer = 0;
 				this.current = Math.min(max, this.current + config.regenAmount());
 			}

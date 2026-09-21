@@ -8,6 +8,10 @@ import com.sephiria.artifact.ShieldTextbookItem;
 import com.sephiria.artifact.SwordTextbookItem;
 import com.sephiria.artifact.WindScoreItem;
 import com.sephiria.artifact.EnchantCoinItem;
+import com.sephiria.artifact.GoldenCloakItem;
+import com.sephiria.artifact.PressureBandageItem;
+import com.sephiria.artifact.ProjectionSwordItem;
+import com.sephiria.artifact.WandererNecklaceItem;
 import com.sephiria.artifact.WarriorsProofItem;
 import com.sephiria.slate.FutureSlateItem;
 import com.sephiria.weapon.BaseWeapon;
@@ -158,6 +162,26 @@ public final class ModItems {
 	/** 乐谱「风」（风之歌，高级）：【唯一】近战攻击范围 +10..50%。 */
 	public static final Item WIND_SCORE = register(key("wind_score"),
 			p -> new WindScoreItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 压迫绷带（风之歌，普通）：冲刺恢复速度 +10/15/30%。 */
+	public static final Item PRESSURE_BANDAGE = register(key("pressure_bandage"),
+			p -> new PressureBandageItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 金色斗篷（风之歌，高级）：冲刺次数 +1/1/2、攻速 +3/6/9%。 */
+	public static final Item GOLDEN_CLOAK = register(key("golden_cloak"),
+			p -> new GoldenCloakItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 流浪者的项链（风之歌，稀有）：攻速 +6/12/18%、最高元素伤害 +2/4/6。 */
+	public static final Item WANDERER_NECKLACE = register(key("wanderer_necklace"),
+			p -> new WandererNecklaceItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 阿格玛投影剑190,191号（坚固，稀有）：物理伤害 +2..14（8 档）。 */
+	public static final Item PROJECTION_SWORD = register(key("projection_sword"),
+			p -> new ProjectionSwordItem(p),
 			new Item.Properties().stacksTo(1));
 
 	/** 骰子（赛菲利亚道具）：商店刷新用，可堆叠；自然箱子里 10% 概率开出。 */

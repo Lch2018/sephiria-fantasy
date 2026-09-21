@@ -3,6 +3,7 @@ package com.sephiria.backpack;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
+import com.sephiria.ability.SkillStorage;
 import com.sephiria.artifact.BackpackStorable;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -230,8 +231,9 @@ public final class ArtifactBackpack extends SimpleContainer {
 		}
 
 		this.owner.setAttached(SAVED, snapshot());
-		// 神器会影响物理强度，属性面板跟着刷新一次
+		// 神器会影响物理强度与冲刺上限，属性面板和 HUD 各刷新一次
 		PlayerStats.sync(this.owner);
+		SkillStorage.syncAll(this.owner);
 	}
 
 	/** 保存用快照：物品 + 格子等级 + 高度。 */

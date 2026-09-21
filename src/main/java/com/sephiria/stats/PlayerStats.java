@@ -113,10 +113,77 @@ public final class PlayerStats {
 	 * 物理强度的来源明细，供面板按来源分色显示，也供结算复用。
 	 *
 	 * <p>目前只有神器一个来源；药水、树根祝福等来源接进来时在这里各加一项即可。
+	 *
+	 * <p>「最高元素伤害」如果加在物理强度上，也算神器那一份（同样是神器给的固定值）。
 	 */
 	public static PhysicalBreakdown physicalBreakdown(ServerPlayer player) {
-		return new PhysicalBreakdown(of(player).physical, ArtifactEffects.physicalBonus(player), 0.0D,
+		double artifactFlat = ArtifactEffects.physicalBonus(player);
+
+		if (highestElement(player) == Element.PHYSICAL) {
+			artifactFlat += ArtifactEffects.highestElementBonus(player);
+		}
+
+		return new PhysicalBreakdown(of(player).physical, artifactFlat, 0.0D,
 				ArtifactEffects.physicalPercentBonus(player), 0.0D);
+	}
+
+	/** 四项强度：物理强度与三种元素强度，「最高元素伤害」只在它们之间挑一个。 */
+	public enum Element {
+		PHYSICAL, FIRE, ICE, LIGHTNING
+	}
+
+	/**
+	 * 四项强度里数值最高的一项——「最高元素伤害 +N」只加给它。
+	 *
+	 * <p>比较用的是<b>不含该加成</b>的数值：加成如果参与比较，自己就会改变谁最高，
+	 * 会出现「谁加上去谁就最高」的不稳定结果。
+	 *
+	 * <p>并列时按 物理 → 火 → 冰 → 电 的顺序取靠前的那一项。
+	 */
+	public static Element highestElement(ServerPlayer player) {
+		Values values = of(player);
+		Element best = Element.PHYSICAL;
+		double highest = physicalBreakdownBase(player);
+
+		if (values.fire > highest) {
+			best = Element.FIRE;
+			highest = values.fire;
+		}
+
+		if (values.ice > highest) {
+			best = Element.ICE;
+			highest = values.ice;
+		}
+
+		if (values.lightning > highest) {
+			best = Element.LIGHTNING;
+			highest = values.lightning;
+		}
+
+		return best;
+	}
+
+	/** 不含「最高元素伤害」的物理强度，只给 {@link #highestElement} 比较用（避免自引用）。 */
+	private static double physicalBreakdownBase(ServerPlayer player) {
+		double flat = of(player).physical + ArtifactEffects.physicalBonus(player);
+		return flat * (1.0D + ArtifactEffects.physicalPercentBonus(player) / 100.0D);
+	}
+
+	/** 某项强度的实际值（面板显示用）：最高的那一项带上「最高元素伤害」。 */
+	public static double elementTotal(ServerPlayer player, Element element) {
+		double base = switch (element) {
+			case PHYSICAL -> physicalTotal(player);
+			case FIRE -> of(player).fire;
+			case ICE -> of(player).ice;
+			case LIGHTNING -> of(player).lightning;
+		};
+
+		// 物理强度那条链在 physicalBreakdown 里已经把加成算进去了，这里不能重复加。
+		if (element == Element.PHYSICAL || highestElement(player) != element) {
+			return base;
+		}
+
+		return base + ArtifactEffects.highestElementBonus(player);
 	}
 
 	/**
@@ -211,8 +278,10 @@ public final class PlayerStats {
 	/** 改完属性后调用：把最新数值推给客户端（物理强度与攻速都用含神器加成的总值）。 */
 	public static void sync(ServerPlayer player) {
 		ServerPlayNetworking.send(player, StatsSyncPayload.of(of(player), physicalTotal(player),
-				attackSpeedTotal(player), physicalAmpPercent(player), physicalBreakdown(player),
-				attackSpeedBreakdown(player), weaponDamageTotal(player), specialAttackTotal(player)));
+				elementTotal(player, Element.FIRE), elementTotal(player, Element.ICE),
+				elementTotal(player, Element.LIGHTNING), attackSpeedTotal(player), physicalAmpPercent(player),
+				physicalBreakdown(player), attackSpeedBreakdown(player), weaponDamageTotal(player),
+				specialAttackTotal(player)));
 	}
 
 	/** 进服时推一次，面板才有初始值。 */

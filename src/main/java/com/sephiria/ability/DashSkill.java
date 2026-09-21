@@ -1,6 +1,7 @@
 package com.sephiria.ability;
 
 import com.sephiria.Sephiria;
+import com.sephiria.artifact.ArtifactEffects;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -52,6 +53,9 @@ public final class DashSkill {
 	/** 注册存储配置（由 {@link Sephiria#onInitialize()} 调用）。 */
 	public static void register() {
 		SkillStorage.register(STORAGE, MAX_CHARGES, REGEN_AMOUNT, REGEN_INTERVAL_TICKS);
+		// 神器与连击的「冲刺次数 +N」「冲刺恢复速度 +x%」在这里接进存储池
+		SkillStorage.registerMaxBonus(STORAGE, ArtifactEffects::dashChargeBonus);
+		SkillStorage.registerRegenBonus(STORAGE, player -> (int) Math.round(ArtifactEffects.dashRegenPercent(player)));
 	}
 
 	public static void perform(ServerPlayer player) {

@@ -301,6 +301,16 @@ $jobs = @(
     @{ name = 'slate_tab_icon'; source = 'image-02819efdb2970d9e7b051a5e06f349e5.png';
        mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
     # leaf currency icon (fig 1) - drawn in the attribute panel
+    # batch 2: pressure bandage / golden cloak / wanderer necklace / argma projection sword
+    @{ name = 'pressure_bandage'; source = 'image-a628fc58440863833d9289271e0128ed.png'; root = 'cache';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'golden_cloak'; source = 'image-8b227800af38498190e66891e1cca0d1.png'; root = 'cache';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'wanderer_necklace'; source = 'image-844cd14b84647f6d338fd2a698eec9af.png'; root = 'cache';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'projection_sword'; source = 'image-5797598120567ac7015707fd5a65efb6.png'; root = 'cache';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+
     # shield/sword textbook + wind score icons and the wind-song combo icon (wechat refs)
     @{ name = 'shield_textbook'; source = 'f2d76651bbc04fe14c995fc683196387.png'; root = 'wechat';
        mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },

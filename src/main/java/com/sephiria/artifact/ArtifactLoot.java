@@ -45,7 +45,9 @@ public final class ArtifactLoot {
 
 	/** 神器池（可按需要排除石板）。 */
 	private static List<Item> artifacts() {
-		return List.of(ModItems.CHARM_OF_STRENGTH, ModItems.WARRIORS_PROOF);
+		return List.of(ModItems.CHARM_OF_STRENGTH, ModItems.WARRIORS_PROOF, ModItems.SHIELD_TEXTBOOK,
+				ModItems.SWORD_TEXTBOOK, ModItems.WIND_SCORE, ModItems.PRESSURE_BANDAGE, ModItems.GOLDEN_CLOAK,
+				ModItems.WANDERER_NECKLACE, ModItems.PROJECTION_SWORD);
 	}
 
 	private static List<Item> slates() {

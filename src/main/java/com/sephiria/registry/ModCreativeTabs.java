@@ -46,6 +46,10 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.SHIELD_TEXTBOOK);
 						output.accept(ModItems.SWORD_TEXTBOOK);
 						output.accept(ModItems.WIND_SCORE);
+						output.accept(ModItems.PRESSURE_BANDAGE);
+						output.accept(ModItems.GOLDEN_CLOAK);
+						output.accept(ModItems.WANDERER_NECKLACE);
+						output.accept(ModItems.PROJECTION_SWORD);
 					})
 					.build());
 

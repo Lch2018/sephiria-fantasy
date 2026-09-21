@@ -100,6 +100,21 @@ public final class ArtifactEffects {
 		return sumAffix(player, (artifact, level) -> artifact.meleeRangePercentBonus(level));
 	}
 
+	/** 神器给的冲刺存储上限加成（次）。 */
+	public static int artifactDashCharges(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::dashChargesBonus);
+	}
+
+	/** 神器给的冲刺恢复速度加成（%）。 */
+	public static double dashRegenPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::dashRegenPercentBonus);
+	}
+
+	/** 神器给的「最高元素伤害」加成（点）。 */
+	public static double highestElementBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::highestElementBonus);
+	}
+
 	/** 连击给的攻击速度加成总和（%）。 */
 	public static double comboAttackSpeedPercent(ServerPlayer player) {
 		double total = 0.0D;
@@ -122,9 +137,9 @@ public final class ArtifactEffects {
 		return total;
 	}
 
-	/** 连击给的冲刺存储上限加成（次）。 */
+	/** 冲刺存储上限加成（次）：连击 + 神器。 */
 	public static int dashChargeBonus(ServerPlayer player) {
-		int total = 0;
+		int total = artifactDashCharges(player);
 
 		for (Map.Entry<ArtifactCombo, Integer> entry : comboLevels(player).entrySet()) {
 			total += entry.getKey().dashCharges(entry.getValue());
