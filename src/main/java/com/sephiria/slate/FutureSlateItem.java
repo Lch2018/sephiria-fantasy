@@ -4,7 +4,7 @@ import com.sephiria.artifact.ArtifactRarity;
 import net.minecraft.network.chat.Component;
 
 /**
- * 石板「未来」（稀有）：让周围的格子等级 +1（图 6 的形状——所在格正上方三格 + 左侧一格），
+ * 石板「未来」（高级）：让周围的格子等级 +1（图 6 的形状——所在格正上方三格 + 左侧一格），
  * 按 R 旋转会把这四格一起转，所以它对不同的邻格生效。
  */
 public class FutureSlateItem extends SlateItem {
@@ -19,7 +19,8 @@ public class FutureSlateItem extends SlateItem {
 
 	@Override
 	public ArtifactRarity rarity() {
-		return ArtifactRarity.RARE;
+		// 高级（蓝）
+		return ArtifactRarity.ADVANCED;
 	}
 
 	@Override
