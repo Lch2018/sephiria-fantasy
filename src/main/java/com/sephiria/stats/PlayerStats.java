@@ -85,6 +85,16 @@ public final class PlayerStats {
 				ArtifactEffects.physicalPercentBonus(player), 0.0D);
 	}
 
+	/**
+	 * 攻击速度的来源明细，结构与物理强度那边一样。
+	 *
+	 * <p>攻击速度的「+N%%」在数值上就是 +N 点（基准 100 = 100%%），所以神器的加成直接进固定值那一段。
+	 */
+	public static PhysicalBreakdown attackSpeedBreakdown(ServerPlayer player) {
+		return new PhysicalBreakdown(of(player).attackSpeed, ArtifactEffects.attackSpeedBonus(player), 0.0D,
+				0.0D, 0.0D);
+	}
+
 	/** 物理强度的构成：基础 + 各来源固定值，再乘各来源百分比。 */
 	public record PhysicalBreakdown(double base, double artifactFlat, double potionFlat,
 			double artifactPercent, double potionPercent) {
@@ -125,7 +135,8 @@ public final class PlayerStats {
 	/** 改完属性后调用：把最新数值推给客户端（物理强度与攻速都用含神器加成的总值）。 */
 	public static void sync(ServerPlayer player) {
 		ServerPlayNetworking.send(player, StatsSyncPayload.of(of(player), physicalTotal(player),
-				attackSpeedTotal(player), physicalAmpPercent(player), physicalBreakdown(player)));
+				attackSpeedTotal(player), physicalAmpPercent(player), physicalBreakdown(player),
+				attackSpeedBreakdown(player)));
 	}
 
 	/** 进服时推一次，面板才有初始值。 */

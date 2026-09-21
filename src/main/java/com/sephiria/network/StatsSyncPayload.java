@@ -18,7 +18,8 @@ import net.minecraft.resources.Identifier;
 public record StatsSyncPayload(double mp, double mpRegen, double physical, double fire, double ice,
 		double lightning, double defense, double attackSpeed, double meleeRange, double physicalAmp,
 		double physicalBase, double artifactFlat, double potionFlat, double artifactPercent,
-		double potionPercent) implements CustomPacketPayload {
+		double potionPercent, double attackBase, double attackArtifactFlat, double attackPotionFlat,
+		double attackArtifactPercent, double attackPotionPercent) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<StatsSyncPayload> TYPE =
 			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "stats_sync"));
 
@@ -39,20 +40,29 @@ public record StatsSyncPayload(double mp, double mpRegen, double physical, doubl
 				buffer.writeDouble(payload.potionFlat());
 				buffer.writeDouble(payload.artifactPercent());
 				buffer.writeDouble(payload.potionPercent());
+				buffer.writeDouble(payload.attackBase());
+				buffer.writeDouble(payload.attackArtifactFlat());
+				buffer.writeDouble(payload.attackPotionFlat());
+				buffer.writeDouble(payload.attackArtifactPercent());
+				buffer.writeDouble(payload.attackPotionPercent());
 			},
 			(RegistryFriendlyByteBuf buffer) -> new StatsSyncPayload(
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
-					buffer.readDouble(), buffer.readDouble(), buffer.readDouble()));
+					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
+					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble()));
 
 	/** {@code physicalTotal} / {@code attackSpeedTotal} 是含神器加成的总值（面板显示这两个数）。 */
 	public static StatsSyncPayload of(PlayerStats.Values values, double physicalTotal, double attackSpeedTotal,
-			double physicalAmp, PlayerStats.PhysicalBreakdown breakdown) {
+			double physicalAmp, PlayerStats.PhysicalBreakdown breakdown,
+			PlayerStats.PhysicalBreakdown attackBreakdown) {
 		return new StatsSyncPayload(values.mp, values.mpRegen, physicalTotal, values.fire, values.ice,
 				values.lightning, values.defense, attackSpeedTotal, values.meleeRange, physicalAmp,
 				breakdown.base(), breakdown.artifactFlat(), breakdown.potionFlat(),
-				breakdown.artifactPercent(), breakdown.potionPercent());
+				breakdown.artifactPercent(), breakdown.potionPercent(), attackBreakdown.base(),
+				attackBreakdown.artifactFlat(), attackBreakdown.potionFlat(),
+				attackBreakdown.artifactPercent(), attackBreakdown.potionPercent());
 	}
 
 	@Override

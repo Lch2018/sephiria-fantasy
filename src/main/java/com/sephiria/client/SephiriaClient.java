@@ -17,6 +17,7 @@ import com.sephiria.registry.ModMenus;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaShieldItem;
 import com.sephiria.weapon.SephiriaWeapon;
+import com.sephiria.weapon.TooltipScale;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -78,7 +79,16 @@ public class SephiriaClient implements ClientModInitializer {
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
 			if (stack.getItem() instanceof SephiriaWeapon detail) {
 				// 详细描述：空行分隔，逐条显示。外层套灰，行内的数值用自己的颜色覆盖它。
-				java.util.List<Component> detailLines = detail.detailLines(stack);
+				// 数值按玩家当前属性换算（武器类里存的是基准值），拼完立刻清掉倍率
+				java.util.List<Component> detailLines;
+
+				try {
+					TooltipScale.set(ClientStats.damageMultiplier(), ClientStats.attackSpeedMultiplier(),
+							ClientStats.rangeMultiplier());
+					detailLines = detail.detailLines(stack);
+				} finally {
+					TooltipScale.reset();
+				}
 
 				if (!detailLines.isEmpty()) {
 					lines.add(Component.empty());

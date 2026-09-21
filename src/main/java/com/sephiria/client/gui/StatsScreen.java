@@ -21,6 +21,7 @@ public class StatsScreen extends Screen {
 	/** 「物理强度」那一行的位置：鼠标悬停时在它下面显示算式。 */
 	private int physicalRowY;
 	private int ampRowY;
+	private int attackSpeedRowY;
 	private int rowsLeft;
 
 	public StatsScreen() {
@@ -51,13 +52,16 @@ public class StatsScreen extends Screen {
 		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.defense", format(ClientStats.defense()));
 		this.ampRowY = y += ROW_HEIGHT;
 		row(left, this.ampRowY, "screen.sephiria.stats.physical_amp", format(ClientStats.physicalAmp()) + "%");
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.attack_speed", format(ClientStats.attackSpeed()) + "%");
+		this.attackSpeedRowY = y += ROW_HEIGHT;
+		row(left, this.attackSpeedRowY, "screen.sephiria.stats.attack_speed",
+				format(ClientStats.attackSpeed()) + "%");
 		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.melee_range", format(ClientStats.meleeRange()) + "%");
 		this.rowsLeft = left;
 	}
 
 	/**
-	 * 鼠标放在「物理强度」上时，在下面补一行算式：{@code 30 =（20+10+0）*（1+0%+0%）}。
+	 * 鼠标放在「物理强度」或「攻击速度」上时，在那一行下面补一行算式：
+	 * {@code 30 =（20+10+0）*（1+0%+0%）}。
 	 *
 	 * <p>按来源分色：基础值白、神器黄、药水红（树根祝福以后加，银色）。
 	 */
@@ -66,11 +70,20 @@ public class StatsScreen extends Screen {
 			float partialTick) {
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 
-		if (mouseY >= this.physicalRowY && mouseY < this.physicalRowY + ROW_HEIGHT
-				&& mouseX >= this.rowsLeft && mouseX < this.rowsLeft + 200) {
-			PlayerStats.PhysicalBreakdown breakdown = ClientStats.physicalBreakdown();
-			extractor.text(this.font, breakdownLine(breakdown), this.rowsLeft, this.physicalRowY + 10, 0xFFDDDDDD);
+		if (mouseX < this.rowsLeft || mouseX >= this.rowsLeft + 200) {
+			return;
 		}
+
+		if (mouseY >= this.physicalRowY && mouseY < this.physicalRowY + ROW_HEIGHT) {
+			drawBreakdown(extractor, this.physicalRowY, ClientStats.physicalBreakdown());
+		} else if (mouseY >= this.attackSpeedRowY && mouseY < this.attackSpeedRowY + ROW_HEIGHT) {
+			drawBreakdown(extractor, this.attackSpeedRowY, ClientStats.attackSpeedBreakdown());
+		}
+	}
+
+	private void drawBreakdown(net.minecraft.client.gui.GuiGraphicsExtractor extractor, int rowY,
+			PlayerStats.PhysicalBreakdown breakdown) {
+		extractor.text(this.font, breakdownLine(breakdown), this.rowsLeft, rowY + 10, 0xFFDDDDDD);
 	}
 
 	/** 算式那一行：数字按来源上色，括号与符号保持灰白。 */

@@ -102,27 +102,32 @@ public interface SephiriaWeapon {
 					.damage(damage).attackSpeed(attackSpeed).range(range);
 		}
 
-		/** 伤害：主数值橙黄，括号里给出相对物理强度基准（20）的倍率。 */
+		/**
+		 * 伤害：主数值橙黄、按当前物理强度换算后显示；括号里给的是<b>基准值</b>
+		 * 相对物理强度基准（20）的倍率，不随属性变化。
+		 */
 		Line damage(double value) {
 			return part(Component.translatable("tooltip.sephiria.part.damage",
-					number(value, COLOR_DAMAGE), number(value / PlayerStats.DEFAULT_STRENGTH * 100.0D) + "%"));
+					number(value * TooltipScale.damage(), COLOR_DAMAGE),
+					number(value / PlayerStats.DEFAULT_STRENGTH * 100.0D) + "%"));
 		}
 
-		/** 攻速：主数值黄色，括号里给出「数值 ×攻击速度」的换算。 */
+		/** 攻速：主数值黄色、按当前攻击速度换算；括号里给出「基准值 ×攻击速度」这个换算关系。 */
 		Line attackSpeed(double value) {
 			return part(Component.translatable("tooltip.sephiria.part.attack_speed",
-					number(value, COLOR_ATTACK_SPEED), number(value)));
+					number(value * TooltipScale.attackSpeed(), COLOR_ATTACK_SPEED), number(value)));
 		}
 
 		/**
-		 * 范围：传<b>格数</b>（水平半径），显示时换算成基准值（1 格 = {@value #RANGE_BASIS}），
-		 * 白色，括号里给出「基准值 ×近战攻击范围」的换算。
+		 * 范围：传<b>格数</b>（水平半径），显示时换算成基准值（1 格 = {@value #RANGE_BASIS}）
+		 * 并按当前近战攻击范围放大；括号里给出「基准值 ×近战攻击范围」这个换算关系。
 		 */
 		Line range(double blocks) {
-			double basis = blocks * RANGE_BASIS;
+			double basis = blocks * RANGE_BASIS * TooltipScale.range();
+			double baseBasis = blocks * RANGE_BASIS;
 
 			return part(Component.translatable("tooltip.sephiria.part.range",
-					number(basis, COLOR_RANGE), number(basis)));
+					number(basis, COLOR_RANGE), number(baseBasis)));
 		}
 
 		/** 该项没有范围时用（远程武器不触发横扫）。 */

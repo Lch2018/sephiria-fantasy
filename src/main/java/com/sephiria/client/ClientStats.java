@@ -20,6 +20,8 @@ public final class ClientStats {
 	private static double attackSpeed = PlayerStats.DEFAULT_ATTACK_SPEED;
 	private static double meleeRange = PlayerStats.DEFAULT_MELEE_RANGE;
 	private static double physicalAmp = 0.0D;
+	private static PlayerStats.PhysicalBreakdown attackBreakdown = new PlayerStats.PhysicalBreakdown(
+			PlayerStats.DEFAULT_ATTACK_SPEED, 0.0D, 0.0D, 0.0D, 0.0D);
 	private static PlayerStats.PhysicalBreakdown breakdown = new PlayerStats.PhysicalBreakdown(
 			PlayerStats.DEFAULT_STRENGTH, 0.0D, 0.0D, 0.0D, 0.0D);
 
@@ -39,6 +41,23 @@ public final class ClientStats {
 		physicalAmp = payload.physicalAmp();
 		breakdown = new PlayerStats.PhysicalBreakdown(payload.physicalBase(), payload.artifactFlat(),
 				payload.potionFlat(), payload.artifactPercent(), payload.potionPercent());
+		attackBreakdown = new PlayerStats.PhysicalBreakdown(payload.attackBase(), payload.attackArtifactFlat(),
+				payload.attackPotionFlat(), payload.attackArtifactPercent(), payload.attackPotionPercent());
+	}
+
+	/** 伤害倍率：物理强度倍率 ×（1 + 物理伤害增幅），提示框用它把基准伤害换算成实际伤害。 */
+	public static double damageMultiplier() {
+		return physical / PlayerStats.DEFAULT_STRENGTH * (1.0D + physicalAmp / 100.0D);
+	}
+
+	/** 攻击速度倍率（1.0 = 100%）。 */
+	public static double attackSpeedMultiplier() {
+		return attackSpeed / PlayerStats.DEFAULT_ATTACK_SPEED;
+	}
+
+	/** 近战攻击范围倍率（1.0 = 100%）。 */
+	public static double rangeMultiplier() {
+		return meleeRange / PlayerStats.DEFAULT_MELEE_RANGE;
 	}
 
 	/** 物理伤害增幅（%），默认 0。 */
@@ -49,6 +68,11 @@ public final class ClientStats {
 	/** 物理强度的来源明细（面板悬停时显示算式）。 */
 	public static PlayerStats.PhysicalBreakdown physicalBreakdown() {
 		return breakdown;
+	}
+
+	/** 攻击速度的来源明细（面板悬停时显示算式）。 */
+	public static PlayerStats.PhysicalBreakdown attackSpeedBreakdown() {
+		return attackBreakdown;
 	}
 
 	public static double mp() {
