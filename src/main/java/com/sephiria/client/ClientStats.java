@@ -20,6 +20,7 @@ public final class ClientStats {
 	private static double attackSpeed = PlayerStats.DEFAULT_ATTACK_SPEED;
 	private static double meleeRange = PlayerStats.DEFAULT_MELEE_RANGE;
 	private static double physicalAmp = 0.0D;
+	private static double leaves = 0.0D;
 	private static PlayerStats.PhysicalBreakdown attackBreakdown = new PlayerStats.PhysicalBreakdown(
 			PlayerStats.DEFAULT_ATTACK_SPEED, 0.0D, 0.0D, 0.0D, 0.0D);
 	private static PlayerStats.PhysicalBreakdown breakdown = new PlayerStats.PhysicalBreakdown(
@@ -39,6 +40,7 @@ public final class ClientStats {
 		attackSpeed = payload.attackSpeed();
 		meleeRange = payload.meleeRange();
 		physicalAmp = payload.physicalAmp();
+		leaves = payload.leaves();
 		breakdown = new PlayerStats.PhysicalBreakdown(payload.physicalBase(), payload.artifactFlat(),
 				payload.potionFlat(), payload.artifactPercent(), payload.potionPercent());
 		attackBreakdown = new PlayerStats.PhysicalBreakdown(payload.attackBase(), payload.attackArtifactFlat(),
@@ -68,6 +70,11 @@ public final class ClientStats {
 	/** 物理强度的来源明细（面板悬停时显示算式）。 */
 	public static PlayerStats.PhysicalBreakdown physicalBreakdown() {
 		return breakdown;
+	}
+
+	/** 树叶（货币）持有量。 */
+	public static double leaves() {
+		return leaves;
 	}
 
 	/** 攻击速度的来源明细（面板悬停时显示算式）。 */

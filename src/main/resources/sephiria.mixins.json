@@ -5,6 +5,7 @@
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"DamageReductionMixin",
+		"LeafExperienceMixin",
 		"SephiriaDamageFramesMixin"
 	],
 	"injectors": {

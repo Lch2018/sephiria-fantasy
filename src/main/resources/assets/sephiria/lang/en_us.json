@@ -25,6 +25,13 @@
     "item.sephiria.warriors_proof":  "Warrior's Proof",
     "item.sephiria.slate_of_future":  "Slate of Future",
     "item.sephiria.enchant_coin":  "Artifact Enchant Coin",
+    "item.sephiria.dice":  "Dice",
+    "item.sephiria.artifact_chest":  "Artifact Chest",
+    "item.sephiria.slate_chest":  "Slate Chest",
+    "item.sephiria.upgrade_chest":  "Upgrade Chest",
+    "screen.sephiria.chest":  "Chest",
+    "screen.sephiria.chest.hint":  "Click one to take it; the chest is consumed",
+    "screen.sephiria.stats.leaves":  "Leaves: %s",
     
     "sephiria.rarity.advanced":  "Advanced",
     "sephiria.rarity.bond":  "Bond",

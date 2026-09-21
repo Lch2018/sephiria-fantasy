@@ -4,6 +4,7 @@ import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.network.StatsSyncPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,8 @@ public final class PlayerStats {
 	public static final double DEFAULT_ATTACK_SPEED = 100.0D;
 	/** 近战攻击范围（百分比）：武器的攻击范围与技能伤害范围都乘它。 */
 	public static final double DEFAULT_MELEE_RANGE = 100.0D;
+	/** 多少点经验换一个升级宝箱。 */
+	public static final double EXPERIENCE_PER_CHEST = 1000.0D;
 
 	private static final Map<UUID, Values> STATS = new HashMap<>();
 
@@ -44,6 +47,10 @@ public final class PlayerStats {
 		public double ice = DEFAULT_STRENGTH;
 		public double lightning = DEFAULT_STRENGTH;
 		public double defense = DEFAULT_DEFENSE;
+		/** 树叶（货币）：每获得 1 点原版经验 +1。 */
+		public double leaves = 0.0D;
+		/** 累计获得的经验：每满 1000 发一个升级宝箱（计数器会扣掉已兑换的部分）。 */
+		public double experienceTowardsChest = 0.0D;
 		public double attackSpeed = DEFAULT_ATTACK_SPEED;
 		public double meleeRange = DEFAULT_MELEE_RANGE;
 	}
@@ -126,6 +133,46 @@ public final class PlayerStats {
 	/** 攻击速度的实际值（%）：面板值 + 神器加成。 */
 	public static double attackSpeedTotal(ServerPlayer player) {
 		return of(player).attackSpeed + ArtifactEffects.attackSpeedBonus(player);
+	}
+
+	/** 树叶持有量。 */
+	public static double leaves(ServerPlayer player) {
+		return of(player).leaves;
+	}
+
+	/** 花掉树叶；不够则返回 false。 */
+	public static boolean spendLeaves(ServerPlayer player, double amount) {
+		Values values = of(player);
+
+		if (values.leaves < amount) {
+			return false;
+		}
+
+		values.leaves -= amount;
+		sync(player);
+		return true;
+	}
+
+	/**
+	 * 获得经验：同时加树叶，并按每 1000 点发一个升级宝箱。
+	 *
+	 * <p>宝箱由这里直接塞进玩家背包（背包满了就掉在脚下），所以调用方不用管。
+	 */
+	public static void addLeaves(ServerPlayer player, int experience) {
+		Values values = of(player);
+		values.leaves += experience;
+		values.experienceTowardsChest += experience;
+
+		while (values.experienceTowardsChest >= EXPERIENCE_PER_CHEST) {
+			values.experienceTowardsChest -= EXPERIENCE_PER_CHEST;
+			ItemStack chest = new ItemStack(com.sephiria.registry.ModItems.UPGRADE_CHEST);
+
+			if (!player.getInventory().add(chest)) {
+				player.drop(chest, false);
+			}
+		}
+
+		sync(player);
 	}
 
 	public static Values of(ServerPlayer player) {

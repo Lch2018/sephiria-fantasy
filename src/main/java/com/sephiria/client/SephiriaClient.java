@@ -2,6 +2,7 @@ package com.sephiria.client;
 
 import com.sephiria.client.artifact.ArtifactTooltip;
 import com.sephiria.client.backpack.ArtifactBackpackScreen;
+import com.sephiria.client.backpack.ChestScreen;
 import com.sephiria.client.backpack.EnchantScreen;
 import com.sephiria.client.hud.HudConfigScreen;
 import com.sephiria.client.hud.SephiriaHud;
@@ -75,6 +76,7 @@ public class SephiriaClient implements ClientModInitializer {
 		// 容器菜单的界面：26.2 的 MenuScreens.register 是包私有的，走访问拓宽（sephiria.accesswidener）
 		MenuScreens.register(ModMenus.ARTIFACT_BACKPACK, ArtifactBackpackScreen::new);
 		MenuScreens.register(ModMenus.ARTIFACT_ENCHANT, EnchantScreen::new);
+		MenuScreens.register(ModMenus.CHEST, ChestScreen::new);
 
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
 			if (stack.getItem() instanceof SephiriaWeapon detail) {

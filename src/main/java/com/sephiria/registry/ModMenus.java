@@ -2,6 +2,7 @@ package com.sephiria.registry;
 
 import com.sephiria.Sephiria;
 import com.sephiria.backpack.ArtifactBackpackMenu;
+import com.sephiria.backpack.ChestMenu;
 import com.sephiria.backpack.EnchantMenu;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
 import net.minecraft.core.Registry;
@@ -33,6 +34,14 @@ public final class ModMenus {
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_enchant"),
 			new ExtendedMenuType<EnchantMenu, Unit>(
 					(id, inventory, data) -> new EnchantMenu(id, inventory),
+					Unit.STREAM_CODEC));
+
+	/** 宝箱页面（神器 / 石板 / 升级宝箱右键打开）。 */
+	public static final MenuType<ChestMenu> CHEST = Registry.register(
+			BuiltInRegistries.MENU,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "chest"),
+			new ExtendedMenuType<ChestMenu, Unit>(
+					(id, inventory, data) -> new ChestMenu(id, inventory),
 					Unit.STREAM_CODEC));
 
 	private ModMenus() {

@@ -298,10 +298,20 @@ $jobs = @(
     # slate tab icon (fig 4: the grey stone face)
     @{ name = 'slate_tab_icon'; source = 'image-02819efdb2970d9e7b051a5e06f349e5.png';
        mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
-    @{ name = 'slate_of_future'; source = 'image-84628a6d87ac4c3a2b8dc0287d8122a0.png';
+    # leaf currency icon (fig 1) - drawn in the attribute panel
+    @{ name = 'leaf'; source = 'image-09c22f1cd7431951e527f5126b8d4400.png';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'gui' },
+    # shop tab icon (fig 3: the golden scales)
+    @{ name = 'shop_tab'; source = 'image-0ac6d54790555cb858f4fe583a191d87.png';
+       mode = 'downscaled'; target = 20; trim = 0; rule = 'ring'; dir = 'gui' },
+    # dice (fig 4) and the upgrade chest (fig 5)
+    @{ name = 'dice'; source = 'image-1930778f7324f8dfe5e250b50cfbfc79.png';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'upgrade_chest'; source = 'image-1591196f455e2354d278f04d9b78cb40.png';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },    @{ name = 'slate_of_future'; source = 'image-84628a6d87ac4c3a2b8dc0287d8122a0.png';
        mode = 'native'; cell = 3; canvas = 16; rule = 'ring'; dir = 'item' },
     # the coin's gem is 22x21: pasting it natively keeps the art exact, Minecraft scales it down
-    @{ name = 'enchant_coin'; source = 'image-0904240550fd05ab97639985e0a49a75.png';
+    @{ name = 'enchant_coin'; source = 'image-479fa47d5d5c63efb1b9e9b6fee3de20.png';
        mode = 'native'; cell = 3; canvas = 24; rule = 'ring'; dir = 'item' }
 )
 

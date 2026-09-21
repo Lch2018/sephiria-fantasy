@@ -17,11 +17,16 @@ import net.minecraft.network.chat.Component;
  */
 public class StatsScreen extends Screen {
 	private static final int ROW_HEIGHT = 14;
+	/** 树叶（货币）的图标。 */
+	private static final net.minecraft.resources.Identifier LEAF_ICON =
+			net.minecraft.resources.Identifier.fromNamespaceAndPath(com.sephiria.Sephiria.MOD_ID, "textures/gui/leaf.png");
 
 	/** 「物理强度」那一行的位置：鼠标悬停时在它下面显示算式。 */
 	private int physicalRowY;
 	private int ampRowY;
 	private int attackSpeedRowY;
+	/** 树叶那一行：图标 + 数值，画在最上面。 */
+	private int leafRowY;
 	private int rowsLeft;
 
 	public StatsScreen() {
@@ -40,6 +45,10 @@ public class StatsScreen extends Screen {
 		String health = player == null
 				? "-"
 				: format(player.getHealth()) + " / " + format(player.getMaxHealth());
+
+		// 树叶（货币）放第一行，并且带图标——一眼就能看到
+		this.leafRowY = y;
+		y += ROW_HEIGHT;
 
 		row(left, y, "screen.sephiria.stats.hp", health);
 		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.mp", format(ClientStats.mp()));
@@ -69,6 +78,13 @@ public class StatsScreen extends Screen {
 	public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor extractor, int mouseX, int mouseY,
 			float partialTick) {
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
+
+		// 树叶：图标在文字左边，数值黄色
+		extractor.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, LEAF_ICON,
+				this.rowsLeft, this.leafRowY, 0.0F, 0.0F, 12, 12, 16, 16);
+		extractor.text(this.font, Component.translatable("screen.sephiria.stats.leaves",
+						Component.literal(format(ClientStats.leaves())).withColor(0xFFFFD24A)),
+				this.rowsLeft + 15, this.leafRowY + 2, 0xFFFFFFFF);
 
 		if (mouseX < this.rowsLeft || mouseX >= this.rowsLeft + 200) {
 			return;

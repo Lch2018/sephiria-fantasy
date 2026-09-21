@@ -111,6 +111,9 @@ public class Sephiria implements ModInitializer {
 					}
 				});
 
+		// 骰子进自然生成的箱子：所有 minecraft:chests/* 的表各加一个 10% 概率的池子
+		com.sephiria.shop.DiceLoot.register();
+
 		// 进服时把各技能的存储量推给客户端，HUD 才有初始值
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			SkillStorage.syncAll(handler.player);

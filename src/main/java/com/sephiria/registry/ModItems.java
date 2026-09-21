@@ -2,6 +2,8 @@ package com.sephiria.registry;
 
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.CharmOfStrengthItem;
+import com.sephiria.artifact.ChestItem;
+import com.sephiria.artifact.DiceItem;
 import com.sephiria.artifact.EnchantCoinItem;
 import com.sephiria.artifact.WarriorsProofItem;
 import com.sephiria.slate.FutureSlateItem;
@@ -139,6 +141,26 @@ public final class ModItems {
 	public static final Item ENCHANT_COIN = register(key("enchant_coin"),
 			p -> new EnchantCoinItem(p),
 			new Item.Properties());
+
+	/** 骰子（赛菲利亚道具）：商店刷新用，可堆叠；自然箱子里 10% 概率开出。 */
+	public static final Item DICE = register(key("dice"),
+			p -> new DiceItem(p),
+			new Item.Properties());
+
+	/** 神器宝箱（赛菲利亚道具）：右键开出 5 件随机神器，选一件拿走。 */
+	public static final Item ARTIFACT_CHEST = register(key("artifact_chest"),
+			p -> new ChestItem(ChestItem.Kind.ARTIFACT, p),
+			new Item.Properties().stacksTo(1));
+
+	/** 石板宝箱：同上，奖池是石板。 */
+	public static final Item SLATE_CHEST = register(key("slate_chest"),
+			p -> new ChestItem(ChestItem.Kind.SLATE, p),
+			new Item.Properties().stacksTo(1));
+
+	/** 升级宝箱：每 1000 点经验发一个，奖池混着神器与石板，好东西更少。 */
+	public static final Item UPGRADE_CHEST = register(key("upgrade_chest"),
+			p -> new ChestItem(ChestItem.Kind.UPGRADE, p),
+			new Item.Properties().stacksTo(1));
 
 	/**
 	 * 神器标签页的图标物品。
