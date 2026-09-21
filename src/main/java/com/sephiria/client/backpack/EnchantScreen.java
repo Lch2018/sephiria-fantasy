@@ -42,7 +42,8 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 	@Override
 	protected void init() {
 		super.init();
-		SephiriaTabs.add(this, this.leftPos, this.topPos - TAB_HEIGHT, SephiriaTab.ATTRIBUTES);
+		// 附魔面板不是那三页之一，所以不标当前页——三个标签都可点
+		SephiriaTabs.add(this, this.leftPos, this.topPos - TAB_HEIGHT, null);
 		this.upgradeButtons.clear();
 
 		for (int index = 0; index < EnchantMenu.UPGRADE_STEPS.length; index++) {
