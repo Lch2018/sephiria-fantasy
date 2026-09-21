@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.artifact.BackpackStorable;
+import com.sephiria.artifact.Quality;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -23,7 +24,7 @@ import net.minecraft.world.item.ItemStack;
  * <p>鼠标放在石板上按 R 可以旋转（默认逆时针，每次 90°），影响范围会跟着转。
  * 朝向存在物品的数据组件里。
  */
-public abstract class SlateItem extends Item implements BackpackStorable {
+public abstract class SlateItem extends Item implements BackpackStorable, Quality {
 	public static final DataComponentType<Integer> ROTATION = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_rotation"),

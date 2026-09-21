@@ -350,7 +350,7 @@ $jobs = @(
        mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
     @{ name = 'upgrade_chest'; source = 'image-1591196f455e2354d278f04d9b78cb40.png';
        mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },    @{ name = 'slate_of_future'; source = 'image-84628a6d87ac4c3a2b8dc0287d8122a0.png';
-       mode = 'native'; cell = 3; canvas = 16; rule = 'ring'; dir = 'item' },
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
     # the coin's gem is 22x21: pasting it natively keeps the art exact, Minecraft scales it down
     @{ name = 'enchant_coin'; source = 'image-479fa47d5d5c63efb1b9e9b6fee3de20.png';
        mode = 'native'; cell = 3; canvas = 24; rule = 'ring'; dir = 'item' },
@@ -369,6 +369,22 @@ $jobs = @(
        mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
     @{ name = 'slate_of_competition'; source = '79d2a42f662d9109b1b0e7c5b5c40841.png'; root = 'wechat';
        crop = @{ x = 362; y = 11; w = 60; h = 60 };
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+
+    # batch 4: the five potions (icon-only references on a dark plate, so the ring rule alone
+    # isolates the bottle). The art here is smaller than 16x16, so it gets scaled up to fill the
+    # canvas (majority colour, same as every other icon) -- pasting it at native size would leave
+    # a tiny vial in the slot.
+    # The potions tab reuses the regeneration potion as its icon.
+    @{ name = 'regeneration_potion'; source = '38af9bf5fa04c2b82f33547784727131.png'; root = 'wechat';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'apple_juice'; source = '67ec95565d54e49a4090d158a1076511.png'; root = 'wechat';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'trappist_sacred'; source = '1a1b1f5222c25416c3bd396f294f71a1.png'; root = 'wechat';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'big_dice_potion'; source = '6f80f18e7f5f5ac3600f4a848d6bfda1.png'; root = 'wechat';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'vampire_lord_oath'; source = '414e4f638cfc9a75cce608cb5e29b3d5.png'; root = 'wechat';
        mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' }
 )
 

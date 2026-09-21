@@ -14,6 +14,9 @@ import com.sephiria.artifact.ProjectionSwordItem;
 import com.sephiria.artifact.WandererNecklaceItem;
 import com.sephiria.artifact.WarriorsProofItem;
 import com.sephiria.artifact.ArtifactRarity;
+import com.sephiria.potion.PotionEffect;
+import com.sephiria.potion.Potions;
+import com.sephiria.potion.SephiriaPotionItem;
 import com.sephiria.slate.PatternSlateItem;
 import com.sephiria.slate.Slates;
 import com.sephiria.weapon.BaseWeapon;
@@ -243,7 +246,34 @@ public final class ModItems {
 			Item::new,
 			new Item.Properties());
 
+	/** 再生药水（白）：立即回复最大生命值的 20%。 */
+	public static final Item REGENERATION_POTION = registerPotion("regeneration_potion", Potions.REGENERATION,
+			Potions.REGENERATION_RARITY);
+	/** 苹果汁（白）：每秒回 1 点生命，持续 30 秒。 */
+	public static final Item APPLE_JUICE = registerPotion("apple_juice", Potions.APPLE_JUICE,
+			Potions.APPLE_JUICE_RARITY);
+	/** 特拉普派的神圣（蓝）：物理伤害 +2，永久。 */
+	public static final Item TRAPPIST_SACRED = registerPotion("trappist_sacred", Potions.TRAPPIST_SACRED,
+			Potions.TRAPPIST_SACRED_RARITY);
+	/** 大骰子药水（黄）：立即获得 3 个骰子。 */
+	public static final Item BIG_DICE_POTION = registerPotion("big_dice_potion", Potions.BIG_DICE,
+			Potions.BIG_DICE_RARITY);
+	/** 吸血鬼领主的誓约（红）：HP 偷取 +1，永久。 */
+	public static final Item VAMPIRE_LORD_OATH = registerPotion("vampire_lord_oath", Potions.VAMPIRE_LORD_OATH,
+			Potions.VAMPIRE_LORD_OATH_RARITY);
+
+	/** 药水池（商店的两个药水格按品质加权从这里抽）。 */
+	public static final List<Item> POTIONS = List.of(REGENERATION_POTION, APPLE_JUICE, TRAPPIST_SACRED,
+			BIG_DICE_POTION, VAMPIRE_LORD_OATH);
+
 	private ModItems() {
+	}
+
+	/** 药水统一注册：不可堆叠（和原版药水一样，喝完手里留一个玻璃瓶）。 */
+	private static Item registerPotion(String name, PotionEffect effect, ArtifactRarity rarity) {
+		return register(key(name),
+				p -> new SephiriaPotionItem(p, effect, rarity),
+				new Item.Properties().stacksTo(1));
 	}
 
 	/** 注册发生在类加载时，由 {@link Sephiria#onInitialize()} 触发。 */

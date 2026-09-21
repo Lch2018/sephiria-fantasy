@@ -62,11 +62,11 @@ public final class ShopStock extends SimpleContainer {
 		STOCKS.remove(player.getUUID());
 	}
 
-	/** 重新刷一批货：商品按品质加权抽，宝箱固定两种，购买记录清零。 */
+	/** 重新刷一批货：商品按品质加权抽，宝箱固定两种，药水按品质加权抽，购买记录清零。 */
 	public void refresh(RandomSource random) {
 		clearContent();
 
-		List<ItemStack> goods = ArtifactLoot.roll(random, GOOD_SLOTS, true, ArtifactLoot.Weights.DEFAULT);
+		List<ItemStack> goods = ArtifactLoot.roll(random, GOOD_SLOTS, ArtifactLoot.Pool.BOTH, ArtifactLoot.Weights.DEFAULT);
 
 		for (int index = 0; index < goods.size(); index++) {
 			setItem(index, goods.get(index));
@@ -74,7 +74,17 @@ public final class ShopStock extends SimpleContainer {
 
 		setItem(CHEST_START, new ItemStack(ModItems.ARTIFACT_CHEST));
 		setItem(CHEST_START + 1, new ItemStack(ModItems.SLATE_CHEST));
-		// 药水格（POTION_START 起两格）留空：药水物品还没做
+
+		// 药水格：按品质加权抽（1000/10/5/1），价格定成 0 的药水商店不出售，抽到就留空
+		List<ItemStack> potions = ArtifactLoot.rollPotions(random, POTION_SLOTS);
+
+		for (int index = 0; index < potions.size(); index++) {
+			ItemStack potion = potions.get(index);
+
+			if (ShopPrices.buy(potion) > 0) {
+				setItem(POTION_START + index, potion);
+			}
+		}
 
 		java.util.Arrays.fill(this.bought, 0);
 		setChanged();

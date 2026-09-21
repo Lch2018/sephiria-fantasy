@@ -10,7 +10,7 @@ $assets = Join-Path $root 'src\main\resources\assets\sephiria'
 $modelsDir = Join-Path $assets 'models\item'
 $texDir = Join-Path $assets 'textures\item'
 
-$items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'crossbow_bolt', 'blade', 'quarterstaff', 'charm_of_strength', 'artifact_tab_icon', 'warriors_proof', 'slate_of_future', 'enchant_coin', 'slate_tab_icon', 'dice', 'artifact_chest', 'slate_chest', 'upgrade_chest', 'shield_textbook', 'sword_textbook', 'wind_score', 'pressure_bandage', 'golden_cloak', 'wanderer_necklace', 'projection_sword', 'slate_of_oath', 'slate_of_belief', 'slate_of_entrance', 'slate_of_competition')
+$items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'crossbow_bolt', 'blade', 'quarterstaff', 'charm_of_strength', 'artifact_tab_icon', 'warriors_proof', 'slate_of_future', 'enchant_coin', 'slate_tab_icon', 'dice', 'artifact_chest', 'slate_chest', 'upgrade_chest', 'shield_textbook', 'sword_textbook', 'wind_score', 'pressure_bandage', 'golden_cloak', 'wanderer_necklace', 'projection_sword', 'slate_of_oath', 'slate_of_belief', 'slate_of_entrance', 'slate_of_competition', 'regeneration_potion', 'apple_juice', 'trappist_sacred', 'big_dice_potion', 'vampire_lord_oath')
 $branches = @('sword_and_shield', 'greatsword', 'dagger', 'crossbow', 'katana', 'staff')
 
 $errors = 0

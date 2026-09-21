@@ -18,6 +18,8 @@ import com.sephiria.network.SellItemPayload;
 import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.StatsSyncPayload;
+import com.sephiria.potion.PotionTimers;
+import com.sephiria.stats.Lifesteal;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.stats.WeaponStats;
 import com.sephiria.registry.ModCreativeTabs;
@@ -71,6 +73,9 @@ public class Sephiria implements ModInitializer {
 		DashSkill.register();
 		SephiriaCrossbowItem.register();
 		SkillStorage.registerTicker();
+		// 药水：按秒回血的计时器 + HP 偷取（造成伤害后按比例回血）
+		PotionTimers.registerTicker();
+		Lifesteal.register();
 		WeaponStats.register();
 
 		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);

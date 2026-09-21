@@ -84,7 +84,27 @@ public final class ModCreativeTabs {
 			FabricCreativeModeTab.builder()
 					.title(Component.translatable("itemGroup.sephiria.items"))
 					.icon(() -> new ItemStack(ModItems.ENCHANT_COIN))
-					.displayItems((parameters, output) -> output.accept(ModItems.ENCHANT_COIN))
+					.displayItems((parameters, output) -> {
+						output.accept(ModItems.ENCHANT_COIN);
+						output.accept(ModItems.DICE);
+						output.accept(ModItems.ARTIFACT_CHEST);
+						output.accept(ModItems.SLATE_CHEST);
+						output.accept(ModItems.UPGRADE_CHEST);
+					})
+					.build());
+
+	/** Potions tab: the potions are their own category, icon is the regeneration potion (fig 1). */
+	public static final ResourceKey<CreativeModeTab> POTIONS_KEY = ResourceKey.create(
+			Registries.CREATIVE_MODE_TAB,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "potions"));
+
+	public static final CreativeModeTab POTIONS = Registry.register(
+			BuiltInRegistries.CREATIVE_MODE_TAB,
+			POTIONS_KEY,
+			FabricCreativeModeTab.builder()
+					.title(Component.translatable("itemGroup.sephiria.potions"))
+					.icon(() -> new ItemStack(ModItems.REGENERATION_POTION))
+					.displayItems((parameters, output) -> ModItems.POTIONS.forEach(output::accept))
 					.build());
 
 	private ModCreativeTabs() {

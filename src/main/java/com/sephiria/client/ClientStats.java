@@ -23,6 +23,7 @@ public final class ClientStats {
 	private static double leaves = 0.0D;
 	private static double weaponDamage = PlayerStats.DEFAULT_WEAPON_DAMAGE;
 	private static double specialAttack = PlayerStats.DEFAULT_SPECIAL_ATTACK;
+	private static double lifesteal = 0.0D;
 	private static PlayerStats.PhysicalBreakdown attackBreakdown = new PlayerStats.PhysicalBreakdown(
 			PlayerStats.DEFAULT_ATTACK_SPEED, 0.0D, 0.0D, 0.0D, 0.0D);
 	private static PlayerStats.PhysicalBreakdown breakdown = new PlayerStats.PhysicalBreakdown(
@@ -45,6 +46,7 @@ public final class ClientStats {
 		leaves = payload.leaves();
 		weaponDamage = payload.weaponDamage();
 		specialAttack = payload.specialAttack();
+		lifesteal = payload.lifesteal();
 		breakdown = new PlayerStats.PhysicalBreakdown(payload.physicalBase(), payload.artifactFlat(),
 				payload.potionFlat(), payload.artifactPercent(), payload.potionPercent());
 		attackBreakdown = new PlayerStats.PhysicalBreakdown(payload.attackBase(), payload.attackArtifactFlat(),
@@ -89,6 +91,11 @@ public final class ClientStats {
 	/** 树叶（货币）持有量。 */
 	public static double leaves() {
 		return leaves;
+	}
+
+	/** HP 偷取（俗称吸血）：造成伤害的 0.1% 回血。 */
+	public static double lifesteal() {
+		return lifesteal;
 	}
 
 	/** 攻击速度的来源明细（面板悬停时显示算式）。 */

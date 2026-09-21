@@ -67,6 +67,7 @@ public class StatsScreen extends Screen {
 		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.melee_range", format(ClientStats.meleeRange()) + "%");
 		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.weapon_damage", format(ClientStats.weaponDamage()) + "%");
 		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.special_attack", format(ClientStats.specialAttack()) + "%");
+		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.lifesteal", format(ClientStats.lifesteal()));
 		this.rowsLeft = left;
 	}
 

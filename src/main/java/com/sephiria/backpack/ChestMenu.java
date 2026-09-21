@@ -76,14 +76,13 @@ public class ChestMenu extends AbstractContainerMenu {
 		return playerRowsY() + 4 * 18 + 4;
 	}
 
-	/** 服务端使用：按手里的宝箱种类抽好奖励再打开。 */
+	/** 服务端使用：按手里的宝箱种类抽好奖励再打开（已经抽过的箱子沿用原来那一批）。 */
 	public static MenuProvider provider(ServerPlayer player, InteractionHand hand) {
 		ItemStack held = player.getItemInHand(hand);
 		ChestItem.Kind kind = held.getItem() instanceof ChestItem chest ? chest.kind() : ChestItem.Kind.ARTIFACT;
 		Container rewards = new SimpleContainer(ChestItem.REWARDS);
 
-		java.util.List<ItemStack> rolled = ArtifactLoot.roll(player.getRandom(),
-				Math.min(ChestItem.REWARDS, ArtifactLoot.MAX_ROLL), kind.withSlates(), kind.weights());
+		java.util.List<ItemStack> rolled = ChestItem.rewardsOf(held, player.getRandom(), kind);
 
 		for (int index = 0; index < rolled.size(); index++) {
 			rewards.setItem(index, rolled.get(index));

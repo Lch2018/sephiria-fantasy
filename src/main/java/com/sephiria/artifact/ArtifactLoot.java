@@ -27,6 +27,8 @@ public final class ArtifactLoot {
 		public static final Weights DEFAULT = new Weights(30, 40, 10, 2, 1);
 		/** 升级宝箱：80/100/10/2/1（好东西更少）。 */
 		public static final Weights UPGRADE = new Weights(80, 100, 10, 2, 1);
+		/** 药水（商店的两个药水格）：1000/10/5/1，白药水满地都是、红的极稀有。 */
+		public static final Weights POTION = new Weights(1000, 10, 5, 1, 1);
 
 		int weightOf(ArtifactRarity rarity) {
 			return switch (rarity) {
@@ -55,14 +57,33 @@ public final class ArtifactLoot {
 				ModItems.SLATE_OF_ENTRANCE, ModItems.SLATE_OF_COMPETITION);
 	}
 
-	/** 抽 {@code count} 件互不重复的神器（{@code withSlates} 时把石板也放进池子）。 */
-	public static List<ItemStack> roll(RandomSource random, int count, boolean withSlates, Weights weights) {
-		List<Item> pool = new ArrayList<>(artifacts());
+	/** 抽奖池：神器宝箱只出神器、石板宝箱只出石板、升级宝箱与商店两者都出。 */
+	public enum Pool {
+		ARTIFACTS, SLATES, BOTH
+	}
 
-		if (withSlates) {
-			pool.addAll(slates());
-		}
+	/** 抽 {@code count} 件互不重复的东西（{@code pool} 决定池子，{@code weights} 决定品质权重）。 */
+	public static List<ItemStack> roll(RandomSource random, int count, Pool pool, Weights weights) {
+		List<Item> items = switch (pool) {
+			case ARTIFACTS -> artifacts();
+			case SLATES -> slates();
+			case BOTH -> {
+				List<Item> both = new ArrayList<>(artifacts());
+				both.addAll(slates());
+				yield both;
+			}
+		};
 
+		return rollFrom(random, count, items, weights);
+	}
+
+	/** 抽 {@code count} 瓶互不重复的药水。 */
+	public static List<ItemStack> rollPotions(RandomSource random, int count) {
+		return rollFrom(random, count, ModItems.POTIONS, Weights.POTION);
+	}
+
+	/** 从给定池子里按品质加权抽 {@code count} 件，互不重复。 */
+	public static List<ItemStack> rollFrom(RandomSource random, int count, List<Item> pool, Weights weights) {
 		List<ItemStack> result = new ArrayList<>();
 		List<Item> remaining = new ArrayList<>(pool);
 
@@ -87,8 +108,8 @@ public final class ArtifactLoot {
 		int poolWeight = 0;
 
 		for (Item item : candidates) {
-			if (item instanceof SephiriaArtifact artifact) {
-				poolWeight += weights.weightOf(artifact.rarity());
+			if (item instanceof Quality quality) {
+				poolWeight += weights.weightOf(quality.rarity());
 				pool.add(item);
 			}
 		}
@@ -101,7 +122,7 @@ public final class ArtifactLoot {
 		int cursor = 0;
 
 		for (Item item : pool) {
-			cursor += weights.weightOf(((SephiriaArtifact) item).rarity());
+			cursor += weights.weightOf(((Quality) item).rarity());
 
 			if (roll < cursor) {
 				return item;
@@ -113,14 +134,6 @@ public final class ArtifactLoot {
 
 	/** 物品的品质（没有品质的东西按普通算）。 */
 	public static ArtifactRarity rarityOf(Item item) {
-		if (item instanceof SephiriaArtifact artifact) {
-			return artifact.rarity();
-		}
-
-		if (item instanceof SlateItem slate) {
-			return slate.rarity();
-		}
-
-		return ArtifactRarity.COMMON;
+		return item instanceof Quality quality ? quality.rarity() : ArtifactRarity.COMMON;
 	}
 }

@@ -47,10 +47,14 @@ public final class PlayerStats {
 		public double mp = DEFAULT_MP;
 		public double mpRegen = DEFAULT_MP_REGEN;
 		public double physical = DEFAULT_STRENGTH;
+		/** 药水给的物理强度（面板算式里「药水」那一份固定值）。 */
+		public double potionPhysical = 0.0D;
 		public double fire = DEFAULT_STRENGTH;
 		public double ice = DEFAULT_STRENGTH;
 		public double lightning = DEFAULT_STRENGTH;
 		public double defense = DEFAULT_DEFENSE;
+		/** HP 偷取（俗称吸血）：每点 = 造成伤害的 0.1% 回血，见 {@link #lifestealTotal}。 */
+		public double lifesteal = 0.0D;
 		/** 树叶（货币）：每获得 1 点原版经验 +1。 */
 		public double leaves = 0.0D;
 		/** 累计获得的经验：每满 1000 发一个升级宝箱（计数器会扣掉已兑换的部分）。 */
@@ -123,8 +127,29 @@ public final class PlayerStats {
 			artifactFlat += ArtifactEffects.highestElementBonus(player);
 		}
 
-		return new PhysicalBreakdown(of(player).physical, artifactFlat, 0.0D,
+		return new PhysicalBreakdown(of(player).physical, artifactFlat, of(player).potionPhysical,
 				ArtifactEffects.physicalPercentBonus(player), 0.0D);
+	}
+
+	/**
+	 * HP 偷取（俗称吸血）：造成的伤害按 {@code 数值 / 1000} 回血，默认 0。
+	 *
+	 * <p>5 点 = 造成 100 点伤害回 0.5 点生命。目前只有药水会给，以后神器也能给。
+	 */
+	public static double lifestealTotal(ServerPlayer player) {
+		return of(player).lifesteal;
+	}
+
+	/** 药水永久 +HP 偷取。 */
+	public static void addPotionLifesteal(ServerPlayer player, double amount) {
+		of(player).lifesteal += amount;
+		sync(player);
+	}
+
+	/** 药水永久 +物理强度（算「药水」那一份来源，面板里红字）。 */
+	public static void addPotionPhysical(ServerPlayer player, double amount) {
+		of(player).potionPhysical += amount;
+		sync(player);
 	}
 
 	/** 四项强度：物理强度与三种元素强度，「最高元素伤害」只在它们之间挑一个。 */

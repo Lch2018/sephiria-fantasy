@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
  * <p>等级：获得时是 0 级（{@link ArtifactItem#LEVEL}），可用神器附魔币升级；
  * 放在赛菲利亚背包的格子里时，实际等级 = 自身等级 + 格子等级，为负则这件神器不生效。
  */
-public interface SephiriaArtifact {
+public interface SephiriaArtifact extends Quality {
 
 	/** 连招（坚固……）。 */
 	ArtifactCombo combo();

@@ -41,6 +41,10 @@ public final class ArtifactTooltip {
 			return slateLines(stack, slate);
 		}
 
+		if (stack.getItem() instanceof com.sephiria.potion.SephiriaPotionItem potion) {
+			return potionLines(potion);
+		}
+
 		if (!(stack.getItem() instanceof SephiriaArtifact artifact)) {
 			return List.of();
 		}
@@ -82,6 +86,16 @@ public final class ArtifactTooltip {
 		}
 
 		lines.add(Component.translatable(slate.flavorKey()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+		return lines;
+	}
+
+	/** 药水的提示行：效果 + 品质（药水不写风味，效果本身已经够说明问题）。 */
+	private static List<Component> potionLines(com.sephiria.potion.SephiriaPotionItem potion) {
+		List<Component> lines = new ArrayList<>();
+		lines.add(potion.effect().describe());
+		lines.add(Component.translatable("artifact.sephiria.rarity_line",
+						Component.translatable(potion.rarity().translationKey()).withColor(potion.rarity().color()))
+				.withStyle(ChatFormatting.GRAY));
 		return lines;
 	}
 
