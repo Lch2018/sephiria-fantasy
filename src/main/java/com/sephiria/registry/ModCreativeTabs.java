@@ -46,7 +46,21 @@ public final class ModCreativeTabs {
 					})
 					.build());
 
-	/** 璧涜彶鍒╀簹閬撳叿鏍囩椤碉細鐩墠鍙湁绁炲櫒闄勯瓟甯侊紝鍥炬爣灏辩敤瀹冭嚜宸便€?*/
+	/** Slates tab: slates are not artifacts, they get their own page. */
+	public static final ResourceKey<CreativeModeTab> SLATES_KEY = ResourceKey.create(
+			Registries.CREATIVE_MODE_TAB,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "slates"));
+
+	public static final CreativeModeTab SLATES = Registry.register(
+			BuiltInRegistries.CREATIVE_MODE_TAB,
+			SLATES_KEY,
+			FabricCreativeModeTab.builder()
+					.title(Component.translatable("itemGroup.sephiria.slates"))
+					.icon(() -> new ItemStack(ModItems.SLATE_TAB_ICON))
+					.displayItems((parameters, output) -> output.accept(ModItems.SLATE_OF_FUTURE))
+					.build());
+
+	/** Items tab: the enchant coin, its own icon. */
 	public static final ResourceKey<CreativeModeTab> ITEMS_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "items"));
