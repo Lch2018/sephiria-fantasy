@@ -81,21 +81,7 @@ public final class ArtifactLoot {
 
 	/** 先按品质权重抽一档，再从这一档里随机挑一件；这一档没有货就整体降级重试。 */
 	private static Item pickByRarity(RandomSource random, List<Item> candidates, Weights weights) {
-		int total = 0;
-		List<ArtifactRarity> rarities = new ArrayList<>();
-
-		for (Item item : candidates) {
-			if (item instanceof SephiriaArtifact artifact) {
-				total += weights.weightOf(artifact.rarity());
-				rarities.add(artifact.rarity());
-			}
-		}
-
-		if (total <= 0) {
-			return candidates.isEmpty() ? null : candidates.get(0);
-		}
-
-		// 品质里有货的才参与抽签
+		// 只有「有品质」的物品参与抽签，权重按各自的品质取
 		List<Item> pool = new ArrayList<>();
 		int poolWeight = 0;
 
@@ -106,18 +92,22 @@ public final class ArtifactLoot {
 			}
 		}
 
-		int roll = random.nextInt(Math.max(1, poolWeight));
+		if (poolWeight <= 0) {
+			return candidates.isEmpty() ? null : candidates.get(0);
+		}
+
+		int roll = random.nextInt(poolWeight);
 		int cursor = 0;
 
-		for (int index = 0; index < pool.size(); index++) {
-			cursor += weights.weightOf(((SephiriaArtifact) pool.get(index)).rarity());
+		for (Item item : pool) {
+			cursor += weights.weightOf(((SephiriaArtifact) item).rarity());
 
 			if (roll < cursor) {
-				return pool.get(index);
+				return item;
 			}
 		}
 
-		return pool.isEmpty() ? null : pool.get(pool.size() - 1);
+		return pool.get(pool.size() - 1);
 	}
 
 	/** 物品的品质（没有品质的东西按普通算）。 */
