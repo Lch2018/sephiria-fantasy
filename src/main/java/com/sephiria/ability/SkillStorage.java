@@ -35,6 +35,8 @@ public final class SkillStorage {
 	}
 
 	private static final Map<Identifier, Config> CONFIGS = new LinkedHashMap<>();
+	/** 按玩家的上限加成（风之歌 10 级给冲刺 +1 次这种）。 */
+	private static final Map<Identifier, java.util.function.ToIntFunction<ServerPlayer>> MAX_BONUS = new LinkedHashMap<>();
 	private static final Map<UUID, Map<Identifier, Pool>> POOLS = new HashMap<>();
 
 	private SkillStorage() {
@@ -80,6 +82,21 @@ public final class SkillStorage {
 		ServerTickEvents.END_SERVER_TICK.register(SkillStorage::tick);
 	}
 
+	/**
+	 * 给某个技能注册「按玩家的上限加成」。
+	 *
+	 * <p>上限变化会跟着 {@link #syncAll} / 每次同步一起推给客户端，所以 HUD 的 x/y 会跟着变。
+	 */
+	public static void registerMaxBonus(Identifier skill, java.util.function.ToIntFunction<ServerPlayer> bonus) {
+		MAX_BONUS.put(skill, bonus);
+	}
+
+	/** 某个玩家在该技能上的实际上限：注册值 + 加成。 */
+	public static double max(ServerPlayer player, Identifier skill) {
+		java.util.function.ToIntFunction<ServerPlayer> bonus = MAX_BONUS.get(skill);
+		return max(skill) + (bonus == null ? 0.0D : bonus.applyAsInt(player));
+	}
+
 	/** 现有存储量。 */
 	public static double current(ServerPlayer player, Identifier skill) {
 		return pool(player, skill).current;
@@ -107,7 +124,7 @@ public final class SkillStorage {
 	/** 回复：加上回复量并封顶到存储总量。 */
 	public static void regenerate(ServerPlayer player, Identifier skill, double amount) {
 		Pool pool = pool(player, skill);
-		pool.current = Math.min(max(skill), pool.current + amount);
+		pool.current = Math.min(max(player, skill), pool.current + amount);
 		sync(player, skill, pool);
 	}
 
@@ -120,7 +137,7 @@ public final class SkillStorage {
 
 	private static void sync(ServerPlayer player, Identifier skill, Pool pool) {
 		ServerPlayNetworking.send(player,
-				new SkillSyncPayload(skill, pool.current, max(skill)));
+				new SkillSyncPayload(skill, pool.current, max(player, skill)));
 	}
 
 	private static Pool pool(ServerPlayer player, Identifier skill) {
@@ -156,7 +173,7 @@ public final class SkillStorage {
 
 				Pool pool = entry.getValue();
 				double before = pool.current;
-				pool.tick(config);
+				pool.tick(config, max(player, entry.getKey()));
 
 				// 自动回复改了数值也要推给客户端，否则 HUD 会停在扣掉之后的值
 				if (pool.current != before) {
@@ -176,13 +193,13 @@ public final class SkillStorage {
 			this.current = initial;
 		}
 
-		void tick(Config config) {
+		void tick(Config config, double max) {
 			// 不自动回复的技能（回复间隔 <= 0）跳过：它的回复由调用方自己触发
 			if (config.regenIntervalTicks() <= 0 || config.regenAmount() <= 0.0D) {
 				return;
 			}
 
-			if (this.current >= config.max()) {
+			if (this.current >= max) {
 				// 满仓：取消回复，计时归零
 				this.timer = 0;
 				return;
@@ -190,7 +207,7 @@ public final class SkillStorage {
 
 			if (++this.timer >= config.regenIntervalTicks()) {
 				this.timer = 0;
-				this.current = Math.min(config.max(), this.current + config.regenAmount());
+				this.current = Math.min(max, this.current + config.regenAmount());
 			}
 		}
 	}

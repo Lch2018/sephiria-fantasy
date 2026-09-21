@@ -41,6 +41,16 @@ public interface SephiriaArtifact {
 		return 0.0D;
 	}
 
+	/** 该等级给的特殊攻击伤害加成（百分点，100 = 100%）：只影响武器技能。 */
+	default double specialAttackBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的近战攻击范围加成（百分点，100 = 100%）。 */
+	default double meleeRangePercentBonus(int level) {
+		return 0.0D;
+	}
+
 	/** 该等级给的攻击速度加成（百分点，100 = 100%）。 */
 	default double attackSpeedBonus(int level) {
 		return 0.0D;

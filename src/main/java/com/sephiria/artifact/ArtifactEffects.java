@@ -90,6 +90,81 @@ public final class ArtifactEffects {
 		return total;
 	}
 
+	/** 神器给的「特殊攻击伤害」加成总和（%）。 */
+	public static double specialAttackBonus(ServerPlayer player) {
+		return sumAffix(player, (artifact, level) -> artifact.specialAttackBonus(level));
+	}
+
+	/** 神器给的「近战攻击范围」加成总和（%）。 */
+	public static double meleeRangePercent(ServerPlayer player) {
+		return sumAffix(player, (artifact, level) -> artifact.meleeRangePercentBonus(level));
+	}
+
+	/** 连击给的攻击速度加成总和（%）。 */
+	public static double comboAttackSpeedPercent(ServerPlayer player) {
+		double total = 0.0D;
+
+		for (Map.Entry<ArtifactCombo, Integer> entry : comboLevels(player).entrySet()) {
+			total += entry.getKey().attackSpeedPercent(entry.getValue());
+		}
+
+		return total;
+	}
+
+	/** 连击给的武器伤害加成总和（%）。 */
+	public static double weaponDamagePercent(ServerPlayer player) {
+		double total = 0.0D;
+
+		for (Map.Entry<ArtifactCombo, Integer> entry : comboLevels(player).entrySet()) {
+			total += entry.getKey().weaponDamagePercent(entry.getValue());
+		}
+
+		return total;
+	}
+
+	/** 连击给的冲刺存储上限加成（次）。 */
+	public static int dashChargeBonus(ServerPlayer player) {
+		int total = 0;
+
+		for (Map.Entry<ArtifactCombo, Integer> entry : comboLevels(player).entrySet()) {
+			total += entry.getKey().dashCharges(entry.getValue());
+		}
+
+		return total;
+	}
+
+	/** 一件神器在某个等级下的加成（%）。 */
+	@FunctionalInterface
+	private interface Affix {
+		double at(SephiriaArtifact artifact, int level);
+	}
+
+	/** 按【唯一】规则汇总某一种神器词条：同类只取等级最高的那一个副本。 */
+	private static double sumAffix(ServerPlayer player, Affix affix) {
+		ArtifactBackpack backpack = ArtifactBackpack.of(player);
+		double total = 0.0D;
+		Map<Item, Integer> bestPerKind = new HashMap<>();
+
+		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
+			Slot slotData = read(backpack, slot);
+
+			if (slotData.artifact() == null || slotData.inactive()) {
+				continue;
+			}
+
+			if (slotData.artifact().unique()) {
+				bestPerKind.merge(slotData.item(), slotData.level(), Math::max);
+			} else {
+				total += affix.at(slotData.artifact(), slotData.level());
+			}
+		}
+
+		for (Map.Entry<Item, Integer> entry : bestPerKind.entrySet()) {
+			total += affix.at((SephiriaArtifact) entry.getKey(), entry.getValue());
+		}
+
+		return total;
+	}
 	/** 连击的物理伤害增幅（%）：把所有连击当前档位的增幅加起来。 */
 	public static double physicalAmpPercent(ServerPlayer player) {
 		double total = 0.0D;

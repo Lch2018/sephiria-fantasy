@@ -6,14 +6,14 @@
 #   attributes_tab     attributes.png ( 65x65, 20x20 @3x)   -> textures/gui/attributes_tab.png
 #   slate              slate.png      (120x120, 34x30 @3x)  -> textures/item/slate.png
 #
-# 两种处理方式：
-#   native     受源图网格小于画布时，按原生像素贴进画布，不做重采样（像素画保持原样）；
-#   downscaled 源图网格远大于画布时，按「覆盖率的多数色 + 二值 alpha」缩小
-#              （面积平均会把平涂像素画糊成一团，点采样又会丢掉描边）。
-# 参考图的背景（缓存渲染用的底色：深灰棋盘 / 纯黑 / 墨绿）一律判为透明，判定规则逐张给。
+# wechat temp folder holds the textbook / wind-score references
+# wechat temp folder holds the textbook / wind-score references
+# wechat temp folder holds the textbook / wind-score references
+# wechat temp folder holds the textbook / wind-score references
+# wechat temp folder holds the textbook / wind-score references
 #
-# 本脚本刻意只用 ASCII：PowerShell 5.1 会把没有 BOM 的 .ps1 按 GBK 读，中文注释会破坏解析
-# （踩过的坑：注释乱码后把下一行代码吞掉，字面量被当成输出打出来）。
+# wechat temp folder holds the textbook / wind-score references
+# wechat temp folder holds the textbook / wind-score references
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -23,6 +23,8 @@ $texDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\item'
 $guiDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\gui'
 $previewDir = Join-Path $root '.preview'
 $cache = 'C:\Users\28237\.zcode\cli\image-cache\sess_30e8ce6e-bd9a-4f06-a1a0-7ff99b2cb644'
+# wechat temp folder holds the textbook / wind-score references
+$wechat = 'C:\Users\28237\Documents\xwechat_files\wxid_v1oblkxkkuq222_3365\temp\RWTemp\2026-09\9e20f478899dc29eb19741386f9343c8'
 
 foreach ($dir in @($texDir, $guiDir, $previewDir)) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -299,6 +301,15 @@ $jobs = @(
     @{ name = 'slate_tab_icon'; source = 'image-02819efdb2970d9e7b051a5e06f349e5.png';
        mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
     # leaf currency icon (fig 1) - drawn in the attribute panel
+    # shield/sword textbook + wind score icons and the wind-song combo icon (wechat refs)
+    @{ name = 'shield_textbook'; source = 'f2d76651bbc04fe14c995fc683196387.png'; root = 'wechat';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'sword_textbook'; source = 'image-5f52a21905f37f9ec10745cb7afd1dad.png'; root = 'cache';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'wind_score'; source = 'image-f916fd3ba7516aa64dcc5b2ac4681aa0.png'; root = 'cache';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
+    @{ name = 'combo_wind_song'; source = 'image-47da6411294340e6fb72a2dc162282fa.png'; root = 'cache';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'not-black'; dir = 'gui' },
     @{ name = 'leaf'; source = 'image-09c22f1cd7431951e527f5126b8d4400.png';
        mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'gui' },
     # shop tab icon (fig 3: the golden scales)
@@ -317,7 +328,8 @@ $jobs = @(
 
 foreach ($job in $jobs) {
     $name = $job.name
-    $file = Join-Path $cache $job.source
+    $sourceRoot = if ($job.root -eq 'wechat') { $wechat } else { $cache }
+    $file = Join-Path $sourceRoot $job.source
 
     if (-not (Test-Path $file)) {
         throw "reference image not found: $file"

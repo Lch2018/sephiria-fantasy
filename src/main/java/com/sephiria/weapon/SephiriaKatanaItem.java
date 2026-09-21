@@ -443,7 +443,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	}
 
 	private static void powerfulSlash(ServerPlayer player, ServerLevel level, ItemStack stack, double intent) {
-		float damage = (float) (POWERFUL_DAMAGE_AT_FULL * (intent / INTENT_MAX) * PlayerStats.damageMultiplier(player));
+		float damage = (float) (POWERFUL_DAMAGE_AT_FULL * (intent / INTENT_MAX) * PlayerStats.skillDamageMultiplier(player));
 
 		// 突进走 3D 版本：准星朝上/朝下时也要能斜着窜出去
 		Dash.startVertical(player, player.getLookAngle(), POWERFUL_DISTANCE, POWERFUL_DASH_TICKS, Dash.DEFAULT_DECAY);

@@ -175,7 +175,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		Dash.startVertical(player, direction, PARRY_DISTANCE, DASH_TICKS, Dash.DEFAULT_DECAY);
 		player.getCooldowns().addCooldown(stack, PARRY_COOLDOWN);
 
-		PENDING.add(Pending.aura(player, DASH_TICKS, (float) (PARRY_DAMAGE * PlayerStats.damageMultiplier(player)), PARRY_RANGE, PARRY_HEIGHT));
+		PENDING.add(Pending.aura(player, DASH_TICKS, (float) (PARRY_DAMAGE * PlayerStats.skillDamageMultiplier(player)), PARRY_RANGE, PARRY_HEIGHT));
 	}
 
 	/** 狂怒：长突进 + 无敌，落地后结算突进路径上的范围伤害，并消耗一层专注。 */
@@ -186,7 +186,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		player.getCooldowns().addCooldown(stack, FURY_COOLDOWN);
 
 		SkillStorage.consume(player, FOCUS, 1.0D);
-		PENDING.add(Pending.path(player, direction, FURY_DISTANCE, DASH_TICKS, (float) (FURY_DAMAGE * PlayerStats.damageMultiplier(player)), FURY_PATH_RADIUS));
+		PENDING.add(Pending.path(player, direction, FURY_DISTANCE, DASH_TICKS, (float) (FURY_DAMAGE * PlayerStats.skillDamageMultiplier(player)), FURY_PATH_RADIUS));
 	}
 
 	/** 完整的准星朝向：匕首沿真正的视线突进，抬头会向上冲、低头会向下冲。 */

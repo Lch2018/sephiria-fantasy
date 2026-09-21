@@ -218,7 +218,7 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 		Dash.startVertical(player, direction, DASH_DISTANCE, DASH_TICKS, Dash.DEFAULT_DECAY);
 		serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2F, 0.7F);
-		PENDING.add(Pending.ring(player, DASH_TICKS, (float) (WHIRLWIND_DAMAGE * PlayerStats.damageMultiplier(player)), RING_HEIGHT));
+		PENDING.add(Pending.ring(player, DASH_TICKS, (float) (WHIRLWIND_DAMAGE * PlayerStats.skillDamageMultiplier(player)), RING_HEIGHT));
 		return true;
 	}
 

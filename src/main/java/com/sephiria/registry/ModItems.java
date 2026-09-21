@@ -4,6 +4,9 @@ import com.sephiria.Sephiria;
 import com.sephiria.artifact.CharmOfStrengthItem;
 import com.sephiria.artifact.ChestItem;
 import com.sephiria.artifact.DiceItem;
+import com.sephiria.artifact.ShieldTextbookItem;
+import com.sephiria.artifact.SwordTextbookItem;
+import com.sephiria.artifact.WindScoreItem;
 import com.sephiria.artifact.EnchantCoinItem;
 import com.sephiria.artifact.WarriorsProofItem;
 import com.sephiria.slate.FutureSlateItem;
@@ -141,6 +144,21 @@ public final class ModItems {
 	public static final Item ENCHANT_COIN = register(key("enchant_coin"),
 			p -> new EnchantCoinItem(p),
 			new Item.Properties());
+
+	/** 盾牌术教材（坚固，普通）：无【唯一】，特殊攻击伤害 +5/8%。 */
+	public static final Item SHIELD_TEXTBOOK = register(key("shield_textbook"),
+			p -> new ShieldTextbookItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 剑术教材（风之歌，稀有）：【唯一】攻击速度 +7/14/26%。 */
+	public static final Item SWORD_TEXTBOOK = register(key("sword_textbook"),
+			p -> new SwordTextbookItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 乐谱「风」（风之歌，高级）：【唯一】近战攻击范围 +10..50%。 */
+	public static final Item WIND_SCORE = register(key("wind_score"),
+			p -> new WindScoreItem(p),
+			new Item.Properties().stacksTo(1));
 
 	/** 骰子（赛菲利亚道具）：商店刷新用，可堆叠；自然箱子里 10% 概率开出。 */
 	public static final Item DICE = register(key("dice"),

@@ -30,6 +30,10 @@ public final class PlayerStats {
 	public static final double DEFAULT_ATTACK_SPEED = 100.0D;
 	/** 近战攻击范围（百分比）：武器的攻击范围与技能伤害范围都乘它。 */
 	public static final double DEFAULT_MELEE_RANGE = 100.0D;
+	/** 武器伤害（百分比）：赛菲莉亚武器的全部伤害（普攻 + 技能）都乘它；神器伤害不吃。 */
+	public static final double DEFAULT_WEAPON_DAMAGE = 100.0D;
+	/** 特殊攻击伤害（百分比）：只加成武器技能的伤害。 */
+	public static final double DEFAULT_SPECIAL_ATTACK = 100.0D;
 	/** 多少点经验换一个升级宝箱。 */
 	public static final double EXPERIENCE_PER_CHEST = 1000.0D;
 
@@ -53,6 +57,8 @@ public final class PlayerStats {
 		public double experienceTowardsChest = 0.0D;
 		public double attackSpeed = DEFAULT_ATTACK_SPEED;
 		public double meleeRange = DEFAULT_MELEE_RANGE;
+		public double weaponDamage = DEFAULT_WEAPON_DAMAGE;
+		public double specialAttack = DEFAULT_SPECIAL_ATTACK;
 	}
 
 	/**
@@ -61,7 +67,28 @@ public final class PlayerStats {
 	 * <p>物理伤害增幅是独立的一条乘算项（默认 0 = 没有增幅），不是加在物理强度上的。
 	 */
 	public static double damageMultiplier(ServerPlayer player) {
-		return physicalTotal(player) / DEFAULT_STRENGTH * (1.0D + physicalAmpPercent(player) / 100.0D);
+		return physicalTotal(player) / DEFAULT_STRENGTH
+				* (1.0D + physicalAmpPercent(player) / 100.0D)
+				* (weaponDamageTotal(player) / DEFAULT_WEAPON_DAMAGE);
+	}
+
+	/**
+	 * 技能伤害倍率：在武器伤害的基础上再乘「特殊攻击伤害」。
+	 *
+	 * <p>只有武器技能用它——普通攻击不吃特殊攻击伤害。
+	 */
+	public static double skillDamageMultiplier(ServerPlayer player) {
+		return damageMultiplier(player) * (specialAttackTotal(player) / DEFAULT_SPECIAL_ATTACK);
+	}
+
+	/** 武器伤害的实际值（%%）：面板值 × (1 + 神器与连击的百分比加成)。 */
+	public static double weaponDamageTotal(ServerPlayer player) {
+		return of(player).weaponDamage * (1.0D + ArtifactEffects.weaponDamagePercent(player) / 100.0D);
+	}
+
+	/** 特殊攻击伤害的实际值（%%）：面板值 + 神器固定加成。 */
+	public static double specialAttackTotal(ServerPlayer player) {
+		return of(player).specialAttack + ArtifactEffects.specialAttackBonus(player);
 	}
 
 	/**
@@ -122,7 +149,8 @@ public final class PlayerStats {
 
 	/** 近战攻击范围倍率：1.0 = 默认值 100%。 */
 	public static double rangeMultiplier(ServerPlayer player) {
-		return of(player).meleeRange / DEFAULT_MELEE_RANGE;
+		return of(player).meleeRange * (1.0D + ArtifactEffects.meleeRangePercent(player) / 100.0D)
+				/ DEFAULT_MELEE_RANGE;
 	}
 
 	/** 攻击速度倍率：1.0 = 默认值 100%。 */
@@ -132,7 +160,8 @@ public final class PlayerStats {
 
 	/** 攻击速度的实际值（%）：面板值 + 神器加成。 */
 	public static double attackSpeedTotal(ServerPlayer player) {
-		return of(player).attackSpeed + ArtifactEffects.attackSpeedBonus(player);
+		return of(player).attackSpeed + ArtifactEffects.attackSpeedBonus(player)
+				+ ArtifactEffects.comboAttackSpeedPercent(player);
 	}
 
 	/** 树叶持有量。 */
@@ -183,7 +212,7 @@ public final class PlayerStats {
 	public static void sync(ServerPlayer player) {
 		ServerPlayNetworking.send(player, StatsSyncPayload.of(of(player), physicalTotal(player),
 				attackSpeedTotal(player), physicalAmpPercent(player), physicalBreakdown(player),
-				attackSpeedBreakdown(player)));
+				attackSpeedBreakdown(player), weaponDamageTotal(player), specialAttackTotal(player)));
 	}
 
 	/** 进服时推一次，面板才有初始值。 */

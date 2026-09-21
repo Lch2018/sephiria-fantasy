@@ -10,22 +10,39 @@ import java.util.List;
  * <p>放在赛菲利亚背包里的神器会一起提升所属连击的等级：<b>同一个神器只算一次</b>
  * （带三个力量护符也还是 +1 级），卸下则等级随之下降。
  *
- * <p>达到阈值时按「当前达到的最高档」给增益，不是逐档累加：坚固的 2/4/6/8 四档都是
- * 物理强度 +N，取最高档（8 级就是 +8，而不是 +2+4+6+8）；10 级的 +15% 物理伤害增幅
- * 是另一种增益，会叠在它之上。
+ * <p>达到阈值的增益<b>逐档累加</b>：坚固的 2/4/6/8 四档都是物理强度 +N，8 级就是 +2+4+6+8；
+ * 10 级那档是另一种增益（物理伤害增幅 / 武器伤害 + 冲刺次数），同样叠上去。
  */
 public enum ArtifactCombo {
 	/** 坚固：物理强度与物理伤害增幅。 */
 	STURDY("sturdy", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.sturdy.t2", 2.0D, 0.0D),
-			new Tier(4, "artifact.sephiria.combo.sturdy.t4", 4.0D, 0.0D),
-			new Tier(6, "artifact.sephiria.combo.sturdy.t6", 6.0D, 0.0D),
-			new Tier(8, "artifact.sephiria.combo.sturdy.t8", 8.0D, 0.0D),
-			new Tier(10, "artifact.sephiria.combo.sturdy.t10", 0.0D, 15.0D)
+			new Tier(2, "artifact.sephiria.combo.sturdy.t2", 2.0D, 0.0D, 0.0D, 0.0D, 0),
+			new Tier(4, "artifact.sephiria.combo.sturdy.t4", 4.0D, 0.0D, 0.0D, 0.0D, 0),
+			new Tier(6, "artifact.sephiria.combo.sturdy.t6", 6.0D, 0.0D, 0.0D, 0.0D, 0),
+			new Tier(8, "artifact.sephiria.combo.sturdy.t8", 8.0D, 0.0D, 0.0D, 0.0D, 0),
+			new Tier(10, "artifact.sephiria.combo.sturdy.t10", 0.0D, 15.0D, 0.0D, 0.0D, 0)
+	}),
+
+	/** 风之歌：攻速、武器伤害与冲刺上限。 */
+	WIND_SONG("wind_song", new Tier[] {
+			new Tier(2, "artifact.sephiria.combo.wind.t2", 0.0D, 0.0D, 8.0D, 0.0D, 0),
+			new Tier(4, "artifact.sephiria.combo.wind.t4", 0.0D, 0.0D, 12.0D, 0.0D, 0),
+			new Tier(6, "artifact.sephiria.combo.wind.t6", 0.0D, 0.0D, 16.0D, 0.0D, 0),
+			new Tier(8, "artifact.sephiria.combo.wind.t8", 0.0D, 0.0D, 20.0D, 0.0D, 0),
+			new Tier(10, "artifact.sephiria.combo.wind.t10", 0.0D, 0.0D, 0.0D, 15.0D, 1)
 	});
 
-	/** 一档增益：达到 {@code level} 级时给 {@code physical} 点物理强度、{@code physicalAmp} % 物理伤害增幅。 */
-	public record Tier(int level, String textKey, double physical, double physicalAmp) {
+	/**
+	 * 一档增益：达到 {@code level} 级时生效。各字段按需填，用不到的就是 0。
+	 *
+	 * @param physical      物理强度（点）
+	 * @param physicalAmp   物理伤害增幅（%）
+	 * @param attackSpeed   攻击速度（%）
+	 * @param weaponDamage  武器伤害（%）
+	 * @param dashCharges   冲刺存储上限（次）
+	 */
+	public record Tier(int level, String textKey, double physical, double physicalAmp, double attackSpeed,
+			double weaponDamage, int dashCharges) {
 		/** 这一档给的说明行。 */
 		public Component line() {
 			return Component.translatable(this.textKey);
@@ -51,6 +68,34 @@ public enum ArtifactCombo {
 	/** 全部阈值（从低到高）。 */
 	public Tier[] tiers() {
 		return this.tiers;
+	}
+
+	/** 各档累加：返回某个字段在当前等级下的总和。 */
+	private double sum(int comboLevel, java.util.function.ToDoubleFunction<Tier> field) {
+		double total = 0.0D;
+
+		for (Tier tier : this.tiers) {
+			if (comboLevel >= tier.level()) {
+				total += field.applyAsDouble(tier);
+			}
+		}
+
+		return total;
+	}
+
+	/** 攻击速度加成（%）：各档累加。 */
+	public double attackSpeedPercent(int comboLevel) {
+		return sum(comboLevel, Tier::attackSpeed);
+	}
+
+	/** 武器伤害加成（%）：各档累加。 */
+	public double weaponDamagePercent(int comboLevel) {
+		return sum(comboLevel, Tier::weaponDamage);
+	}
+
+	/** 冲刺存储上限加成（次）：各档累加。 */
+	public int dashCharges(int comboLevel) {
+		return (int) sum(comboLevel, Tier::dashCharges);
 	}
 
 	/** 当前等级已经吃到的物理强度：<b>各档累加</b>（8 级就是 2+4+6+8 = +20）。 */

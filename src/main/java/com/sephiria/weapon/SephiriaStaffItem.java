@@ -232,9 +232,9 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 		serverPlayer.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0F, 1.2F);
 
-		double step1Damage = RIPOSTE1_DAMAGE * PlayerStats.damageMultiplier(serverPlayer);
+		double step1Damage = RIPOSTE1_DAMAGE * PlayerStats.skillDamageMultiplier(serverPlayer);
 		PENDING.add(Pending.aura(serverPlayer, STEP_DASH_TICKS, (float) step1Damage, PARRY_RANGE, PARRY_HEIGHT));
-		PENDING.add(Pending.followUp(serverPlayer, PlayerStats.damageMultiplier(serverPlayer), STEP2_DELAY_TICKS));
+		PENDING.add(Pending.followUp(serverPlayer, PlayerStats.skillDamageMultiplier(serverPlayer), STEP2_DELAY_TICKS));
 		return InteractionResult.CONSUME;
 	}
 

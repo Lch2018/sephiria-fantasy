@@ -126,7 +126,7 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 
 	private static void sweep(ServerPlayer player, ServerLevel level, ItemStack stack) {
 		double mul = PlayerStats.rangeMultiplier(player);
-		float damage = (float) (PlayerStats.damageMultiplier(player) * 20.0D * SWEEP_DAMAGE_RATIO);
+		float damage = (float) (PlayerStats.skillDamageMultiplier(player) * 20.0D * SWEEP_DAMAGE_RATIO);
 		AABB area = player.getBoundingBox().inflate(SWEEP_RANGE * mul, SWEEP_HEIGHT * mul, SWEEP_RANGE * mul);
 
 		for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {
