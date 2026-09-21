@@ -20,6 +20,8 @@
 
     "screen.sephiria.backpack":  "Sephiria Backpack",
     "itemGroup.sephiria.items":  "SEPHIRIA Items",
+    "itemGroup.sephiria.slates":  "SEPHIRIA Slates",
+    "item.sephiria.slate_tab_icon":  "Slate Icon",
     "item.sephiria.warriors_proof":  "Warrior's Proof",
     "item.sephiria.slate_of_future":  "Slate of Future",
     "item.sephiria.enchant_coin":  "Artifact Enchant Coin",
@@ -44,6 +46,8 @@
     
     "screen.sephiria.enchant":  "Artifact Enchanting",
     "screen.sephiria.enchant.upgrade":  "Upgrade",
+    "screen.sephiria.enchant.upgrade_n":  "Upgrade %s level(s)",
+    "screen.sephiria.enchant.artifact":  "Artifact (put it here)",
     "screen.sephiria.enchant.hint":  "Put in an artifact and press Upgrade to spend one coin",
     "screen.sephiria.enchant.coins":  "Enchant coins: %s",
     "screen.sephiria.backpack.subtitle":  "Artifacts and slates",

@@ -31,6 +31,7 @@ import com.sephiria.weapon.WeaponSweep;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.WeaponBranch;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.world.item.ItemStack;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -87,6 +88,25 @@ public class Sephiria implements ModInitializer {
 		// 赛菲利亚背包是容器菜单，必须由服务端打开（客户端只负责画那个标签页按钮）
 		ServerPlayNetworking.registerGlobalReceiver(OpenBackpackPayload.TYPE,
 				(payload, context) -> context.player().openMenu(ArtifactBackpackMenu.provider(context.player())));
+		// 背包装界里按 R 旋转石板：只带格子编号，服务端自己查朝向再接 90°
+		ServerPlayNetworking.registerGlobalReceiver(RotateSlatePayload.TYPE, (payload, context) -> {
+			if (!(context.player().containerMenu instanceof ArtifactBackpackMenu menu)) {
+				return;
+			}
+
+			ItemStack stack = menu.getSlot(payload.slot()).getItem();
+
+			if (stack.getItem() instanceof SlateItem) {
+				SlateItem.rotate(stack);
+			}
+		});
+		// 附魔面板：点「升级 N 级」——从附魔币栏扣币，把神器升上去（不会溢出）
+		ServerPlayNetworking.registerGlobalReceiver(UpgradeArtifactPayload.TYPE,
+				(payload, context) -> {
+					if (context.player().containerMenu instanceof EnchantMenu menu) {
+						menu.upgrade(payload.levels());
+					}
+				});
 
 		// 进服时把各技能的存储量推给客户端，HUD 才有初始值
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

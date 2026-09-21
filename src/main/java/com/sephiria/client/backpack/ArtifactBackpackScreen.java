@@ -24,6 +24,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Matrix3x2fStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -52,6 +53,8 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	/** 格子等级文字：正数绿、负数红。 */
 	private static final int SLOT_LEVEL_POSITIVE = 0xFF55FF55;
 	private static final int SLOT_LEVEL_NEGATIVE = 0xFFFF5555;
+	/** 格子里的等级文字缩放：缩到 0.6 倍，免得盖住图标。 */
+	private static final float LEVEL_TEXT_SCALE = 0.6F;
 	/** 神器等级文字：失效红、未满白、满级绿、超上限黄。 */
 	private static final int LEVEL_INACTIVE = 0xFFFF5555;
 	private static final int LEVEL_NORMAL = 0xFFFFFFFF;
@@ -156,12 +159,6 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 			extractor.text(font, Component.literal(level + " / " + combo.nextTier(level)),
 					left + COMBO_ICON + 6, rowY + 10, TEXT_COLOR, true);
 
-			// 鼠标放在「图标 + 名字 + 等级」这块区域时显示该连击的效果
-			if (mouseX >= left - 1 && mouseX < this.leftPos + ArtifactBackpackMenu.COMBO_PANEL_WIDTH
-					&& mouseY >= rowY - 1 && mouseY < rowY + COMBO_ICON + 1) {
-				renderComboTooltip(extractor, combo, level, mouseX, mouseY);
-			}
-
 			row++;
 		}
 	}
@@ -196,6 +193,45 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		}
 	}
 
+	/** 连击浮窗画在提示框层——这一层在最上面，不会被格子与物品盖住。 */
+	@Override
+	protected void extractTooltip(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
+		super.extractTooltip(extractor, mouseX, mouseY);
+
+		ArtifactCombo hovered = hoveredCombo(mouseX, mouseY);
+
+		if (hovered != null) {
+			int level = ArtifactEffects.comboLevels(this.menu.container(), this.menu::slotLevel).getOrDefault(hovered, 0);
+			renderComboTooltip(extractor, hovered, level, mouseX, mouseY);
+		}
+	}
+
+	/** 鼠标下的那行连击；不在任何一行上时返回 null。 */
+	private ArtifactCombo hoveredCombo(int mouseX, int mouseY) {
+		if (mouseX < this.leftPos - 1 || mouseX >= this.leftPos + ArtifactBackpackMenu.COMBO_PANEL_WIDTH) {
+			return null;
+		}
+
+		Map<ArtifactCombo, Integer> levels = ArtifactEffects.comboLevels(this.menu.container(), this.menu::slotLevel);
+		int row = 0;
+
+		for (Map.Entry<ArtifactCombo, Integer> entry : levels.entrySet()) {
+			if (entry.getValue() <= 0) {
+				continue;
+			}
+
+			int rowY = this.topPos + COMBO_TOP + row * COMBO_ROW_HEIGHT;
+
+			if (mouseY >= rowY - 1 && mouseY < rowY + COMBO_ICON + 1) {
+				return entry.getKey();
+			}
+
+			row++;
+		}
+
+		return null;
+	}
+
 	@Override
 	protected void extractLabels(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
 		super.extractLabels(extractor, mouseX, mouseY);
@@ -214,15 +250,13 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 			return;
 		}
 
-		Font font = this.font;
-		int x = this.leftPos + slot.x + 1;
-		int y = this.topPos + slot.y + 1;
 		ItemStack stack = slot.getItem();
+		Component text;
+		int colour;
 
 		if (stack.getItem() instanceof SephiriaArtifact artifact) {
 			int level = ArtifactEffects.effectiveLevel(stack, this.menu.slotLevelOf(slot));
 			int max = artifact.maxLevel();
-			int colour;
 
 			if (level < 0) {
 				colour = LEVEL_INACTIVE;
@@ -234,17 +268,26 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 				colour = LEVEL_NORMAL;
 			}
 
-			extractor.text(font, Component.literal(level + "/" + max), x, y, colour, true);
-			return;
+			text = Component.literal(level + "/" + max);
+		} else {
+			int slotLevel = this.menu.slotLevelOf(slot);
+
+			if (slotLevel == 0) {
+				return;
+			}
+
+			text = Component.literal((slotLevel > 0 ? "+" : "") + Numbers.format(slotLevel));
+			colour = slotLevel > 0 ? SLOT_LEVEL_POSITIVE : SLOT_LEVEL_NEGATIVE;
 		}
 
-		int slotLevel = this.menu.slotLevelOf(slot);
-
-		if (slotLevel != 0) {
-			String text = (slotLevel > 0 ? "+" : "") + Numbers.format(slotLevel);
-			extractor.text(font, Component.literal(text), x, y,
-					slotLevel > 0 ? SLOT_LEVEL_POSITIVE : SLOT_LEVEL_NEGATIVE, true);
-		}
+		// 注意坐标系：容器内容是在「以面板左上角为原点」的平移里画的，所以这里用面板内坐标；
+		// 字号缩到 0.6 倍，神器等级要小到不盖住图标。
+		Matrix3x2fStack pose = extractor.pose();
+		pose.pushMatrix();
+		pose.translate(slot.x + 1.0F, slot.y + 1.0F);
+		pose.scale(LEVEL_TEXT_SCALE, LEVEL_TEXT_SCALE);
+		extractor.text(this.font, text, 0, 0, colour, true);
+		pose.popMatrix();
 	}
 
 	/** 鼠标下那个背包格子；不在任何背包格子上时返回 null。 */

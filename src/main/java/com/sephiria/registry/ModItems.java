@@ -146,6 +146,10 @@ public final class ModItems {
 	 * <p>创造模式的标签页图标只能用物品栈，而设计要求用「袋子」那张图，所以注册一个只用于图标的
 	 * 隐藏物品（不出现在任何标签页里，也不可获取）。
 	 */
+	public static final Item SLATE_TAB_ICON = register(key("slate_tab_icon"),
+			Item::new,
+			new Item.Properties());
+
 	public static final Item ARTIFACT_TAB_ICON = register(key("artifact_tab_icon"),
 			Item::new,
 			new Item.Properties());

@@ -2,6 +2,8 @@
     "itemGroup.sephiria.weapons":  "SEPHIRIA 武器",
     "itemGroup.sephiria.artifacts":  "SEPHIRIA 神器",
     "itemGroup.sephiria.items":  "SEPHIRIA 道具",
+    "itemGroup.sephiria.slates":  "SEPHIRIA 石板",
+    "item.sephiria.slate_tab_icon":  "石板图标",
     "item.sephiria.default_sword_and_shield":  "标准剑盾",
     "item.sephiria.steel_greatsword":  "钢铁巨剑",
     "item.sephiria.dagger":  "匕首",
@@ -137,6 +139,8 @@
     "screen.sephiria.tab.vanilla":  "原版背包",
     "screen.sephiria.enchant":  "神器附魔",
     "screen.sephiria.enchant.upgrade":  "升级",
+    "screen.sephiria.enchant.upgrade_n":  "升级 %s 级",
+    "screen.sephiria.enchant.artifact":  "神器（放这里）",
     "screen.sephiria.enchant.hint":  "放入要升级的神器，点「升级」消耗一枚附魔币",
     "screen.sephiria.enchant.coins":  "神器附魔币：%s"
 }

@@ -290,11 +290,14 @@ $jobs = @(
        mode = 'native'; cell = 3; canvas = 20; rule = 'non-background'; dir = 'gui' },
     @{ name = 'slate'; source = 'image-ca60fa5463a9a7dbff644a1e5b2e9d23.png';
        mode = 'downscaled'; target = 16; trim = 2; rule = 'not-black'; dir = 'item' },
-    # combo icon for 坚固 (shown in the backpack's combo panel)
+    # slate tab icon (fig 4: the grey stone face)
     @{ name = 'combo_sturdy'; source = 'image-fd3f1ff1b1c2bb356b3035c500a2affc.png';
        mode = 'native'; cell = 3; canvas = 16; rule = 'non-background'; dir = 'gui' },
     @{ name = 'warriors_proof'; source = 'image-c87ad1ff1cd702645d73ccc07ff3d9c0.png';
        mode = 'native'; cell = 3; canvas = 18; rule = 'ring'; dir = 'item' },
+    # slate tab icon (fig 4: the grey stone face)
+    @{ name = 'slate_tab_icon'; source = 'image-02819efdb2970d9e7b051a5e06f349e5.png';
+       mode = 'downscaled'; target = 16; trim = 0; rule = 'ring'; dir = 'item' },
     @{ name = 'slate_of_future'; source = 'image-84628a6d87ac4c3a2b8dc0287d8122a0.png';
        mode = 'native'; cell = 3; canvas = 16; rule = 'ring'; dir = 'item' },
     # the coin's gem is 22x21: pasting it natively keeps the art exact, Minecraft scales it down

@@ -43,7 +43,6 @@ public final class ModCreativeTabs {
 					.displayItems((parameters, output) -> {
 						output.accept(ModItems.CHARM_OF_STRENGTH);
 						output.accept(ModItems.WARRIORS_PROOF);
-						output.accept(ModItems.SLATE_OF_FUTURE);
 					})
 					.build());
 
