@@ -27,7 +27,7 @@ public class SephiriaDamageFramesMixin {
 		LivingEntity self = (LivingEntity) (Object) this;
 
 		if (SephiriaDamage.ignoresInvulnerableFrames(self) && SephiriaDamage.fromSephiria(source)) {
-			self.invulnerableTime = 0;
+			self.setInvulnerableTime(0);
 		}
 	}
 }

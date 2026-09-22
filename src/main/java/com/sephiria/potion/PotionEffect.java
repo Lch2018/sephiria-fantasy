@@ -5,6 +5,7 @@ import com.sephiria.stats.PlayerStats;
 import com.sephiria.util.Numbers;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -41,7 +42,7 @@ public record PotionEffect(Kind kind, double amount, int seconds) {
 				ItemStack dice = new ItemStack(ModItems.DICE, (int) this.amount);
 
 				if (!player.getInventory().add(dice)) {
-					player.drop(dice, false);
+					player.drop(dice, false, Prediction.SERVER_ONLY);
 				}
 			}
 		}

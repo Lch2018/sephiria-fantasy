@@ -266,6 +266,6 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 
 	/** 视觉上的弩矢数（供提示框、耐久条等只读用途）。 */
 	public static int visualAmmoCount(ItemStack crossbow) {
-		return crossbow.getOrDefault(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.EMPTY).itemCopies().size();
+		return crossbow.getOrDefault(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.EMPTY).size();
 	}
 }

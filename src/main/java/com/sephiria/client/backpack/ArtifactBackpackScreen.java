@@ -3,7 +3,6 @@ package com.sephiria.client.backpack;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
-import com.sephiria.artifact.SephiriaArtifact;
 import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.backpack.ArtifactBackpackMenu;
 import com.sephiria.client.artifact.ArtifactTooltip;
@@ -11,7 +10,7 @@ import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.client.tabs.SephiriaTabs;
 import com.sephiria.network.RotateSlatePayload;
 import com.sephiria.slate.SlateItem;
-import com.sephiria.util.Numbers;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -24,8 +23,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import org.joml.Matrix3x2fStack;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,16 +46,6 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	private static final int HEADER_COLOR = 0xFFFFD24A;
 	private static final int TEXT_COLOR = 0xFFFFFFFF;
 	private static final int TAB_HEIGHT = 20;
-	/** 格子等级文字：正数绿、负数红。 */
-	private static final int SLOT_LEVEL_POSITIVE = 0xFF55FF55;
-	private static final int SLOT_LEVEL_NEGATIVE = 0xFFFF5555;
-	/** 格子里的等级文字缩放：缩到 0.6 倍，免得盖住图标。 */
-	private static final float LEVEL_TEXT_SCALE = 0.6F;
-	/** 神器等级文字：失效红、未满白、满级绿、超上限黄。 */
-	private static final int LEVEL_INACTIVE = 0xFFFF5555;
-	private static final int LEVEL_NORMAL = 0xFFFFFFFF;
-	private static final int LEVEL_MAX = 0xFF55FF55;
-	private static final int LEVEL_OVER = 0xFFFFD24A;
 
 	private static final int COMBO_ROW_HEIGHT = 26;
 	private static final int COMBO_TOP = 30;
@@ -82,7 +69,9 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	/** 按 R 旋转鼠标下的石板（默认逆时针 90°）；写着「不可旋转」的石板不响应。 */
 	@Override
 	public boolean keyPressed(KeyEvent event) {
-		if (event.key() == GLFW.GLFW_KEY_R) {
+		// 26.3 移除了 GLFW，键位常量改用 InputConstants（KeyEvent.key() 与
+		// InputConstants.KEY_* 同一套键码，原版 InputConstants.getKey 也是这么取的）
+		if (event.key() == InputConstants.KEY_R) {
 			Slot hovered = hoveredBackpackSlot();
 
 			if (hovered != null && hovered.getItem().getItem() instanceof SlateItem slate && slate.rotatable()) {
@@ -239,17 +228,10 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	protected void extractSlot(GuiGraphicsExtractor extractor, Slot slot, int mouseX, int mouseY) {
 		ItemStack shown = slot.getItem();
 
-		if (shown.getItem() instanceof SlateItem slate && SlateItem.rotationOf(shown) != 0) {
+		if (shown.getItem() instanceof SlateItem && SlateItem.rotationOf(shown) != 0) {
 			// 石板：按朝向把图标一起转过来（绕着格子中心转），这样一眼能看出它朝哪边
 			// 这里自己画，所以不调 super（否则会再画一遍没转的图标）
-			Matrix3x2fStack pose = extractor.pose();
-			pose.pushMatrix();
-			pose.translate(slot.x + 8.0F, slot.y + 8.0F);
-			// 屏幕坐标 y 向下：负角度才是视觉上的逆时针，与 SlateItem#rotateOffset 的方向一致
-			pose.rotate(-SlateItem.rotationOf(shown) * ((float) Math.PI / 2.0F));
-			pose.translate(-8.0F, -8.0F);
-			extractor.item(shown, 0, 0);
-			pose.popMatrix();
+			BackpackCellRenderer.drawRotatedItem(extractor, slot, shown);
 		} else {
 			super.extractSlot(extractor, slot, mouseX, mouseY);
 		}
@@ -258,48 +240,7 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 			return;
 		}
 
-		drawLevelText(extractor, slot, shown);
-	}
-
-	/** 格子左上角的等级文字（0.6 倍大小）。 */
-	private void drawLevelText(GuiGraphicsExtractor extractor, Slot slot, ItemStack stack) {
-		Component text;
-		int colour;
-
-		if (stack.getItem() instanceof SephiriaArtifact artifact) {
-			int level = ArtifactEffects.effectiveLevel(stack, this.menu.slotLevelOf(slot));
-			int max = artifact.maxLevel();
-
-			if (level < 0) {
-				colour = LEVEL_INACTIVE;
-			} else if (level > max) {
-				colour = LEVEL_OVER;
-			} else if (level == max) {
-				colour = LEVEL_MAX;
-			} else {
-				colour = LEVEL_NORMAL;
-			}
-
-			text = Component.literal(level + "/" + max);
-		} else {
-			int slotLevel = this.menu.slotLevelOf(slot);
-
-			if (slotLevel == 0) {
-				return;
-			}
-
-			text = Component.literal((slotLevel > 0 ? "+" : "") + Numbers.format(slotLevel));
-			colour = slotLevel > 0 ? SLOT_LEVEL_POSITIVE : SLOT_LEVEL_NEGATIVE;
-		}
-
-		// 注意坐标系：容器内容是在「以面板左上角为原点」的平移里画的，所以这里用面板内坐标；
-		// 字号缩到 0.6 倍，神器等级要小到不盖住图标。
-		Matrix3x2fStack pose = extractor.pose();
-		pose.pushMatrix();
-		pose.translate(slot.x + 1.0F, slot.y + 1.0F);
-		pose.scale(LEVEL_TEXT_SCALE, LEVEL_TEXT_SCALE);
-		extractor.text(this.font, text, 0, 0, colour, true);
-		pose.popMatrix();
+		BackpackCellRenderer.drawLevelText(extractor, this.font, slot, shown, this.menu.slotLevelOf(slot));
 	}
 
 	/** 鼠标下那个背包格子；不在任何背包格子上时返回 null。 */

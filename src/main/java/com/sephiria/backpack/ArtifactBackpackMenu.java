@@ -24,7 +24,7 @@ import net.minecraft.world.item.ItemStack;
  * 格子内容同步过来，两边不用自己写同步。格子等级走数据槽（{@code ContainerData}），
  * 只用于在格子里显示等级数字。
  */
-public class ArtifactBackpackMenu extends AbstractContainerMenu {
+public class ArtifactBackpackMenu extends AbstractContainerMenu implements BackpackGridMenu {
 	/** 九格宽的玩家背包决定面板宽度；背包区（6 格）在面板里居中。 */
 	/** 左侧连击面板的宽度：面板本身 176 宽，左边再加一条连击栏。 */
 	public static final int COMBO_PANEL_WIDTH = 96;

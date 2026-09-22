@@ -9,7 +9,7 @@
 # so it is read from there instead of being written out twice.
 
 $root = Split-Path -Parent $PSScriptRoot
-$mods = 'D:\PCL\.minecraft\versions\26.2-Fabric 0.19.5\mods'
+$mods = 'D:\PCL\.minecraft\versions\26.3-Fabric 0.19.5\mods'
 
 if (-not (Test-Path $mods)) { throw "mods folder not found: $mods" }
 

@@ -18,7 +18,7 @@ dependencies {
 
 	// GeckoLib（骨骼动画）从本地 libs\ 引入：刀的模型/动画由 Blockbench 的 GeckoLib
 	// 格式导出，游戏内播放需要它。文件同时也放在 PCL 的 mods 目录里。
-	implementation files('libs/geckolib-fabric-26.2-5.5.5.jar')
+	implementation files('libs/geckolib-fabric-26.3-5.5.6.jar')
 }
 
 processResources {

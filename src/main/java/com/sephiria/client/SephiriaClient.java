@@ -36,13 +36,15 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+// 26.3 把 GLFW 从客户端整个移除了，键位常量与按键类型都在 InputConstants 上
+// （Type.KEYSYM → Type.KEYBOARD；鼠标侧键用 InputConstants.MOUSE_BUTTON_4）。
 
 /**
  * 客户端入口：武器提示框、HUD、以及固有技能的按键。
@@ -62,19 +64,19 @@ public class SephiriaClient implements ClientModInitializer {
 	private static final KeyMapping DASH_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 			"key.sephiria.dash",
 			InputConstants.Type.MOUSE,
-			GLFW.GLFW_MOUSE_BUTTON_4,
+			InputConstants.MOUSE_BUTTON_4,
 			KeyMapping.Category.GAMEPLAY));
 
 	private static final KeyMapping RELOAD_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 			"key.sephiria.reload",
-			InputConstants.Type.KEYSYM,
-			GLFW.GLFW_KEY_R,
+			InputConstants.Type.KEYBOARD,
+			InputConstants.KEY_R,
 			KeyMapping.Category.GAMEPLAY));
 
 	private static final KeyMapping HUD_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 			"key.sephiria.hud",
-			InputConstants.Type.KEYSYM,
-			GLFW.GLFW_KEY_H,
+			InputConstants.Type.KEYBOARD,
+			InputConstants.KEY_H,
 			KeyMapping.Category.GAMEPLAY));
 
 	/**
@@ -87,7 +89,7 @@ public class SephiriaClient implements ClientModInitializer {
 		for (int slot = 0; slot < SKILL_KEYS.length; slot++) {
 			SKILL_KEYS[slot] = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 					"key.sephiria.artifact_skill_" + (slot + 1),
-					InputConstants.Type.KEYSYM,
+					InputConstants.Type.KEYBOARD,
 					InputConstants.UNKNOWN.getValue(),
 					KeyMapping.Category.GAMEPLAY));
 		}
@@ -188,7 +190,8 @@ public class SephiriaClient implements ClientModInitializer {
 					// 丢弃剩余的点击次数
 				}
 
-				client.player.swing(InteractionHand.MAIN_HAND);
+				// 26.3 的 swing 需要动画组件；末参 true = 同步给自己（客户端本地挥动照旧传 true）
+				client.player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
 				ClientPlayNetworking.send(ShieldSweepPayload.INSTANCE);
 			}
 		});

@@ -226,7 +226,7 @@ public final class SephiriaDamage {
 		float extra = (float) (flat * multiplier);
 
 		// 真实伤害不吃无敌帧，否则高速武器下它会经常被上一次的帧吞掉
-		target.invulnerableTime = 0;
+		target.setInvulnerableTime(0);
 		target.hurtServer(level, trueDamage(level, player), extra);
 	}
 

@@ -3,6 +3,7 @@ package com.sephiria.shop;
 import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.registry.ModItems;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.ContainerData;
@@ -143,7 +144,7 @@ public final class ShopStock extends SimpleContainer {
 		ItemStack boughtStack = stack.copy();
 
 		if (!player.getInventory().add(boughtStack)) {
-			player.drop(boughtStack, false);
+			player.drop(boughtStack, false, Prediction.SERVER_ONLY);
 		}
 
 		setChanged();

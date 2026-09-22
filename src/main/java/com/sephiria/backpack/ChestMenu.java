@@ -8,6 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Prediction;
 import net.minecraft.util.Unit;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
@@ -130,7 +131,8 @@ public class ChestMenu extends AbstractContainerMenu {
 		player.getInventory().setChanged();
 
 		if (!player.getInventory().add(reward)) {
-			player.drop(reward, false);
+			// 26.3 的 drop 要带 Prediction：这是纯服务端结算，不是客户端预测
+			player.drop(reward, false, Prediction.SERVER_ONLY);
 		}
 
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),

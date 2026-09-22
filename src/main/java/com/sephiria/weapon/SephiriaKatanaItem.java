@@ -609,7 +609,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 						public void adjustRenderPose(RenderPassInfo<GeoRenderState> passInfo) {
 							super.adjustRenderPose(passInfo);
 							// 出鞘时刀刃朝前：模型长轴是自身的 Y，绕它转 90° 把刀面转到侧面。
-							passInfo.poseStack().mulPose(new Quaternionf().rotateY((float) Math.toRadians(90.0D)));
+							passInfo.poseStack().rotate(new Quaternionf().rotateY((float) Math.toRadians(90.0D)));
 						}
 					};
 				}

@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
@@ -577,7 +578,7 @@ public final class PlayerStats {
 			ItemStack chest = new ItemStack(com.sephiria.registry.ModItems.UPGRADE_CHEST);
 
 			if (!player.getInventory().add(chest)) {
-				player.drop(chest, false);
+				player.drop(chest, false, Prediction.SERVER_ONLY);
 			}
 		}
 

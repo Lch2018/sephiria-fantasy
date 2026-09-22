@@ -6,6 +6,7 @@ import com.sephiria.ability.Invulnerability;
 import com.sephiria.ability.SkillStorage;
 import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.backpack.ArtifactBackpackMenu;
+import com.sephiria.backpack.BackpackGridMenu;
 import com.sephiria.backpack.EnchantMenu;
 import com.sephiria.network.DashPayload;
 import com.sephiria.network.InvulnerablePayload;
@@ -51,6 +52,8 @@ import com.sephiria.weapon.WeaponSweep;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.WeaponBranch;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -127,18 +130,23 @@ public class Sephiria implements ModInitializer {
 		// 赛菲利亚背包是容器菜单，必须由服务端打开（客户端只负责画那个标签页按钮）
 		ServerPlayNetworking.registerGlobalReceiver(OpenBackpackPayload.TYPE,
 				(payload, context) -> context.player().openMenu(ArtifactBackpackMenu.provider(context.player())));
-		// 背包装界里按 R 旋转石板：只带格子编号，服务端自己查朝向再接 90°
+		// 背包页与附魔页都能按 R 旋转石板：只带菜单格子编号。服务端先确认开着的是带
+		// 背包格区的菜单、这一格真是背包格区（附魔页里背包格区前面还有神器槽/币槽），
+		// 别的菜单或玩家背包区里的格子不认
 		ServerPlayNetworking.registerGlobalReceiver(RotateSlatePayload.TYPE, (payload, context) -> {
-			if (!(context.player().containerMenu instanceof ArtifactBackpackMenu menu)) {
+			AbstractContainerMenu menu = context.player().containerMenu;
+
+			if (!(menu instanceof BackpackGridMenu grid)
+					|| payload.slot() < 0 || payload.slot() >= menu.slots.size()) {
 				return;
 			}
 
-			ItemStack stack = menu.getSlot(payload.slot()).getItem();
+			Slot slot = menu.getSlot(payload.slot());
 
-			if (stack.getItem() instanceof SlateItem) {
-				SlateItem.rotate(stack);
+			if (grid.isBackpackSlot(slot) && slot.getItem().getItem() instanceof SlateItem) {
+				SlateItem.rotate(slot.getItem());
 				// 朝向变了：让背包重算格子等级（缓存里存着上次的结果），并把新组件同步给客户端
-				menu.container().setChanged();
+				slot.setChanged();
 				menu.broadcastChanges();
 			}
 		});
@@ -185,8 +193,9 @@ public class Sephiria implements ModInitializer {
 					}
 				});
 
-		// 骰子进自然生成的箱子：所有 minecraft:chests/* 的表各加一个 10% 概率的池子
-		com.sephiria.shop.DiceLoot.register();
+		// 赛菲利亚货币进自然生成的箱子（骰子 + 神器附魔币）：所有 minecraft:chests/* 的表
+		// 各加一个 10% 概率的池子
+		com.sephiria.shop.ChestLoot.register();
 
 		// 进服时把各技能的存储量推给客户端，HUD 才有初始值
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

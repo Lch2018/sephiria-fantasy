@@ -91,7 +91,7 @@ public final class EncouragementBannerSkill implements ArtifactSkill {
 		ItemEntity banner = new ItemEntity(level0, player.getX(), player.getY() + HOVER_HEIGHT, player.getZ(),
 				new ItemStack(Items.BANNER.pick(DyeColor.LIME)));
 		banner.setNoGravity(true);
-		banner.setInvulnerable(true);
+		banner.setPermanentlyInvulnerable(true);
 		banner.setNeverPickUp();
 		banner.setDeltaMovement(0.0D, 0.0D, 0.0D);
 		level0.addFreshEntity(banner);
