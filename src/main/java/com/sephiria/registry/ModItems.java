@@ -1,6 +1,19 @@
 package com.sephiria.registry;
 
 import com.sephiria.Sephiria;
+import com.sephiria.artifact.ColorlessCubeItem;
+import com.sephiria.artifact.SilverPlateItem;
+import com.sephiria.artifact.EncouragementBannerItem;
+import com.sephiria.artifact.HasteGrimoireItem;
+import com.sephiria.artifact.RedDewItem;
+import com.sephiria.artifact.LongingAmuletItem;
+import com.sephiria.artifact.FaultProbeItem;
+import com.sephiria.artifact.DeftAmuletItem;
+import com.sephiria.artifact.PinwheelItem;
+import com.sephiria.artifact.SpecimenBeakItem;
+import com.sephiria.artifact.EvergreenCloakItem;
+import com.sephiria.artifact.ResistanceBandItem;
+import com.sephiria.artifact.WarmStoneItem;
 import com.sephiria.artifact.CharmOfStrengthItem;
 import com.sephiria.artifact.ChestItem;
 import com.sephiria.artifact.DiceItem;
@@ -164,6 +177,22 @@ public final class ModItems {
 	public static final Item SLATE_OF_COMPETITION = registerSlate("slate_of_competition", ArtifactRarity.ADVANCED,
 			Slates.COMPETITION, true);
 
+	/** 石板 · 集结（高级）：正上方与正左方各 +2。 */
+	public static final Item SLATE_OF_RALLY = registerSlate("slate_of_rally", ArtifactRarity.ADVANCED,
+			Slates.RALLY, true);
+
+	/** 石板 · 波浪（高级）：正上方 -1、正右方 -1、右上方 +3。 */
+	public static final Item SLATE_OF_WAVE = registerSlate("slate_of_wave", ArtifactRarity.ADVANCED,
+			Slates.WAVE, true);
+
+	/** 石板 · 双星（高级）：正上方与正下方各 +2。 */
+	public static final Item SLATE_OF_DOUBLE_STAR = registerSlate("slate_of_double_star", ArtifactRarity.ADVANCED,
+			Slates.DOUBLE_STAR, true);
+
+	/** 石板 · 握手（普通）：正上方与正下方各 +1。 */
+	public static final Item SLATE_OF_HANDSHAKE = registerSlate("slate_of_handshake", ArtifactRarity.COMMON,
+			Slates.HANDSHAKE, true);
+
 	/** 石板统一走通用实现：范围与增量都在 Slates 里，这里只挑品质与风味文本。 */
 	private static Item registerSlate(String name, ArtifactRarity rarity, java.util.List<PatternSlateItem.Cell> pattern,
 			boolean rotatable) {
@@ -210,6 +239,71 @@ public final class ModItems {
 	/** 阿格玛投影剑190,191号（坚固，稀有）：物理伤害 +2..14（8 档）。 */
 	public static final Item PROJECTION_SWORD = register(key("projection_sword"),
 			p -> new ProjectionSwordItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 无色立方体（风之歌，稀有）：无视防御伤害 +1/1/2/2/3、移动速度与攻击速度 +5/6/7/9/12%。 */
+	public static final Item COLORLESS_CUBE = register(key("colorless_cube"),
+			p -> new ColorlessCubeItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 银盘子（坚固，普通）：【唯一】普通攻击伤害 +3/6/10%、特殊攻击伤害 +3/6/10%。 */
+	public static final Item SILVER_PLATE = register(key("silver_plate"),
+			p -> new SilverPlateItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 鼓励旗帜（风之歌，稀有）：发动型神器，召唤旗帜给范围内友军 +10/20/30% 攻速。 */
+	public static final Item ENCOURAGEMENT_BANNER = register(key("encouragement_banner"),
+			p -> new EncouragementBannerItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 急速（风之歌，高级，魔法书）：【唯一】获得技能「急速」。 */
+	public static final Item HASTE_GRIMOIRE = register(key("haste_grimoire"),
+			p -> new HasteGrimoireItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 红色露水（精密，普通）：【唯一】暴击时对周围敌人造成最高属性值 10% 的伤害。 */
+	public static final Item RED_DEW = register(key("red_dew"),
+			p -> new RedDewItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 渴望护符（精密，普通）：【唯一】武器攻击的暴击几率 +3/6/10/14%。 */
+	public static final Item LONGING_AMULET = register(key("longing_amulet"),
+			p -> new LongingAmuletItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 故障探测针（精密，稀有）：【唯一】暴击几率 +3/6/9/12/15/18/21%。 */
+	public static final Item FAULT_PROBE = register(key("fault_probe"),
+			p -> new FaultProbeItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 灵巧护符（影子，普通）：闪避 +3/6。 */
+	public static final Item DEFT_AMULET = register(key("deft_amulet"),
+			p -> new DeftAmuletItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 风车（风之歌 + 影子，高级）：【唯一】双连击，攻速 +3/6/9%、闪避 +2/4/6。 */
+	public static final Item PINWHEEL = register(key("pinwheel"),
+			p -> new PinwheelItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 标本喙（影子，稀有）：【唯一】物理伤害 +1/2/3/5/8、闪避 +2/3/4/5/6。 */
+	public static final Item SPECIMEN_BEAK = register(key("specimen_beak"),
+			p -> new SpecimenBeakItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 常青斗篷（影子，高级）：【唯一】冲刺次数 +0/1/1、闪避 +4/6/8、暴击几率 +1/2/4%。 */
+	public static final Item EVERGREEN_CLOAK = register(key("evergreen_cloak"),
+			p -> new EvergreenCloakItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 弹力带（影子，高级）：【唯一】闪避触发回冲刺、暴击伤害 +2/4/6%、闪避 +1/2/3。 */
+	public static final Item RESISTANCE_BAND = register(key("resistance_band"),
+			p -> new ResistanceBandItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 温暖的石头（精密，稀有）：【唯一】暴击伤害 +10/20/30/40%。 */
+	public static final Item WARM_STONE = register(key("warm_stone"),
+			p -> new WarmStoneItem(p),
 			new Item.Properties().stacksTo(1));
 
 	/** 骰子（赛菲利亚道具）：商店刷新用，可堆叠；自然箱子里 10% 概率开出。 */

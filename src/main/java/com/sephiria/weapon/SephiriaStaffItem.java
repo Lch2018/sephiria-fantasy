@@ -3,6 +3,7 @@ package com.sephiria.weapon;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.Dash;
 import com.sephiria.ability.Invulnerability;
+import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -132,13 +133,13 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 		return java.util.List.of(
 				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, VANILLA_SWEEP_RANGE * SWEEP_RANGE_SCALE).build(),
 				Line.titled("tooltip.sephiria.skill.riposte1")
-						.damage(RIPOSTE1_DAMAGE).cooldownTicks(COOLDOWN_TICKS)
+						.skillDamage(RIPOSTE1_DAMAGE).cooldownTicks(COOLDOWN_TICKS)
 						.range(PARRY_RANGE).distance(STEP1_DISTANCE).build(),
 				Line.titled("tooltip.sephiria.skill.riposte2")
-						.damage(RIPOSTE2_DAMAGE).cooldownSame()
+						.skillDamage(RIPOSTE2_DAMAGE).cooldownSame()
 						.range(RIPOSTE2_RANGE).distance(STEP2_DISTANCE).build(),
 				Line.titled("tooltip.sephiria.skill.riposte3")
-						.damage(RIPOSTE3_DAMAGE).cooldownSame().range(RIPOSTE3_RANGE).build(),
+						.skillDamage(RIPOSTE3_DAMAGE).cooldownSame().range(RIPOSTE3_RANGE).build(),
 				desc("tooltip.sephiria.skill.riposte", "tooltip.sephiria.desc.riposte"));
 	}
 
@@ -341,6 +342,8 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 					continue;
 				}
 
+				// 告诉伤害入口「这是技能伤害」：无视防御伤害要按技能的倍率放大（见 SephiriaDamage.applyTrueDamage）
+				SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
 				victim.hurtServer(level, level.damageSources().playerAttack(player), this.damage);
 			}
 

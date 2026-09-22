@@ -50,6 +50,19 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.GOLDEN_CLOAK);
 						output.accept(ModItems.WANDERER_NECKLACE);
 						output.accept(ModItems.PROJECTION_SWORD);
+						output.accept(ModItems.COLORLESS_CUBE);
+						output.accept(ModItems.SILVER_PLATE);
+						output.accept(ModItems.ENCOURAGEMENT_BANNER);
+						output.accept(ModItems.HASTE_GRIMOIRE);
+						output.accept(ModItems.RED_DEW);
+						output.accept(ModItems.LONGING_AMULET);
+						output.accept(ModItems.FAULT_PROBE);
+						output.accept(ModItems.DEFT_AMULET);
+						output.accept(ModItems.PINWHEEL);
+						output.accept(ModItems.SPECIMEN_BEAK);
+						output.accept(ModItems.EVERGREEN_CLOAK);
+						output.accept(ModItems.RESISTANCE_BAND);
+						output.accept(ModItems.WARM_STONE);
 					})
 					.build());
 
@@ -66,6 +79,10 @@ public final class ModCreativeTabs {
 					.icon(() -> new ItemStack(ModItems.SLATE_TAB_ICON))
 					.displayItems((parameters, output) -> {
 						output.accept(ModItems.SLATE_OF_FUTURE);
+						output.accept(ModItems.SLATE_OF_RALLY);
+						output.accept(ModItems.SLATE_OF_WAVE);
+						output.accept(ModItems.SLATE_OF_DOUBLE_STAR);
+						output.accept(ModItems.SLATE_OF_HANDSHAKE);
 						output.accept(ModItems.SLATE_OF_OATH);
 						output.accept(ModItems.SLATE_OF_BELIEF);
 						output.accept(ModItems.SLATE_OF_ENTRANCE);

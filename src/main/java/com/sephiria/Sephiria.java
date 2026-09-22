@@ -20,10 +20,23 @@ import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.potion.PotionTimers;
+import com.sephiria.damage.SephiriaDamage;
+import com.sephiria.stats.Dodge;
+import com.sephiria.stats.PseudoRandom;
 import com.sephiria.stats.Lifesteal;
+import com.sephiria.stats.StatAttributes;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.stats.WeaponStats;
+import com.sephiria.artifact.skill.ArtifactSkills;
+import com.sephiria.artifact.skill.EncouragementBannerSkill;
+import com.sephiria.artifact.skill.SkillSlots;
+import com.sephiria.network.ArtifactSkillsPayload;
+import com.sephiria.network.AssignArtifactSkillPayload;
+import com.sephiria.network.CastArtifactSkillPayload;
+import com.sephiria.network.OpenArtifactSkillsPayload;
 import com.sephiria.registry.ModCreativeTabs;
+import com.sephiria.stats.TimedAttributes;
+import net.minecraft.server.level.ServerPlayer;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.weapon.SephiriaCrossbowItem;
@@ -55,6 +68,7 @@ public class Sephiria implements ModInitializer {
 		ModCreativeTabs.initialize();
 		ModMenus.initialize();
 		ArtifactBackpack.register();
+		PlayerStats.register();
 		OffHandGuard.register();
 		SephiriaKatanaItem.registerEvents();
 		SephiriaKatanaItem.register();
@@ -70,6 +84,8 @@ public class Sephiria implements ModInitializer {
 		// 所以各武器自己的格挡窗口（刀的切换、匕首的招架、长棍的回击）必须排在
 		// Invulnerability 这个"通用无敌"之前，否则它们收不到事件、奖励也就发不出来。
 		Invulnerability.register();
+		// 闪避：排在武器自己的格挡/减伤之后，闪掉的那一下完全不存在
+		Dodge.register();
 		Dash.register();
 		DashSkill.register();
 		SephiriaCrossbowItem.register();
@@ -78,6 +94,12 @@ public class Sephiria implements ModInitializer {
 		PotionTimers.registerTicker();
 		Lifesteal.register();
 		WeaponStats.register();
+		// 神器技能：技能注册、技能栏存档、限时增益（急速 / 旗帜）的推进器
+		ArtifactSkills.initialize();
+		SkillSlots.register();
+		TimedAttributes.register();
+		EncouragementBannerSkill.register();
+		StatAttributes.register();
 
 		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
@@ -87,6 +109,10 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.serverboundPlay().register(SellItemPayload.TYPE, SellItemPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RefreshShopPayload.TYPE, RefreshShopPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RotateSlatePayload.TYPE, RotateSlatePayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(OpenArtifactSkillsPayload.TYPE, OpenArtifactSkillsPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(CastArtifactSkillPayload.TYPE, CastArtifactSkillPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(AssignArtifactSkillPayload.TYPE, AssignArtifactSkillPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(ArtifactSkillsPayload.TYPE, ArtifactSkillsPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
@@ -119,6 +145,24 @@ public class Sephiria implements ModInitializer {
 		// 商店也是容器菜单（货架在服务端），同样只能由服务端打开
 		ServerPlayNetworking.registerGlobalReceiver(OpenShopPayload.TYPE,
 				(payload, context) -> context.player().openMenu(ShopMenu.provider(context.player())));
+		// 神器技能页：打开时把可用技能与 6 个栏位推过去；放入 / 清空后重推一次
+		ServerPlayNetworking.registerGlobalReceiver(OpenArtifactSkillsPayload.TYPE,
+				(payload, context) -> syncArtifactSkills(context.player()));
+		ServerPlayNetworking.registerGlobalReceiver(CastArtifactSkillPayload.TYPE,
+				(payload, context) -> ArtifactSkills.cast(context.player(), payload.slot()));
+		ServerPlayNetworking.registerGlobalReceiver(AssignArtifactSkillPayload.TYPE, (payload, context) -> {
+			ServerPlayer player = context.player();
+			String entry = payload.entry();
+
+			// 只接受「背包里确实有、且生效」的神器：客户端塞别的过来一律当清空处理
+			if (!entry.isEmpty() && ArtifactSkills.resolve(player, entry) == null) {
+				return;
+			}
+
+			SkillSlots.set(player, payload.slot(), entry);
+			syncArtifactSkills(player);
+		});
+
 		// 商店页面点「刷新」：吃掉骰子栏里的一颗骰子，重刷一批货
 		ServerPlayNetworking.registerGlobalReceiver(RefreshShopPayload.TYPE, (payload, context) -> {
 			if (context.player().containerMenu instanceof ShopMenu menu) {
@@ -149,15 +193,33 @@ public class Sephiria implements ModInitializer {
 			SkillStorage.syncAll(handler.player);
 			PlayerStats.syncOnJoin(handler.player);
 			WeaponStats.refresh(handler.player);
+			StatAttributes.refresh(handler.player);
 		});
 
-		// 退出时把背包从缓存里放掉（附件里已经是最新状态，下次进来重新读）
+		// 退出时把背包与属性从缓存里放掉（附件里已经是最新状态，下次进来重新读）
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			ArtifactBackpack.forget(handler.player);
+			PlayerStats.forget(handler.player);
+			PseudoRandom.forget(handler.player);
+			SephiriaDamage.forget(handler.player);
+			ArtifactSkills.forget(handler.player);
+			Dodge.forget(handler.player);
 			ShopStock.forget(handler.player);
 		});
 
 		LOGGER.info("[SEPHIRIA] 武器系统已载入：{} 个分支，{} 把基础武器（锻造系统尚未实现）",
 				WeaponBranch.values().length, ModItems.BASE_WEAPONS.size());
 	}
+	/** 把神器技能页需要的数据推给客户端（可用技能 + 6 个栏位）。 */
+	private static void syncArtifactSkills(ServerPlayer player) {
+		java.util.List<ArtifactSkillsPayload.Entry> skills = new java.util.ArrayList<>();
+
+		for (ArtifactSkills.Available available : ArtifactSkills.available(player)) {
+			skills.add(new ArtifactSkillsPayload.Entry(
+					net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(available.item()), available.level()));
+		}
+
+		ServerPlayNetworking.send(player, new ArtifactSkillsPayload(skills, java.util.List.copyOf(SkillSlots.of(player))));
+	}
+
 }

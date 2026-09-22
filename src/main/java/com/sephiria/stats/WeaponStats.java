@@ -9,14 +9,11 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * 把属性系统接到武器的普通攻击上（伤害与攻速；技能另算，攻速不影响技能）。
@@ -28,21 +25,21 @@ import java.util.UUID;
  *
  * <p>然后给玩家挂两个<b>临时修饰符</b>（按玩家、不写回物品，所以多人各算各的）：
  * <pre>
- *   伤害增量 = 面板伤害 × (物理强度 / 20 − 1)
- *   攻速增量 = 基础攻速 × (攻击速度 / 100 − 1)
+ *   伤害增量 = 面板伤害 × (总伤害倍率 − 1)
+ *              总伤害倍率 = 物理强度/20 ×（1 + 物理伤害增幅）×（武器伤害/100）
+ *   攻速增量 = 基础攻速 × (攻击速度总倍率 − 1)
  * </pre>
  * 属性为默认值时增量恰好为 0，也就是表里的数值原样生效。
  *
- * <p>不需要每 tick 重算：只在"手持物变化"或"数值变化"时才写一次，其余时刻直接跳过。
+ * <p>不能只在"手持物变化"时才写：属性（神器、连击、药水）随时会变，所以每
+ * {@value #CHECK_INTERVAL} tick 重算一次；写之前先跟属性表上的当前值比一下，一样就跳过，
+ * 所以正常运行时这里只是一次读取。
  */
 public final class WeaponStats {
 	private static final Identifier DAMAGE_MODIFIER = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_weapon_damage");
 	private static final Identifier SPEED_MODIFIER = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_weapon_speed");
-	/** 检查间隔（tick）：换武器后最多等这么久就会重算。 */
+	/** 检查间隔（tick）：换武器或属性变化后最多等这么久就会重算。 */
 	private static final int CHECK_INTERVAL = 4;
-
-	/** 上次算出来的增量，用来判断是否需要写属性（避免每轮都重建修饰符）。 */
-	private static final Map<UUID, double[]> APPLIED = new HashMap<>();
 
 	private static int ticker;
 
@@ -90,32 +87,49 @@ public final class WeaponStats {
 			}
 		}
 
-		PlayerStats.Values values = PlayerStats.of(player);
-
+		// 增量按「总倍率 − 1」算：总倍率里已经含了物理强度、物理伤害增幅、武器伤害与普通攻击伤害（攻速同理），
+		// 全取默认值（物理强度 20、攻速 100%）时增量恰好是 0，表里的数值就原样生效。
+		//
+		// 这里必须用 PlayerStats 算好的**总值**：神器、连击、药水给的加成都只进总值，
+		// 直接读 values.physical（永远是 20）会让增量恒为 0——普通攻击就一直是基础伤害。
 		return new double[]{
-				damage * (values.physical / PlayerStats.DEFAULT_STRENGTH - 1.0D),
-				speed * (values.attackSpeed / PlayerStats.DEFAULT_ATTACK_SPEED - 1.0D)};
+				damage * (PlayerStats.normalAttackMultiplier(player) - 1.0D),
+				speed * (PlayerStats.attackSpeedMultiplier(player) - 1.0D)};
 	}
 
 	private static void apply(ServerPlayer player, double[] deltas) {
-		double[] previous = APPLIED.get(player.getUUID());
+		write(player, Attributes.ATTACK_DAMAGE, DAMAGE_MODIFIER, deltas[0]);
+		write(player, Attributes.ATTACK_SPEED, SPEED_MODIFIER, deltas[1]);
+	}
 
-		if (previous != null && previous[0] == deltas[0] && previous[1] == deltas[1]) {
+	/**
+	 * 把一条增量写到玩家属性上（0 表示撤掉）。
+	 *
+	 * <p><b>以属性表上的当前值为准，而不是记「上次算出来是多少」</b>：复活会新建玩家实体，
+	 * 而属性表只继承永久修饰符——这里挂的临时修饰符会随旧实体一起消失。只比对自家缓存的话，
+	 * 复活后每一轮都会以为"已经写过了"而跳过，普通攻击就悄悄退回基础伤害。
+	 */
+	private static void write(ServerPlayer player, Holder<Attribute> attribute, Identifier id, double amount) {
+		AttributeInstance instance = player.getAttribute(attribute);
+
+		if (instance == null) {
 			return;
 		}
 
-		APPLIED.put(player.getUUID(), deltas);
-		player.getAttribute(Attributes.ATTACK_DAMAGE).removeModifier(DAMAGE_MODIFIER);
-		player.getAttribute(Attributes.ATTACK_SPEED).removeModifier(SPEED_MODIFIER);
+		AttributeModifier current = instance.getModifier(id);
 
-		if (deltas[0] != 0.0D) {
-			player.getAttribute(Attributes.ATTACK_DAMAGE).addTransientModifier(
-					new AttributeModifier(DAMAGE_MODIFIER, deltas[0], AttributeModifier.Operation.ADD_VALUE));
+		if (amount == 0.0D) {
+			if (current != null) {
+				instance.removeModifier(id);
+			}
+
+			return;
 		}
 
-		if (deltas[1] != 0.0D) {
-			player.getAttribute(Attributes.ATTACK_SPEED).addTransientModifier(
-					new AttributeModifier(SPEED_MODIFIER, deltas[1], AttributeModifier.Operation.ADD_VALUE));
+		// 数值没变就什么都不做——绝大多数 tick 走的是这条路，不重建修饰符
+		if (current == null || current.amount() != amount) {
+			instance.addOrUpdateTransientModifier(
+					new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_VALUE));
 		}
 	}
 }

@@ -42,6 +42,27 @@ public final class Slates {
 			new PatternSlateItem.Cell(0, -1, -1),
 			new PatternSlateItem.Cell(0, 1, 3));
 
+	/** 集结：正上方与正左方各 +2（可旋转）。 */
+	public static final List<PatternSlateItem.Cell> RALLY = List.of(
+			new PatternSlateItem.Cell(0, -1, 2),
+			new PatternSlateItem.Cell(-1, 0, 2));
+
+	/** 波浪：正上方 -1、正右方 -1、右上方 +3（可旋转）。 */
+	public static final List<PatternSlateItem.Cell> WAVE = List.of(
+			new PatternSlateItem.Cell(0, -1, -1),
+			new PatternSlateItem.Cell(1, 0, -1),
+			new PatternSlateItem.Cell(1, -1, 3));
+
+	/** 双星：正上方与正下方各 +2（可旋转）。 */
+	public static final List<PatternSlateItem.Cell> DOUBLE_STAR = List.of(
+			new PatternSlateItem.Cell(0, -1, 2),
+			new PatternSlateItem.Cell(0, 1, 2));
+
+	/** 握手：正上方与正下方各 +1（可旋转）。 */
+	public static final List<PatternSlateItem.Cell> HANDSHAKE = List.of(
+			new PatternSlateItem.Cell(0, -1, 1),
+			new PatternSlateItem.Cell(0, 1, 1));
+
 	private Slates() {
 	}
 }

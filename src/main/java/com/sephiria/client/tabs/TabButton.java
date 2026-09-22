@@ -25,6 +25,10 @@ public class TabButton extends Button {
 	public static final Identifier ATTRIBUTES_ICON =
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "textures/gui/attributes_tab.png");
 
+	/** 神器技能页的图标：直接用「急速」那本魔法书的贴图，不额外画一张。 */
+	public static final Identifier SKILLS_ICON =
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "textures/item/haste_grimoire.png");
+
 	/** 商店页的图标。 */
 	public static final Identifier SHOP_ICON =
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "textures/gui/shop_tab.png");

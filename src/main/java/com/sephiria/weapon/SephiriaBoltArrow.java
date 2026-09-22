@@ -53,7 +53,7 @@ public class SephiriaBoltArrow extends Arrow implements SephiriaDamage.Source {
 		Entity owner = this.getOwner();
 		// 固定伤害指"不随飞行速度变化"，仍按物理强度换算（默认 20 时倍率 1.0，即 1.82）
 		float damage = owner instanceof ServerPlayer shooter
-				? (float) (FIXED_DAMAGE * PlayerStats.damageMultiplier(shooter))
+				? (float) (FIXED_DAMAGE * PlayerStats.normalAttackMultiplier(shooter))
 				: FIXED_DAMAGE;
 
 		target.hurtServer(level, level.damageSources().arrow(this, owner), damage);

@@ -71,7 +71,7 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 						.stat("tooltip.sephiria.part.reduction", DEFEND_REDUCTION * 100.0F, COLOR_RANGE).build(),
 				desc("tooltip.sephiria.skill.defend", "tooltip.sephiria.desc.defend"),
 				Line.titled("tooltip.sephiria.skill.shield_sweep")
-						.damage(PlayerStats.DEFAULT_STRENGTH * SWEEP_DAMAGE_RATIO)
+						.skillDamage(PlayerStats.DEFAULT_STRENGTH * SWEEP_DAMAGE_RATIO)
 						.cooldownTicks(SWEEP_COOLDOWN_TICKS).range(SWEEP_RANGE).build(),
 				desc("tooltip.sephiria.skill.shield_sweep", "tooltip.sephiria.desc.shield_sweep"));
 	}
@@ -134,6 +134,8 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 				continue;
 			}
 
+			// 告诉伤害入口「这是技能伤害」：无视防御伤害要按技能的倍率放大（见 SephiriaDamage.applyTrueDamage）
+			SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
 			victim.hurtServer(level, level.damageSources().playerAttack(player), damage);
 		}
 

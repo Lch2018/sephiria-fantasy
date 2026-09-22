@@ -8,6 +8,7 @@ import com.sephiria.client.SkillClientData;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
+import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.stats.WeaponStats;
 import com.geckolib.animatable.GeoItem;
@@ -237,7 +238,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 						.stat("tooltip.sephiria.part.block_bonus", INTENT_SWITCH_BONUS, COLOR_DAMAGE).build(),
 				desc("tooltip.sephiria.skill.intent", "tooltip.sephiria.desc.intent"),
 				Line.titled("tooltip.sephiria.skill.slash")
-						.damage(POWERFUL_DAMAGE_AT_FULL).cooldownTicks(POWERFUL_COOLDOWN)
+						.skillDamage(POWERFUL_DAMAGE_AT_FULL).cooldownTicks(POWERFUL_COOLDOWN)
 						.range(POWERFUL_RANGE).distance(POWERFUL_DISTANCE).build(),
 				desc("tooltip.sephiria.skill.slash", "tooltip.sephiria.desc.slash"));
 	}
@@ -405,9 +406,11 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	/** 原版 {@code Player#doSweepAttack} 的复刻：以命中目标为中心扫一圈，参数按状态缩放。 */
 	private static void sweep(ServerPlayer player, ServerLevel level, ItemStack stack, Entity target) {
 		boolean sheathed = isSheathed(stack);
-		float mainDamage = sheathed ? SHEATHED_DAMAGE : UNSHEATHED_DAMAGE;
 		double ratio = sheathed ? SHEATHED_SWEEP_RATIO : UNSHEATHED_SWEEP_RATIO;
 		double rangeScale = sheathed ? SHEATHED_SWEEP_RANGE : UNSHEATHED_SWEEP_RANGE;
+		// 主伤害取属性上的攻击力，而不是武器常量：常量是没算物理强度的基准值，
+		// 用它横扫就会一直停在基础伤害（与 WeaponSweep / 巨剑 / 棍 保持一致）。
+		float mainDamage = (float) player.getAttributeValue(Attributes.ATTACK_DAMAGE);
 
 		// 原版公式：1 + 横扫伤害比 × 主伤害
 		float sweepDamage = 1.0F + (float) (ratio * mainDamage);
@@ -523,6 +526,8 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 					continue;
 				}
 
+				// 告诉伤害入口「这是技能伤害」：无视防御伤害要按技能的倍率放大（见 SephiriaDamage.applyTrueDamage）
+				SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
 				victim.hurtServer(level, source, damage);
 			}
 

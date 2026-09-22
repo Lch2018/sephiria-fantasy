@@ -4,6 +4,7 @@ import com.sephiria.Sephiria;
 import com.sephiria.ability.Dash;
 import com.sephiria.ability.Invulnerability;
 import com.sephiria.ability.SkillStorage;
+import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -110,11 +111,11 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		return java.util.List.of(
 				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, WeaponSweep.RANGE).build(),
 				Line.titled("tooltip.sephiria.skill.parry")
-						.damage(PARRY_DAMAGE).cooldownTicks(PARRY_COOLDOWN)
+						.skillDamage(PARRY_DAMAGE).cooldownTicks(PARRY_COOLDOWN)
 						.range(PARRY_RANGE).distance(PARRY_DISTANCE).build(),
 				desc("tooltip.sephiria.skill.parry", "tooltip.sephiria.desc.parry"),
 				Line.titled("tooltip.sephiria.skill.fury")
-						.damage(FURY_DAMAGE).cooldownTicks(FURY_COOLDOWN)
+						.skillDamage(FURY_DAMAGE).cooldownTicks(FURY_COOLDOWN)
 						.range(FURY_PATH_RADIUS).distance(FURY_DISTANCE).build(),
 				desc("tooltip.sephiria.skill.fury", "tooltip.sephiria.desc.fury"),
 				Line.titled("tooltip.sephiria.skill.focus")
@@ -320,6 +321,8 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 					continue;
 				}
 
+				// 告诉伤害入口「这是技能伤害」：无视防御伤害要按技能的倍率放大（见 SephiriaDamage.applyTrueDamage）
+				SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
 				if (victim.hurtServer(level, level.damageSources().playerAttack(player), damage)) {
 					hitAnyone = true;
 				}

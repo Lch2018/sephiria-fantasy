@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "W": "#sephiria:iron_weapons",
+    "I": "minecraft:iron_ingot",
+    "S": "#minecraft:saplings"
+  },
+  "pattern": [
+    "IWI",
+    " S ",
+    " S "
+  ],
+  "result": {
+    "id": "sephiria:quarterstaff"
+  }
+}

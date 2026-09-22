@@ -107,8 +107,17 @@ public interface SephiriaWeapon {
 		 * 相对物理强度基准（20）的倍率，不随属性变化。
 		 */
 		Line damage(double value) {
+			return damage(value, TooltipScale.damage());
+		}
+
+		/** 技能那一行的伤害：比普攻多乘一项「特殊攻击伤害」（见武器数据表第十三节）。 */
+		Line skillDamage(double value) {
+			return damage(value, TooltipScale.skillDamage());
+		}
+
+		private Line damage(double value, double scale) {
 			return part(Component.translatable("tooltip.sephiria.part.damage",
-					number(value * TooltipScale.damage(), COLOR_DAMAGE),
+					number(value * scale, COLOR_DAMAGE),
 					number(value / PlayerStats.DEFAULT_STRENGTH * 100.0D) + "%"));
 		}
 

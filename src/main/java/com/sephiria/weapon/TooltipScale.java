@@ -13,26 +13,35 @@ package com.sephiria.weapon;
 public final class TooltipScale {
 	private static final double NONE = 1.0D;
 	private static double damage = NONE;
+	private static double skillDamage = NONE;
 	private static double attackSpeed = NONE;
 	private static double range = NONE;
 
 	private TooltipScale() {
 	}
 
-	public static void set(double damageMultiplier, double attackSpeedMultiplier, double rangeMultiplier) {
+	public static void set(double damageMultiplier, double skillDamageMultiplier, double attackSpeedMultiplier,
+			double rangeMultiplier) {
 		damage = damageMultiplier;
+		skillDamage = skillDamageMultiplier;
 		attackSpeed = attackSpeedMultiplier;
 		range = rangeMultiplier;
 	}
 
 	public static void reset() {
 		damage = NONE;
+		skillDamage = NONE;
 		attackSpeed = NONE;
 		range = NONE;
 	}
 
 	static double damage() {
 		return damage;
+	}
+
+	/** 技能那一行用的倍率：伤害倍率再乘「特殊攻击伤害」，只有技能吃这一项。 */
+	static double skillDamage() {
+		return skillDamage;
 	}
 
 	static double attackSpeed() {

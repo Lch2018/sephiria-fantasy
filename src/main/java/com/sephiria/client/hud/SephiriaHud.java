@@ -1,6 +1,7 @@
 package com.sephiria.client.hud;
 
 import com.sephiria.Sephiria;
+import com.sephiria.client.ClientStats;
 import com.sephiria.ability.DashSkill;
 import com.sephiria.client.InvulnClientData;
 import com.sephiria.client.SkillClientData;
@@ -61,6 +62,7 @@ public final class SephiriaHud implements HudElement {
 		// 开界面时不需要额外判断：HUD 层在那种情况下本来就不会被绘制
 		renderWeapon(extractor, client);
 		renderDash(extractor, client);
+		renderMp(extractor, client);
 		renderInvuln(extractor, client);
 	}
 
@@ -145,6 +147,32 @@ public final class SephiriaHud implements HudElement {
 			}
 		}
 
+		pose.popMatrix();
+	}
+
+	/** MP 条：{@code MP：[蓝条] 当前/上限}，蓝色填充与巨剑蓄力条同一套画法。 */
+	private void renderMp(GuiGraphicsExtractor extractor, Minecraft client) {
+		Font font = client.font;
+		double current = ClientStats.mp();
+		double max = com.sephiria.stats.PlayerStats.DEFAULT_MP;
+		float fraction = (float) Math.clamp(max <= 0.0D ? 0.0D : current / max, 0.0D, 1.0D);
+		String numbers = format(current) + "/" + format(max);
+		int textWidth = Math.max(font.width(numbers), font.width("MP"));
+		int barWidth = 60;
+		int width = textWidth + barWidth + PAD * 4;
+		int height = LINE + PAD * 2;
+		HudConfig.Element config = HudConfig.element(HudConfig.MP);
+		Matrix3x2fStack pose = extractor.pose();
+		pose.pushMatrix();
+		pose.translate((float) config.x, (float) config.y);
+		pose.scale((float) config.scale, (float) config.scale);
+
+		extractor.fill(0, 0, width, height, PANEL_COLOR);
+		extractor.text(font, numbers, PAD, PAD, NAME_COLOR, true);
+		int barX = PAD * 2 + textWidth;
+		int barY = PAD + 2;
+		extractor.fill(barX, barY, barX + barWidth, barY + 8, 0xFF202020);
+		extractor.fill(barX, barY, barX + (int) (barWidth * fraction), barY + 8, 0xFF3B6BE8);
 		pose.popMatrix();
 	}
 

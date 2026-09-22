@@ -53,7 +53,10 @@ public final class ArtifactTooltip {
 		List<Component> lines = new ArrayList<>();
 
 		// 连招（坚固）
-		lines.add(Component.translatable(artifact.combo().translationKey()).withStyle(ChatFormatting.GREEN));
+		// 双连击神器（风车）两个连击都列出来
+		for (com.sephiria.artifact.ArtifactCombo combo : artifact.combos()) {
+			lines.add(Component.translatable(combo.translationKey()).withStyle(ChatFormatting.GREEN));
+		}
 
 		if (artifact.unique()) {
 			lines.add(Component.translatable("artifact.sephiria.tag.unique").withColor(COLOUR_TAG));

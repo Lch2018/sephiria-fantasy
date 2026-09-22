@@ -24,6 +24,13 @@ public final class ClientStats {
 	private static double weaponDamage = PlayerStats.DEFAULT_WEAPON_DAMAGE;
 	private static double specialAttack = PlayerStats.DEFAULT_SPECIAL_ATTACK;
 	private static double lifesteal = 0.0D;
+	private static double normalAttackDamage = PlayerStats.DEFAULT_NORMAL_ATTACK_DAMAGE;
+	private static double critChance = PlayerStats.DEFAULT_CRIT_CHANCE;
+	private static double critDamage = PlayerStats.DEFAULT_CRIT_DAMAGE;
+	private static double ignoreDefense = 0.0D;
+	private static double moveSpeed = PlayerStats.DEFAULT_MOVE_SPEED;
+	private static double dodge = 0.0D;
+	private static double dodgeRate = 0.0D;
 	private static PlayerStats.PhysicalBreakdown attackBreakdown = new PlayerStats.PhysicalBreakdown(
 			PlayerStats.DEFAULT_ATTACK_SPEED, 0.0D, 0.0D, 0.0D, 0.0D);
 	private static PlayerStats.PhysicalBreakdown breakdown = new PlayerStats.PhysicalBreakdown(
@@ -47,15 +54,29 @@ public final class ClientStats {
 		weaponDamage = payload.weaponDamage();
 		specialAttack = payload.specialAttack();
 		lifesteal = payload.lifesteal();
+		normalAttackDamage = payload.normalAttackDamage();
+		critChance = payload.critChance();
+		critDamage = payload.critDamage();
+		ignoreDefense = payload.ignoreDefense();
+		moveSpeed = payload.moveSpeed();
+		dodge = payload.dodge();
+		dodgeRate = payload.dodgeRate();
 		breakdown = new PlayerStats.PhysicalBreakdown(payload.physicalBase(), payload.artifactFlat(),
 				payload.potionFlat(), payload.artifactPercent(), payload.potionPercent());
 		attackBreakdown = new PlayerStats.PhysicalBreakdown(payload.attackBase(), payload.attackArtifactFlat(),
 				payload.attackPotionFlat(), payload.attackArtifactPercent(), payload.attackPotionPercent());
 	}
 
-	/** 伤害倍率：物理强度倍率 ×（1 + 物理伤害增幅），提示框用它把基准伤害换算成实际伤害。 */
+	/** 普通攻击倍率：与服务端公式一致（物理强度 ×（1 + 物理伤害增幅）× 武器伤害 × 普通攻击伤害）。 */
 	public static double damageMultiplier() {
-		return physical / PlayerStats.DEFAULT_STRENGTH * (1.0D + physicalAmp / 100.0D);
+		return physical / PlayerStats.DEFAULT_STRENGTH * (1.0D + physicalAmp / 100.0D)
+				* (weaponDamage / PlayerStats.DEFAULT_WEAPON_DAMAGE)
+				* (normalAttackDamage / PlayerStats.DEFAULT_NORMAL_ATTACK_DAMAGE);
+	}
+
+	/** 技能伤害倍率：伤害倍率再乘「特殊攻击伤害」——只有武器技能吃这一项。 */
+	public static double skillDamageMultiplier() {
+		return damageMultiplier() * (specialAttack / PlayerStats.DEFAULT_SPECIAL_ATTACK);
 	}
 
 	/** 攻击速度倍率（1.0 = 100%）。 */
@@ -66,6 +87,41 @@ public final class ClientStats {
 	/** 近战攻击范围倍率（1.0 = 100%）。 */
 	public static double rangeMultiplier() {
 		return meleeRange / PlayerStats.DEFAULT_MELEE_RANGE;
+	}
+
+	/** 普通攻击伤害（%），默认 100。 */
+	public static double normalAttackDamage() {
+		return normalAttackDamage;
+	}
+
+	/** 暴击几率（%），默认 0。 */
+	public static double critChance() {
+		return critChance;
+	}
+
+	/** 暴击伤害（%），默认 150。 */
+	public static double critDamage() {
+		return critDamage;
+	}
+
+	/** 无视防御伤害（点），默认 0。 */
+	public static double ignoreDefense() {
+		return ignoreDefense;
+	}
+
+	/** 移动速度（%），默认 100。 */
+	public static double moveSpeed() {
+		return moveSpeed;
+	}
+
+	/** 闪避（点），默认 0。 */
+	public static double dodge() {
+		return dodge;
+	}
+
+	/** 闪避率（%）：面板直接显示它。 */
+	public static double dodgeRate() {
+		return dodgeRate;
 	}
 
 	/** 物理伤害增幅（%），默认 0。 */

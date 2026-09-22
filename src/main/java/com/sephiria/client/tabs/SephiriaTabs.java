@@ -1,6 +1,8 @@
 package com.sephiria.client.tabs;
 
 import com.sephiria.client.gui.StatsScreen;
+import com.sephiria.client.skill.ArtifactSkillScreen;
+import com.sephiria.network.OpenArtifactSkillsPayload;
 import net.minecraft.client.gui.components.Button;
 import com.sephiria.network.OpenBackpackPayload;
 import com.sephiria.network.OpenShopPayload;
@@ -50,6 +52,10 @@ public final class SephiriaTabs {
 			case VANILLA -> TabButton.item(x, y, new ItemStack(Items.CHEST), tab.title(), active, press);
 			case BACKPACK -> TabButton.texture(x, y, TabButton.BACKPACK_ICON, tab.title(), active, press);
 			case ATTRIBUTES -> TabButton.texture(x, y, TabButton.ATTRIBUTES_ICON, tab.title(), active, press);
+			// 技能页的图标直接用「急速」那本魔法书的贴图，不额外画一张
+			case ARTIFACT_SKILLS -> TabButton.texture(x, y, TabButton.SKILLS_ICON, tab.title(), active, press);
+			// 配方页用工作台图标（原版物品，不用另画图）
+			case RECIPES -> TabButton.item(x, y, new ItemStack(net.minecraft.world.item.Items.CRAFTING_TABLE), tab.title(), active, press);
 			case SHOP -> TabButton.texture(x, y, TabButton.SHOP_ICON, tab.title(), active, press);
 		};
 	}
@@ -83,6 +89,12 @@ public final class SephiriaTabs {
 			// 背包与商店都是容器菜单，只能由服务端打开，所以这里发包
 			case BACKPACK -> ClientPlayNetworking.send(OpenBackpackPayload.INSTANCE);
 			case ATTRIBUTES -> client.setScreenAndShow(new StatsScreen());
+			case RECIPES -> client.setScreenAndShow(new com.sephiria.client.gui.RecipeScreen());
+			// 技能列表由服务端算（客户端没有背包内容），所以先开页面再发请求，包一到就填上
+			case ARTIFACT_SKILLS -> {
+				client.setScreenAndShow(new ArtifactSkillScreen());
+				ClientPlayNetworking.send(OpenArtifactSkillsPayload.INSTANCE);
+			}
 			case SHOP -> ClientPlayNetworking.send(OpenShopPayload.INSTANCE);
 		}
 	}

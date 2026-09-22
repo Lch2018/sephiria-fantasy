@@ -6,7 +6,12 @@ import com.sephiria.client.backpack.ChestScreen;
 import com.sephiria.client.shop.ShopScreen;
 import com.sephiria.client.backpack.EnchantScreen;
 import com.sephiria.client.hud.HudConfigScreen;
+import com.sephiria.artifact.skill.ArtifactSkills;
+import com.sephiria.artifact.skill.SkillSlots;
 import com.sephiria.client.hud.SephiriaHud;
+import com.sephiria.client.skill.ClientSkills;
+import com.sephiria.network.ArtifactSkillsPayload;
+import com.sephiria.network.CastArtifactSkillPayload;
 import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.client.tabs.SephiriaTabs;
 import com.sephiria.network.DashPayload;
@@ -72,6 +77,22 @@ public class SephiriaClient implements ClientModInitializer {
 			GLFW.GLFW_KEY_H,
 			KeyMapping.Category.GAMEPLAY));
 
+	/**
+	 * 神器技能的 6 个按键：<b>默认不绑键</b>（UNKNOWN = 未绑定），玩家自己去
+	 * 「选项 → 控制 → 游戏玩法」里设「神器技能 1..6」。
+	 */
+	private static final KeyMapping[] SKILL_KEYS = new KeyMapping[SkillSlots.COUNT];
+
+	static {
+		for (int slot = 0; slot < SKILL_KEYS.length; slot++) {
+			SKILL_KEYS[slot] = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+					"key.sephiria.artifact_skill_" + (slot + 1),
+					InputConstants.Type.KEYSYM,
+					InputConstants.UNKNOWN.getValue(),
+					KeyMapping.Category.GAMEPLAY));
+		}
+	}
+
 	@Override
 	public void onInitializeClient() {
 		// 容器菜单的界面：26.2 的 MenuScreens.register 是包私有的，走访问拓宽（sephiria.accesswidener）
@@ -87,8 +108,8 @@ public class SephiriaClient implements ClientModInitializer {
 				java.util.List<Component> detailLines;
 
 				try {
-					TooltipScale.set(ClientStats.damageMultiplier(), ClientStats.attackSpeedMultiplier(),
-							ClientStats.rangeMultiplier());
+					TooltipScale.set(ClientStats.damageMultiplier(), ClientStats.skillDamageMultiplier(),
+							ClientStats.attackSpeedMultiplier(), ClientStats.rangeMultiplier());
 					detailLines = detail.detailLines(stack);
 				} finally {
 					TooltipScale.reset();
@@ -125,6 +146,16 @@ public class SephiriaClient implements ClientModInitializer {
 				(payload, context) -> InvulnClientData.accept(payload));
 		ClientPlayNetworking.registerGlobalReceiver(StatsSyncPayload.TYPE,
 				(payload, context) -> ClientStats.accept(payload));
+		// 神器技能页的可用技能与 6 个栏位
+		ClientPlayNetworking.registerGlobalReceiver(ArtifactSkillsPayload.TYPE, (payload, context) -> {
+			ClientSkills.accept(payload);
+
+			// 技能页开着就地重建，否则页面还显示旧内容（「切换不动」的观感来源之一）
+			// 26.2 的当前界面在 Minecraft.gui.screen() 上（Minecraft 自己已经没有 screen 字段）
+			if (Minecraft.getInstance().gui.screen() instanceof com.sephiria.client.skill.ArtifactSkillScreen screen) {
+				screen.refresh();
+			}
+		});
 
 		// 背包界面顶部的标签栏：原版背包 / 赛菲利亚背包 / 属性。
 		// 生存与创造用的是两个不同的界面类，所以两种都挂——之前只挂了生存的，创造模式下看不到。
@@ -180,6 +211,15 @@ public class SephiriaClient implements ClientModInitializer {
 
 			while (HUD_KEY.consumeClick()) {
 				client.setScreenAndShow(new HudConfigScreen(null));
+			}
+
+			// 神器技能：按下第几号栏位就发第几号，冷却与蓝量由服务端判
+			for (int slot = 0; slot < SKILL_KEYS.length; slot++) {
+				while (SKILL_KEYS[slot].consumeClick()) {
+					if (client.player != null) {
+						ClientPlayNetworking.send(new CastArtifactSkillPayload(slot));
+					}
+				}
 			}
 		});
 	}

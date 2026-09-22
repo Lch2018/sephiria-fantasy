@@ -49,12 +49,12 @@ public final class ArtifactLoot {
 	private static List<Item> artifacts() {
 		return List.of(ModItems.CHARM_OF_STRENGTH, ModItems.WARRIORS_PROOF, ModItems.SHIELD_TEXTBOOK,
 				ModItems.SWORD_TEXTBOOK, ModItems.WIND_SCORE, ModItems.PRESSURE_BANDAGE, ModItems.GOLDEN_CLOAK,
-				ModItems.WANDERER_NECKLACE, ModItems.PROJECTION_SWORD);
+				ModItems.WANDERER_NECKLACE, ModItems.PROJECTION_SWORD, ModItems.COLORLESS_CUBE, ModItems.SILVER_PLATE, ModItems.ENCOURAGEMENT_BANNER, ModItems.HASTE_GRIMOIRE, ModItems.RED_DEW, ModItems.LONGING_AMULET, ModItems.FAULT_PROBE, ModItems.DEFT_AMULET, ModItems.PINWHEEL, ModItems.SPECIMEN_BEAK, ModItems.EVERGREEN_CLOAK, ModItems.RESISTANCE_BAND, ModItems.WARM_STONE);
 	}
 
 	private static List<Item> slates() {
 		return List.of(ModItems.SLATE_OF_FUTURE, ModItems.SLATE_OF_OATH, ModItems.SLATE_OF_BELIEF,
-				ModItems.SLATE_OF_ENTRANCE, ModItems.SLATE_OF_COMPETITION);
+				ModItems.SLATE_OF_ENTRANCE, ModItems.SLATE_OF_COMPETITION, ModItems.SLATE_OF_RALLY, ModItems.SLATE_OF_WAVE, ModItems.SLATE_OF_DOUBLE_STAR, ModItems.SLATE_OF_HANDSHAKE);
 	}
 
 	/** 抽奖池：神器宝箱只出神器、石板宝箱只出石板、升级宝箱与商店两者都出。 */

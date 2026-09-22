@@ -2,6 +2,7 @@ package com.sephiria.weapon;
 
 import com.sephiria.Sephiria;
 import com.sephiria.ability.Dash;
+import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -97,7 +98,7 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 		return java.util.List.of(
 				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, KATANA_SHEATHED_SWEEP_RANGE * SWEEP_RANGE_SCALE).build(),
 				Line.titled("tooltip.sephiria.skill.whirlwind")
-						.damage(WHIRLWIND_DAMAGE)
+						.skillDamage(WHIRLWIND_DAMAGE)
 						.stat("tooltip.sephiria.part.charge", CHARGE_TICKS / 20.0D, COLOR_COOLDOWN)
 						.range(RING_RADIUS).distance(DASH_DISTANCE).build(),
 				desc("tooltip.sephiria.skill.whirlwind", "tooltip.sephiria.desc.whirlwind"));
@@ -287,6 +288,8 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 					continue;
 				}
 
+				// 告诉伤害入口「这是技能伤害」：无视防御伤害要按技能的倍率放大（见 SephiriaDamage.applyTrueDamage）
+				SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
 				victim.hurtServer(level, level.damageSources().playerAttack(player), damage);
 			}
 

@@ -7,6 +7,7 @@ import com.sephiria.client.tabs.SephiriaTabs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 
 /**
@@ -25,21 +26,44 @@ public class StatsScreen extends Screen {
 	private int physicalRowY;
 	private int ampRowY;
 	private int attackSpeedRowY;
+	/** 「闪避」那一行的位置：悬停时显示闪避率公式。 */
+	private int dodgeRowY;
 	/** 树叶那一行：图标 + 数值，画在最上面。 */
 	private int leafRowY;
 	private int rowsLeft;
+	/** 右列的 x（属性分两列，免得一列排不下）。 */
+	private int rowsRight;
 
 	public StatsScreen() {
 		super(Component.translatable("screen.sephiria.stats"));
 	}
 
+	/**
+	 * 按「背包键」（默认 E）关掉属性页、回到游戏。
+	 *
+	 * <p>原版背包、箱子这类界面是 {@code AbstractContainerScreen} 自己处理这个键的，属性页是个普通
+	 * {@code Screen}，不补这一手的话按 E 没反应——而另外三页（原版背包 / 赛菲利亚背包 / 商店）都能
+	 * 按 E 退出，只有这一页不行会显得很别扭。
+	 */
+	@Override
+	public boolean keyPressed(KeyEvent event) {
+		if (Minecraft.getInstance().options.keyInventory.matches(event)) {
+			this.onClose();
+			return true;
+		}
+
+		return super.keyPressed(event);
+	}
+
 	@Override
 	protected void init() {
-		int left = this.width / 2 - 100;
+		int left = this.width / 2 - 210;
+		int rightX = left + 210;
 		int y = 34;
 
 		// 标签栏：与背包界面里那一排位置对应（原版背包 / 赛菲利亚背包 / 属性）
-		SephiriaTabs.add(this, left, 14, SephiriaTab.ATTRIBUTES);
+		// 标签栏仍按「单列面板」居中，属性分两列后它不跟着左移
+		SephiriaTabs.add(this, this.width / 2 - 100, 14, SephiriaTab.ATTRIBUTES);
 
 		var player = Minecraft.getInstance().player;
 		String health = player == null
@@ -64,11 +88,22 @@ public class StatsScreen extends Screen {
 		this.attackSpeedRowY = y += ROW_HEIGHT;
 		row(left, this.attackSpeedRowY, "screen.sephiria.stats.attack_speed",
 				format(ClientStats.attackSpeed()) + "%");
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.melee_range", format(ClientStats.meleeRange()) + "%");
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.weapon_damage", format(ClientStats.weaponDamage()) + "%");
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.special_attack", format(ClientStats.specialAttack()) + "%");
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.lifesteal", format(ClientStats.lifesteal()));
+		y = 34;
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.melee_range", format(ClientStats.meleeRange()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.weapon_damage", format(ClientStats.weaponDamage()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.special_attack", format(ClientStats.specialAttack()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.normal_attack_damage", format(ClientStats.normalAttackDamage()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.crit_chance", format(ClientStats.critChance()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.crit_damage", format(ClientStats.critDamage()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.ignore_defense", format(ClientStats.ignoreDefense()));
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.move_speed", format(ClientStats.moveSpeed()) + "%");
+		// 闪避直接显示折算后的闪避率（带 %），点数在悬停的算式里给
+		this.dodgeRowY = y += ROW_HEIGHT;
+		// 行里显示闪避点数（与词条/其它来源的口径一致），闪避率放在悬停算式里
+		row(rightX, this.dodgeRowY, "screen.sephiria.stats.dodge", format(ClientStats.dodge()));
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.lifesteal", format(ClientStats.lifesteal()));
 		this.rowsLeft = left;
+		this.rowsRight = rightX;
 	}
 
 	/**
@@ -89,12 +124,24 @@ public class StatsScreen extends Screen {
 						Component.literal(format(ClientStats.leaves())).withColor(0xFFFFD24A)),
 				this.rowsLeft + 15, this.leafRowY + 2, 0xFFFFFFFF);
 
-		if (mouseX < this.rowsLeft || mouseX >= this.rowsLeft + 200) {
+		// 两列各自的 x：悬停提示要跟着行所在的那一列
+		int columnX = this.rowsLeft;
+
+		if (mouseY >= this.dodgeRowY && mouseY < this.dodgeRowY + ROW_HEIGHT) {
+			columnX = this.rowsRight;
+		}
+
+		if (mouseX < columnX || mouseX >= columnX + 200) {
 			return;
 		}
 
 		if (mouseY >= this.physicalRowY && mouseY < this.physicalRowY + ROW_HEIGHT) {
 			drawBreakdown(extractor, this.physicalRowY, ClientStats.physicalBreakdown());
+		} else if (mouseY >= this.dodgeRowY && mouseY < this.dodgeRowY + ROW_HEIGHT) {
+			// 闪避率 = 0.8 × (1 − e^(−闪避 / 43.28))：把点数与结果一起写出来
+			extractor.text(this.font, Component.translatable("screen.sephiria.stats.dodge_formula",
+					format(ClientStats.dodgeRate()), format(ClientStats.dodge())), this.rowsRight, this.dodgeRowY + 10,
+					0xFFDDDDDD);
 		} else if (mouseY >= this.attackSpeedRowY && mouseY < this.attackSpeedRowY + ROW_HEIGHT) {
 			drawBreakdown(extractor, this.attackSpeedRowY, ClientStats.attackSpeedBreakdown());
 		}

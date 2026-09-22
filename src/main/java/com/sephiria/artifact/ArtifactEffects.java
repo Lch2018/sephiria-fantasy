@@ -19,7 +19,8 @@ import java.util.Set;
  * <ol>
  *   <li><b>格子等级</b>：实际等级 = 物品自身等级 + 所处格子的等级，为负则这件神器失效；</li>
  *   <li><b>【唯一】</b>：同一件神器只算等级最高的那一个副本，多个不叠加；</li>
- *   <li><b>连击</b>：同连击的「不同种类」神器每种 +1 级，达到阈值给额外增益。</li>
+ *   <li><b>连击</b>：背包里每件生效的神器各 +1 级，带【唯一】的同种神器只算一次
+ *       （三本没有【唯一】的盾牌术教材 = 坚固 +3），达到阈值给额外增益。</li>
  * </ol>
  */
 public final class ArtifactEffects {
@@ -115,6 +116,84 @@ public final class ArtifactEffects {
 		return sumAffix(player, SephiriaArtifact::highestElementBonus);
 	}
 
+	/** 神器给的暴击几率加成总和（%）：任何由玩家造成的伤害都吃。 */
+	public static double critChanceBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::critChanceBonus);
+	}
+
+	/** 神器给的「武器攻击的暴击几率」加成总和（%）：只有武器打出的伤害吃得到。 */
+	public static double weaponCritChanceBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::weaponCritChanceBonus);
+	}
+
+	/** 神器给的暴击伤害加成总和（%），加在默认的 150% 上。 */
+	public static double critDamageBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::critDamageBonus);
+	}
+
+	/** 神器给的「无视防御伤害」总和（点）。 */
+	public static double ignoreDefenseBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::ignoreDefenseBonus);
+	}
+
+	/** 神器给的「普通攻击伤害」加成总和（%）：只加成普通攻击。 */
+	public static double normalAttackDamagePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::normalAttackDamagePercentBonus);
+	}
+
+	/** 神器给的移动速度加成总和（%）。 */
+	public static double moveSpeedPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::moveSpeedPercentBonus);
+	}
+
+	/** 神器给的闪避总和（点）。 */
+	public static double dodgeBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::dodgeBonus);
+	}
+
+	/** 闪避触发时恢复的冲刺次数（弹力带）。 */
+	public static double dodgeRestoreCharges(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::dodgeRestoreDashCharges);
+	}
+
+	/** 连击给的闪避加成总和（点）。 */
+	public static double comboDodgeBonus(ServerPlayer player) {
+		double total = 0.0D;
+
+		for (Map.Entry<ArtifactCombo, Integer> entry : comboLevels(player).entrySet()) {
+			total += entry.getKey().dodgeBonus(entry.getValue());
+		}
+
+		return total;
+	}
+
+	/** 暴击溅射比例（%）：0 表示没有这个词条。 */
+	public static double critSplashPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::critSplashPercent);
+	}
+
+	/** 连击给的暴击几率加成总和（%）。 */
+	public static double comboCritChancePercent(ServerPlayer player) {
+		double total = 0.0D;
+
+		for (Map.Entry<ArtifactCombo, Integer> entry : comboLevels(player).entrySet()) {
+			total += entry.getKey().critChancePercent(entry.getValue());
+		}
+
+		return total;
+	}
+
+	/** 连击给的暴击伤害加成总和（%）。 */
+	public static double comboCritDamagePercent(ServerPlayer player) {
+		double total = 0.0D;
+
+		for (Map.Entry<ArtifactCombo, Integer> entry : comboLevels(player).entrySet()) {
+			total += entry.getKey().critDamagePercent(entry.getValue());
+		}
+
+		return total;
+	}
+
 	/** 连击给的攻击速度加成总和（%）。 */
 	public static double comboAttackSpeedPercent(ServerPlayer player) {
 		double total = 0.0D;
@@ -202,14 +281,16 @@ public final class ArtifactEffects {
 	}
 
 	/**
-	 * 各连击的等级：同一连击下「不同种类」的神器各记 1 级——同一个神器放多个也只算一次，
-	 * 卸下就掉回去。失效（实际等级为负）的神器不计入。
+	 * 各连击的等级：背包里每件生效的神器各记 1 级，带【唯一】的同种神器只算一次
+	 * （三本盾牌术教材没有【唯一】→ 坚固 +3；三个力量护符有【唯一】→ 坚固 +1）。
+	 * 失效（实际等级为负）的神器不计入。
 	 *
 	 * <p>这个重载不依赖服务端：客户端用菜单同步过来的容器与格子等级自己算一遍，
 	 * 连击面板就能显示等级与颜色，不用再多发一个同步包。
 	 */
 	public static Map<ArtifactCombo, Integer> comboLevels(Container backpack, java.util.function.IntUnaryOperator slotLevels) {
-		Map<ArtifactCombo, Set<Item>> kinds = new EnumMap<>(ArtifactCombo.class);
+		Map<ArtifactCombo, Integer> levels = new EnumMap<>(ArtifactCombo.class);
+		Set<Item> uniqueCounted = new HashSet<>();
 
 		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
 			ItemStack stack = backpack.getItem(slot);
@@ -222,13 +303,20 @@ public final class ArtifactEffects {
 				continue;
 			}
 
-			kinds.computeIfAbsent(artifact.combo(), combo -> new HashSet<>()).add(stack.getItem());
+			// 【唯一】的同种神器只记一次；没有【唯一】的每个副本都记，所以带三本就是 +3 级
+			if (artifact.unique() && !uniqueCounted.add(stack.getItem())) {
+				continue;
+			}
+
+			// 双连击神器：两种连击各记 1 级
+			for (ArtifactCombo combo : artifact.combos()) {
+				levels.merge(combo, 1, Integer::sum);
+			}
 		}
 
-		Map<ArtifactCombo, Integer> levels = new EnumMap<>(ArtifactCombo.class);
-
+		// 一件都没有的连击也要留一项（连击面板要显示 0 级）
 		for (ArtifactCombo combo : ArtifactCombo.values()) {
-			levels.put(combo, kinds.getOrDefault(combo, Set.of()).size());
+			levels.putIfAbsent(combo, 0);
 		}
 
 		return levels;

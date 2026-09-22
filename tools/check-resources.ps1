@@ -10,7 +10,7 @@ $assets = Join-Path $root 'src\main\resources\assets\sephiria'
 $modelsDir = Join-Path $assets 'models\item'
 $texDir = Join-Path $assets 'textures\item'
 
-$items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'crossbow_bolt', 'blade', 'quarterstaff', 'charm_of_strength', 'artifact_tab_icon', 'warriors_proof', 'slate_of_future', 'enchant_coin', 'slate_tab_icon', 'dice', 'artifact_chest', 'slate_chest', 'upgrade_chest', 'shield_textbook', 'sword_textbook', 'wind_score', 'pressure_bandage', 'golden_cloak', 'wanderer_necklace', 'projection_sword', 'slate_of_oath', 'slate_of_belief', 'slate_of_entrance', 'slate_of_competition', 'regeneration_potion', 'apple_juice', 'trappist_sacred', 'big_dice_potion', 'vampire_lord_oath')
+$items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'crossbow_bolt', 'blade', 'quarterstaff', 'charm_of_strength', 'artifact_tab_icon', 'warriors_proof', 'slate_of_future', 'enchant_coin', 'slate_tab_icon', 'dice', 'artifact_chest', 'slate_chest', 'upgrade_chest', 'shield_textbook', 'sword_textbook', 'wind_score', 'pressure_bandage', 'golden_cloak', 'wanderer_necklace', 'projection_sword', 'colorless_cube', 'silver_plate', 'encouragement_banner', 'haste_grimoire', 'red_dew', 'longing_amulet', 'fault_probe', 'deft_amulet', 'pinwheel', 'specimen_beak', 'evergreen_cloak', 'resistance_band', 'warm_stone', 'slate_of_oath', 'slate_of_belief', 'slate_of_entrance', 'slate_of_competition', 'slate_of_rally', 'slate_of_wave', 'slate_of_double_star', 'slate_of_handshake', 'regeneration_potion', 'apple_juice', 'trappist_sacred', 'big_dice_potion', 'vampire_lord_oath')
 $branches = @('sword_and_shield', 'greatsword', 'dagger', 'crossbow', 'katana', 'staff')
 
 $errors = 0
@@ -18,6 +18,20 @@ function Fail($msg) { Write-Output ("FAIL: " + $msg); $script:errors++ }
 function Ok($msg)   { Write-Output ("ok  : " + $msg) }
 function ReadText($path) { return [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8) }
 function ReadJson($path) { return (ReadText $path | ConvertFrom-Json) }
+function Get-JarNames($jar, $pattern) {
+    # group 1 of every jar entry matching $pattern (1.21.4+ keeps item definitions under
+    # assets/minecraft/items/, so plain vanilla item ids are checkable without the game)
+    $names = New-Object System.Collections.Generic.List[string]
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($jar)
+    try {
+        foreach ($entry in $zip.Entries) {
+            $m = [regex]::Match($entry.FullName, $pattern)
+            if ($m.Success) { $names.Add($m.Groups[1].Value) }
+        }
+    }
+    finally { $zip.Dispose() }
+    return $names
+}
 
 function Get-Refs($text) {
     $refs = New-Object System.Collections.Generic.List[string]
@@ -126,6 +140,126 @@ foreach ($lang in @('en_us', 'zh_cn')) {
 }
 
 if (-not (Test-Path (Join-Path $assets 'icon.png'))) { Fail "missing icon.png" }
+
+# 5) data: crafting recipes, the tags they reference, and the recipe-book unlocks.
+#    A recipe that fails to load is completely silent in game -- the pattern simply never
+#    matches -- so the shape is checked here: pattern symbols must be declared, declared
+#    symbols must be used, the result must be one of this mod's items, and every referenced
+#    tag file must exist. Vanilla ids are checked against the Minecraft jars in the loom
+#    cache when they are there, and skipped otherwise (the cache path differs per machine).
+$dataDir = Join-Path $root 'src\main\resources\data\sephiria'
+$recipeDir = Join-Path $dataDir 'recipe'
+$tagDir = Join-Path $dataDir 'tags\item'
+$weaponItems = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'blade', 'quarterstaff')
+
+$vanillaItems = $null
+$vanillaItemTags = $null
+$clientJar = Join-Path $env:USERPROFILE '.gradle\caches\fabric-loom\26.2\minecraft-client.jar'
+$serverJar = Join-Path $env:USERPROFILE '.gradle\caches\fabric-loom\26.2\minecraft-extracted_server.jar'
+if ((Test-Path $clientJar) -and (Test-Path $serverJar)) {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $vanillaItems = Get-JarNames $clientJar '^assets/minecraft/items/(.+)\.json$'
+    $vanillaItemTags = Get-JarNames $serverJar '^data/minecraft/tags/item/(.+)\.json$'
+    Ok ("vanilla id lists loaded (" + $vanillaItems.Count + " items, " + $vanillaItemTags.Count + " item tags)")
+} else {
+    Write-Output "note: Minecraft jars not in the loom cache -- vanilla id checks skipped"
+}
+
+# Returns the problem with one ingredient ("minecraft:iron_ingot" or "#minecraft:saplings"),
+# or $null when it resolves.
+function Test-Ingredient($value) {
+    $tagged = $value.StartsWith('#')
+    if ($tagged) { $value = $value.Substring(1) }
+
+    $parts = $value.Split(':', 2)
+    if ($parts.Count -ne 2) { return "$value has no namespace" }
+
+    if ($parts[0] -eq 'minecraft') {
+        if ($tagged) {
+            if ($null -ne $vanillaItemTags -and -not $vanillaItemTags.Contains($parts[1])) { return "unknown vanilla item tag #$value" }
+        } elseif ($null -ne $vanillaItems -and -not $vanillaItems.Contains($parts[1])) {
+            return "unknown vanilla item $value"
+        }
+    } elseif ($parts[0] -eq 'sephiria') {
+        if ($tagged) {
+            if (-not (Test-Path (Join-Path $tagDir ($parts[1] + '.json')))) { return "no tags/item/$($parts[1]).json for #$value" }
+        } elseif ($items -notcontains $parts[1]) {
+            return "unknown mod item $value"
+        }
+    } else {
+        return "$value is in an unknown namespace"
+    }
+
+    return $null
+}
+
+$crafted = New-Object System.Collections.Generic.List[string]
+foreach ($file in Get-ChildItem $recipeDir -Filter *.json) {
+    $name = $file.BaseName
+    $json = ReadJson $file.FullName
+
+    if ($json.type -ne 'minecraft:crafting_shaped') { Fail "recipe/$name.json: unsupported type '$($json.type)'"; continue }
+
+    $result = $json.result.id
+    if ($result -notlike 'sephiria:*' -or $items -notcontains $result.Substring('sephiria:'.Length)) {
+        Fail "recipe/$name.json: result '$result' is not one of this mod's items"
+    }
+    $crafted.Add($result)
+
+    $symbols = @($json.key.PSObject.Properties.Name)
+    $pattern = @($json.pattern)
+    if ($pattern.Count -eq 0 -or $pattern.Count -gt 3) { Fail "recipe/$name.json: pattern has $($pattern.Count) rows" }
+
+    $used = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($row in $pattern) {
+        if ($row.Length -ne $pattern[0].Length) { Fail "recipe/$name.json: pattern rows differ in width" }
+        if ($row.Length -gt 3) { Fail "recipe/$name.json: row '$row' is wider than 3" }
+        foreach ($ch in $row.ToCharArray()) {
+            # empty cells are plain spaces; '.' is NOT special to the recipe codec and makes
+            # the whole recipe fail to load (silently, apart from a log line)
+            if ($ch -eq '.') { Fail "recipe/$name.json: '.' is not an empty cell, use a space"; continue }
+            if ($ch -ne ' ') { [void]$used.Add([string]$ch) }
+        }
+    }
+
+    foreach ($s in $used) {
+        if ($symbols -notcontains $s) { Fail "recipe/$name.json: pattern uses '$s' but key does not declare it" }
+    }
+    foreach ($s in $symbols) {
+        if (-not $used.Contains($s)) { Fail "recipe/$name.json: key '$s' is never used by the pattern" }
+        $problem = Test-Ingredient $json.key.$s
+        if ($problem) { Fail "recipe/$name.json: $problem" }
+    }
+
+    Ok ("recipe/$name.json -> $result [" + ($pattern -join '/') + "]")
+}
+
+foreach ($id in $weaponItems) {
+    if (-not $crafted.Contains("sephiria:$id")) { Fail "no recipe crafts sephiria:$id" }
+}
+
+foreach ($file in Get-ChildItem $tagDir -Filter *.json) {
+    $json = ReadJson $file.FullName
+    foreach ($value in @($json.values)) {
+        # A tag may also carry an object entry ({"id": ..., "required": ...}); only plain ids are used here.
+        if ($value -isnot [string]) { Fail "tags/item/$($file.Name): object entries are not checked" ; continue }
+        $problem = Test-Ingredient $value
+        if ($problem) { Fail "tags/item/$($file.Name): $problem" }
+    }
+    Ok ("tags/item/" + $file.Name + " (" + @($json.values).Count + " values)")
+}
+
+$advancementDir = Join-Path $dataDir 'advancement'
+foreach ($file in Get-ChildItem $advancementDir -Recurse -Filter *.json) {
+    $json = ReadJson $file.FullName
+    # 解锁条目指向不存在的合成表时游戏只记一条日志，玩家那边就是"配方书里没有"
+    # display-only entries (tab roots, weapon index) carry no rewards -> nothing to unlock
+    if ($null -eq $json.rewards) { Ok ("advancement/" + $file.Name + " (display only)"); continue }
+    foreach ($recipe in @($json.rewards.recipes)) {
+        if (-not $crafted.Contains($recipe)) { Fail ("advancement/" + $file.Name + ": unlocks '$recipe' which no recipe provides") }
+    }
+    Ok ("advancement/" + $file.Name + " unlocks " + @($json.rewards.recipes).Count + " recipe(s)")
+}
 
 Write-Output ""
 if ($errors -eq 0) { Write-Output "ALL RESOURCE CHECKS PASSED" } else { Write-Output ("$errors PROBLEM(S) FOUND") }

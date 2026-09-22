@@ -28,11 +28,14 @@ public final class HudConfig {
 	public static final String WEAPON = "weapon";
 	/** 冲刺 UI（左下角）。 */
 	public static final String DASH = "dash";
+	/** MP 条（左下角，默认在冲刺上方）。 */
+	public static final String MP = "mp";
+
 	/** 无敌条（准星下方居中）。 */
 	public static final String INVULN = "invuln";
 
 	/** 全部可调的 HUD 模块，顺序即设置界面里的顺序；新增模块在这里登记。 */
-	public static final List<String> MODULES = List.of(WEAPON, DASH, INVULN);
+	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, INVULN);
 
 	/** 一个界面元素的位置与缩放。 */
 	public static final class Element {
@@ -53,7 +56,8 @@ public final class HudConfig {
 			}
 			else {
 				this.x = "bottom_right".equals(corner) ? guiWidth - 150.0D : 8.0D;
-				this.y = guiHeight - 40.0D;
+				// 左下角有两个模块（冲刺、MP），MP 默认叠在冲刺上面一行
+				this.y = guiHeight - ("bottom_left_high".equals(corner) ? 64.0D : 40.0D);
 			}
 
 			this.placed = true;
@@ -63,6 +67,7 @@ public final class HudConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final Map<String, String> CORNERS = Map.of(
 			WEAPON, "bottom_right",
+			MP, "bottom_left_high",
 			DASH, "bottom_left",
 			INVULN, "center");
 	private static final Map<String, Element> ELEMENTS = new LinkedHashMap<>();
