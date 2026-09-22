@@ -15,6 +15,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -136,11 +137,17 @@ public class ArtifactSkillScreen extends Screen {
 		extractor.fill(rect[0], rect[1], rect[0] + CELL - 5, rect[1] + CELL - 5, colour);
 	}
 
-	/** 图标正好铺满格子的内沿（内沿是 CELL-5 = 15px），这样才是居中的；之前贴 14px 会偏右下。 */
+	/** 图标画在格子内沿（用原版物品绘制，走模型与 atlas；自己拼贴图路径会画成紫黑格甚至崩游戏）。 */
 	private void drawIcon(GuiGraphicsExtractor extractor, Item item, int[] rect) {
 		drawIcon(extractor, item, rect[0], rect[1]);
 	}
 
+	/**
+	 * 画图标：技能图标都来自本模组物品，贴图就在 {@code textures/item/<id>.png}，直接 blit 是安全的。
+	 *
+	 * <p>曾经换成原版 {@code extractor.item(...)} 想统一走物品模型，结果在这个「收集渲染状态」的阶段
+	 * 调用会崩游戏，所以这里保持直接画贴图（只画本模组物品，路径一定对）。
+	 */
 	private void drawIcon(GuiGraphicsExtractor extractor, Item item, int x, int y) {
 		if (item != null) {
 			extractor.blit(RenderPipelines.GUI_TEXTURED, ClientSkills.iconOf(item), x, y, 0.0F, 0.0F, CELL - 5, CELL - 5, 16, 16);

@@ -8,7 +8,6 @@ public enum SephiriaTab {
 	BACKPACK("screen.sephiria.backpack"),
 	ATTRIBUTES("screen.sephiria.stats"),
 	ARTIFACT_SKILLS("screen.sephiria.artifact_skills"),
-	RECIPES("screen.sephiria.recipes"),
 	SHOP("screen.sephiria.shop");
 
 	private final String titleKey;
