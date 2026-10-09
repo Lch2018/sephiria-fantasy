@@ -102,6 +102,12 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 
 	@Override
 	public void extractBackground(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
+		// 容器界面在原版里 isInGameUi() 为 true，原版这条路只压暗、不虚化；补上「属性 / 技能页」
+		// 那套（普通 Screen 走的）：先虚化，再盖一层 25% 黑的菜单底纹。虚化会把这一层之前抽取的
+		// 内容一起糊掉——26.3 里 HUD 与物品栏正是在界面之前抽取的，所以它们也会跟着虚化。
+		extractBlurredBackground(extractor);
+		extractMenuBackground(extractor);
+
 		int left = this.leftPos;
 		int top = this.topPos;
 

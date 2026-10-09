@@ -31,13 +31,13 @@ public class DamageReductionMixin {
 		LivingEntity self = (LivingEntity) (Object) this;
 		SephiriaDamage.Kind kind = SephiriaDamage.kindOf(source);
 
-		// 真实伤害自带「数值已定死」的语义，也不再参与暴击与新的真伤
+		// 真实伤害绕开减伤（这是它存在的意义），但和别的伤害一样吃暴击与黄金之手（2026-10 起）
 		if (kind == SephiriaDamage.Kind.TRUE) {
-			return amount;
+			return SephiriaDamage.applyGoldenHands(source, SephiriaDamage.applyCrit(self, source, amount));
 		}
 
-		// 电属性伤害同样不吃减伤与黄金之手，但「电属性攻击的暴击几率」（麒麟的角）能给它暴击；
-		// 灼伤（FIRE）是减益伤害，连暴击都不参与，applyCrit 会原样返回
+		// 电属性伤害与灼伤（减益伤害）同样不吃减伤与黄金之手，但照掷暴击：
+		// 电属性那边是「通用 + 电属性攻击的暴击几率（麒麟的角）」，灼伤只用通用那一项
 		if (kind == SephiriaDamage.Kind.ELECTRIC || kind == SephiriaDamage.Kind.FIRE) {
 			return SephiriaDamage.applyCrit(self, source, amount);
 		}

@@ -87,7 +87,10 @@ public final class SephiriaDamage {
 		WEAPON,
 		/** 神器自己造成的伤害：吃暴击几率，但吃不到「武器攻击的暴击几率」。 */
 		ARTIFACT,
-		/** 无视防御伤害：不再暴击，也不会再触发一次真伤。 */
+		/**
+		 * 无视防御伤害：绕开护甲与本模组减伤，但和别的伤害一样吃暴击与黄金之手（2026-10 起）；
+		 * 它自己不会再触发一次真伤。
+		 */
 		TRUE,
 		/** 电属性伤害（触电结算与攻击打出的都是）：数值各自定死，不吃倍率；
 		 * 事件守门只把触电自己的结算（electric_shock）挡在电击之触之外（防链式自触），
@@ -100,7 +103,8 @@ public final class SephiriaDamage {
 		SUN,
 		/**
 		 * 灼伤减益自己结算的火属性伤害（sephiria:burn）：与触电一样属于「减益伤害」——
-		 * 数值定死、不吃减伤与黄金之手、也不触发任何「造成伤害时」的效果。
+		 * 数值定死、不吃减伤与黄金之手、也不触发任何「造成伤害时」的效果；
+		 * 暴击照吃（2026-10 起减益伤害一律走通用暴击几率，见 {@link #applyCrit}）。
 		 */
 		FIRE,
 		/**
@@ -198,23 +202,23 @@ public final class SephiriaDamage {
 	/**
 	 * 暴击判定：命中就按「暴击伤害」放大这一下的数值。
 	 *
-	 * <p>只有玩家造成的伤害会暴击，真实伤害与减益伤害（灼伤）不参与（它们本来就是「额外的那一下」）。
-	 * 「武器攻击的暴击几率」只加在武器打出的伤害上——神器自己造成的伤害只用通用暴击几率；
-	 * 电属性伤害（触电结算、附加闪电伤害、闪电攻击）单独用「电属性攻击的暴击几率」（麒麟的角）。
+	 * <p><b>本模组打出的伤害都吃通用暴击几率</b>（2026-10 起：减益伤害与真实伤害也算进来）。
+	 * 在这条之上还有两笔专项加成：「武器攻击的暴击几率」只加在武器打出的那几路
+	 * （普通攻击、横扫、弩矢、武器技能），「电属性攻击的暴击几率」（麒麟的角）只加在电属性那几路
+	 * （触电结算、附加闪电、闪电攻击）——是<b>相加</b>，不是各掷一套；真实伤害与减益伤害只吃通用那一项。
+	 * 唯一不掷暴击的是「不是玩家造成的伤害」。
 	 * 武器攻击暴击时还会触发红色露水那类「暴击溅射」。
 	 */
 	public static float applyCrit(LivingEntity target, DamageSource source, float amount) {
 		Kind kind = kindOf(source);
 
-		if (kind == Kind.OTHER || kind == Kind.TRUE || kind == Kind.FIRE
-				|| !(source.getEntity() instanceof ServerPlayer player)) {
+		if (kind == Kind.OTHER || !(source.getEntity() instanceof ServerPlayer player)) {
 			return amount;
 		}
 
-		// 电属性伤害不共用通用暴击几率：没有麒麟的角时这一项是 0，它们照旧不暴击
 		double chance = switch (kind) {
 			case WEAPON -> PlayerStats.weaponCritChanceTotal(player);
-			case ELECTRIC -> PlayerStats.electricCritChanceTotal(player);
+			case ELECTRIC -> PlayerStats.critChanceTotal(player) + PlayerStats.electricCritChanceTotal(player);
 			default -> PlayerStats.critChanceTotal(player);
 		};
 
@@ -284,13 +288,13 @@ public final class SephiriaDamage {
 	 * 谈判连击的「黄金之手」：每持有 200 叶子，这次攻击的伤害 +1%，最多 +20%。
 	 *
 	 * <p>攻击方的增益，由 {@code DamageReductionMixin} 在暴击与减伤算完之后调用。
-	 * 守门与暴击一致：非玩家造成的伤害、真实伤害与减益伤害（触电 / 灼伤）不参与——
-	 * 真实伤害本来就是"额外那一下"，黄金之手已经在原来那一下里放大过了。
+	 * 真实伤害也吃它（2026-10 起：它虽然绕开减伤，但仍是一次正常打出的伤害），
+	 * 不参与的只有非玩家造成的伤害与减益伤害（触电 / 灼伤）——减益是「数值定死」的那一类。
 	 */
 	public static float applyGoldenHands(DamageSource source, float amount) {
 		Kind kind = kindOf(source);
 
-		if (kind == Kind.OTHER || kind == Kind.TRUE || kind == Kind.ELECTRIC || kind == Kind.FIRE
+		if (kind == Kind.OTHER || kind == Kind.ELECTRIC || kind == Kind.FIRE
 				|| !(source.getEntity() instanceof ServerPlayer player)) {
 			return amount;
 		}
@@ -311,8 +315,10 @@ public final class SephiriaDamage {
 	 * 额外那一下真实伤害：由 {@code DamageReductionMixin} 在伤害结算<b>之后</b>调用。
 	 *
 	 * <p>单独打一次是因为它要绕开护甲、韧性、附魔保护与本模组的减伤——这些都作用在
-	 * 「那一下」的数值上，只有换一种伤害类型重新打一次才能真正绕开。它会按该次攻击的倍率放大：
-	 * 普通攻击吃普攻那一套，技能吃技能那一套（技能结算前用 {@link #markSkill} 挂上倍率）。
+	 * 「那一下」的数值上，只有换一种伤害类型重新打一次才能真正绕开。绕开的只有这些：
+	 * <b>增伤照吃</b>——按该次攻击的倍率放大（普通攻击吃普攻那一套，技能吃技能那一套，
+	 * 技能结算前用 {@link #markSkill} 挂上倍率），并在打出时照掷通用暴击、照吃黄金之手
+	 * （2026-10 起；它是独立的一下，所以自己掷，不跟着主伤害那次的结果）。
 	 */
 	public static void applyTrueDamage(LivingEntity target, DamageSource source, float amount) {
 		Kind kind = kindOf(source);
@@ -425,8 +431,8 @@ public final class SephiriaDamage {
 	/**
 	 * 造一个灼伤结算的火属性伤害来源（数据包里的 sephiria:burn）。
 	 *
-	 * <p>只给灼伤减益的每跳用：它是减益伤害（{@link Kind#FIRE}），不参与暴击 / 减伤 / 黄金之手，
-	 * 也不会再触发火焰之触（防链式自触）。
+	 * <p>只给灼伤减益的每跳用：它是减益伤害（{@link Kind#FIRE}），吃通用暴击（与神器伤害同一项），
+	 * 但不吃减伤与黄金之手，也不会再触发火焰之触（防链式自触）。
 	 *
 	 * <p>触发者掉线后 {@code player} 传 null：伤害照样结算，只是没有归属（不计击杀功劳）。
 	 */

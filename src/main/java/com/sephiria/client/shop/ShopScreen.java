@@ -88,6 +88,11 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 
 	@Override
 	public void extractBackground(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
+		// 与背包页同一套：容器界面原版只压暗不虚化，这里补上「属性 / 技能页」那套（虚化 + 25% 黑底纹），
+		// 虚化会把 HUD 与物品栏一起糊掉（它们在界面之前抽取）
+		extractBlurredBackground(extractor);
+		extractMenuBackground(extractor);
+
 		int left = this.leftPos;
 		int top = this.topPos;
 
