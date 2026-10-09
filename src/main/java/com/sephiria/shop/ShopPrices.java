@@ -15,7 +15,8 @@ import net.minecraft.world.item.ItemStack;
  * <p>价目只跟物品种类（品质）有关，与神器等级、格子等级无关——所以客户端不用等服务端同步价格，
  * 自己按手里的物品算一遍就是同一个数（{@link #buy} 是纯函数）。
  *
- * <p>货币是「树叶」（{@link com.sephiria.stats.PlayerStats}）。
+ * <p>货币是「叶子」（{@link com.sephiria.stats.PlayerStats}）；谈判力给的折扣只折算买价
+ * （{@link #discounted}），卖价仍按原价的 3 折，免得低买高卖套利。
  *
  * <p><b>收不收</b>（{@link #sellable}）与<b>卖不卖</b>（{@link #buy}）是两件事：商店会卖宝箱，
  * 但不收宝箱——只有神器、石板、药水能卖给商店，骰子 / 附魔币 / 宝箱这些稀有道具不收购。
@@ -68,6 +69,11 @@ public final class ShopPrices {
 	/** 出售价：原价的 3 折，向下取整。 */
 	public static int sell(ItemStack stack) {
 		return sellable(stack) ? buy(stack) * SELL_PERCENT / 100 : 0;
+	}
+
+	/** 按折扣（%）折算后的实付价：向下取整，别让四舍五入让玩家多掏钱。 */
+	public static int discounted(int base, double discountPercent) {
+		return (int) (base * (1.0D - discountPercent / 100.0D));
 	}
 
 	private static int byRarity(ArtifactRarity rarity) {

@@ -2,7 +2,7 @@
 
 
 
-**开工前先读「记忆手册.md」**：那里记着当前做到哪、关键设计决策、26.2 上踩过的坑、以及还没做的事。
+**开工前先读「记忆手册.md」**：那里记着当前做到哪、关键设计决策、26.2/26.3 上踩过的坑、以及还没做的事。
 数值与公式看「武器数据表.txt」，每个提交的动机看 git 提交信息。
 这个文件是给在本仓库工作的助手（以及人）看的协作约定，优先于默认习惯。
 
@@ -12,10 +12,11 @@
   其它名字的旧 jar（同 mod id 有两个 jar 会报重复 mod）、把新 jar 复制到 PCL 实例的 mods 目录。
 - jar 名字跟 `gradle.properties` 里的 `version` 走（当前 `0.1.0-a`，a = A 测），
   所以是 `build/libs/sephiria-0.1.0-a.jar` → `mods\sephiria-0.1.0-a.jar`；改版本号只要改那一处。
-- PCL 实例：`D:\PCL\.minecraft\versions\26.2-Fabric 0.19.5\`。
+- PCL 实例：`D:\PCL\.minecraft\versions\26.3-Fabric 0.19.5\`（已从 26.2 迁到 26.3；
+  以 `tools/deploy.ps1` 里写死的路径为准，别照旧路径找 jar）。
 - **不要自动启动游戏。** 用户自己从 PCL2 打开实例测试。开发客户端 `gradlew.bat runClient`
   只在用户明确要求时使用（例如需要看 `run/logs/latest.log` 排查渲染问题）。
-- 实装后可以扫一遍 `run/logs/latest.log`（如果用户跑过）确认没有异常，但不要为此启动游戏。
+- 实装后可以扫一遍 PCL 实例的 `logs\latest.log`（用户跑过就有）确认没有异常，但不要为此启动游戏。
 
 ## 版本管理
 

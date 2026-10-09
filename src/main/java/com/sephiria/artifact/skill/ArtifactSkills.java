@@ -46,6 +46,7 @@ public final class ArtifactSkills {
 	public static void initialize() {
 		register(EncouragementBannerSkill.INSTANCE);
 		register(HasteSkill.INSTANCE);
+		register(ThunderVerdictSkill.INSTANCE);
 	}
 
 	public static ArtifactSkill byId(String id) {

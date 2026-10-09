@@ -338,7 +338,8 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 			AABB area = player.getBoundingBox().inflate(this.range, this.height, this.range);
 
 			for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {
-				if (victim == player || victim.isAlliedTo(player)) {
+				// 技能范围大：只打有威胁的生物，和平生物不误伤（见 SephiriaDamage.strikeable）
+				if (!SephiriaDamage.strikeable(victim, player)) {
 					continue;
 				}
 

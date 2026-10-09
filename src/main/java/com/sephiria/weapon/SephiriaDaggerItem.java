@@ -317,7 +317,8 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 			boolean hitAnyone = false;
 
 			for (LivingEntity victim : victims) {
-				if (victim == player || victim.isAlliedTo(player)) {
+				// 技能范围大：只打有威胁的生物，和平生物不误伤（见 SephiriaDamage.strikeable）
+				if (!SephiriaDamage.strikeable(victim, player)) {
 					continue;
 				}
 

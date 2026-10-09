@@ -18,7 +18,7 @@ import net.minecraft.network.chat.Component;
  */
 public class StatsScreen extends Screen {
 	private static final int ROW_HEIGHT = 14;
-	/** 树叶（货币）的图标。 */
+	/** 叶子（货币）的图标。 */
 	private static final net.minecraft.resources.Identifier LEAF_ICON =
 			net.minecraft.resources.Identifier.fromNamespaceAndPath(com.sephiria.Sephiria.MOD_ID, "textures/gui/leaf.png");
 
@@ -28,7 +28,9 @@ public class StatsScreen extends Screen {
 	private int attackSpeedRowY;
 	/** 「闪避」那一行的位置：悬停时显示闪避率公式。 */
 	private int dodgeRowY;
-	/** 树叶那一行：图标 + 数值，画在最上面。 */
+	/** 「谈判力」那一行的位置：悬停时显示换算出的商店折扣（折扣不再单独占一行）。 */
+	private int negotiationRowY;
+	/** 叶子那一行：图标 + 数值，画在最上面。 */
 	private int leafRowY;
 	private int rowsLeft;
 	/** 右列的 x（属性分两列，免得一列排不下）。 */
@@ -70,7 +72,7 @@ public class StatsScreen extends Screen {
 				? "-"
 				: format(player.getHealth()) + " / " + format(player.getMaxHealth());
 
-		// 树叶（货币）放第一行，并且带图标——一眼就能看到
+		// 叶子（货币）放第一行，并且带图标——一眼就能看到
 		this.leafRowY = y;
 		y += ROW_HEIGHT;
 
@@ -102,6 +104,13 @@ public class StatsScreen extends Screen {
 		// 行里显示闪避点数（与词条/其它来源的口径一致），闪避率放在悬停算式里
 		row(rightX, this.dodgeRowY, "screen.sephiria.stats.dodge", format(ClientStats.dodge()));
 		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.lifesteal", format(ClientStats.lifesteal()));
+		// 商店折扣是谈判力换算出来的，单独占一行太浪费——藏进谈判力的悬停里
+		this.negotiationRowY = y += ROW_HEIGHT;
+		row(rightX, this.negotiationRowY, "screen.sephiria.stats.negotiation", format(ClientStats.negotiation()));
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.leaf_gain",
+				format(ClientStats.leafGainPercent()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.xp_drop",
+				format(ClientStats.xpDropPercent()) + "%");
 		this.rowsLeft = left;
 		this.rowsRight = rightX;
 	}
@@ -117,34 +126,49 @@ public class StatsScreen extends Screen {
 			float partialTick) {
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 
-		// 树叶：图标在文字左边，数值黄色
+		// 叶子：图标在文字左边，数值黄色
 		extractor.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, LEAF_ICON,
 				this.rowsLeft, this.leafRowY, 0.0F, 0.0F, 12, 12, 16, 16);
 		extractor.text(this.font, Component.translatable("screen.sephiria.stats.leaves",
 						Component.literal(format(ClientStats.leaves())).withColor(0xFFFFD24A)),
 				this.rowsLeft + 15, this.leafRowY + 2, 0xFFFFFFFF);
 
-		// 两列各自的 x：悬停提示要跟着行所在的那一列
-		int columnX = this.rowsLeft;
+		// 悬停提示跟着行所在的那一列：物理强度与攻速在左列，闪避与谈判力在右列
+		// （先按行定列再查 x——谈判力在右列，用左列的 x 范围判断会永远判不中）
+		boolean leftRow = inRow(this.physicalRowY, mouseY) || inRow(this.attackSpeedRowY, mouseY);
+		boolean rightRow = inRow(this.dodgeRowY, mouseY) || inRow(this.negotiationRowY, mouseY);
 
-		if (mouseY >= this.dodgeRowY && mouseY < this.dodgeRowY + ROW_HEIGHT) {
-			columnX = this.rowsRight;
+		if (!leftRow && !rightRow) {
+			return;
 		}
+
+		int columnX = leftRow ? this.rowsLeft : this.rowsRight;
 
 		if (mouseX < columnX || mouseX >= columnX + 200) {
 			return;
 		}
 
-		if (mouseY >= this.physicalRowY && mouseY < this.physicalRowY + ROW_HEIGHT) {
+		if (inRow(this.physicalRowY, mouseY)) {
 			drawBreakdown(extractor, this.physicalRowY, ClientStats.physicalBreakdown());
-		} else if (mouseY >= this.dodgeRowY && mouseY < this.dodgeRowY + ROW_HEIGHT) {
+		} else if (inRow(this.attackSpeedRowY, mouseY)) {
+			drawBreakdown(extractor, this.attackSpeedRowY, ClientStats.attackSpeedBreakdown());
+		} else if (inRow(this.dodgeRowY, mouseY)) {
 			// 闪避率 = 0.8 × (1 − e^(−闪避 / 43.28))：把点数与结果一起写出来
 			extractor.text(this.font, Component.translatable("screen.sephiria.stats.dodge_formula",
 					format(ClientStats.dodgeRate()), format(ClientStats.dodge())), this.rowsRight, this.dodgeRowY + 10,
 					0xFFDDDDDD);
-		} else if (mouseY >= this.attackSpeedRowY && mouseY < this.attackSpeedRowY + ROW_HEIGHT) {
-			drawBreakdown(extractor, this.attackSpeedRowY, ClientStats.attackSpeedBreakdown());
+		} else {
+			// 商店折扣 = 70×(1−e^(−谈判力/27.94))：数值与叶子一样用黄色，方便和其它悬停算式区分
+			extractor.text(this.font,
+					Component.translatable("screen.sephiria.stats.shop_discount",
+							Component.literal(formatDecimal(ClientStats.shopDiscount()) + "%").withColor(0xFFFFD24A)),
+					this.rowsRight, this.negotiationRowY + 10, 0xFFDDDDDD);
 		}
+	}
+
+	/** 鼠标是否悬停在某一行的行高范围内。 */
+	private static boolean inRow(int rowY, int mouseY) {
+		return mouseY >= rowY && mouseY < rowY + ROW_HEIGHT;
 	}
 
 	private void drawBreakdown(net.minecraft.client.gui.GuiGraphicsExtractor extractor, int rowY,
@@ -176,5 +200,10 @@ public class StatsScreen extends Screen {
 	/** 属性都按整数显示（当前数值都是整的），需要小数时再改。 */
 	private static String format(double value) {
 		return String.valueOf(Math.round(value));
+	}
+
+	/** 商店折扣是公式算出来的小数（y = 70×(1−e^(−谈判力/27.94))），保留 1 位小数显示，不四舍五入到整数。 */
+	private static String formatDecimal(double value) {
+		return String.format(java.util.Locale.ROOT, "%.1f", value);
 	}
 }

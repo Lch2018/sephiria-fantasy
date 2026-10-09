@@ -21,7 +21,9 @@ public record StatsSyncPayload(double mp, double mpRegen, double physical, doubl
 		double potionPercent, double attackBase, double attackArtifactFlat, double attackPotionFlat,
 		double attackArtifactPercent, double attackPotionPercent, double leaves, double weaponDamage,
 		double specialAttack, double lifesteal, double normalAttackDamage, double critChance, double critDamage,
-		double ignoreDefense, double moveSpeed, double dodge, double dodgeRate) implements CustomPacketPayload {
+		double ignoreDefense, double moveSpeed, double dodge, double dodgeRate, double negotiation,
+		double shopDiscount, double leafGainPercent, double xpDropPercent, double maxMp)
+		implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<StatsSyncPayload> TYPE =
 			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "stats_sync"));
 
@@ -58,6 +60,11 @@ public record StatsSyncPayload(double mp, double mpRegen, double physical, doubl
 				buffer.writeDouble(payload.moveSpeed());
 				buffer.writeDouble(payload.dodge());
 				buffer.writeDouble(payload.dodgeRate());
+				buffer.writeDouble(payload.negotiation());
+				buffer.writeDouble(payload.shopDiscount());
+				buffer.writeDouble(payload.leafGainPercent());
+				buffer.writeDouble(payload.xpDropPercent());
+				buffer.writeDouble(payload.maxMp());
 			},
 			(RegistryFriendlyByteBuf buffer) -> new StatsSyncPayload(
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
@@ -66,27 +73,32 @@ public record StatsSyncPayload(double mp, double mpRegen, double physical, doubl
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
+					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
-					buffer.readDouble(), buffer.readDouble(), buffer.readDouble()));
+					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
+					buffer.readDouble()));
 
 	/**
 	 * {@code physicalTotal} / {@code attackSpeedTotal} 与三个元素值都是含神器加成的总值
 	 * （面板显示的就是这些）；元素值里已经含「最高元素伤害」那一条。
 	 */
-	public static StatsSyncPayload of(PlayerStats.Values values, double physicalTotal, double fireTotal,
+	public static StatsSyncPayload of(PlayerStats.Values values, double mpRegenTotal, double physicalTotal,
+			double fireTotal,
 			double iceTotal, double lightningTotal, double attackSpeedTotal, double physicalAmp,
 			PlayerStats.PhysicalBreakdown breakdown, PlayerStats.PhysicalBreakdown attackBreakdown,
 			double weaponDamageTotal, double specialAttackTotal, double normalAttackDamageTotal,
 			double critChanceTotal, double critDamageTotal, double ignoreDefenseTotal, double moveSpeedTotal,
-			double dodgeTotal, double dodgeRate, double meleeRangeTotal) {
-		return new StatsSyncPayload(values.mp, values.mpRegen, physicalTotal, fireTotal, iceTotal,
+			double dodgeTotal, double dodgeRate, double meleeRangeTotal,
+			double negotiationTotal, double shopDiscount, double leafGainTotal, double xpDropTotal, double maxMp) {
+		return new StatsSyncPayload(values.mp, mpRegenTotal, physicalTotal, fireTotal, iceTotal,
 				lightningTotal, values.defense, attackSpeedTotal, meleeRangeTotal, physicalAmp,
 				breakdown.base(), breakdown.artifactFlat(), breakdown.potionFlat(),
 				breakdown.artifactPercent(), breakdown.potionPercent(), attackBreakdown.base(),
 				attackBreakdown.artifactFlat(), attackBreakdown.potionFlat(),
 				attackBreakdown.artifactPercent(), attackBreakdown.potionPercent(), values.leaves,
 				weaponDamageTotal, specialAttackTotal, values.lifesteal, normalAttackDamageTotal,
-				critChanceTotal, critDamageTotal, ignoreDefenseTotal, moveSpeedTotal, dodgeTotal, dodgeRate);
+				critChanceTotal, critDamageTotal, ignoreDefenseTotal, moveSpeedTotal, dodgeTotal, dodgeRate,
+				negotiationTotal, shopDiscount, leafGainTotal, xpDropTotal, maxMp);
 	}
 
 	@Override

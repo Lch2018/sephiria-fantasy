@@ -25,7 +25,7 @@ import net.minecraft.world.item.ItemStack;
 /**
  * 商店页面：上面 6 个商品格（点一下就买），下面一排是宝箱 / 药水 / 骰子 / 出售。
  *
- * <p>买：点商品格直接结算——扣树叶、把东西塞进玩家背包、记一次限购。货架本身是服务端的
+ * <p>买：点商品格直接结算——扣叶子、把东西塞进玩家背包、记一次限购。货架本身是服务端的
  * {@link ShopStock}，客户端拿到的是原版同步过来的空壳容器，所以价格不用同步（{@link ShopPrices}
  * 是纯函数，两边算出来一样），只有「每格买过几次」走数据槽。
  *
@@ -231,7 +231,7 @@ public class ShopMenu extends AbstractContainerMenu {
 		}
 
 		if (!shopStock.buy(index, player)) {
-			// 树叶不够
+			// 叶子不够
 			player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 					SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.6F, 1.2F);
 			return;
@@ -242,7 +242,7 @@ public class ShopMenu extends AbstractContainerMenu {
 		broadcastChanges();
 	}
 
-	/** 出售栏里的东西按原价 3 折换树叶（整摞一起卖）。 */
+	/** 出售栏里的东西按原价 3 折换叶子（整摞一起卖）。 */
 	public boolean sell(ServerPlayer player) {
 		ItemStack stack = this.sell.getItem(0);
 

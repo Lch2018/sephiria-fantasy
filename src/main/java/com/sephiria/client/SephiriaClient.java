@@ -12,6 +12,8 @@ import com.sephiria.client.hud.SephiriaHud;
 import com.sephiria.client.skill.ClientSkills;
 import com.sephiria.network.ArtifactSkillsPayload;
 import com.sephiria.network.CastArtifactSkillPayload;
+import com.sephiria.network.CloudSyncPayload;
+import com.sephiria.network.DebuffSyncPayload;
 import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.client.tabs.SephiriaTabs;
 import com.sephiria.network.DashPayload;
@@ -20,6 +22,7 @@ import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.network.ReloadPayload;
 import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
+import com.sephiria.network.SunSwordSyncPayload;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaShieldItem;
@@ -30,6 +33,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
@@ -148,6 +152,21 @@ public class SephiriaClient implements ClientModInitializer {
 				(payload, context) -> InvulnClientData.accept(payload));
 		ClientPlayNetworking.registerGlobalReceiver(StatsSyncPayload.TYPE,
 				(payload, context) -> ClientStats.accept(payload));
+		// 乌云容量：HUD 的乌云 UI 读它（上限 > 0 才显示）
+		ClientPlayNetworking.registerGlobalReceiver(CloudSyncPayload.TYPE,
+				(payload, context) -> CloudClientData.accept(payload));
+		// 减益层数：敌人脚下的层数标签读它（0 = 标签消失）
+		ClientPlayNetworking.registerGlobalReceiver(DebuffSyncPayload.TYPE,
+				(payload, context) -> ClientDebuffs.accept(payload));
+		// 太阳剑数量：HUD 的太阳剑 UI 读它（上限 > 0 才显示）
+		ClientPlayNetworking.registerGlobalReceiver(SunSwordSyncPayload.TYPE,
+				(payload, context) -> SunSwordClientData.accept(payload));
+		// 换世界 / 重连时清掉镜像：云、减益与太阳剑状态都不跨世界，免得新世界里 UI 还挂着上个世界的残值
+		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+			CloudClientData.reset();
+			ClientDebuffs.reset();
+			SunSwordClientData.reset();
+		});
 		// 神器技能页的可用技能与 6 个栏位
 		ClientPlayNetworking.registerGlobalReceiver(ArtifactSkillsPayload.TYPE, (payload, context) -> {
 			ClientSkills.accept(payload);
@@ -198,6 +217,8 @@ public class SephiriaClient implements ClientModInitializer {
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			InvulnClientData.tick();
+			// 实体死亡/卸载后服务端不会再发清除包，靠这里按「实体还在不在」清掉它的减益标签
+			ClientDebuffs.prune(client.level);
 
 			// consumeClick 会把这期间累积的按键次数一次取出，避免连点丢事件
 			while (DASH_KEY.consumeClick()) {

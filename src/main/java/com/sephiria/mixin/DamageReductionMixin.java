@@ -29,16 +29,24 @@ public class DamageReductionMixin {
 	@ModifyVariable(method = "hurtServer", at = @At("HEAD"), argsOnly = true)
 	private float sephiria$adjustDamage(float amount, ServerLevel level, DamageSource source) {
 		LivingEntity self = (LivingEntity) (Object) this;
+		SephiriaDamage.Kind kind = SephiriaDamage.kindOf(source);
 
-		// 真实伤害自带「不吃减伤」的语义，也不再参与暴击与新的真伤
-		if (SephiriaDamage.kindOf(source) == SephiriaDamage.Kind.TRUE) {
+		// 真实伤害自带「数值已定死」的语义，也不再参与暴击与新的真伤
+		if (kind == SephiriaDamage.Kind.TRUE) {
 			return amount;
+		}
+
+		// 电属性伤害同样不吃减伤与黄金之手，但「电属性攻击的暴击几率」（麒麟的角）能给它暴击；
+		// 灼伤（FIRE）是减益伤害，连暴击都不参与，applyCrit 会原样返回
+		if (kind == SephiriaDamage.Kind.ELECTRIC || kind == SephiriaDamage.Kind.FIRE) {
+			return SephiriaDamage.applyCrit(self, source, amount);
 		}
 
 		float result = SephiriaDamage.applyCrit(self, source, amount);
 		float multiplier = SephiriaDamage.damageMultiplier(self);
 
-		return multiplier >= 1.0F ? result : result * multiplier;
+		// 黄金之手是攻击方的增益，接在减伤之后统一放大
+		return SephiriaDamage.applyGoldenHands(source, multiplier >= 1.0F ? result : result * multiplier);
 	}
 
 	@Inject(method = "hurtServer", at = @At("TAIL"))

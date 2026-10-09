@@ -3,7 +3,7 @@ package com.sephiria.util;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
-/** 颜色工具：目前只有「彩色」品质要用的逐字彩虹。 */
+/** 颜色工具：彩虹上色。 */
 public final class Colours {
 	/** 逐字循环的颜色（红→橙→黄→绿→青→蓝→紫）。 */
 	private static final int[] RAINBOW = {

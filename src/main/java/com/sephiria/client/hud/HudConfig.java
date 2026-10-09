@@ -31,11 +31,17 @@ public final class HudConfig {
 	/** MP 条（左下角，默认在冲刺上方）。 */
 	public static final String MP = "mp";
 
+	/** 乌云容量条（左下角，默认在 MP 上方；只在乌云激活时显示）。 */
+	public static final String CLOUD = "cloud";
+
+	/** 太阳剑数量条（左下角，默认在乌云上方；只在太阳剑激活时显示）。 */
+	public static final String SUN_SWORD = "sun_sword";
+
 	/** 无敌条（准星下方居中）。 */
 	public static final String INVULN = "invuln";
 
 	/** 全部可调的 HUD 模块，顺序即设置界面里的顺序；新增模块在这里登记。 */
-	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, INVULN);
+	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, CLOUD, SUN_SWORD, INVULN);
 
 	/** 一个界面元素的位置与缩放。 */
 	public static final class Element {
@@ -54,11 +60,13 @@ public final class HudConfig {
 				this.x = guiWidth / 2.0D - 30.0D;
 				this.y = guiHeight / 2.0D + 18.0D;
 			}
-			else {
-				this.x = "bottom_right".equals(corner) ? guiWidth - 150.0D : 8.0D;
-				// 左下角有两个模块（冲刺、MP），MP 默认叠在冲刺上面一行
-				this.y = guiHeight - ("bottom_left_high".equals(corner) ? 64.0D : 40.0D);
-			}
+		else {
+			this.x = "bottom_right".equals(corner) ? guiWidth - 150.0D : 8.0D;
+			// 左下角一列从下往上依次是：冲刺、MP、乌云、太阳剑，各差一行高
+			this.y = guiHeight - ("bottom_left_highest".equals(corner) ? 112.0D
+					: "bottom_left_higher".equals(corner) ? 88.0D
+					: "bottom_left_high".equals(corner) ? 64.0D : 40.0D);
+		}
 
 			this.placed = true;
 		}
@@ -69,6 +77,8 @@ public final class HudConfig {
 			WEAPON, "bottom_right",
 			MP, "bottom_left_high",
 			DASH, "bottom_left",
+			CLOUD, "bottom_left_higher",
+			SUN_SWORD, "bottom_left_highest",
 			INVULN, "center");
 	private static final Map<String, Element> ELEMENTS = new LinkedHashMap<>();
 

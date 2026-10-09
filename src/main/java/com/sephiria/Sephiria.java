@@ -9,6 +9,8 @@ import com.sephiria.backpack.ArtifactBackpackMenu;
 import com.sephiria.backpack.BackpackGridMenu;
 import com.sephiria.backpack.EnchantMenu;
 import com.sephiria.network.DashPayload;
+import com.sephiria.network.CloudSyncPayload;
+import com.sephiria.network.DebuffSyncPayload;
 import com.sephiria.network.InvulnerablePayload;
 import com.sephiria.network.OpenBackpackPayload;
 import com.sephiria.network.OpenShopPayload;
@@ -20,9 +22,12 @@ import com.sephiria.network.SellItemPayload;
 import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.StatsSyncPayload;
+import com.sephiria.network.SunSwordSyncPayload;
 import com.sephiria.potion.PotionTimers;
 import com.sephiria.damage.SephiriaDamage;
+import com.sephiria.debuff.Debuffs;
 import com.sephiria.stats.Dodge;
+import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PseudoRandom;
 import com.sephiria.stats.Lifesteal;
 import com.sephiria.stats.StatAttributes;
@@ -36,6 +41,8 @@ import com.sephiria.network.AssignArtifactSkillPayload;
 import com.sephiria.network.CastArtifactSkillPayload;
 import com.sephiria.network.OpenArtifactSkillsPayload;
 import com.sephiria.registry.ModCreativeTabs;
+import com.sephiria.registry.ModParticleTypes;
+import com.sephiria.registry.ModSounds;
 import com.sephiria.stats.TimedAttributes;
 import net.minecraft.server.level.ServerPlayer;
 import com.sephiria.registry.ModItems;
@@ -70,7 +77,11 @@ public class Sephiria implements ModInitializer {
 		ModItems.initialize();
 		ModCreativeTabs.initialize();
 		ModMenus.initialize();
+		ModSounds.initialize();
+		ModParticleTypes.initialize();
 		ArtifactBackpack.register();
+		// 商店货架的内容与限购次数存在玩家附件里：跨会话保留，重登/重启不会换一批货
+		com.sephiria.shop.ShopStock.register();
 		PlayerStats.register();
 		OffHandGuard.register();
 		SephiriaKatanaItem.registerEvents();
@@ -96,6 +107,8 @@ public class Sephiria implements ModInitializer {
 		// 药水：按秒回血的计时器 + HP 偷取（造成伤害后按比例回血）
 		PotionTimers.registerTicker();
 		Lifesteal.register();
+		// 减益效果：触电（魔法科技连击）挂在吸血同一个 AFTER_DAMAGE 上，结算那一击的实扣伤害
+		Debuffs.register();
 		WeaponStats.register();
 		// 神器技能：技能注册、技能栏存档、限时增益（急速 / 旗帜）的推进器
 		ArtifactSkills.initialize();
@@ -103,6 +116,20 @@ public class Sephiria implements ModInitializer {
 		TimedAttributes.register();
 		EncouragementBannerSkill.register();
 		StatAttributes.register();
+		// 魔法科技那批神器的钩子：树枝的附加闪电、萤火虫的受伤禁用、桑德耳环的周期闪电、雷之裁决的光束
+		com.sephiria.artifact.LightningStruckBranchItem.register();
+		com.sephiria.artifact.FireflyItem.register();
+		com.sephiria.artifact.SandeEarringsItem.registerTicker();
+		com.sephiria.artifact.skill.ThunderVerdictSkill.register();
+		// 脱战/战斗状态（乌云容量回复用）与「乌云」连击（头顶乌云 + 周期雷击）；台风的武器附加闪电
+		CombatState.register();
+		com.sephiria.cloud.DarkCloud.registerTicker();
+		com.sephiria.artifact.TyphoonScoreItem.register();
+		// 「太阳剑」连击：武器/魔法书伤害投掷太阳剑（触发 + 数量回复/拾取/UI 同步）
+		com.sephiria.sun.SunSword.register();
+		com.sephiria.sun.SunSword.registerTicker();
+		// 「余烬」连击的红蛇之眼：每 5 秒掉落的陨石（下落推进在它自己的推进器里）
+		com.sephiria.artifact.RedSnakeEyeItem.registerTicker();
 
 		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
@@ -118,6 +145,9 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.clientboundPlay().register(ArtifactSkillsPayload.TYPE, ArtifactSkillsPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(CloudSyncPayload.TYPE, CloudSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(DebuffSyncPayload.TYPE, DebuffSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(SunSwordSyncPayload.TYPE, SunSwordSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
 
@@ -178,7 +208,7 @@ public class Sephiria implements ModInitializer {
 			}
 		});
 
-		// 商店页面点「出售」：卖出售栏里的东西，按原价 3 折换树叶
+		// 商店页面点「出售」：卖出售栏里的东西，按原价 3 折换叶子
 		ServerPlayNetworking.registerGlobalReceiver(SellItemPayload.TYPE, (payload, context) -> {
 			if (context.player().containerMenu instanceof ShopMenu menu) {
 				menu.sell(context.player());
@@ -211,6 +241,14 @@ public class Sephiria implements ModInitializer {
 			PlayerStats.forget(handler.player);
 			PseudoRandom.forget(handler.player);
 			SephiriaDamage.forget(handler.player);
+			Debuffs.forget(handler.player);
+			com.sephiria.artifact.LightningStruckBranchItem.forget(handler.player);
+			com.sephiria.artifact.FireflyItem.forget(handler.player);
+			com.sephiria.artifact.SandeEarringsItem.forget(handler.player);
+		com.sephiria.artifact.RedSnakeEyeItem.forget(handler.player);
+			CombatState.forget(handler.player);
+			com.sephiria.cloud.DarkCloud.forget(handler.player);
+			com.sephiria.sun.SunSword.forget(handler.player);
 			ArtifactSkills.forget(handler.player);
 			Dodge.forget(handler.player);
 			ShopStock.forget(handler.player);

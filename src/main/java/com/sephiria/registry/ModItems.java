@@ -14,6 +14,39 @@ import com.sephiria.artifact.SpecimenBeakItem;
 import com.sephiria.artifact.EvergreenCloakItem;
 import com.sephiria.artifact.ResistanceBandItem;
 import com.sephiria.artifact.WarmStoneItem;
+import com.sephiria.artifact.CrittonsSealItem;
+import com.sephiria.artifact.LuckyMedalItem;
+import com.sephiria.artifact.GoldenMapleLeafItem;
+import com.sephiria.artifact.SwordEarringItem;
+import com.sephiria.artifact.KeenEyeItem;
+import com.sephiria.artifact.MagicCarrotItem;
+import com.sephiria.artifact.SharpFlintItem;
+import com.sephiria.artifact.ResonanceStoneItem;
+import com.sephiria.artifact.LightningStruckBranchItem;
+import com.sephiria.artifact.ElectricBugItem;
+import com.sephiria.artifact.QilinHornItem;
+import com.sephiria.artifact.ElectricAmuletItem;
+import com.sephiria.artifact.SandeEarringsItem;
+import com.sephiria.artifact.ThunderVerdictItem;
+import com.sephiria.artifact.StormCompassItem;
+import com.sephiria.artifact.FireflyItem;
+import com.sephiria.artifact.TyphoonScoreItem;
+import com.sephiria.artifact.StoneFlowerItem;
+import com.sephiria.artifact.SapoteFruitItem;
+import com.sephiria.artifact.LightningRodItem;
+import com.sephiria.artifact.PointyAcornItem;
+import com.sephiria.artifact.ThunderStoneItem;
+import com.sephiria.artifact.CloudseedArrowItem;
+import com.sephiria.artifact.MastModelItem;
+import com.sephiria.artifact.RavenTabletItem;
+import com.sephiria.artifact.SolisFractoItem;
+import com.sephiria.artifact.SolisParvoItem;
+import com.sephiria.artifact.RedSnakeEyeItem;
+import com.sephiria.artifact.AmbergrisItem;
+import com.sephiria.artifact.RedYarnBallItem;
+import com.sephiria.artifact.OakCharcoalItem;
+import com.sephiria.artifact.FireBugItem;
+import com.sephiria.artifact.LavaBeadItem;
 import com.sephiria.artifact.CharmOfStrengthItem;
 import com.sephiria.artifact.ChestItem;
 import com.sephiria.artifact.DiceItem;
@@ -304,6 +337,191 @@ public final class ModItems {
 	/** 温暖的石头（精密，稀有）：【唯一】暴击伤害 +10/20/30/40%。 */
 	public static final Item WARM_STONE = register(key("warm_stone"),
 			p -> new WarmStoneItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 克里顿的印章（谈判，普通）：叶子获得量 +10/25/50%，没有【唯一】。 */
+	public static final Item CRITTONS_SEAL = register(key("crittons_seal"),
+			p -> new CrittonsSealItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 幸运的奖章（谈判，高级）：【唯一】每买一瓶药水生成 +100/150/200 叶子、谈判力 +2/6/10。 */
+	public static final Item LUCKY_MEDAL = register(key("lucky_medal"),
+			p -> new LuckyMedalItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 金色枫叶（谈判，普通）：【唯一】经验掉落 +10%，无等级。 */
+	public static final Item GOLDEN_MAPLE_LEAF = register(key("golden_maple_leaf"),
+			p -> new GoldenMapleLeafItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 魔法胡萝卜（元素，高级）：【唯一】最高元素伤害 +2/3/4/6/8、移动速度 +2/4/6/8/10%。 */
+	public static final Item MAGIC_CARROT = register(key("magic_carrot"),
+			p -> new MagicCarrotItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 尖锐的燧石（元素，高级）：【唯一】暴击几率 +2/4/6/8%、最高元素伤害 +1/2/3/4。 */
+	public static final Item SHARP_FLINT = register(key("sharp_flint"),
+			p -> new SharpFlintItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 共鸣石（元素，传说）：【唯一】最高元素伤害 +8/10/12/14。 */
+	public static final Item RESONANCE_STONE = register(key("resonance_stone"),
+			p -> new ResonanceStoneItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 剑耳环（精密，稀有）：【唯一】暴击伤害 +10/16/24/33%、最大蓝量 −16/13/10/7（削上限）。 */
+	public static final Item SWORD_EARRING = register(key("sword_earring"),
+			p -> new SwordEarringItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 锐利之眼（精密，高级）：【唯一】获得技能「锐利之眼」——限时暴击 buff，耗蓝。 */
+	public static final Item KEEN_EYE = register(key("keen_eye"),
+			p -> new KeenEyeItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 被雷击中的树枝（魔法科技，普通）：【唯一】武器 / 魔法书造成伤害时附加 10/20/30 闪电属性伤害（冷却 2 秒）。 */
+	public static final Item LIGHTNING_STRUCK_BRANCH = register(key("lightning_struck_branch"),
+			p -> new LightningStruckBranchItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 电击虫（魔法科技，稀有）：【唯一】触电叠加上限 +0/1/1/2/2/3 层。 */
+	public static final Item ELECTRIC_BUG = register(key("electric_bug"),
+			p -> new ElectricBugItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 麒麟的角（魔法科技，稀有）：【唯一】电属性攻击的暴击几率 +10/20/30%、冰属性伤害 −2/4/6。 */
+	public static final Item QILIN_HORN = register(key("qilin_horn"),
+			p -> new QilinHornItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 电击护符（魔法科技，普通）：闪电属性伤害 +3/4/6/8，没有【唯一】。 */
+	public static final Item ELECTRIC_AMULET = register(key("electric_amulet"),
+			p -> new ElectricAmuletItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 桑德耳环（魔法科技，高级）：【唯一】每 4 秒闪电攻击附近 1..4 名敌人并施加触电、电元素强度 +1..6。 */
+	public static final Item SANDE_EARRINGS = register(key("sande_earrings"),
+			p -> new SandeEarringsItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 雷之裁决（魔法科技，传说，魔法书）：【唯一】获得技能「雷之裁决」——8×8×30 电击光束，10 击。 */
+	public static final Item THUNDER_VERDICT = register(key("thunder_verdict"),
+			p -> new ThunderVerdictItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 雷云追踪指南针（魔法科技，传说）：【唯一】电元素强度 +2/4/6/8、触电施加时概率强化触电。 */
+	public static final Item STORM_COMPASS = register(key("storm_compass"),
+			p -> new StormCompassItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 萤火虫（魔法科技，高级）：【唯一】电元素强度 +4/8/12，受到攻击时 6 秒内禁用。 */
+	public static final Item FIREFLY = register(key("firefly"),
+			p -> new FireflyItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 乐谱《台风》（羁绊，双连击：乌云 + 风之歌）：【唯一】乌云消耗速度 +攻击速度的 25/50/100%、武器攻击附加 5/10/15 闪电属性伤害、攻速 +4/8/12%。 */
+	public static final Item TYPHOON_SCORE = register(key("typhoon_score"),
+			p -> new TyphoonScoreItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 石花（乌云，普通）：闪电属性伤害 +3/5、暴击伤害 +3/6%，没有【唯一】。 */
+	public static final Item STONE_FLOWER = register(key("stone_flower"),
+			p -> new StoneFlowerItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 沙波特果实（乌云，高级）：乌云容量 +4/8/12/16、蓝量再生 +1/2/3/4，没有【唯一】。 */
+	public static final Item SAPOTE_FRUIT = register(key("sapote_fruit"),
+			p -> new SapoteFruitItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 避雷针（乌云，传说）：【唯一】乌云容量 +5/10/15/20/25、战斗中乌云恢复速度 +3/6/9/12/15%、闪电属性伤害 +1/2/3/4/5。 */
+	public static final Item LIGHTNING_ROD = register(key("lightning_rod"),
+			p -> new LightningRodItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 尖尖的橡果（乌云，高级）：【唯一】战斗中乌云恢复速度 +3/6/9/12%、闪避 +3/3/6/6。 */
+	public static final Item POINTY_ACORN = register(key("pointy_acorn"),
+			p -> new PointyAcornItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 雷石（乌云，稀有）：乌云的额外伤害 +25/30/35/40/45/50/60%，没有【唯一】。 */
+	public static final Item THUNDER_STONE = register(key("thunder_stone"),
+			p -> new ThunderStoneItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 云种箭头（乌云，高级）：乌云的闪电以 5/10/15/23/35/50% 的概率被强化（伤害翻倍），没有【唯一】。 */
+	public static final Item CLOUDSEED_ARROW = register(key("cloudseed_arrow"),
+			p -> new CloudseedArrowItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 桅杆模型（乌云，普通）：【唯一】乌云的消耗速度 +20/40/60%（固定点数，不是按攻速的比例）。 */
+	public static final Item MAST_MODEL = register(key("mast_model"),
+			p -> new MastModelItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 雷文泥板（乌云，传说）：【唯一】乌云以 20/30/40/55/70% 的概率不被消耗。 */
+	public static final Item RAVEN_TABLET = register(key("raven_tablet"),
+			p -> new RavenTabletItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 索利斯·弗拉克托（太阳剑，普通）：火焰属性伤害 +2/3/5、最大生命值 +2/3/4，没有【唯一】。 */
+	public static final Item SOLIS_FRACTO = register(key("solis_fracto"),
+			p -> new SolisFractoItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 索利斯·帕尔沃（太阳剑，高级）：【唯一】太阳剑数量上限 +1/1/2/2/3、移动速度 +1/2/4/6/8%。 */
+	public static final Item SOLIS_PARVO = register(key("solis_parvo"),
+			p -> new SolisParvoItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 红蛇之眼（余烬，高级）：【唯一】每 5 秒在附近掉落 1/1/2/2/3/4 颗陨石，火属性伤害 60..80% 并附加灼伤。 */
+	public static final Item RED_SNAKE_EYE = register(key("red_snake_eye"),
+			p -> new RedSnakeEyeItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 龙涎香（余烬，高级）：火焰属性伤害 +2/4/6/8/10，没有【唯一】。 */
+	public static final Item AMBERGRIS = register(key("ambergris"),
+			p -> new AmbergrisItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 红色线球（余烬，稀有）：【唯一】灼伤异常状态额外伤害 +20/40/60/80/100%。 */
+	public static final Item RED_YARN_BALL = register(key("red_yarn_ball"),
+			p -> new RedYarnBallItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 橡木炭（余烬，高级）：灼伤的攻击速度 +10/20/30/40/50%，没有【唯一】。 */
+	public static final Item OAK_CHARCOAL = register(key("oak_charcoal"),
+			p -> new OakCharcoalItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 火焰虫（余烬，稀有）：【唯一】灼伤层 +0/1/1/2/3/4。 */
+	public static final Item FIRE_BUG = register(key("fire_bug"),
+			p -> new FireBugItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 熔岩珠（余烬，传说）：【唯一】赋予灼伤时额外给予 0/1/1/2 次、灼伤层 +1/1/1/2。 */
+	public static final Item LAVA_BEAD = register(key("lava_bead"),
+			p -> new LavaBeadItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/**
+	 * 太阳剑的贴图载体（隐藏物品）：不是给玩家用的东西，只给「掉在地上的太阳剑」当外观。
+	 *
+	 * <p>掉落的太阳剑是关掉原版拾取与自然消失的物品实体（见 {@code sun.SunSword}），
+	 * 物品栏里拿不到它；这一件只是为了那个实体有贴图可画，别加进创造模式页签。
+	 */
+	public static final Item SUN_SWORD = register(key("sun_sword"),
+			p -> new Item(p),
+			new Item.Properties().stacksTo(1));
+
+	/**
+	 * 乌云的贴图载体（隐藏物品）：不是给玩家用的东西，只是让「乌云」连击头顶那朵云有个模型可画。
+	 *
+	 * <p>乌云视觉是一朵无重力、捡不起来的物品实体（与鼓励旗帜同一套手法），物品模型就是这张
+	 * 带翻腾动画的贴图（16×64 四帧 + .mcmeta）。
+	 */
+	public static final Item DARK_CLOUD = register(key("dark_cloud"),
+			p -> new Item(p),
 			new Item.Properties().stacksTo(1));
 
 	/** 骰子（赛菲利亚道具）：商店刷新用，可堆叠；自然箱子里 10% 概率开出。 */

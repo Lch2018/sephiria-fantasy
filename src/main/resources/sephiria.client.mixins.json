@@ -5,7 +5,10 @@
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"OffHandHideMixin",
-		"InvulnerableGlowMixin"
+		"InvulnerableGlowMixin",
+		"ParticleResourcesMixin",
+		"EntityRendererMixin",
+		"EntityRenderStateMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

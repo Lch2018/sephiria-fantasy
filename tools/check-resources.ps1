@@ -10,7 +10,14 @@ $assets = Join-Path $root 'src\main\resources\assets\sephiria'
 $modelsDir = Join-Path $assets 'models\item'
 $texDir = Join-Path $assets 'textures\item'
 
-$items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'crossbow_bolt', 'blade', 'quarterstaff', 'charm_of_strength', 'artifact_tab_icon', 'warriors_proof', 'slate_of_future', 'enchant_coin', 'slate_tab_icon', 'dice', 'artifact_chest', 'slate_chest', 'upgrade_chest', 'shield_textbook', 'sword_textbook', 'wind_score', 'pressure_bandage', 'golden_cloak', 'wanderer_necklace', 'projection_sword', 'colorless_cube', 'silver_plate', 'encouragement_banner', 'haste_grimoire', 'red_dew', 'longing_amulet', 'fault_probe', 'deft_amulet', 'pinwheel', 'specimen_beak', 'evergreen_cloak', 'resistance_band', 'warm_stone', 'slate_of_oath', 'slate_of_belief', 'slate_of_entrance', 'slate_of_competition', 'slate_of_rally', 'slate_of_wave', 'slate_of_double_star', 'slate_of_handshake', 'regeneration_potion', 'apple_juice', 'trappist_sacred', 'big_dice_potion', 'vampire_lord_oath')
+$items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'crossbow_bolt', 'blade', 'quarterstaff', 'charm_of_strength', 'artifact_tab_icon', 'warriors_proof', 'slate_of_future', 'enchant_coin', 'slate_tab_icon', 'dice', 'artifact_chest', 'slate_chest', 'upgrade_chest', 'shield_textbook', 'sword_textbook', 'wind_score', 'pressure_bandage', 'golden_cloak', 'wanderer_necklace', 'projection_sword', 'colorless_cube', 'silver_plate', 'encouragement_banner', 'haste_grimoire', 'red_dew', 'longing_amulet', 'fault_probe', 'deft_amulet', 'pinwheel', 'specimen_beak', 'evergreen_cloak', 'resistance_band', 'warm_stone', 'slate_of_oath', 'slate_of_belief', 'slate_of_entrance', 'slate_of_competition', 'slate_of_rally', 'slate_of_wave', 'slate_of_double_star', 'slate_of_handshake', 'regeneration_potion', 'apple_juice', 'trappist_sacred', 'big_dice_potion', 'vampire_lord_oath',
+    # the magic-tech / dark-cloud artifact batches: an icon texture without these two definition
+    # files renders as a missing model in game, so every artifact added since batch 10 is listed
+    'magic_carrot', 'sharp_flint', 'resonance_stone', 'lightning_struck_branch', 'electric_bug',
+    'qilin_horn', 'electric_amulet', 'sande_earrings', 'thunder_verdict', 'storm_compass',
+    'firefly', 'typhoon_score', 'stone_flower', 'sapote_fruit', 'lightning_rod',
+    'pointy_acorn', 'thunder_stone', 'cloudseed_arrow', 'mast_model', 'raven_tablet',
+    'solis_fracto', 'solis_parvo', 'sun_sword')
 $branches = @('sword_and_shield', 'greatsword', 'dagger', 'crossbow', 'katana', 'staff')
 
 $errors = 0

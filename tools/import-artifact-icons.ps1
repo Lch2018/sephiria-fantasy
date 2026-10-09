@@ -25,6 +25,18 @@
 # inside it, is gone).
 #
 # NOTE: keep this file ASCII - Windows PowerShell 5.1 reads .ps1 as GBK otherwise.
+#
+#   -Only <name>[,<name>...]   run just those jobs (by name) instead of re-cutting every texture.
+#                              A reference that has expired still skips with a warning; pass this
+#                              when adding one icon so the committed textures are left untouched.
+
+param([string[]]$Only)
+
+# NOTE: powershell -File hands "-Only a,b,c" over as ONE string, the comma list is not split into
+# an array - split it here so both "-Only a,b,c" and "-Only a b c" work.
+if ($Only) {
+    $Only = @($Only | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
+}
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -35,11 +47,16 @@ $guiDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\gui'
 $previewDir = Join-Path $root '.preview'
 $cache = 'C:\Users\28237\.zcode\cli\image-cache\sess_30e8ce6e-bd9a-4f06-a1a0-7ff99b2cb644'
 $cache2 = 'C:\Users\28237\.zcode\cli\image-cache\sess_ef7ea5c6-ffe1-4f26-8dae-12227ec34263'
+# zcode sessions are also recycled eventually: cache3 holds the latest batch (sword_earring,
+# keen_eye). Its jobs skip once the folder or the files are gone, like the wechat ones.
+$cache3 = 'C:\Users\28237\.zcode\cli\image-cache\sess_223909ec-2207-4576-8f58-bc253e01b51d'
 $wechat = 'C:\Users\28237\Documents\xwechat_files\wxid_v1oblkxkkuq222_3365\temp\RWTemp\2026-09\9e20f478899dc29eb19741386f9343c8'
 # the chat client recycles the RWTemp slot, so the new batch (the four slates below) arrived in the
 # same string that $wechat already names - but with the old textbook / potion files deleted. It
 # keeps its own root so the two batches can expire independently.
 $wechat2 = 'C:\Users\28237\Documents\xwechat_files\wxid_v1oblkxkkuq222_3365\temp\RWTemp\2026-09\9e20f478899dc29eb19741386f9343c8'
+# the ember batch (combo icon) landed in a newer zcode session cache; same lifecycle as cache3.
+$cache4 = 'C:\Users\28237\.zcode\cli\image-cache\sess_da3fb70d-3f37-4d0d-9565-6509fd39e4d0'
 
 foreach ($dir in @($texDir, $guiDir, $previewDir)) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -63,8 +80,41 @@ function Save-Preview([System.Drawing.Bitmap]$bmp, [string]$name) {
     $big.Dispose()
 }
 
-function Get-Pixels([System.Drawing.Bitmap]$img) {
-    # one GetPixel per pixel: the flood fill walks every pixel several times, and going through
+# An item texture alone does not make the item render: it also needs the item model definition
+# (assets/sephiria/items/<id>.json, the 1.21.4+ system) and the model itself
+# (assets/sephiria/models/item/<id>.json). Batch 15 shipped without them and the icons showed up
+# as missing models in game, so every item-dir job now writes both - only when absent, so
+# hand-made special models (weapons, animated sprites) are never overwritten.
+function Write-ItemDefinitions([string]$name) {
+    $defDir = Join-Path $root 'src\main\resources\assets\sephiria\items'
+    $modelDir = Join-Path $root 'src\main\resources\assets\sephiria\models\item'
+    New-Item -ItemType Directory -Force -Path $defDir, $modelDir | Out-Null
+
+    $utf8 = New-Object System.Text.UTF8Encoding($false)
+    $defFile = Join-Path $defDir ($name + '.json')
+
+    if (-not (Test-Path $defFile)) {
+        # NOTE: the concatenation MUST stay in parentheses. In a PowerShell array literal an
+        # unparenthesised 'a' + $name + '"' is parsed as three separate elements, and joining them
+        # with newlines writes the value split across lines - invalid JSON (batch 15's slate.json
+        # came out exactly like that).
+        $lines = @('{', '  "model": {', '    "type": "minecraft:model",',
+                   ('    "model": "sephiria:item/' + $name + '"'), '  }', '}')
+        [IO.File]::WriteAllText($defFile, (($lines -join "`n") + "`n"), $utf8)
+        Write-Output ("wrote items/" + $name + '.json')
+    }
+
+    $modelFile = Join-Path $modelDir ($name + '.json')
+
+    if (-not (Test-Path $modelFile)) {
+        $lines = @('{', '  "parent": "minecraft:item/generated",', '  "textures": {',
+                   ('    "layer0": "sephiria:item/' + $name + '"'), '  }', '}')
+        [IO.File]::WriteAllText($modelFile, (($lines -join "`n") + "`n"), $utf8)
+        Write-Output ("wrote models/item/" + $name + '.json')
+    }
+}
+
+function Get-Pixels([System.Drawing.Bitmap]$img) {    # one GetPixel per pixel: the flood fill walks every pixel several times, and going through
     # System.Drawing each time is what makes a naive version of this script take minutes
     $w = $img.Width
     $h = $img.Height
@@ -202,7 +252,7 @@ function Remove-Specks($mask, [int]$w, [int]$h, [int]$minBlob) {
     }
 }
 
-function Import-Icon([string]$file, [string]$outFile, [string]$label, [int]$target, [int]$tol, [int]$ring, [int]$share, [int]$trim, [int]$minBlob) {
+function Import-Icon([string]$file, [string]$outFile, [string]$label, [int]$target, [int]$tol, [int]$ring, [int]$share, [int]$trim, [int]$minBlob, [int]$frames = 1) {
     $src = [System.Drawing.Bitmap]::FromFile($file)
     $w = $src.Width
     $h = $src.Height
@@ -285,7 +335,38 @@ function Import-Icon([string]$file, [string]$outFile, [string]$label, [int]$targ
         }
     }
 
-    $canvas.Save($outFile, [System.Drawing.Imaging.ImageFormat]::Png)
+    if ($frames -gt 1) {
+        # single-frame art -> a "churning" animation: keep the base frame untouched and stack a
+        # 50%-alpha copy of the same sprite shifted by 2px, cycling the direction per frame. The
+        # silhouette grows a soft 2px bulge that walks around while the outline itself never
+        # breaks (the base frame is always fully opaque), which is what sells "clouds rolling".
+        $stacked = New-Object System.Drawing.Bitmap $target, ($target * $frames), ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+        $g = [System.Drawing.Graphics]::FromImage($stacked)
+        $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::NearestNeighbor
+        $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::Half
+        $offsets = @(@(2, 0), @(0, -2), @(-2, 2), @(0, 2))
+        $ghost = New-Object System.Drawing.Imaging.ImageAttributes
+        $matrix = New-Object System.Drawing.Imaging.ColorMatrix
+        $matrix.Matrix33 = 0.5
+        $ghost.SetColorMatrix($matrix)
+
+        for ($f = 0; $f -lt $frames; $f++) {
+            $g.DrawImage($canvas, 0, ($f * $target))
+            $o = $offsets[$f % $offsets.Count]
+            $dest = New-Object System.Drawing.Rectangle -ArgumentList 0, ($f * $target), $target, $target
+            $g.DrawImage($canvas, $dest, $o[0], $o[1], $target, $target, [System.Drawing.GraphicsUnit]::Pixel, $ghost)
+        }
+
+        $g.Dispose()
+        $ghost.Dispose()
+        $stacked.Save($outFile, [System.Drawing.Imaging.ImageFormat]::Png)
+        $stacked.Dispose()
+        # 4 ticks a frame (0.2s), 4 frames -> a 0.8s loop
+        Set-Content -Path ($outFile + '.mcmeta') -Value '{ "animation": { "frametime": 4 } }' -Encoding Ascii
+    } else {
+        $canvas.Save($outFile, [System.Drawing.Imaging.ImageFormat]::Png)
+    }
+
     $pal = ($palette | ForEach-Object { '#{0:X2}{1:X2}{2:X2}' -f $_[0], $_[1], $_[2] }) -join ' '
     Write-Host ("{0,-22} src {1,3}x{2,-3} plate {3,5}px [{4}]  sprite {5,3}x{6,-3} -> {7,2}x{8,-2} at {9},{10}  tol={11}" -f `
         $label, $w, $h, $plate, $pal, $sw, $sh, $dw, $dh, $offX, $offY, $tol)
@@ -295,7 +376,7 @@ function Import-Icon([string]$file, [string]$outFile, [string]$label, [int]$targ
 
 # where each reference comes from, how it is processed, where it goes
 #   name   output file name (no extension)
-#   root   'cache' / 'cache2' / 'wechat' / 'wechat2' (which reference folder the source lives in)
+#   root   'cache' / 'cache2' / 'cache3' / 'wechat' / 'wechat2' (which reference folder the source lives in)
 #   source reference file name inside that root
 #   target canvas size (16 for items, 16 for combo icons)
 #   dir    'item' or 'gui'
@@ -445,17 +526,147 @@ $jobs = @(
     @{ name = 'slate_of_double_star'; root = 'wechat2'; source = 'e701a22f22f43c5229046f544405017c.png';
        target = 16; dir = 'item'; tol = 10; minBlob = 24 },
     @{ name = 'slate_of_handshake'; root = 'wechat2'; source = '7197415cfcf6fb6c0a32ee0cc4b36211.png';
-       target = 16; dir = 'item'; tol = 10; minBlob = 24 }
+       target = 16; dir = 'item'; tol = 10; minBlob = 24 },
+
+    # batch 8: the three negotiation artifacts + the real negotiation combo icon. Same wechat RWTemp
+    # slot as before, now holding this batch (the earlier files are gone, their jobs skip). Artwork
+    # sits straight on the dark plate with its own outline, like batch 6 - default tol/params,
+    # previews checked in .preview/.
+    @{ name = 'crittons_seal'; root = 'wechat'; source = 'ef1bb7c18c0c69f2534cfd050af33338.png';
+       target = 16; dir = 'item' },
+    @{ name = 'lucky_medal'; root = 'wechat'; source = 'cb8c9fc32dafc4c2ab4ef86f147315d3.png';
+       target = 16; dir = 'item' },
+    @{ name = 'golden_maple_leaf'; root = 'wechat'; source = '443688cd86c89f361b4dfeaa0c42997f.png';
+       target = 16; dir = 'item' },
+    @{ name = 'combo_negotiation'; root = 'wechat'; source = 'a4653a64f74d7809bba15cbda580ec42.png';
+       target = 16; dir = 'gui' },
+
+    # batch 9: two precision artifacts (sword_earring, keen_eye) from the newest zcode session
+    # cache. Artwork sits straight on the dark plate with its own outline, like batch 8 - default
+    # tol/params, previews checked in .preview/.
+    @{ name = 'sword_earring'; root = 'cache3'; source = 'image-bb54fc94e6afd0772c93934c69bf0c18.png';
+       target = 16; dir = 'item' },
+    @{ name = 'keen_eye'; root = 'cache3'; source = 'image-ea7fb834d63687053a0fd44ee7bca8df.png';
+       target = 16; dir = 'item' },
+
+    # batch 10: the element combo icon + its three artifacts (magic_carrot, sharp_flint,
+    # resonance_stone), same cache3 session. Artwork sits straight on the dark plate with its own
+    # outline, like batch 9 - default tol/params, previews checked in .preview/.
+    @{ name = 'combo_element'; root = 'cache3'; source = 'image-ccadf59e7bd0132ad1533882a1ef6f54.png';
+       target = 16; dir = 'gui' },
+    @{ name = 'magic_carrot'; root = 'cache3'; source = 'image-61bf87780310e0d291652b9d6131ac95.png';
+       target = 16; dir = 'item' },
+    @{ name = 'sharp_flint'; root = 'cache3'; source = 'image-b1b3c504bf4fe2ec35efc20a960984cf.png';
+       target = 16; dir = 'item' },
+    @{ name = 'resonance_stone'; root = 'cache3'; source = 'image-f5e59fd4bc9658a41f0abf551e51ca61.png';
+       target = 16; dir = 'item' },
+
+    # batch 11: the magic_tech combo icon, same cache3 session. Artwork sits straight on the dark
+    # plate with its own outline, like batch 10 - default tol/params, previews checked in .preview/.
+    @{ name = 'combo_magic_tech'; root = 'cache3'; source = 'image-dfed20b690e2f920ef613de9fa9a0eb3.png';
+       target = 16; dir = 'gui' },
+
+    # batch 12: the eight magic_tech artifacts (branch, bug, horn, amulet, earrings, grimoire,
+    # compass, firefly), same cache3 session. Artwork sits straight on the dark plate with its own
+    # outline, like batches 9-11 - default tol/params, previews checked in .preview/.
+    @{ name = 'lightning_struck_branch'; root = 'cache3'; source = 'image-703e9bd81db1cec3b6b4a3f4a777795c.png';
+       target = 16; dir = 'item' },
+    @{ name = 'electric_bug'; root = 'cache3'; source = 'image-5ecd4db7543309b85d6d97343a4b1bb1.png';
+       target = 16; dir = 'item' },
+    @{ name = 'qilin_horn'; root = 'cache3'; source = 'image-1877797ca80e3f3b267498653ed4850c.png';
+       target = 16; dir = 'item' },
+    @{ name = 'electric_amulet'; root = 'cache3'; source = 'image-9a868ab007001ad4dd55a8c18756b65d.png';
+       target = 16; dir = 'item' },
+    @{ name = 'sande_earrings'; root = 'cache3'; source = 'image-7d0ec09fd0f187371a4328be94695cf1.png';
+       target = 16; dir = 'item' },
+    @{ name = 'thunder_verdict'; root = 'cache3'; source = 'image-aa6b6f67e7520ddbcf478b6f6f91244c.png';
+       target = 16; dir = 'item' },
+    @{ name = 'storm_compass'; root = 'cache3'; source = 'image-5f1aa3bb932ee0abc25657e520540a6a.png';
+       target = 16; dir = 'item' },
+    @{ name = 'firefly'; root = 'cache3'; source = 'image-bb46f8e4d4017ed927c1f677d6606e5a.png';
+       target = 16; dir = 'item' },
+
+    # batch 13: the dark_cloud combo icon + the typhoon score + the cloud sprite the combo floats
+    # above the player's head. The cloud sprite is written as a 4-frame churn animation (16x64 +
+    # .mcmeta) built from the single reference frame - see the $frames branch in Import-Icon.
+    @{ name = 'combo_dark_cloud'; root = 'wechat'; source = 'a6f2cd9598f1bc68fc7bfde4553c95fc.png';
+       target = 16; dir = 'gui' },
+    @{ name = 'typhoon_score'; root = 'wechat'; source = '6431f5bd40aa555cc1f118512096fd99.png';
+       target = 16; dir = 'item' },
+    @{ name = 'dark_cloud'; root = 'wechat'; source = 'a6f2cd9598f1bc68fc7bfde4553c95fc.png';
+       target = 16; dir = 'item'; frames = 4 },
+
+    # batch 14: the first three plain dark-cloud artifacts (stone flower, sapote fruit, lightning
+    # rod), same cache3 session. Artwork sits straight on the dark plate with its own outline,
+    # like batches 9-12 - default tol/params, previews checked in .preview/.
+    @{ name = 'stone_flower'; root = 'cache3'; source = 'image-47a9431dee034a1a5c9ead35bf91e364.png';
+       target = 16; dir = 'item' },
+    @{ name = 'sapote_fruit'; root = 'cache3'; source = 'image-4680feb40a19db2230de92e7ede6800a.png';
+       target = 16; dir = 'item' },
+    @{ name = 'lightning_rod'; root = 'cache3'; source = 'image-410e88d2dc36ae5a7c01e7cf9db3a5a5.png';
+       target = 16; dir = 'item' },
+
+    # batch 15: five more dark-cloud artifacts (pointy acorn, thunder stone, cloudseed arrow, mast
+    # model, raven tablet), same cache3 session. Artwork sits straight on the dark plate with its
+    # own outline, like batches 9-14 - default tol/params, previews checked in .preview/.
+    @{ name = 'pointy_acorn'; root = 'cache3'; source = 'image-f2ea1211a6e86d2ca82923485e62f3dc.png';
+       target = 16; dir = 'item' },
+    @{ name = 'thunder_stone'; root = 'cache3'; source = 'image-7503b3b057dce1599f188d5bfecb6f11.png';
+       target = 16; dir = 'item' },
+    @{ name = 'cloudseed_arrow'; root = 'cache3'; source = 'image-876433656e40954eee47fda119d0e759.png';
+       target = 16; dir = 'item' },
+    @{ name = 'mast_model'; root = 'cache3'; source = 'image-6b1ffa5b185fb42e9fbb23913ccdca45.png';
+       target = 16; dir = 'item' },
+    @{ name = 'raven_tablet'; root = 'cache3'; source = 'image-71f344e59e0108fd36bd4eae495d9263.png';
+       target = 16; dir = 'item' },
+
+    # batch 16: the sun_sword combo icon (also reused as the sun_sword item sprite - the hidden
+    # carrier the dropped swords use) plus the two sun_sword artifacts. Same cache3 session,
+    # artwork straight on the dark plate with its own outline - default tol/params.
+    @{ name = 'combo_sun_sword'; root = 'cache3'; source = 'image-fc141ed9cf66debced03b5e4fd0b5ee8.png';
+       target = 16; dir = 'gui' },
+    @{ name = 'sun_sword'; root = 'cache3'; source = 'image-fc141ed9cf66debced03b5e4fd0b5ee8.png';
+       target = 16; dir = 'item' },
+    @{ name = 'solis_fracto'; root = 'cache3'; source = 'image-75b5b7e23f8ca4a90efc17dac084933b.png';
+       target = 16; dir = 'item' },
+    @{ name = 'solis_parvo'; root = 'cache3'; source = 'image-747ffd11b5448cc114753e859e7c7b79.png';
+       target = 16; dir = 'item' },
+
+    # batch 17: the ember combo icon, from the newest zcode session cache (the reference is the
+    # 60x60 flame on the #16151F plate, same as batches 13/16) - default tol/params.
+    @{ name = 'combo_ember'; root = 'cache4'; source = 'image-6960c5d86ba46c654f47fad1622baef1.png';
+       target = 16; dir = 'gui' },
+
+    # batch 18: the six ember artifacts (red snake eye, ambergris, red yarn ball, oak charcoal,
+    # fire bug, lava bead), same cache4 session. Artwork sits straight on the dark plate with its
+    # own outline, like batches 9-16 - default tol/params, previews checked in .preview/.
+    @{ name = 'red_snake_eye'; root = 'cache4'; source = 'image-22de5de63e0a59a1210ebf516e32a55c.png';
+       target = 16; dir = 'item' },
+    @{ name = 'ambergris'; root = 'cache4'; source = 'image-8538589edb40c96426304dfc26f76b77.png';
+       target = 16; dir = 'item' },
+    @{ name = 'red_yarn_ball'; root = 'cache4'; source = 'image-d6037930a374d644ea5107107fd0bb74.png';
+       target = 16; dir = 'item' },
+    @{ name = 'oak_charcoal'; root = 'cache4'; source = 'image-2644ae0740c36c82d58cf232c42c7adc.png';
+       target = 16; dir = 'item' },
+    @{ name = 'fire_bug'; root = 'cache4'; source = 'image-449098c42453aa58162db15911626e34.png';
+       target = 16; dir = 'item' },
+    @{ name = 'lava_bead'; root = 'cache4'; source = 'image-fdd055ac3e8bcd69e4b95b9fb76e772d.png';
+       target = 16; dir = 'item' }
 )
 
 $skipped = @()
 
 foreach ($job in $jobs) {
     $name = $job.name
+
+    if ($Only -and ($Only -notcontains $name)) {
+        continue
+    }
+
     $outDir = if ($job.dir -eq 'gui') { $guiDir } else { $texDir }
     $outFile = Join-Path $outDir ($name + '.png')
 
-    $sourceRoot = if ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
+    $sourceRoot = if ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
 
     if (-not (Test-Path $sourceRoot)) {
         # the wechat temp folder is recycled by the chat client: once a whole batch's reference
@@ -471,11 +682,11 @@ foreach ($job in $jobs) {
     if (-not (Test-Path $file)) {
         # same story one level down: the client reuses one RWTemp slot, so a folder that is still
         # there can hold a newer batch while an older batch's files are already gone. For the wechat
-        # roots that is an expired download whose texture is committed, not a typo - a missing file
-        # under a cache root still stops the run.
-        if ($job.root -eq 'wechat' -or $job.root -eq 'wechat2') {
+        # roots and the newest cache roots (cache3 / cache4) that is an expired reference whose
+        # texture is committed, not a typo; a missing file under cache / cache2 still stops the run.
+        if (@('wechat', 'wechat2', 'cache3', 'cache4') -contains $job.root) {
             $skipped += $name
-            Write-Warning "$name : reference file no longer in the wechat temp folder, skipped"
+            Write-Warning "$name : reference file no longer in its temp folder, skipped"
             continue
         }
 
@@ -487,8 +698,13 @@ foreach ($job in $jobs) {
     $share = if ($job.share) { [int]$job.share } else { 96 }
     $trim = if ($job.trim) { [int]$job.trim } else { 0 }
     $minBlob = if ($job.minBlob) { [int]$job.minBlob } else { 4 }
+    $frames = if ($job.frames) { [int]$job.frames } else { 1 }
 
-    Import-Icon $file $outFile $name ([int]$job.target) $tol $ring $share $trim $minBlob
+    Import-Icon $file $outFile $name ([int]$job.target) $tol $ring $share $trim $minBlob $frames
+
+    if ($job.dir -ne 'gui') {
+        Write-ItemDefinitions $name
+    }
 }
 
 if ($skipped.Count -gt 0) {

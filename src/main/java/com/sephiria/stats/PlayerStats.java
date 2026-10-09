@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Prediction;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
@@ -27,7 +28,7 @@ import java.util.UUID;
  * 换算用的百分比。
  *
  * <p>数值<b>跟着存档走</b>：每个玩家一份存在 Fabric 数据附件里（{@code player_stats}），
- * 变化时由 {@link #sync} 写回，所以药水给的永久加成（物理伤害 +2、HP 偷取 +1）、树叶与升级宝箱
+ * 变化时由 {@link #sync} 写回，所以药水给的永久加成（物理伤害 +2、HP 偷取 +1）、叶子与升级宝箱
  * 的进度都不会因为重登或重启而丢。附件只在服务端，客户端那边由 {@link StatsSyncPayload} 推。
  */
 public final class PlayerStats {
@@ -55,6 +56,15 @@ public final class PlayerStats {
 	/** 闪避率曲线的上限（80%）与尺度常数（43.28 点）。 */
 	public static final double DODGE_CAP = 0.8D;
 	public static final double DODGE_SCALE = 43.28D;
+	/** 商店折扣曲线的收敛上限（70%）与尺度常数：谈判力 x → 70·(1 − e^(−x/27.94))，x=35 恰好 50%。 */
+	public static final double SHOP_DISCOUNT_CAP = 70.0D;
+	public static final double SHOP_DISCOUNT_SCALE = 27.94D;
+	/** 谈判力（点）、叶子获得量（%）、经验掉落（%）的默认值。 */
+	public static final double DEFAULT_NEGOTIATION = 0.0D;
+	public static final double DEFAULT_LEAF_GAIN = 100.0D;
+	public static final double DEFAULT_XP_DROP = 100.0D;
+	/** 「村庄英雄」buff 期间给的谈判力：buff 一消失加成就归零，所以不进存档、每次算总值时现查。 */
+	public static final double VILLAGE_HERO_NEGOTIATION = 20.0D;
 	/** 多少点经验换一个升级宝箱。 */
 	public static final double EXPERIENCE_PER_CHEST = 1000.0D;
 
@@ -65,9 +75,10 @@ public final class PlayerStats {
 	 * 所以新属性打包成一个可选的子记录——旧存档没有这一组时整组取默认值。
 	 */
 	private record Combat(double normalAttackDamage, double critChance, double critDamage, double ignoreDefense,
-			double moveSpeed, double dodge) {
+			double moveSpeed, double dodge, double negotiation, double leafGainPercent, double xpDropPercent) {
 		static final Combat DEFAULT = new Combat(DEFAULT_NORMAL_ATTACK_DAMAGE, DEFAULT_CRIT_CHANCE,
-				DEFAULT_CRIT_DAMAGE, 0.0D, DEFAULT_MOVE_SPEED, 0.0D);
+				DEFAULT_CRIT_DAMAGE, 0.0D, DEFAULT_MOVE_SPEED, 0.0D,
+				DEFAULT_NEGOTIATION, DEFAULT_LEAF_GAIN, DEFAULT_XP_DROP);
 
 		static final Codec<Combat> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.DOUBLE.optionalFieldOf("normal_attack_damage", DEFAULT_NORMAL_ATTACK_DAMAGE)
@@ -76,7 +87,10 @@ public final class PlayerStats {
 				Codec.DOUBLE.optionalFieldOf("crit_damage", DEFAULT_CRIT_DAMAGE).forGetter(Combat::critDamage),
 				Codec.DOUBLE.optionalFieldOf("ignore_defense", 0.0D).forGetter(Combat::ignoreDefense),
 				Codec.DOUBLE.optionalFieldOf("move_speed", DEFAULT_MOVE_SPEED).forGetter(Combat::moveSpeed),
-				Codec.DOUBLE.optionalFieldOf("dodge", 0.0D).forGetter(Combat::dodge)
+				Codec.DOUBLE.optionalFieldOf("dodge", 0.0D).forGetter(Combat::dodge),
+				Codec.DOUBLE.optionalFieldOf("negotiation", DEFAULT_NEGOTIATION).forGetter(Combat::negotiation),
+				Codec.DOUBLE.optionalFieldOf("leaf_gain_percent", DEFAULT_LEAF_GAIN).forGetter(Combat::leafGainPercent),
+				Codec.DOUBLE.optionalFieldOf("xp_drop_percent", DEFAULT_XP_DROP).forGetter(Combat::xpDropPercent)
 		).apply(instance, Combat::new));
 	}
 
@@ -114,7 +128,8 @@ public final class PlayerStats {
 					values.ice, values.lightning, values.defense, values.lifesteal, values.leaves,
 					values.experienceTowardsChest, values.attackSpeed, values.meleeRange, values.weaponDamage,
 					values.specialAttack, new Combat(values.normalAttackDamage, values.critChance, values.critDamage,
-							values.ignoreDefense, values.moveSpeed, values.dodge));
+							values.ignoreDefense, values.moveSpeed, values.dodge,
+							values.negotiation, values.leafGainPercent, values.xpDropPercent));
 		}
 
 		/** 读档：把存档里的数值填进一份新的 {@link Values}。 */
@@ -141,13 +156,16 @@ public final class PlayerStats {
 			values.ignoreDefense = this.combat.ignoreDefense;
 			values.moveSpeed = this.combat.moveSpeed;
 			values.dodge = this.combat.dodge;
+			values.negotiation = this.combat.negotiation;
+			values.leafGainPercent = this.combat.leafGainPercent;
+			values.xpDropPercent = this.combat.xpDropPercent;
 			return values;
 		}
 	}
 
 	private static final AttachmentType<Saved> SAVED = AttachmentRegistry.<Saved>builder()
 			.persistent(Saved.CODEC)
-			// 永久加成不该因为死一次就没了（树叶同理：它是商店的货币）
+			// 永久加成不该因为死一次就没了（叶子同理：它是商店的货币）
 			.copyOnDeath()
 			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "player_stats"));
 
@@ -184,16 +202,29 @@ public final class PlayerStats {
 
 			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 				Values values = of(player);
+				double maxMp = maxMpTotal(player);
+				double regen = mpRegenTotal(player);
 
-				if (values.mp >= DEFAULT_MP || values.mpRegen <= 0.0D) {
+				if (values.mp >= maxMp || regen <= 0.0D) {
 					continue;
 				}
 
-				// 蓝量回复：每秒加 mpRegen，回到默认上限为止（还没有「最大蓝量」这条属性）
-				values.mp = Math.min(DEFAULT_MP, values.mp + values.mpRegen);
+				// 蓝量回复：每秒加再生总值（含神器那一份，不写回 Values——免得把神器加成存进存档），
+				// 回到当前上限为止（上限被剑耳环削过的也回到削过的那条线）
+				values.mp = Math.min(maxMp, values.mp + regen);
 				sync(player);
 			}
 		});
+	}
+
+	/** 蓝量再生（点/秒）：面板值 + 神器（沙波特果实那一批）。 */
+	public static double mpRegenTotal(ServerPlayer player) {
+		return of(player).mpRegen + ArtifactEffects.mpRegenBonus(player);
+	}
+
+	/** 神器给的「最大生命值」加成（点）：StatAttributes 把它挂成原版属性修饰符。 */
+	public static double maxHpBonus(ServerPlayer player) {
+		return ArtifactEffects.maxHpBonus(player);
 	}
 
 	/** 面板上那些实际值的指纹（神器一变它就会变）。 */
@@ -202,8 +233,15 @@ public final class PlayerStats {
 				+ "/" + specialAttackTotal(player) + "/" + normalAttackDamageTotal(player) + "/"
 				+ critChanceTotal(player) + "/" + critDamageTotal(player) + "/" + ignoreDefenseTotal(player)
 				+ "/" + moveSpeedPercentTotal(player) + "/" + dodgeTotal(player) + "/" + dodgeRatePercent(player)
-				+ "/" + physicalTotal(player);
-	}
+				+ "/" + physicalTotal(player) + "/" + negotiationTotal(player) + "/" + shopDiscountPercent(player)
+				+ "/" + leafGainPercentTotal(player) + "/" + xpDropPercentTotal(player) + "/" + maxMpTotal(player)
+				// 蓝量再生的神器加成也进指纹：换装时（沙波特果实）面板的再生行要跟着刷新
+				+ "/" + mpRegenTotal(player)
+				// 火/冰/电的面板值也进指纹：元素连击换装时（物理不是最高项的话）总物理不变，
+				// 不对账的话面板的元素数值要等下一次 sync 才刷新
+				+ "/" + elementTotal(player, Element.FIRE) + "/" + elementTotal(player, Element.ICE)
+				+ "/" + elementTotal(player, Element.LIGHTNING);
+		}
 
 	/** 玩家退出时清缓存（附件里已经是最新状态，下次进来重新读）。 */
 	public static void forget(ServerPlayer player) {
@@ -224,7 +262,7 @@ public final class PlayerStats {
 		public double defense = DEFAULT_DEFENSE;
 		/** HP 偷取（俗称吸血）：每点 = 造成伤害的 0.1% 回血，见 {@link #lifestealTotal}。 */
 		public double lifesteal = 0.0D;
-		/** 树叶（货币）：每获得 1 点原版经验 +1。 */
+		/** 叶子（货币）：获得经验时结算，见 {@link #addLeaves}。 */
 		public double leaves = 0.0D;
 		/** 累计获得的经验：每满 1000 发一个升级宝箱（计数器会扣掉已兑换的部分）。 */
 		public double experienceTowardsChest = 0.0D;
@@ -244,6 +282,12 @@ public final class PlayerStats {
 		public double moveSpeed = DEFAULT_MOVE_SPEED;
 		/** 闪避（点）：按 {@link #dodgeRatePercent} 折算成闪避率。 */
 		public double dodge = 0.0D;
+		/** 谈判力（点）：给商店价格打折，见 {@link #shopDiscountPercent}。 */
+		public double negotiation = DEFAULT_NEGOTIATION;
+		/** 叶子获得量（%）：经验折算叶子时乘它，默认 100。 */
+		public double leafGainPercent = DEFAULT_LEAF_GAIN;
+		/** 经验掉落（%）：获得经验时先乘它，默认 100。 */
+		public double xpDropPercent = DEFAULT_XP_DROP;
 	}
 
 	/**
@@ -290,10 +334,16 @@ public final class PlayerStats {
 		return damageMultiplier(player) * (normalAttackDamageTotal(player) / DEFAULT_NORMAL_ATTACK_DAMAGE);
 	}
 
-	/** 暴击几率（%）：面板值 + 神器 + 精密连击。 */
+	/**
+	 * 暴击几率（%）：面板值 + 神器 + 精密连击 + 锐利之眼的限时加成。
+	 *
+	 * <p>锐利之眼的加成不是原版属性，挂在 {@link TimedAttributes} 的自定义加成表里，
+	 * 战斗掷暴击与面板都从这条总值现查——buff 到点消失，这里自动归零。
+	 */
 	public static double critChanceTotal(ServerPlayer player) {
 		return of(player).critChance + ArtifactEffects.critChanceBonus(player)
-				+ ArtifactEffects.comboCritChancePercent(player);
+				+ ArtifactEffects.comboCritChancePercent(player)
+				+ TimedAttributes.statBonusOf(player, com.sephiria.artifact.skill.KeenEyeSkill.CRIT_BONUS_ID);
 	}
 
 	/**
@@ -310,6 +360,15 @@ public final class PlayerStats {
 	public static double critDamageTotal(ServerPlayer player) {
 		return of(player).critDamage + ArtifactEffects.critDamageBonus(player)
 				+ ArtifactEffects.comboCritDamagePercent(player);
+	}
+
+	/**
+	 * 电属性攻击的暴击几率（%）：只有电属性伤害用它（触电结算、附加闪电伤害、闪电攻击）。
+	 *
+	 * <p>目前唯一来源是麒麟的角；没有它时这一项是 0，电属性伤害照旧不暴击。
+	 */
+	public static double electricCritChanceTotal(ServerPlayer player) {
+		return ArtifactEffects.electricCritChanceBonus(player);
 	}
 
 	/** 无视防御伤害（点）：面板值 + 神器，默认 0。 */
@@ -329,6 +388,41 @@ public final class PlayerStats {
 	/** 闪避（点）：面板值 + 神器 + 影子连击。 */
 	public static double dodgeTotal(ServerPlayer player) {
 		return of(player).dodge + ArtifactEffects.dodgeBonus(player) + ArtifactEffects.comboDodgeBonus(player);
+	}
+
+	/**
+	 * 「村庄英雄」buff 期间的谈判力加成：生效就 +{@value #VILLAGE_HERO_NEGOTIATION}，消失就归零。
+	 *
+	 * <p>不存档、不写进 Values：每次算总值时现查一次状态效果。商店折价在买入时也走这条总值，
+	 * 所以不会出现「buff 没了折扣还在」；面板靠每秒的指纹对账，buff 变化后一秒内刷新。
+	 */
+	private static double villageHeroNegotiation(ServerPlayer player) {
+		return player.hasEffect(MobEffects.HERO_OF_THE_VILLAGE) ? VILLAGE_HERO_NEGOTIATION : 0.0D;
+	}
+
+	/** 谈判力（点）：面板值 + 村庄英雄 buff + 神器 + 谈判连击。 */
+	public static double negotiationTotal(ServerPlayer player) {
+		return of(player).negotiation + villageHeroNegotiation(player) + ArtifactEffects.negotiationBonus(player)
+				+ ArtifactEffects.comboNegotiationBonus(player);
+	}
+
+	/**
+	 * 商店折扣（%）：谈判力 x 按 {@code 70·(1 − e^(−x/27.94))} 折算，收益递减、理论上限 70%
+	 * （x=35 恰好 50%）。只作用于商店「买入」——卖出价始终是原价的 30%，不然低买高卖就赚翻了。
+	 */
+	public static double shopDiscountPercent(ServerPlayer player) {
+		return SHOP_DISCOUNT_CAP * (1.0D - Math.exp(-negotiationTotal(player) / SHOP_DISCOUNT_SCALE));
+	}
+
+	/** 叶子获得量（%）：面板值 + 神器 + 谈判连击，默认 100。 */
+	public static double leafGainPercentTotal(ServerPlayer player) {
+		return of(player).leafGainPercent + ArtifactEffects.leafGainPercent(player)
+				+ ArtifactEffects.comboLeafGainPercent(player);
+	}
+
+	/** 经验掉落（%）：面板值 + 神器，默认 100；结算见 LeafExperienceMixin（获得经验时先乘它）。 */
+	public static double xpDropPercentTotal(ServerPlayer player) {
+		return of(player).xpDropPercent + ArtifactEffects.xpDropPercent(player);
 	}
 
 	/**
@@ -380,11 +474,14 @@ public final class PlayerStats {
 		double artifactFlat = ArtifactEffects.physicalBonus(player);
 
 		if (highestElement(player) == Element.PHYSICAL) {
-			artifactFlat += ArtifactEffects.highestElementBonus(player);
+			artifactFlat += ArtifactEffects.highestElementBonus(player)
+					+ ArtifactEffects.comboHighestElementBonus(player);
 		}
 
+		// 连击的「所有元素伤害提升」也按百分比放大物理强度，跟火/冰/电那边同一套算法；
+		// 它目前没有独立的神器词条来源，所以直接并进神器百分比那一段。
 		return new PhysicalBreakdown(of(player).physical, artifactFlat, of(player).potionPhysical,
-				ArtifactEffects.physicalPercentBonus(player), 0.0D);
+				ArtifactEffects.physicalPercentBonus(player) + ArtifactEffects.comboAllElementPercent(player), 0.0D);
 	}
 
 	/**
@@ -423,22 +520,26 @@ public final class PlayerStats {
 	 */
 	public static Element highestElement(ServerPlayer player) {
 		Values values = of(player);
+		// 「所有元素伤害提升」对四项强度是同一个乘数，本来不改变大小关系；
+		// 但物理那边（physicalBreakdownBase）的口径里乘了它，所以火/冰/电这边也乘，
+		// 保证四项比的是面板上实际显示的数值。
+		double multiplier = 1.0D + ArtifactEffects.comboAllElementPercent(player) / 100.0D;
 		Element best = Element.PHYSICAL;
 		double highest = physicalBreakdownBase(player);
 
-		if (values.fire > highest) {
+		if (values.fire * multiplier > highest) {
 			best = Element.FIRE;
-			highest = values.fire;
+			highest = values.fire * multiplier;
 		}
 
-		if (values.ice > highest) {
+		if (values.ice * multiplier > highest) {
 			best = Element.ICE;
-			highest = values.ice;
+			highest = values.ice * multiplier;
 		}
 
-		if (values.lightning > highest) {
+		if (values.lightning * multiplier > highest) {
 			best = Element.LIGHTNING;
-			highest = values.lightning;
+			highest = values.lightning * multiplier;
 		}
 
 		return best;
@@ -447,24 +548,37 @@ public final class PlayerStats {
 	/** 不含「最高元素伤害」的物理强度，只给 {@link #highestElement} 比较用（避免自引用）。 */
 	private static double physicalBreakdownBase(ServerPlayer player) {
 		double flat = of(player).physical + ArtifactEffects.physicalBonus(player);
-		return flat * (1.0D + ArtifactEffects.physicalPercentBonus(player) / 100.0D);
+		// 百分比口径要跟 physicalBreakdown 一致（含连击的「所有元素伤害提升」），
+		// 否则连击 6 档生效时物理这边被放大、火/冰/电那边没放大，比较就不公平了。
+		return flat * (1.0D + (ArtifactEffects.physicalPercentBonus(player)
+				+ ArtifactEffects.comboAllElementPercent(player)) / 100.0D);
 	}
 
 	/** 某项强度的实际值（面板显示用）：最高的那一项带上「最高元素伤害」。 */
 	public static double elementTotal(ServerPlayer player, Element element) {
-		double base = switch (element) {
-			case PHYSICAL -> physicalTotal(player);
-			case FIRE -> of(player).fire;
-			case ICE -> of(player).ice;
-			case LIGHTNING -> of(player).lightning;
-		};
+		// 「所有元素伤害提升」放大的是强度值本身（基础 + 最高元素伤害的固定值一起乘），
+		// 跟物理那条链（physicalBreakdown 的百分比段）算法一致；物理已经在那条链里乘过，直接复用。
+		double multiplier = 1.0D + ArtifactEffects.comboAllElementPercent(player) / 100.0D;
+		double flat = 0.0D;
 
-		// 物理强度那条链在 physicalBreakdown 里已经把加成算进去了，这里不能重复加。
-		if (element == Element.PHYSICAL || highestElement(player) != element) {
-			return base;
+		if (element != Element.PHYSICAL && highestElement(player) == element) {
+			flat = ArtifactEffects.highestElementBonus(player) + ArtifactEffects.comboHighestElementBonus(player);
 		}
 
-		return base + ArtifactEffects.highestElementBonus(player);
+		return switch (element) {
+			case PHYSICAL -> physicalTotal(player);
+			// 火元素强度有两类固定值来源：神器（索利斯那两枚徽章的「火焰属性伤害」）与连击（余烬 4/6 档）
+			case FIRE -> (of(player).fire + flat
+					+ ArtifactEffects.fireElementBonus(player)
+					+ ArtifactEffects.comboFireElement(player)) * multiplier;
+			// 冰元素强度会吃麒麟的角那种负加成：固定值段扣完夹在 0 以上
+			case ICE -> Math.max(0.0D, of(player).ice + flat + ArtifactEffects.iceElementBonus(player))
+					* multiplier;
+			// 电元素强度有两类固定值来源：连击（魔法科技 4/8 档）与神器（护符 / 耳环 / 指南针 / 萤火虫）
+			case LIGHTNING -> (of(player).lightning + flat
+					+ ArtifactEffects.comboLightningElement(player)
+					+ ArtifactEffects.lightningElementBonus(player)) * multiplier;
+		};
 	}
 
 	/**
@@ -512,9 +626,19 @@ public final class PlayerStats {
 				+ ArtifactEffects.comboAttackSpeedPercent(player);
 	}
 
-	/** 当前蓝量（上限就是默认值 50——还没有「最大蓝量」这条属性）。 */
+	/** 当前蓝量。 */
 	public static double mpTotal(ServerPlayer player) {
 		return of(player).mp;
+	}
+
+	/**
+	 * 最大蓝量（点）：默认值 50 + 各神器加成的总和，下限夹在 1。
+	 *
+	 * <p>加成可能是负数（剑耳环削上限）。已经超出上限的蓝不会被强行扣掉——只是回不上去，
+	 * 花掉之后按新上限回。
+	 */
+	public static double maxMpTotal(ServerPlayer player) {
+		return Math.max(1.0D, DEFAULT_MP + ArtifactEffects.maxMpBonus(player));
 	}
 
 	/** 花蓝；不够返回 false（技能释放前先问一次，不够就不放、也不扣）。 */
@@ -530,13 +654,13 @@ public final class PlayerStats {
 		return true;
 	}
 
-	/** 树叶持有量。 */
+	/** 叶子持有量。 */
 	public static double leaves(ServerPlayer player) {
 		return of(player).leaves;
 	}
 
 	/**
-	 * 直接给树叶（商店出售这类非经验来源）。
+	 * 直接给叶子（商店出售这类非经验来源）。
 	 *
 	 * <p>和 {@link #addLeaves} 的区别：这里不推进「每 1000 经验一个升级宝箱」的计数——
 	 * 卖东西不是赚经验。
@@ -550,7 +674,7 @@ public final class PlayerStats {
 		sync(player);
 	}
 
-	/** 花掉树叶；不够则返回 false。 */
+	/** 花掉叶子；不够则返回 false。 */
 	public static boolean spendLeaves(ServerPlayer player, double amount) {
 		Values values = of(player);
 
@@ -564,13 +688,16 @@ public final class PlayerStats {
 	}
 
 	/**
-	 * 获得经验：同时加树叶，并按每 1000 点发一个升级宝箱。
+	 * 获得经验：折算成叶子加进余额，并按每 1000 点发一个升级宝箱。
 	 *
 	 * <p>宝箱由这里直接塞进玩家背包（背包满了就掉在脚下），所以调用方不用管。
+	 *
+	 * <p>{@code experience} 是已按「经验掉落」放大后的实际经验；叶子再按「叶子获得量」放大，
+	 * 而升级宝箱只按实际经验计数——两个放大各自独立（100 经验 ×110% 经验 ×120% 叶子 = 132 叶子）。
 	 */
 	public static void addLeaves(ServerPlayer player, int experience) {
 		Values values = of(player);
-		values.leaves += experience;
+		values.leaves += experience * leafGainPercentTotal(player) / 100.0D;
 		values.experienceTowardsChest += experience;
 
 		while (values.experienceTowardsChest >= EXPERIENCE_PER_CHEST) {
@@ -600,7 +727,7 @@ public final class PlayerStats {
 	public static void sync(ServerPlayer player) {
 		// 所有改动都会走到这里，所以存档只在这一个地方写——属性存在附件里，重登/重启都不丢
 		player.setAttached(SAVED, Saved.of(of(player)));
-		ServerPlayNetworking.send(player, StatsSyncPayload.of(of(player), physicalTotal(player),
+		ServerPlayNetworking.send(player, StatsSyncPayload.of(of(player), mpRegenTotal(player), physicalTotal(player),
 				elementTotal(player, Element.FIRE), elementTotal(player, Element.ICE),
 				elementTotal(player, Element.LIGHTNING),
 				// 面板要显示当前实际值：把限时加成（急速/旗帜）加回去；机械结算那边不加，免得重复
@@ -609,7 +736,9 @@ public final class PlayerStats {
 				specialAttackTotal(player), normalAttackDamageTotal(player), critChanceTotal(player),
 				critDamageTotal(player), ignoreDefenseTotal(player),
 				moveSpeedPercentTotal(player) + TimedAttributes.moveSpeedPercent(player),
-				dodgeTotal(player), dodgeRatePercent(player), meleeRangeTotal(player)));
+				dodgeTotal(player), dodgeRatePercent(player), meleeRangeTotal(player),
+				negotiationTotal(player), shopDiscountPercent(player),
+				leafGainPercentTotal(player), xpDropPercentTotal(player), maxMpTotal(player)));
 	}
 
 	/** 进服时推一次，面板才有初始值（顺带把读出来的那份写回附件）。 */

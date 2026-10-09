@@ -156,7 +156,15 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		lines.add(Component.translatable("screen.sephiria.combo.header").withColor(0xFFAAAAAA));
 		lines.add(Component.empty());
 		lines.add(Component.translatable(combo.translationKey()).withColor(combo.nameColour(level)));
-		lines.add(Component.empty());
+
+		// 带「效果说明」的连击（魔法科技）在档位表之前先给一行说明，再空一行隔开
+		Component intro = combo.introLine();
+
+		if (intro != null) {
+			lines.add(intro);
+			lines.add(Component.empty());
+		}
+
 		lines.addAll(combo.effectLines(level));
 
 		int width = 0;

@@ -1,7 +1,14 @@
 package com.sephiria.shop;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactLoot;
+import com.sephiria.potion.SephiriaPotionItem;
 import com.sephiria.registry.ModItems;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Prediction;
 import net.minecraft.util.RandomSource;
@@ -24,8 +31,9 @@ import java.util.UUID;
  * <p>限购：宝箱每次刷新<b>共</b>能买 {@value #CHEST_LIMIT} 次（两个宝箱格共用这个额度），
  * 其余商品每格 {@value #GOOD_LIMIT} 次；买光的格子直接清空，界面上就是空槽。
  *
- * <p>货架只在内存里（按玩家存），玩家重登会重新刷一批——和技能存储一样，将来要跨会话保留
- * 再换成数据附件。
+ * <p>货架<b>跨会话保留</b>：内容与限购次数存在玩家附件里（{@link #SAVED}，与神器背包同一套做法，
+ * 死亡也带着走），内存里的 {@link #STOCKS} 只是缓存——重登、重启都读回同一批货，
+ * 只有放骰子刷新（{@link #refresh}）才会换新。
  */
 public final class ShopStock extends SimpleContainer {
 	public static final int GOOD_SLOTS = 6;
@@ -40,27 +48,113 @@ public final class ShopStock extends SimpleContainer {
 	public static final int CHEST_LIMIT = 3;
 	public static final int GOOD_LIMIT = 1;
 
+	/** 存档用的数据：十格物品 + 每格已买次数。 */
+	public record Saved(List<ItemStack> slots, List<Integer> bought) {
+		public static final Codec<Saved> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+				ItemStack.OPTIONAL_CODEC.listOf().fieldOf("slots").forGetter(Saved::slots),
+				Codec.INT.listOf().fieldOf("bought").forGetter(Saved::bought)
+		).apply(instance, Saved::new));
+	}
+
+	private static final AttachmentType<Saved> SAVED = AttachmentRegistry.<Saved>builder()
+			.persistent(Saved.CODEC)
+			// 货架是商店的状态、不是身上的东西：死亡（换实体）也要跟着走，不然一死就换一批货
+			.copyOnDeath()
+			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "shop_stock"));
+
 	private static final Map<UUID, ShopStock> STOCKS = new HashMap<>();
 
 	/** 每格已买次数；宝箱那两格共用 {@link #CHEST_LIMIT}。 */
 	private final int[] bought = new int[SLOT_COUNT];
+	private final ServerPlayer owner;
+	/**
+	 * 正在从存档装载。
+	 *
+	 * <p>装载时会走 {@code setItem} → {@link #setChanged()}，那一刻附件还没读完；
+	 * 装载期间先关掉回写（与神器背包同一处坑）。
+	 */
+	private boolean loading;
 
-	public ShopStock() {
+	private ShopStock(ServerPlayer owner, Saved saved) {
 		super(SLOT_COUNT);
+		this.owner = owner;
+		this.loading = true;
+
+		if (saved != null) {
+			List<ItemStack> slots = saved.slots();
+
+			for (int index = 0; index < slots.size() && index < SLOT_COUNT; index++) {
+				ItemStack stack = slots.get(index);
+
+				if (stack != null && !stack.isEmpty()) {
+					super.setItem(index, stack);
+				}
+			}
+
+			List<Integer> bought = saved.bought();
+
+			for (int index = 0; index < bought.size() && index < SLOT_COUNT; index++) {
+				this.bought[index] = Math.max(0, bought.get(index));
+			}
+		}
+
+		this.loading = false;
 	}
 
-	/** 某个玩家的货架；第一次打开时刷一批。 */
+	/**
+	 * 显式初始化入口（由 {@link com.sephiria.Sephiria#onInitialize()} 调用）：
+	 * 附件类型写在静态字段里，加载这个类就会注册；这个方法只是让「初始化」有个明确的调用点。
+	 */
+	public static void register() {
+	}
+
+	/** 某个玩家的货架：内存里没有就从附件读回，附件也没有（第一次开店）才刷一批。 */
 	public static ShopStock of(ServerPlayer player) {
 		return STOCKS.computeIfAbsent(player.getUUID(), uuid -> {
-			ShopStock stock = new ShopStock();
+			Saved saved = player.getAttached(SAVED);
+
+			if (saved != null) {
+				return new ShopStock(player, saved);
+			}
+
+			ShopStock stock = new ShopStock(player, null);
 			stock.refresh(player.getRandom());
 			return stock;
 		});
 	}
 
-	/** 玩家退出时把货架从缓存里放掉。 */
+	/** 玩家退出时把货架从缓存里放掉（附件里已经是最新状态，重登原样读回）。 */
 	public static void forget(ServerPlayer player) {
 		STOCKS.remove(player.getUUID());
+	}
+
+	/** 内容 / 限购一变就写回附件；装载期间不回写（见 {@link #loading}）。 */
+	@Override
+	public void setChanged() {
+		super.setChanged();
+
+		if (this.loading || this.owner == null) {
+			return;
+		}
+
+		this.owner.setAttached(SAVED, snapshot());
+	}
+
+	/** 保存用快照：十格物品 + 每格已买次数。 */
+	private Saved snapshot() {
+		List<ItemStack> slots = new ArrayList<>(SLOT_COUNT);
+
+		for (int index = 0; index < SLOT_COUNT; index++) {
+			slots.add(getItem(index));
+		}
+
+		List<Integer> bought = new ArrayList<>(SLOT_COUNT);
+
+		for (int index = 0; index < SLOT_COUNT; index++) {
+			bought.add(this.bought[index]);
+		}
+
+		return new Saved(slots, bought);
 	}
 
 	/** 重新刷一批货：商品按品质加权抽，宝箱固定两种，药水按品质加权抽，购买记录清零。 */
@@ -114,7 +208,7 @@ public final class ShopStock extends SimpleContainer {
 	}
 
 	/**
-	 * 买下一格：够钱就扣树叶、把东西塞给玩家、记一次限购。
+	 * 买下一格：够钱就扣叶子、把东西塞给玩家、记一次限购。
 	 *
 	 * <p>返回是否成功——不够钱、已售罄、格子空都算失败，调用方按返回值给音效。
 	 */
@@ -129,7 +223,9 @@ public final class ShopStock extends SimpleContainer {
 			return false;
 		}
 
-		int price = ShopPrices.buy(stack);
+		// 折扣只在服务端结算：客户端展示的折后价来自同步的折扣值，别让界面算的数被当真
+		int price = ShopPrices.discounted(ShopPrices.buy(stack),
+				com.sephiria.stats.PlayerStats.shopDiscountPercent(player));
 
 		if (price <= 0 || !com.sephiria.stats.PlayerStats.spendLeaves(player, price)) {
 			return false;
@@ -145,6 +241,13 @@ public final class ShopStock extends SimpleContainer {
 
 		if (!player.getInventory().add(boughtStack)) {
 			player.drop(boughtStack, false, Prediction.SERVER_ONLY);
+		}
+
+		// 幸运的奖章：每次在商店买到药水都生成一笔叶子。走 grantLeaves 而不是 addLeaves——
+		// 生成叶子不是赚经验，不该推进「每 1000 经验一个升级宝箱」的计数，也不吃叶子获得量
+		if (stack.getItem() instanceof SephiriaPotionItem) {
+			com.sephiria.stats.PlayerStats.grantLeaves(player,
+					com.sephiria.artifact.ArtifactEffects.potionBuyLeafBonus(player));
 		}
 
 		setChanged();

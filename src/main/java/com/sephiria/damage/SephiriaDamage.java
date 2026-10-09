@@ -51,8 +51,30 @@ public final class SephiriaDamage {
 	public static final ResourceKey<DamageType> TRUE_DAMAGE = typeKey("true_damage");
 	/** 神器自己造成的伤害（红色露水的暴击溅射等）：吃暴击，但吃不到「武器攻击的暴击几率」。 */
 	public static final ResourceKey<DamageType> ARTIFACT_DAMAGE = typeKey("artifact_damage");
+	/** 触电减益自己结算的闪电属性伤害（数据包里 sephiria:electric_shock）：它是「减益伤害」，
+	 * 不再触发电击之触（防链式自触），只由 {@code Debuffs#activate} 使用。 */
+	public static final ResourceKey<DamageType> ELECTRIC_SHOCK = typeKey("electric_shock");
+	/** 攻击打出的电属性伤害（乌云雷击 / 雷之裁决光束 / 桑德耳环 / 树枝与台风的附加闪电）：
+	 * 与触电结算分开，事件守门才分得清「哪些电属性伤害能触发电击之触」——这些都能。 */
+	public static final ResourceKey<DamageType> ELECTRIC_ATTACK = typeKey("electric_attack");
+	/** 太阳剑投掷那一下的火属性伤害（数据包里 sephiria:sun_sword）：连击效果自己的伤害，
+	 * 既不是武器攻击也不是魔法书，所以不触发别的「造成武器/神器伤害时」效果，也不会自我链式。 */
+	public static final ResourceKey<DamageType> SUN_SWORD = typeKey("sun_sword");
+	/** 灼伤减益自己结算的火属性伤害（数据包里 sephiria:burn）：它是「减益伤害」，
+	 * 不再触发火焰之触（防链式自触），只由 {@code Debuffs#activateBurn} 使用。 */
+	public static final ResourceKey<DamageType> BURN = typeKey("burn");
+	/** 攻击打出的火属性伤害（数据包里 sephiria:fire_attack：红蛇之眼的陨石）：
+	 * 与 sun_sword 分开，因为它照 Electric Attack 的口径算「攻击打出的火属性伤害」——
+	 * 事件守门按它触发火焰之触。 */
+	public static final ResourceKey<DamageType> FIRE_ATTACK = typeKey("fire_attack");
 	/** 红色露水那类暴击溅射的范围（格）：以被暴击的目标为原点。 */
 	private static final double SPLASH_RANGE = 3.0D;
+	/** 黄金之手：每持有这么多叶子升一档。 */
+	private static final double GOLDEN_HANDS_STEP_LEAVES = 200.0D;
+	/** 黄金之手：每一档的增伤（%）。 */
+	private static final double GOLDEN_HANDS_STEP_PERCENT = 1.0D;
+	/** 黄金之手：增伤上限（%）。 */
+	private static final double GOLDEN_HANDS_MAX_PERCENT = 20.0D;
 
 	private SephiriaDamage() {
 	}
@@ -66,7 +88,28 @@ public final class SephiriaDamage {
 		/** 神器自己造成的伤害：吃暴击几率，但吃不到「武器攻击的暴击几率」。 */
 		ARTIFACT,
 		/** 无视防御伤害：不再暴击，也不会再触发一次真伤。 */
-		TRUE
+		TRUE,
+		/** 电属性伤害（触电结算与攻击打出的都是）：数值各自定死，不吃倍率；
+		 * 事件守门只把触电自己的结算（electric_shock）挡在电击之触之外（防链式自触），
+		 * 攻击打出的（electric_attack）照常触发。 */
+		ELECTRIC,
+		/**
+		 * 连击效果自己的伤害（太阳剑）：吃通用暴击与黄金之手，但既不算武器也不算神器攻击——
+		 * 不触发电击之触 / 树枝 / 台风那类「造成武器或神器伤害时」的效果，也就不会链式自触。
+		 */
+		SUN,
+		/**
+		 * 灼伤减益自己结算的火属性伤害（sephiria:burn）：与触电一样属于「减益伤害」——
+		 * 数值定死、不吃减伤与黄金之手、也不触发任何「造成伤害时」的效果。
+		 */
+		FIRE,
+		/**
+		 * 攻击打出的火属性伤害（sephiria:fire_attack：红蛇之眼的陨石）。
+		 *
+		 * <p>与电的 {@link #ELECTRIC} 对称：吃通用暴击、减伤与黄金之手（数值口径与太阳剑那一档相同），
+		 * 但既不算武器也不算神器伤害——只用来触发火焰之触，不牵动树枝 / 台风 / 太阳剑那些口径。
+		 */
+		FIRE_ATTACK
 	}
 
 	public static boolean fromSephiria(DamageSource source) {
@@ -90,6 +133,22 @@ public final class SephiriaDamage {
 
 		if (source.is(ARTIFACT_DAMAGE)) {
 			return Kind.ARTIFACT;
+		}
+
+		if (source.is(ELECTRIC_SHOCK) || source.is(ELECTRIC_ATTACK)) {
+			return Kind.ELECTRIC;
+		}
+
+		if (source.is(SUN_SWORD)) {
+			return Kind.SUN;
+		}
+
+		if (source.is(BURN)) {
+			return Kind.FIRE;
+		}
+
+		if (source.is(FIRE_ATTACK)) {
+			return Kind.FIRE_ATTACK;
 		}
 
 		if (source.getDirectEntity() instanceof Source) {
@@ -139,20 +198,25 @@ public final class SephiriaDamage {
 	/**
 	 * 暴击判定：命中就按「暴击伤害」放大这一下的数值。
 	 *
-	 * <p>只有玩家造成的伤害会暴击，真实伤害不参与（它本来就是额外那一下）。
-	 * 「武器攻击的暴击几率」只加在武器打出的伤害上——神器自己造成的伤害只用通用暴击几率。
+	 * <p>只有玩家造成的伤害会暴击，真实伤害与减益伤害（灼伤）不参与（它们本来就是「额外的那一下」）。
+	 * 「武器攻击的暴击几率」只加在武器打出的伤害上——神器自己造成的伤害只用通用暴击几率；
+	 * 电属性伤害（触电结算、附加闪电伤害、闪电攻击）单独用「电属性攻击的暴击几率」（麒麟的角）。
 	 * 武器攻击暴击时还会触发红色露水那类「暴击溅射」。
 	 */
 	public static float applyCrit(LivingEntity target, DamageSource source, float amount) {
 		Kind kind = kindOf(source);
 
-		if (kind == Kind.OTHER || kind == Kind.TRUE || !(source.getEntity() instanceof ServerPlayer player)) {
+		if (kind == Kind.OTHER || kind == Kind.TRUE || kind == Kind.FIRE
+				|| !(source.getEntity() instanceof ServerPlayer player)) {
 			return amount;
 		}
 
-		double chance = kind == Kind.WEAPON
-				? PlayerStats.weaponCritChanceTotal(player)
-				: PlayerStats.critChanceTotal(player);
+		// 电属性伤害不共用通用暴击几率：没有麒麟的角时这一项是 0，它们照旧不暴击
+		double chance = switch (kind) {
+			case WEAPON -> PlayerStats.weaponCritChanceTotal(player);
+			case ELECTRIC -> PlayerStats.electricCritChanceTotal(player);
+			default -> PlayerStats.critChanceTotal(player);
+		};
 
 		if (!PseudoRandom.crit(player, chance)) {
 			return amount;
@@ -190,12 +254,55 @@ public final class SephiriaDamage {
 		DamageSource splash = artifactDamage(level, player);
 
 		for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {
-			if (victim == player || victim == target || victim.isAlliedTo(player)) {
+			// 被暴击的那个目标自己已经挨过本击，溅射只打周围；和平生物不误伤
+			if (victim == target || !strikeable(victim, player)) {
 				continue;
 			}
 
 			victim.hurtServer(level, splash, damage);
 		}
+	}
+
+	/**
+	 * 范围伤害能不能打这个目标：只打「有威胁的生物」（敌对生物、正在攻击玩家的中立生物），
+	 * <b>玩家整个不在目标池里</b>。
+	 *
+	 * <p>神器的自动攻击（乌云雷击、桑德耳环闪电、雷之裁决光束、露水溅射）与武器技能的范围大，
+	 * 扫到谁算谁——打玩家就是误伤，所以连击、神器、神器技能、武器技能都不以玩家为目标；
+	 * 普通攻击与横扫是玩家自己瞄准的，不在此列（普攻 PVP 照旧）。
+	 * 判定逐个目标进行，所以一次范围攻击裹进友好生物时，它们照样保留无敌帧。
+	 */
+	public static boolean strikeable(LivingEntity victim, ServerPlayer attacker) {
+		// 玩家一律不打（这一条也涵盖 victim != attacker：攻击者自己就是玩家）
+		return !(victim instanceof Player) && victim.isAlive() && !victim.isAlliedTo(attacker)
+				&& ignoresInvulnerableFrames(victim);
+	}
+
+	// ------------------------------------------------------------------ 黄金之手
+
+	/**
+	 * 谈判连击的「黄金之手」：每持有 200 叶子，这次攻击的伤害 +1%，最多 +20%。
+	 *
+	 * <p>攻击方的增益，由 {@code DamageReductionMixin} 在暴击与减伤算完之后调用。
+	 * 守门与暴击一致：非玩家造成的伤害、真实伤害与减益伤害（触电 / 灼伤）不参与——
+	 * 真实伤害本来就是"额外那一下"，黄金之手已经在原来那一下里放大过了。
+	 */
+	public static float applyGoldenHands(DamageSource source, float amount) {
+		Kind kind = kindOf(source);
+
+		if (kind == Kind.OTHER || kind == Kind.TRUE || kind == Kind.ELECTRIC || kind == Kind.FIRE
+				|| !(source.getEntity() instanceof ServerPlayer player)) {
+			return amount;
+		}
+
+		if (!ArtifactEffects.comboGoldenHands(player)) {
+			return amount;
+		}
+
+		int steps = (int) Math.min(Math.floor(PlayerStats.leaves(player) / GOLDEN_HANDS_STEP_LEAVES),
+				GOLDEN_HANDS_MAX_PERCENT / GOLDEN_HANDS_STEP_PERCENT);
+
+		return (float) (amount * (1.0D + steps * GOLDEN_HANDS_STEP_PERCENT / 100.0D));
 	}
 
 	// ------------------------------------------------------------------ 无视防御伤害（真实伤害）
@@ -280,6 +387,61 @@ public final class SephiriaDamage {
 	/** 造一个神器伤害的伤害来源（数据包里的 sephiria:artifact_damage）。 */
 	public static DamageSource artifactDamage(ServerLevel level, ServerPlayer player) {
 		return new DamageSource(lookup(level, ARTIFACT_DAMAGE), player, player);
+	}
+
+	/**
+	 * 造一个触电结算的闪电属性伤害来源（数据包里的 sephiria:electric_shock）。
+	 *
+	 * <p>只给触电减益自己的周期/终结跳用：它是减益伤害，事件守门按类型把它挡在
+	 * 电击之触之外（防链式自触）。攻击打出的电属性伤害走 {@link #electricAttack}。
+	 *
+	 * <p>触发者掉线后 {@code player} 传 null：伤害照样结算，只是没有归属（不触发吸血、不计击杀功劳）。
+	 */
+	public static DamageSource electricShock(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, ELECTRIC_SHOCK), player, player);
+	}
+
+	/**
+	 * 造一个「攻击打出的电属性伤害」来源（数据包里的 sephiria:electric_attack）。
+	 *
+	 * <p>乌云雷击、雷之裁决光束、桑德耳环、树枝 / 台风的附加闪电都用它——它们是电属性攻击，
+	 * 与武器 / 神器伤害一样能触发电击之触（守门见 {@code Debuffs#register}）。
+	 * 伤害数值口径与 {@link #electricShock} 一致：吃电属性暴击，不吃减伤与黄金之手。
+	 */
+	public static DamageSource electricAttack(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, ELECTRIC_ATTACK), player, player);
+	}
+
+	/**
+	 * 造一个太阳剑的火属性伤害来源（数据包里的 sephiria:sun_sword）。
+	 *
+	 * <p>连击效果自己的伤害：吃通用暴击与黄金之手，但不触发「造成武器/神器伤害时」那一串
+	 * （电击之触、树枝的附加闪电……）——见 {@link Kind#SUN}。
+	 */
+	public static DamageSource sunSword(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, SUN_SWORD), player, player);
+	}
+
+	/**
+	 * 造一个灼伤结算的火属性伤害来源（数据包里的 sephiria:burn）。
+	 *
+	 * <p>只给灼伤减益的每跳用：它是减益伤害（{@link Kind#FIRE}），不参与暴击 / 减伤 / 黄金之手，
+	 * 也不会再触发火焰之触（防链式自触）。
+	 *
+	 * <p>触发者掉线后 {@code player} 传 null：伤害照样结算，只是没有归属（不计击杀功劳）。
+	 */
+	public static DamageSource burn(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, BURN), player, player);
+	}
+
+	/**
+	 * 造一个「攻击打出的火属性伤害」来源（数据包里的 sephiria:fire_attack）。
+	 *
+	 * <p>红蛇之眼的陨石用它：与 {@link #electricAttack} 对称——照常触发火焰之触（守门见
+	 * {@code Debuffs#register}），数值吃通用暴击、减伤与黄金之手。
+	 */
+	public static DamageSource fireAttack(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, FIRE_ATTACK), player, player);
 	}
 
 	private static Holder<DamageType> lookup(ServerLevel level, ResourceKey<DamageType> key) {

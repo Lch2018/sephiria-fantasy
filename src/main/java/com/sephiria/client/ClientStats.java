@@ -11,6 +11,7 @@ import com.sephiria.stats.PlayerStats;
  */
 public final class ClientStats {
 	private static double mp = PlayerStats.DEFAULT_MP;
+	private static double maxMp = PlayerStats.DEFAULT_MP;
 	private static double mpRegen = PlayerStats.DEFAULT_MP_REGEN;
 	private static double physical = PlayerStats.DEFAULT_STRENGTH;
 	private static double fire = PlayerStats.DEFAULT_STRENGTH;
@@ -31,6 +32,10 @@ public final class ClientStats {
 	private static double moveSpeed = PlayerStats.DEFAULT_MOVE_SPEED;
 	private static double dodge = 0.0D;
 	private static double dodgeRate = 0.0D;
+	private static double negotiation = PlayerStats.DEFAULT_NEGOTIATION;
+	private static double shopDiscount = 0.0D;
+	private static double leafGainPercent = PlayerStats.DEFAULT_LEAF_GAIN;
+	private static double xpDropPercent = PlayerStats.DEFAULT_XP_DROP;
 	private static PlayerStats.PhysicalBreakdown attackBreakdown = new PlayerStats.PhysicalBreakdown(
 			PlayerStats.DEFAULT_ATTACK_SPEED, 0.0D, 0.0D, 0.0D, 0.0D);
 	private static PlayerStats.PhysicalBreakdown breakdown = new PlayerStats.PhysicalBreakdown(
@@ -41,6 +46,7 @@ public final class ClientStats {
 
 	public static void accept(StatsSyncPayload payload) {
 		mp = payload.mp();
+		maxMp = payload.maxMp();
 		mpRegen = payload.mpRegen();
 		physical = payload.physical();
 		fire = payload.fire();
@@ -61,6 +67,10 @@ public final class ClientStats {
 		moveSpeed = payload.moveSpeed();
 		dodge = payload.dodge();
 		dodgeRate = payload.dodgeRate();
+		negotiation = payload.negotiation();
+		shopDiscount = payload.shopDiscount();
+		leafGainPercent = payload.leafGainPercent();
+		xpDropPercent = payload.xpDropPercent();
 		breakdown = new PlayerStats.PhysicalBreakdown(payload.physicalBase(), payload.artifactFlat(),
 				payload.potionFlat(), payload.artifactPercent(), payload.potionPercent());
 		attackBreakdown = new PlayerStats.PhysicalBreakdown(payload.attackBase(), payload.attackArtifactFlat(),
@@ -124,6 +134,26 @@ public final class ClientStats {
 		return dodgeRate;
 	}
 
+	/** 谈判力（点），默认 0：给商店物品打折。 */
+	public static double negotiation() {
+		return negotiation;
+	}
+
+	/** 商店折扣（%）：谈判力换算出来的，面板与商店价签共用。 */
+	public static double shopDiscount() {
+		return shopDiscount;
+	}
+
+	/** 叶子获得量（%），默认 100：结算叶子时按它放大。 */
+	public static double leafGainPercent() {
+		return leafGainPercent;
+	}
+
+	/** 经验掉落（%），默认 100：入账经验先按它放大。 */
+	public static double xpDropPercent() {
+		return xpDropPercent;
+	}
+
 	/** 物理伤害增幅（%），默认 0。 */
 	public static double physicalAmp() {
 		return physicalAmp;
@@ -144,7 +174,7 @@ public final class ClientStats {
 		return specialAttack;
 	}
 
-	/** 树叶（货币）持有量。 */
+	/** 叶子（货币）持有量。 */
 	public static double leaves() {
 		return leaves;
 	}
@@ -161,6 +191,11 @@ public final class ClientStats {
 
 	public static double mp() {
 		return mp;
+	}
+
+	/** 最大蓝量（点）：被剑耳环削过的话 HUD 与技能蓝耗校验都用它。 */
+	public static double maxMp() {
+		return maxMp;
 	}
 
 	public static double mpRegen() {

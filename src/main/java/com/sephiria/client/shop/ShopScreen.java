@@ -25,7 +25,8 @@ import net.minecraft.world.item.ItemStack;
  * <p>面板不贴图，纯色块画（和背包、附魔面板一致）。每格下面写价格：买得起黄字、买不起红字，
  * 售罄的格子压一层暗色并写「已售罄」；宝箱格写剩余次数。
  *
- * <p>价格由物品自己算（{@link ShopPrices} 是纯函数，两边一致），「买过几次」从菜单的数据槽读。
+ * <p>价格由物品自己算（{@link ShopPrices} 是纯函数，两边一致），谈判力的折扣用同步来的折扣值按
+ * {@link ShopPrices#discounted} 折算；「买过几次」从菜单的数据槽读。
  */
 public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 	private static final int PANEL_COLOR = 0xC0101010;
@@ -109,7 +110,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 		}
 	}
 
-	/** 标题行右边写树叶余额（标题本身由原版画在左上角）。 */
+	/** 标题行右边写叶子余额（标题本身由原版画在左上角）。 */
 	@Override
 	protected void extractLabels(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
 		super.extractLabels(extractor, mouseX, mouseY);
@@ -152,7 +153,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 			return;
 		}
 
-		int price = ShopPrices.buy(stack);
+		int price = ShopPrices.discounted(ShopPrices.buy(stack), ClientStats.shopDiscount());
 		drawSmall(extractor, Component.literal(String.valueOf(price)), slot.x, slot.y + 18,
 				ClientStats.leaves() >= price ? PRICE_OK : PRICE_NO);
 
@@ -206,7 +207,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 		} else if (this.menu.remaining(index) <= 0) {
 			line = Component.translatable("screen.sephiria.shop.sold_out").withColor(SOLD_OUT_COLOR);
 		} else {
-			int price = ShopPrices.buy(stack);
+			int price = ShopPrices.discounted(ShopPrices.buy(stack), ClientStats.shopDiscount());
 
 			line = Component.translatable("screen.sephiria.shop.buy_hint",
 					Component.literal(String.valueOf(price)).withColor(PRICE_OK));

@@ -63,6 +63,15 @@ public final class ArtifactTooltip {
 		}
 
 		lines.addAll(artifact.affixLines(level));
+
+		// 桑德耳环的闪电攻击按「当前电元素强度」现算：客户端用同步过来的面板值补一行当前伤害
+		if (artifact instanceof com.sephiria.artifact.SandeEarringsItem) {
+			double current = com.sephiria.client.ClientStats.lightning()
+					* com.sephiria.artifact.SandeEarringsItem.ATTACK_PERCENT / 100.0D;
+			lines.add(Component.translatable("artifact.sephiria.affix.sande_current",
+					Component.literal(Numbers.format(current)).withColor(0xFF55FF55)));
+		}
+
 		lines.add(Component.translatable("artifact.sephiria.rarity_line",
 						Component.translatable(artifact.rarity().translationKey()).withColor(artifact.rarity().color()))
 				.withStyle(ChatFormatting.GRAY));

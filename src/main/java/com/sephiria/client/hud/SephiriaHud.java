@@ -2,6 +2,8 @@ package com.sephiria.client.hud;
 
 import com.sephiria.Sephiria;
 import com.sephiria.client.ClientStats;
+import com.sephiria.client.CloudClientData;
+import com.sephiria.client.SunSwordClientData;
 import com.sephiria.ability.DashSkill;
 import com.sephiria.client.InvulnClientData;
 import com.sephiria.client.SkillClientData;
@@ -50,6 +52,10 @@ public final class SephiriaHud implements HudElement {
 	/** 刀的剑意条配色：平时浅青，满层金色（和物品栏图标上的条同一套颜色）。 */
 	private static final int INTENT_COLOR = 0xFF6FD8FF;
 	private static final int INTENT_FULL_COLOR = 0xFFFFD24A;
+	/** 乌云容量条的填充色：电蓝 #7EFAFF（与触电 / 乌云雷击的电火花粒子同色）。 */
+	private static final int CLOUD_BAR_COLOR = 0xFF7EFAFF;
+	/** 太阳剑数量条的填充色：#FDF74C（用户定的太阳色）。 */
+	private static final int SUN_SWORD_BAR_COLOR = 0xFFFDF74C;
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, DeltaTracker delta) {
@@ -63,7 +69,84 @@ public final class SephiriaHud implements HudElement {
 		renderWeapon(extractor, client);
 		renderDash(extractor, client);
 		renderMp(extractor, client);
+		renderCloud(extractor, client);
+		renderSunSword(extractor, client);
 		renderInvuln(extractor, client);
+	}
+
+	/**
+	 * 太阳剑数量条：{@code 太阳剑：当前/上限 [条]}，条用 #FDF74C。
+	 *
+	 * <p>显示开关与乌云 UI 同一套：服务端收剑时推一份上限 0，UI 跟着消失。
+	 */
+	private void renderSunSword(GuiGraphicsExtractor extractor, Minecraft client) {
+		if (!SunSwordClientData.active()) {
+			return;
+		}
+
+		Font font = client.font;
+		double max = SunSwordClientData.max();
+		double current = Math.min(SunSwordClientData.current(), max);
+		float fraction = (float) Math.clamp(current / max, 0.0D, 1.0D);
+		Component text = Component.translatable("ui.sephiria.sun_sword", cloudAmount(current), cloudAmount(max));
+		int textWidth = font.width(text);
+		int barWidth = 60;
+		int width = textWidth + barWidth + PAD * 4;
+		int height = LINE + PAD * 2;
+		HudConfig.Element config = HudConfig.element(HudConfig.SUN_SWORD);
+		Matrix3x2fStack pose = extractor.pose();
+		pose.pushMatrix();
+		pose.translate((float) config.x, (float) config.y);
+		pose.scale((float) config.scale, (float) config.scale);
+
+		extractor.fill(0, 0, width, height, PANEL_COLOR);
+		extractor.text(font, text, PAD, PAD, NAME_COLOR, true);
+		int barX = PAD * 2 + textWidth;
+		int barY = PAD + 2;
+		extractor.fill(barX, barY, barX + barWidth, barY + 8, 0xFF202020);
+		extractor.fill(barX, barY, barX + (int) (barWidth * fraction), barY + 8, SUN_SWORD_BAR_COLOR);
+		pose.popMatrix();
+	}
+
+	/**
+	 * 乌云容量条：{@code 乌云：当前/上限 [条]}，条用 #7EFAFF。
+	 *
+	 * <p>只在乌云激活（连击 ≥ 2 档）时显示——服务端收云时会推一份上限 0，UI 就跟着消失，
+	 * 所以这里不看连击等级，只看 {@link CloudClientData#active()}。
+	 */
+	private void renderCloud(GuiGraphicsExtractor extractor, Minecraft client) {
+		if (!CloudClientData.active()) {
+			return;
+		}
+
+		Font font = client.font;
+		double max = CloudClientData.max();
+		double current = Math.min(CloudClientData.capacity(), max);
+		float fraction = (float) Math.clamp(current / max, 0.0D, 1.0D);
+		Component text = Component.translatable("ui.sephiria.cloud", cloudAmount(current), cloudAmount(max));
+		int textWidth = font.width(text);
+		int barWidth = 60;
+		int width = textWidth + barWidth + PAD * 4;
+		int height = LINE + PAD * 2;
+		HudConfig.Element config = HudConfig.element(HudConfig.CLOUD);
+		Matrix3x2fStack pose = extractor.pose();
+		pose.pushMatrix();
+		pose.translate((float) config.x, (float) config.y);
+		pose.scale((float) config.scale, (float) config.scale);
+
+		extractor.fill(0, 0, width, height, PANEL_COLOR);
+		extractor.text(font, text, PAD, PAD, NAME_COLOR, true);
+		int barX = PAD * 2 + textWidth;
+		int barY = PAD + 2;
+		extractor.fill(barX, barY, barX + barWidth, barY + 8, 0xFF202020);
+		extractor.fill(barX, barY, barX + (int) (barWidth * fraction), barY + 8, CLOUD_BAR_COLOR);
+		pose.popMatrix();
+	}
+
+	/** 容量按整数显示：当前值向下取整——「还够不够打一发」看的是整数（2 点射要 2 点）。 */
+	private static String cloudAmount(double value) {
+		int floored = (int) Math.floor(value + 1.0E-6D);
+		return String.valueOf(Math.max(0, floored));
 	}
 
 	/**
@@ -154,7 +237,7 @@ public final class SephiriaHud implements HudElement {
 	private void renderMp(GuiGraphicsExtractor extractor, Minecraft client) {
 		Font font = client.font;
 		double current = ClientStats.mp();
-		double max = com.sephiria.stats.PlayerStats.DEFAULT_MP;
+		double max = ClientStats.maxMp();
 		float fraction = (float) Math.clamp(max <= 0.0D ? 0.0D : current / max, 0.0D, 1.0D);
 		String numbers = format(current) + "/" + format(max);
 		int textWidth = Math.max(font.width(numbers), font.width("MP"));

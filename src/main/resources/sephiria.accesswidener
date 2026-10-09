@@ -7,3 +7,12 @@ accessWidener	v2	official
 accessible	class	net/minecraft/client/gui/screens/MenuScreens$ScreenConstructor
 accessible	method	net/minecraft/client/gui/screens/MenuScreens	register	(Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/client/gui/screens/MenuScreens$ScreenConstructor;)V
 accessible	method	net/minecraft/client/gui/screens/MenuScreens$ScreenConstructor	create	(Lnet/minecraft/world/inventory/AbstractContainerMenu;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/network/chat/Component;)Lnet/minecraft/client/gui/screens/Screen;
+
+# 26.3 原版把粒子工厂注册收进 ParticleResources 的私有表，Fabric 也删了注册 API：
+#   客户端 mixin（ParticleResourcesMixin）在 registerProviders 尾部手动照抄原版
+#   register(type, registration) 的两步——建贴图组（资源重载时按粒子 id 填充贴图）
+#   + 挂工厂——需要打开这两个私有字段与包私有的贴图组类。
+accessible	class	net/minecraft/client/particle/ParticleResources$MutableSpriteSet
+accessible	method	net/minecraft/client/particle/ParticleResources$MutableSpriteSet	<init>	()V
+accessible	field	net/minecraft/client/particle/ParticleResources	spriteSets	Ljava/util/Map;
+accessible	field	net/minecraft/client/particle/ParticleResources	providers	Lit/unimi/dsi/fastutil/ints/Int2ObjectMap;

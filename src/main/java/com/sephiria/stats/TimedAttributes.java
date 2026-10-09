@@ -61,6 +61,21 @@ public final class TimedAttributes {
 	}
 
 	/**
+	 * 给目标挂一条<b>自定义加成</b>：不对应任何原版属性，只在本类里计时。
+	 *
+	 * <p>有些数值（比如暴击几率）不是原版属性，挂不进临时修饰符；这类加成存进表里、
+	 * 到点自动消失，战斗与面板按 {@link #statBonusOf} 现查，不会漏也不会重复算。
+	 *
+	 * @param ticks 持续多少 tick（从这一刻算起）
+	 */
+	public static void grantStat(LivingEntity entity, Identifier id, double amount, int ticks) {
+		// 同一个来源重复给：刷新时间与数值，不叠上去
+		ACTIVE.removeIf(entry -> entry.target() == entity && entry.id().equals(id));
+		ACTIVE.add(new Entry(entity, null, id, amount, entity.level().getGameTime() + ticks));
+		sync(entity);
+	}
+
+	/**
 	 * 目标身上某条属性正挂着的限时加成总和。
 	 *
 	 * <p>面板要显示「当前实际值」，而限时加成是直接挂在原版属性上的修饰符、不在面板数值里，
@@ -71,6 +86,19 @@ public final class TimedAttributes {
 
 		for (Entry entry : ACTIVE) {
 			if (entry.target() == entity && entry.attribute() == attribute) {
+				total += entry.amount();
+			}
+		}
+
+		return total;
+	}
+
+	/** 目标身上某个自定义加成（{@link #grantStat} 挂的）正挂着的总和。 */
+	public static double statBonusOf(LivingEntity entity, Identifier id) {
+		double total = 0.0D;
+
+		for (Entry entry : ACTIVE) {
+			if (entry.target() == entity && entry.attribute() == null && entry.id().equals(id)) {
 				total += entry.amount();
 			}
 		}
@@ -127,6 +155,11 @@ public final class TimedAttributes {
 	}
 
 	private static void remove(LivingEntity entity, Holder<Attribute> attribute, Identifier id) {
+		// 自定义加成（attribute 为 null）没挂在原版属性上，摘除就是从表里删掉（tick 里已做）
+		if (attribute == null) {
+			return;
+		}
+
 		AttributeInstance instance = entity.getAttribute(attribute);
 
 		if (instance != null) {
