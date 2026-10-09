@@ -27,7 +27,7 @@ Physical Power, Fire / Ice / Lightning element strength, crit chance and crit da
 
 ### Shop and chests
 
-The shop rerolls its shelves over time, and your Negotiation stat lowers prices; Artifact / Slate / Upgrade chests as loot.
+The shop's shelves are rerolled with **Dice**: put dice into the shop's dice slot and press the "Refresh" button to spend one and get a fresh set of goods (placing dice alone does not reroll anything, so you cannot waste one by accident). Your Negotiation stat lowers buy prices. Dice come from **naturally generated loot chests (~10%)** and from **harvesting fully grown carrots (~1%)**; the shop does not buy them back. Chests come in three kinds: Artifact / Slate / Upgrade.
 
 ### Effects
 
@@ -91,7 +91,7 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 ### 商店与宝箱
 
-商店会随时间刷新货架，谈判力影响折扣；神器宝箱 / 石板宝箱 / 升级宝箱三种。
+商店的货架用**骰子**刷新：把骰子放进商店的骰子栏，点「刷新」按钮消耗一枚换一批货（不会放上去就自动刷，免得手滑浪费）；谈判力影响买价折扣。骰子来自**自然生成的箱子（约 10%）**与**收获成熟的胡萝卜（约 1%）**，商店本身不收购它。宝箱有神器 / 石板 / 升级三种。
 
 ### 特效
 
