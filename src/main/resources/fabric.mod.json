@@ -3,7 +3,7 @@
 	"id": "sephiria",
 	"version": "${version}",
 	"name": "SEPHIRIA",
-	"description": "把《SEPHIRIA（赛菲莉娅）》的武器系统带进 Minecraft。非官方同人模组，约 99% 内容由 AI 制作，仅供学习交流，禁止商业行为；完整条款见仓库 LICENSE。",
+	"description": "把《SEPHIRIA（赛菲莉娅）》的武器系统带进 Minecraft。非官方同人模组，大量使用 AI 生成代码，仅供学习交流，禁止商业行为；完整条款见仓库 LICENSE。",
 	"authors": [
 		"SEPHIRIA Mod Team"
 	],

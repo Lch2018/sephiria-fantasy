@@ -37,7 +37,7 @@
   同时 `export HTTPS_PROXY=http://127.0.0.1:7897`（gh 也要走代理）。
 - 发布说明（GitHub Release 与 Modrinth 的项目正文 / 更新说明）**一律中英双语**：中文在前，
   之后 `## English` 一节写同样的四块——运行环境（26.3 + Fabric Loader 0.19.5 + Fabric API + GeckoLib）、
-  这一版有什么、已知问题 / 未完成、以及「同人模组 / 99% AI 制作 / 禁止商业行为」的声明。
+  这一版有什么、已知问题 / 未完成、以及「同人模组 / 大量使用 AI 生成代码 / 禁止商业行为」的声明。
   **译文里的专有名词跟 `src/main/resources/assets/sephiria/lang/en_us.json` 走**（那是模组自己的官方英文）：
   武器 Blade / Steel Greatsword / Dagger / Default Sword and Shield / Quarterstaff / Colossal Crossbow，
   连击 Sturdy / Wind Song / Precision / Shadow / Negotiation / Element / Magitech / Dark Cloud /

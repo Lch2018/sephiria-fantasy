@@ -154,8 +154,8 @@ try {
     # 项目资料（正文 + 摘要 + 分类 + 环境 + 许可证 + 链接）：新建时用一次，之后每次发布再刷新一遍
     $projectPayload = @{
         title         = 'SEPHIRIA'
-        # 摘要中英双语（Modrinth 上限 256 字符，这段 246）
-        description   = '把《SEPHIRIA》的武器系统带进 Minecraft 的同人模组：六把武器、十套连击、55 件神器、减益与神器技能。约 99% 由 AI 制作，仅供学习交流，禁止商业行为。 Unofficial fan mod bringing SEPHIRIA''s weapons into Minecraft: 6 weapons, 10 combos, 55 artifacts, debuffs and artifact skills. ~99% AI-made, non-commercial.'
+        # 摘要中英双语（Modrinth 上限 256 字符，这段 254）
+        description   = '把《SEPHIRIA》的武器系统带进 Minecraft 的同人模组：六把武器、十套连击、55 件神器、减益与神器技能。大量使用 AI 生成代码，仅供学习交流，禁止商业行为。 Unofficial fan mod: SEPHIRIA''s weapons in Minecraft — 6 weapons, 10 combos, 55 artifacts, debuffs and artifact skills. Heavy use of AI-generated code; non-commercial.'
         body          = (Get-Content -Path $description -Raw -Encoding UTF8)
         # 分类上限就是 3 个：给 4 个 API 会回 `field categories failed validation with error: length`
         categories    = @('adventure', 'equipment', 'game-mechanics')
