@@ -10,8 +10,11 @@
 
 - 改动完成后**直接实装**：运行 `tools/deploy.ps1`。它做三件事——Gradle 构建、清掉 mods 里
   其它名字的旧 jar（同 mod id 有两个 jar 会报重复 mod）、把新 jar 复制到 PCL 实例的 mods 目录。
-- jar 名字跟 `gradle.properties` 里的 `version` 走（当前 `0.1.0-a`，a = A 测），
-  所以是 `build/libs/sephiria-0.1.0-a.jar` → `mods\sephiria-0.1.0-a.jar`；改版本号只要改那一处。
+- jar 名字跟 `gradle.properties` 里的 `version` 走（当前 `0.1.10.9-a`），
+  所以是 `build/libs/sephiria-<version>.jar` → `mods\sephiria-<version>.jar`；改版本号只要改那一处。
+- **版本号用日期**：`0.1.<月>.<日>-a`（10 月 9 日 → `0.1.10.9-a`；`-a` = A 测）。
+  **每次「发布」前先把 `gradle.properties` 的 `version` 改成当天的日期**再构建实装——
+  jar 名、release 的 tag（`v<版本>`）与游戏里 mod 列表显示的版本都跟着它。
 - PCL 实例：`D:\PCL\.minecraft\versions\26.3-Fabric 0.19.5\`（已从 26.2 迁到 26.3；
   以 `tools/deploy.ps1` 里写死的路径为准，别照旧路径找 jar）。
 - **不要自动启动游戏。** 用户自己从 PCL2 打开实例测试。开发客户端 `gradlew.bat runClient`

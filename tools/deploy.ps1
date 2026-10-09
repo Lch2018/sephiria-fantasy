@@ -5,7 +5,7 @@
 # The PCL instance is the one the user actually tests in, so every build has to land
 # there, not just in build\libs.
 #
-# The jar name follows gradle.properties' version (currently 0.1.0-a, the alpha build),
+# The jar name follows gradle.properties' version (date-based, e.g. 0.1.10.9-a, the alpha build),
 # so it is read from there instead of being written out twice.
 
 $root = Split-Path -Parent $PSScriptRoot
