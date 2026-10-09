@@ -1,4 +1,4 @@
-# SEPHIRIA 模组 — 工作约定
+# 赛菲莉亚幻想 模组 — 工作约定
 
 
 
@@ -23,14 +23,14 @@
 
 ## 版本管理
 
-- 仓库：https://github.com/Lch2018/sephiria （main 分支）
+- 仓库：https://github.com/Lch2018/sephiria-fantasy （main 分支）
 - 用户说「保存」= 打快照：`tools/snapshot.ps1 -Label <名字>`，产物在 `snapshots/`。
 - 用户说「上传」= commit + push。提交信息用中文，说明改了什么、以及为什么这么改。
 - 推送需要本地代理：git 为 github.com 单独配置了 `http://127.0.0.1:7897`。
   代理没开时推送会报 `Failed to connect ... over proxy`，此时直连也解析不了域名，
   必须等用户把代理打开再推。
 - 用户说「发布」= 建 GitHub Release（仓库本身已经是 public）：
-  `gh release create v<版本> build/libs/sephiria-<版本>.jar --title "SEPHIRIA <版本>（A 测）" --notes-file <说明.md> --target main`。
+  `gh release create v<版本> build/libs/sephiria-<版本>.jar --title "赛菲莉亚幻想 <版本>（A 测）" --notes-file <说明.md> --target main`。
   **本机的 `gh` 没有登录**，发布前先用 git 自己的凭据喂给它（别把 token 打印出来）：
   先 `CRED=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill)`，
   再 `export GH_TOKEN=$(printf '%s\n' "$CRED" | sed -n 's/^password=//p')`，

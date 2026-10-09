@@ -1,6 +1,6 @@
-# SEPHIRIA
+# Sephiria Fantasy
 
-An **unofficial fan mod** that brings the weapon system of *SEPHIRIA* into Minecraft. This project makes **heavy use of AI-generated code** — shared for learning and personal use only, and **commercial use is not allowed**.
+**Sephiria Fantasy** is an **unofficial fan mod** that brings the weapon system of *SEPHIRIA* into Minecraft. This project makes **heavy use of AI-generated code** — shared for learning and personal use only, and **commercial use is not allowed**.
 
 > Alpha stage: there is a decent amount of content, but most of it has not been playtested thoroughly yet — numbers and feel are still being tuned.
 
@@ -58,13 +58,13 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 - Not affiliated with Mojang Studios or Microsoft. *SEPHIRIA* and its settings belong to their original author, TEAM HORAY.
 - This project makes **heavy use of AI-generated code**. It is for learning and personal use only, and **commercial use is prohibited** — see the LICENSE file in the repository for the full terms.
-- Source code and issue tracker: <https://github.com/Lch2018/sephiria>
+- Source code and issue tracker: <https://github.com/Lch2018/sephiria-fantasy>
 
 ---
 
-# SEPHIRIA（中文）
+# 赛菲莉亚幻想（中文）
 
-把《SEPHIRIA（赛菲莉娅）》的武器系统搬进 Minecraft 的同人模组。**非官方同人作品**，**大量使用 AI 生成代码**，仅供学习交流，**禁止商业行为**。
+**赛菲莉亚幻想**：把《SEPHIRIA（赛菲莉娅）》的武器系统搬进 Minecraft 的同人模组。**非官方同人作品**，**大量使用 AI 生成代码**，仅供学习交流，**禁止商业行为**。
 
 > 目前是 A 测（alpha）阶段：内容量不小，但大部分还没经过充分实测，数值与手感会持续调整。
 
@@ -122,4 +122,4 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 - 与 Mojang Studios / Microsoft 无任何关系；《SEPHIRIA（赛菲莉娅）》相关设定归原作者 TEAM HORAY 所有。
 - 本项目**大量使用 AI 生成代码**，仅供学习交流，**禁止任何商业行为**；完整条款见仓库里的 LICENSE。
-- 源码与问题反馈：<https://github.com/Lch2018/sephiria>
+- 源码与问题反馈：<https://github.com/Lch2018/sephiria-fantasy>

@@ -1,6 +1,6 @@
 {
-    "itemGroup.sephiria.weapons":  "SEPHIRIA Weapons",
-    "itemGroup.sephiria.artifacts":  "SEPHIRIA Artifacts",
+    "itemGroup.sephiria.weapons":  "Sephiria Fantasy Weapons",
+    "itemGroup.sephiria.artifacts":  "Sephiria Fantasy Artifacts",
     "item.sephiria.charm_of_strength":  "Charm of Strength",
     "item.sephiria.artifact_tab_icon":  "Artifact Icon",
 
@@ -19,9 +19,9 @@
     "artifact.sephiria.charm_of_strength.flavor":  "It says \"strength\" on the tag, and somehow that only makes it less convincing.",
 
     "screen.sephiria.backpack":  "Sephiria Backpack",
-    "itemGroup.sephiria.items":  "SEPHIRIA Items",
-    "itemGroup.sephiria.slates":  "SEPHIRIA Slates",
-    "itemGroup.sephiria.potions":  "SEPHIRIA Potions",
+    "itemGroup.sephiria.items":  "Sephiria Fantasy Items",
+    "itemGroup.sephiria.slates":  "Sephiria Fantasy Slates",
+    "itemGroup.sephiria.potions":  "Sephiria Fantasy Potions",
     "item.sephiria.slate_tab_icon":  "Slate Icon",
     "item.sephiria.warriors_proof":  "Warrior's Proof",
     "item.sephiria.slate_of_future":  "Slate of Future",
@@ -272,8 +272,8 @@
     "screen.sephiria.stats.crit_damage":  "Crit damage: %s",
     "screen.sephiria.stats.ignore_defense":  "Damage that ignores defence: %s",
     "screen.sephiria.stats.move_speed":  "Movement speed: %s",
-    "advancement.sephiria.root.title":  "SEPHIRIA",
-    "advancement.sephiria.root.desc":  "The SEPHIRIA weapon index: how to craft each weapon",
+    "advancement.sephiria.root.title":  "Sephiria Fantasy",
+    "advancement.sephiria.root.desc":  "The Sephiria Fantasy weapon index: how to craft each weapon",
     "advancement.sephiria.recipe.desc":  "Craft: %s (W = vanilla iron weapon, I = iron ingot, S = any sapling)",
     "screen.sephiria.stats.dodge":  "Dodge: %s",
     "screen.sephiria.stats.dodge_formula":  "Dodge rate: %s%% (0.8 x (1 - e^(-%s / 43.28)))",

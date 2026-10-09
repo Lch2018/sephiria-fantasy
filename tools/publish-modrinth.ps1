@@ -55,7 +55,7 @@ curl.exe --version | Out-Null
 if ($LASTEXITCODE -ne 0) { throw '没找到 curl.exe' }
 
 $api = 'https://api.modrinth.com/v2'
-$userAgent = 'SEPHIRIA-Mod-Publisher/1.0 (github.com/Lch2018/sephiria)'
+$userAgent = 'SEPHIRIA-Mod-Publisher/1.0 (github.com/Lch2018/sephiria-fantasy)'
 $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("sephiria-modrinth-" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $tempDir | Out-Null
 
@@ -153,17 +153,17 @@ try {
 
     # 项目资料（正文 + 摘要 + 分类 + 环境 + 许可证 + 链接）：新建时用一次，之后每次发布再刷新一遍
     $projectPayload = @{
-        title         = 'SEPHIRIA'
-        # 摘要中英双语（Modrinth 上限 256 字符，这段 254）
-        description   = '把《SEPHIRIA》的武器系统带进 Minecraft 的同人模组：六把武器、十套连击、55 件神器、减益与神器技能。大量使用 AI 生成代码，仅供学习交流，禁止商业行为。 Unofficial fan mod: SEPHIRIA''s weapons in Minecraft — 6 weapons, 10 combos, 55 artifacts, debuffs and artifact skills. Heavy use of AI-generated code; non-commercial.'
+        title         = '赛菲莉亚幻想 (Sephiria Fantasy)'
+        # 摘要中英双语（Modrinth 上限 256 字符，这段 250）
+        description   = '赛菲莉亚幻想：把《SEPHIRIA》的武器系统带进 Minecraft 的同人模组——六把武器、十套连击、55 件神器、减益与神器技能。大量使用 AI 生成代码，仅供学习交流，禁止商业行为。 Sephiria Fantasy: unofficial SEPHIRIA fan mod for Minecraft — 6 weapons, 10 combos, 55 artifacts, debuffs. Heavy use of AI-generated code; non-commercial.'
         body          = (Get-Content -Path $description -Raw -Encoding UTF8)
         # 分类上限就是 3 个：给 4 个 API 会回 `field categories failed validation with error: length`
         categories    = @('adventure', 'equipment', 'game-mechanics')
         client_side   = 'required'
         server_side   = 'required'
         license_id    = 'CC-BY-NC-4.0'   # 字段名就是 license_id（字符串），不是嵌套的 license 对象
-        source_url    = 'https://github.com/Lch2018/sephiria'
-        issues_url    = 'https://github.com/Lch2018/sephiria/issues'
+        source_url    = 'https://github.com/Lch2018/sephiria-fantasy'
+        issues_url    = 'https://github.com/Lch2018/sephiria-fantasy/issues'
     }
 
     if (-not $project) {
