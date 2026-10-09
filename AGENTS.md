@@ -26,6 +26,14 @@
 - 推送需要本地代理：git 为 github.com 单独配置了 `http://127.0.0.1:7897`。
   代理没开时推送会报 `Failed to connect ... over proxy`，此时直连也解析不了域名，
   必须等用户把代理打开再推。
+- 用户说「发布」= 建 GitHub Release（仓库本身已经是 public）：
+  `gh release create v<版本> build/libs/sephiria-<版本>.jar --title "SEPHIRIA <版本>（A 测）" --notes-file <说明.md> --target main`。
+  **本机的 `gh` 没有登录**，发布前先用 git 自己的凭据喂给它（别把 token 打印出来）：
+  先 `CRED=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill)`，
+  再 `export GH_TOKEN=$(printf '%s\n' "$CRED" | sed -n 's/^password=//p')`，
+  同时 `export HTTPS_PROXY=http://127.0.0.1:7897`（gh 也要走代理）。
+- 发布说明用中文写四块：运行环境（26.3 + Fabric Loader 0.19.5 + Fabric API + GeckoLib）、
+  这一版有什么、已知问题 / 未完成、以及「同人模组 / 99% AI 制作 / 禁止商业行为」的声明。
 
 ## 资源与模型
 
