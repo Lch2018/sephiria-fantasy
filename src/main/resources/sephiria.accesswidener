@@ -16,3 +16,14 @@ accessible	class	net/minecraft/client/particle/ParticleResources$MutableSpriteSe
 accessible	method	net/minecraft/client/particle/ParticleResources$MutableSpriteSet	<init>	()V
 accessible	field	net/minecraft/client/particle/ParticleResources	spriteSets	Ljava/util/Map;
 accessible	field	net/minecraft/client/particle/ParticleResources	providers	Lit/unimi/dsi/fastutil/ints/Int2ObjectMap;
+
+# 26.3 把 Display 实体（方块 / 物品 / 文本展示）的全部配置收进了私有同步数据，
+#   连 setBlockState 都成了私有的——红蛇之眼的陨石本体要靠直接写这些访问器来变形
+#   （出现放大 / 下落自转 / 消失缩小 / 满亮）。渲染仍走原版，不需要客户端代码。
+accessible	field	net/minecraft/world/entity/Display	DATA_TRANSLATION_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible	field	net/minecraft/world/entity/Display	DATA_SCALE_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible	field	net/minecraft/world/entity/Display	DATA_LEFT_ROTATION_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible	field	net/minecraft/world/entity/Display	DATA_BRIGHTNESS_OVERRIDE_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible	field	net/minecraft/world/entity/Display	DATA_TRANSFORMATION_INTERPOLATION_DURATION_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible	field	net/minecraft/world/entity/Display	DATA_POS_ROT_INTERPOLATION_DURATION_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible	field	net/minecraft/world/entity/Display$BlockDisplay	DATA_BLOCK_STATE_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;

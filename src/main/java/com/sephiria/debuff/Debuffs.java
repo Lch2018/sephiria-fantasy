@@ -18,6 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 
 import java.util.HashMap;
@@ -80,6 +81,10 @@ public final class Debuffs {
 	private static final int BURN_BURST_PARTICLES = 8;
 	/** 每跳结算时的烟粒数量（烟比火苗少，免得糊住目标）。 */
 	private static final int BURN_SMOKE_PARTICLES = 5;
+	/** 灼伤粒子浓度按层数线性缩放：1 层 = 上面三个基准数量的 40%，6 层 = 100%（原来的手感）。 */
+	private static final double BURN_PARTICLE_LOW_FACTOR = 0.4D;
+	/** 浓度 100% 对应的层数：基准数量按这一层数写；再往上按同一斜率继续变浓。 */
+	private static final int BURN_PARTICLE_REFERENCE_STACKS = 6;
 
 	/**
 	 * 目标身上的触电：一段共享的持续时间 + 一个周期计时器，层数是伤害乘数。
@@ -283,6 +288,26 @@ public final class Debuffs {
 				SHOCK_AURA_PARTICLES, 0.35D, 0.55D, 0.35D, 0.02D);
 	}
 
+	/**
+	 * 灼伤粒子的层数浓度倍率：1 层 40%，到 {@link #BURN_PARTICLE_REFERENCE_STACKS} 层满 100%
+	 * （= 上面那三个基准数量），再往上按同一斜率继续涨——烧得越旺粒子越密。
+	 */
+	private static double burnParticleFactor(int stacks) {
+		int level = Math.max(1, stacks);
+		return BURN_PARTICLE_LOW_FACTOR + (1.0D - BURN_PARTICLE_LOW_FACTOR)
+				* (level - 1) / (BURN_PARTICLE_REFERENCE_STACKS - 1);
+	}
+
+	/**
+	 * 按浓度倍率折算粒子数：整数部分照发，小数部分按概率补一颗。
+	 * 直接取整会把低层数抹平——1 层时 2 颗 × 40% = 0.8，取整成 0 就一点火苗都没有了。
+	 */
+	private static int burnParticleCount(int base, double factor, RandomSource random) {
+		double exact = base * factor;
+		int count = (int) exact;
+		return count + (random.nextDouble() < exact - count ? 1 : 0);
+	}
+
 	/** 灼伤：每 0.5 秒跳一跳，时间走完直接消失（没有终结跳）。 */
 	private static void tickBurn(LivingEntity entity, ServerLevel level) {
 		Burn burn = entity.getAttached(BURNS);
@@ -310,9 +335,11 @@ public final class Debuffs {
 				burn.attackerId()));
 		syncStacks(BURN_ID, entity, burn.stacks());
 
-		// 燃烧特效：火苗贴着目标往上冒；音效只在结算那一下放，避免一直响
+		// 燃烧特效：火苗贴着目标往上冒，浓度随层数（1 层 40% → 6 层 100%）；
+		// 音效只在结算那一下放，避免一直响
 		level.sendParticles(ParticleTypes.FLAME, entity.getX(), entity.getY(0.5D), entity.getZ(),
-				BURN_AURA_PARTICLES, 0.35D, 0.55D, 0.35D, 0.01D);
+				burnParticleCount(BURN_AURA_PARTICLES, burnParticleFactor(burn.stacks()), level.getRandom()),
+				0.35D, 0.55D, 0.35D, 0.01D);
 	}
 
 	/**
@@ -521,10 +548,13 @@ public final class Debuffs {
 
 		target.setInvulnerableTime(0);
 		target.hurtServer(level, SephiriaDamage.burn(level, player), (float) damage);
+		// 这一跳的爆点浓度与身上那圈火苗同一个倍率，层数越高烧得越旺
+		double factor = burnParticleFactor(stacks);
+		RandomSource random = level.getRandom();
 		level.sendParticles(ParticleTypes.FLAME, target.getX(), target.getY(0.5D), target.getZ(),
-				BURN_BURST_PARTICLES, 0.4D, 0.6D, 0.4D, 0.05D);
+				burnParticleCount(BURN_BURST_PARTICLES, factor, random), 0.4D, 0.6D, 0.4D, 0.05D);
 		level.sendParticles(ParticleTypes.SMOKE, target.getX(), target.getY(0.6D), target.getZ(),
-				BURN_SMOKE_PARTICLES, 0.35D, 0.5D, 0.35D, 0.03D);
+				burnParticleCount(BURN_SMOKE_PARTICLES, factor, random), 0.35D, 0.5D, 0.35D, 0.03D);
 		// 灶火那种短促的噼啪声（原版熔炉燃烧用的那个），只在造成伤害的这一下响
 		level.playSound(null, target.getX(), target.getY(), target.getZ(),
 				SoundEvents.FURNACE_FIRE_CRACKLE, SoundSource.PLAYERS, 0.5F,
