@@ -1,0 +1,228 @@
+﻿# 把当前版本发到 Modrinth（新建项目 + 上传版本），供「发布」时使用。
+#
+# Usage: powershell -NoProfile -ExecutionPolicy Bypass -File tools\publish-modrinth.ps1
+#
+# 需要一份 Modrinth 个人访问令牌（PAT）——网页 https://modrinth.com/settings/pats 新建，
+# 勾上 PROJECT_CREATE 与 VERSION_CREATE 两个权限。令牌按下面的顺序找：
+#   1) -Token 参数；2) 环境变量 MODRINTH_TOKEN；3) %USERPROFILE%\.sephiria-modrinth-token（首行）。
+# 令牌只在本地使用，绝不要写进仓库（那个文件也刻意放在仓库外）。
+#
+# 走本地代理：api.modrinth.com 直连不通，和 git 一样用 127.0.0.1:7897。
+
+param(
+    [string]$Token = '',
+    [string]$Proxy = 'http://127.0.0.1:7897',
+    [string]$Slug = 'sephiria',
+    [switch]$SkipProjectCheck
+)
+
+$ErrorActionPreference = 'Stop'
+$root = Split-Path -Parent $PSScriptRoot
+
+# ---- 令牌 ----
+if (-not $Token) { $Token = $env:MODRINTH_TOKEN }
+
+if (-not $Token) {
+    $tokenPath = Join-Path $env:USERPROFILE '.sephiria-modrinth-token'
+
+    if (Test-Path $tokenPath) {
+        $Token = (Get-Content -Path $tokenPath -Encoding UTF8 | Select-Object -First 1).Trim()
+    }
+}
+
+if (-not $Token) {
+    throw "找不到 Modrinth 令牌。请在 https://modrinth.com/settings/pats 建一个（勾 PROJECT_CREATE + VERSION_CREATE），把令牌粘进 $env:USERPROFILE\.sephiria-modrinth-token，或设环境变量 MODRINTH_TOKEN。"
+}
+
+# ---- 版本号与产物（与 deploy.ps1 同一处来源）----
+$version = (Select-String -Path (Join-Path $root 'gradle.properties') -Pattern '^version=' |
+    Select-Object -First 1).Line.Split('=')[1].Trim()
+$jar = Join-Path $root ("build\libs\sephiria-$version.jar")
+
+if (-not (Test-Path $jar)) {
+    throw "没找到构建产物 $jar —— 先跑 tools\deploy.ps1。"
+}
+
+$description = Join-Path $PSScriptRoot 'modrinth\description.md'
+$changelogPath = Join-Path $PSScriptRoot 'modrinth\changelog.md'
+
+foreach ($file in @($description, $changelogPath)) {
+    if (-not (Test-Path $file)) { throw "缺文件：$file" }
+}
+
+# curl.exe 自带在 Windows 10+ 上；PowerShell 5.1 的 Invoke-RestMethod 做 multipart 太别扭。
+curl.exe --version | Out-Null
+if ($LASTEXITCODE -ne 0) { throw '没找到 curl.exe' }
+
+$api = 'https://api.modrinth.com/v2'
+$userAgent = 'SEPHIRIA-Mod-Publisher/1.0 (github.com/Lch2018/sephiria)'
+$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("sephiria-modrinth-" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $tempDir | Out-Null
+
+# 拼 JSON 用自写的小序列化器，**不要**改成 ConvertTo-Json：本机 PowerShell 5.1 碰到
+# description.md 那份中文正文会卡死（实测进程内存涨到 7 GB 也不返回），换成自写的就没这问题。
+# 只需要转义反斜杠、引号与控制字符，其余（含中文）原样输出——curl 按 UTF-8 发，API 也按 UTF-8 收。
+function ConvertTo-JsonText([string]$text) {
+    $builder = New-Object System.Text.StringBuilder
+
+    foreach ($ch in $text.ToCharArray()) {
+        switch ($ch) {
+            '"' { [void]$builder.Append('\"') }
+            '\' { [void]$builder.Append('\\') }
+            "`n" { [void]$builder.Append('\n') }
+            "`r" { [void]$builder.Append('\r') }
+            "`t" { [void]$builder.Append('\t') }
+            default {
+                if ([int]$ch -lt 0x20) { [void]$builder.Append('\u' + ([int]$ch).ToString('x4')) }
+                else { [void]$builder.Append($ch) }
+            }
+        }
+    }
+
+    return $builder.ToString()
+}
+
+# 够用即可：哈希表 / 数组 / 字符串 / 布尔 / 数字。注意 [string] 也算 IEnumerable，
+# 所以字符串那一支必须排在数组前面。
+function ConvertTo-JsonValue($value) {
+    if ($null -eq $value) { return 'null' }
+    if ($value -is [string]) { return '"' + (ConvertTo-JsonText $value) + '"' }
+    if ($value -is [bool]) { return $value.ToString().ToLowerInvariant() }
+    if ($value -is [int] -or $value -is [long] -or $value -is [double]) {
+        return $value.ToString([System.Globalization.CultureInfo]::InvariantCulture)
+    }
+    if ($value -is [System.Collections.IDictionary]) {
+        $parts = @()
+        foreach ($key in $value.Keys) { $parts += ('"' + $key + '": ' + (ConvertTo-JsonValue $value[$key])) }
+        return '{' + ($parts -join ', ') + '}'
+    }
+    if ($value -is [System.Collections.IEnumerable]) {
+        $parts = @()
+        foreach ($item in $value) { $parts += (ConvertTo-JsonValue $item) }
+        return '[' + ($parts -join ', ') + ']'
+    }
+
+    return '"' + (ConvertTo-JsonText $value.ToString()) + '"'
+}
+
+# 中文写成不带 BOM 的 UTF-8：带 BOM 的 JSON 会被 API 拒掉。
+function Write-JsonFile([string]$path, $payload) {
+    $utf8 = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($path, (ConvertTo-JsonValue $payload), $utf8)
+}
+
+# 统一发请求：返回 @{ status = <码>; body = <文本> }
+function Invoke-Api {
+    param(
+        [string]$Method,
+        [string]$Path,
+        [string[]]$ExtraArgs = @(),
+        [string]$BodyFile = ''
+    )
+
+    $out = Join-Path $tempDir 'response.json'
+    # 注意别用 $args：那是 PowerShell 的自动变量
+    $curlArgs = @('-sS', '-x', $Proxy, '-A', $userAgent, '-X', $Method, '-H', "Authorization: Bearer $Token",
+        '-o', $out, '-w', '%{http_code}', "$api$Path")
+
+    if ($BodyFile) { $curlArgs += @('--data-binary', "@$BodyFile") }
+    if ($ExtraArgs.Count -gt 0) { $curlArgs += $ExtraArgs }
+
+    $status = & curl.exe @curlArgs
+    $body = if (Test-Path $out) { Get-Content -Path $out -Raw -Encoding UTF8 } else { '' }
+
+    if (Test-Path $out) { Remove-Item $out -Force }
+
+    return @{ status = [int]$status; body = $body }
+}
+
+try {
+    $project = $null
+
+    if (-not $SkipProjectCheck) {
+        Write-Output "查询项目 $Slug …"
+        $existing = Invoke-Api -Method 'GET' -Path "/project/$Slug"
+
+        if ($existing.status -eq 200) {
+            $project = $existing.body | ConvertFrom-Json
+            Write-Output ("项目已存在：" + $project.slug + "（id " + $project.id + "）")
+        } elseif ($existing.status -ne 404) {
+            throw "查询项目失败：HTTP $($existing.status) $($existing.body)"
+        }
+    }
+
+    if (-not $project) {
+        Write-Output '新建项目 …'
+
+        $payload = @{
+            slug             = $Slug
+            title            = 'SEPHIRIA'
+            description      = '把《SEPHIRIA》的武器系统带进 Minecraft 的同人模组：六把武器、十套连击、55 件神器、触电与灼伤减益、神器技能。约 99% 由 AI 制作，仅供学习交流，禁止商业行为。'
+            body             = (Get-Content -Path $description -Raw -Encoding UTF8)
+            categories       = @('adventure', 'equipment', 'game-mechanics', 'magic')
+            project_type     = 'mod'
+            client_side      = 'required'
+            server_side      = 'required'
+            license_id       = 'CC-BY-NC-4.0'   # 字段名就是 license_id（字符串），不是嵌套对象
+            game_versions    = @('26.3')
+            loaders          = @('fabric')
+            source_url       = 'https://github.com/Lch2018/sephiria'
+            issues_url       = 'https://github.com/Lch2018/sephiria/issues'
+            is_draft         = $false
+            initial_versions = @()   # 必填字段：建项目时本可顺手带一个版本，这里留空、随后单独传
+        }
+
+        $bodyFile = Join-Path $tempDir 'project.json'
+        Write-JsonFile -path $bodyFile -payload $payload
+
+        # 建项目这条也是 multipart + data 字段（和上传版本同一套）——发成 application/json
+        # 会被 API 回一句 "Error while parsing multipart payload: ContentTypeIncompatible"。
+        $created = Invoke-Api -Method 'POST' -Path '/project' -ExtraArgs @('-F', "data=<$bodyFile")
+
+        if ($created.status -ne 200 -and $created.status -ne 201) {
+            throw "建项目失败：HTTP $($created.status) $($created.body)"
+        }
+
+        $project = $created.body | ConvertFrom-Json
+        Write-Output ("项目已建立：" + $project.slug + "（id " + $project.id + "）")
+    }
+
+    Write-Output "上传版本 $version …"
+
+    $versionPayload = @{
+        project_id     = $project.id
+        name           = "$version（A 测）"
+        version_number = $version
+        changelog      = (Get-Content -Path $changelogPath -Raw -Encoding UTF8)
+        dependencies   = @(
+            @{ project_id = 'P7dR8mSH'; dependency_type = 'required' }   # Fabric API
+            @{ project_id = '8BmcQJ2H'; dependency_type = 'required' }   # GeckoLib
+        )
+        game_versions  = @('26.3')
+        version_type   = 'alpha'
+        loaders        = @('fabric')
+        featured       = $true
+        status         = 'listed'
+    }
+
+    $versionFile = Join-Path $tempDir 'version.json'
+    Write-JsonFile -path $versionFile -payload $versionPayload
+
+    # multipart：data 字段用「文件内容当值」的 curl 语法（<），file 字段才是真的上传文件
+    $uploaded = Invoke-Api -Method 'POST' -Path '/version' -ExtraArgs @(
+        '-F', "data=<$versionFile",
+        '-F', "file=@$jar;type=application/java-archive"
+    )
+
+    if ($uploaded.status -ne 200 -and $uploaded.status -ne 201) {
+        throw "上传版本失败：HTTP $($uploaded.status) $($uploaded.body)"
+    }
+
+    $result = $uploaded.body | ConvertFrom-Json
+    Write-Output ''
+    Write-Output ('完成：' + $project.slug + ' → ' + $version)
+    Write-Output ('项目页： https://modrinth.com/mod/' + $project.slug)
+    Write-Output ('版本页： https://modrinth.com/mod/' + $project.slug + '/version/' + $result.version_number)
+} finally {
+    Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+}

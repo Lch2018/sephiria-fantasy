@@ -37,6 +37,15 @@
   同时 `export HTTPS_PROXY=http://127.0.0.1:7897`（gh 也要走代理）。
 - 发布说明用中文写四块：运行环境（26.3 + Fabric Loader 0.19.5 + Fabric API + GeckoLib）、
   这一版有什么、已知问题 / 未完成、以及「同人模组 / 99% AI 制作 / 禁止商业行为」的声明。
+- 同一版**同时发 Modrinth**：`powershell -NoProfile -ExecutionPolicy Bypass -File tools\publish-modrinth.ps1`
+  （slug `sephiria`；项目没建过就建、建过就直接传新版本）。它要一份 Modrinth 个人访问令牌（PAT）——
+  <https://modrinth.com/settings/pats> 新建，勾 **PROJECT_CREATE** 与 **VERSION_CREATE**，
+  然后按 `-Token` → 环境变量 `MODRINTH_TOKEN` → `%USERPROFILE%\.sephiria-modrinth-token`（首行）的顺序找。
+  **令牌不进仓库**（那个文件刻意放在仓库外）。项目正文 `tools/modrinth/description.md`、
+  本次版本说明 `tools/modrinth/changelog.md`（每次发布前改写它），脚本会带上 Fabric API 与 GeckoLib
+  两个必需依赖。走 API 而不是网页：内置浏览器不支持文件选择框，网页端传不了 jar。
+  改这个脚本时注意两点：文件是**带 BOM 的 UTF-8**（PS 5.1 否则按 ANSI 读、中文会把代码吃掉），
+  以及别把自写的 JSON 序列化器换回 `ConvertTo-Json`（见记忆手册 §三）。
 
 ## 资源与模型
 
