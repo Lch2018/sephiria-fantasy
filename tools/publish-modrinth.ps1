@@ -151,23 +151,28 @@ try {
         }
     }
 
+    # 项目资料（正文 + 摘要 + 分类 + 环境 + 许可证 + 链接）：新建时用一次，之后每次发布再刷新一遍
+    $projectPayload = @{
+        title         = 'SEPHIRIA'
+        description   = '把《SEPHIRIA》的武器系统带进 Minecraft 的同人模组：六把武器、十套连击、55 件神器、触电与灼伤减益、神器技能。约 99% 由 AI 制作，仅供学习交流，禁止商业行为。'
+        body          = (Get-Content -Path $description -Raw -Encoding UTF8)
+        # 分类上限就是 3 个：给 4 个 API 会回 `field categories failed validation with error: length`
+        categories    = @('adventure', 'equipment', 'game-mechanics')
+        client_side   = 'required'
+        server_side   = 'required'
+        license_id    = 'CC-BY-NC-4.0'   # 字段名就是 license_id（字符串），不是嵌套的 license 对象
+        source_url    = 'https://github.com/Lch2018/sephiria'
+        issues_url    = 'https://github.com/Lch2018/sephiria/issues'
+    }
+
     if (-not $project) {
         Write-Output '新建项目 …'
 
-        $payload = @{
+        $payload = $projectPayload + @{
             slug             = $Slug
-            title            = 'SEPHIRIA'
-            description      = '把《SEPHIRIA》的武器系统带进 Minecraft 的同人模组：六把武器、十套连击、55 件神器、触电与灼伤减益、神器技能。约 99% 由 AI 制作，仅供学习交流，禁止商业行为。'
-            body             = (Get-Content -Path $description -Raw -Encoding UTF8)
-            categories       = @('adventure', 'equipment', 'game-mechanics', 'magic')
             project_type     = 'mod'
-            client_side      = 'required'
-            server_side      = 'required'
-            license_id       = 'CC-BY-NC-4.0'   # 字段名就是 license_id（字符串），不是嵌套对象
             game_versions    = @('26.3')
             loaders          = @('fabric')
-            source_url       = 'https://github.com/Lch2018/sephiria'
-            issues_url       = 'https://github.com/Lch2018/sephiria/issues'
             is_draft         = $false
             initial_versions = @()   # 必填字段：建项目时本可顺手带一个版本，这里留空、随后单独传
         }
@@ -175,7 +180,7 @@ try {
         $bodyFile = Join-Path $tempDir 'project.json'
         Write-JsonFile -path $bodyFile -payload $payload
 
-        # 建项目这条也是 multipart + data 字段（和上传版本同一套）——发成 application/json
+        # 建项目这条是 multipart + data 字段（和上传版本同一套）——发成 application/json
         # 会被 API 回一句 "Error while parsing multipart payload: ContentTypeIncompatible"。
         $created = Invoke-Api -Method 'POST' -Path '/project' -ExtraArgs @('-F', "data=<$bodyFile")
 
@@ -185,6 +190,37 @@ try {
 
         $project = $created.body | ConvertFrom-Json
         Write-Output ("项目已建立：" + $project.slug + "（id " + $project.id + "）")
+    } else {
+        # 项目已经在了：把正文与资料按本地文件刷新一遍 —— 改了 tools/modrinth/description.md，
+        # 下次发布就会同步到项目页。注意 PATCH 收 application/json，POST 却要 multipart，两个口径不一样。
+        Write-Output '刷新项目资料 …'
+
+        $patchFile = Join-Path $tempDir 'project-patch.json'
+        Write-JsonFile -path $patchFile -payload $projectPayload
+
+        $patched = Invoke-Api -Method 'PATCH' -Path "/project/$($project.id)" -BodyFile $patchFile `
+            -ExtraArgs @('-H', 'Content-Type: application/json')
+
+        if ($patched.status -ne 204 -and $patched.status -ne 200) {
+            throw "刷新项目资料失败：HTTP $($patched.status) $($patched.body)"
+        }
+
+        Write-Output '项目资料已刷新'
+    }
+
+    # 同一个版本号已经传过就跳过：Modrinth **不拦**重复的 version_number，重复上传会在项目页多出
+    # 一个一模一样的版本（得按 id 删掉）。要重传同一个版本号，先去后台把旧的那条删了再跑。
+    $existingVersions = Invoke-Api -Method 'GET' -Path "/project/$($project.id)/version"
+
+    if ($existingVersions.status -eq 200) {
+        $already = ($existingVersions.body | ConvertFrom-Json) |
+            Where-Object { $_.version_number -eq $version } | Select-Object -First 1
+
+        if ($already) {
+            Write-Output "项目里已经有 $version 这个版本（id $($already.id)），跳过上传。"
+            Write-Output ('项目页： https://modrinth.com/mod/' + $project.slug)
+            return
+        }
     }
 
     Write-Output "上传版本 $version …"
@@ -203,6 +239,8 @@ try {
         loaders        = @('fabric')
         featured       = $true
         status         = 'listed'
+        # 必填：列出 multipart 里装文件的那几个字段名，要和下面的 -F 名字对上
+        file_parts     = @('file')
     }
 
     $versionFile = Join-Path $tempDir 'version.json'
