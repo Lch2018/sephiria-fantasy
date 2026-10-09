@@ -1,5 +1,69 @@
 # SEPHIRIA
 
+An **unofficial fan mod** that brings the weapon system of *SEPHIRIA* into Minecraft. About **99% of it was made by AI** — shared for learning and personal use only, and **commercial use is not allowed**.
+
+> Alpha stage: there is a decent amount of content, but most of it has not been playtested thoroughly yet — numbers and feel are still being tuned.
+
+## Contents
+
+### Six base weapons
+
+Blade / Steel Greatsword / Dagger / Default Sword and Shield / Quarterstaff / Colossal Crossbow — each with its own normal-attack feel and weapon skills (sweeping, whirlwind, dash, area lunge, …). The blade-type weapons are animated with GeckoLib.
+
+### Ten combo sets and 55 artifacts
+
+Sturdy / Wind Song / Precision / Shadow / Negotiation / Element / Magitech / Dark Cloud / Sun Sword / Embers.
+
+Equipping artifacts of the same set in the Sephiria Backpack raises that combo's tier, and higher tiers give stronger effects. Hover a combo icon to see its full tier table. Artifacts come in five rarities (Common / Advanced / Rare / Legendary / Bond), and a 【Unique】 artifact only counts once no matter how many copies you carry.
+
+### Debuffs and artifact skills
+
+- **Shock** (Magitech) and **Burn** (Embers): periodic damage that scales with stacks; affected mobs show a stack label under their feet. Debuff damage and true damage can crit as well.
+- **Artifact skills**: 6 skill slots with rebindable keys — Encouragement Banner, Haste, Keen Eye, Thunder Verdict.
+
+### Attributes and progression
+
+Physical Power, Fire / Ice / Lightning element strength, crit chance and crit damage, dodge, defense-ignoring (true) damage, movement speed, mana, Leaves (currency), and more. The Attributes page is two columns; hover an entry to see its formula.
+
+### Shop and chests
+
+The shop rerolls its shelves over time, and your Negotiation stat lowers prices; Artifact / Slate / Upgrade chests as loot.
+
+### Effects
+
+Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); plus Sun Sword slash marks, the Thunder Verdict beam, Dark Cloud lightning, custom particles and procedurally generated sound effects.
+
+## Requirements
+
+| | |
+|---|---|
+| Minecraft | **26.3** |
+| Loader | Fabric Loader 0.19.5+ |
+| Required | [Fabric API](https://modrinth.com/mod/fabric-api), [GeckoLib](https://modrinth.com/mod/geckolib) (weapon animations) |
+| Environment | Required on **both client and server** |
+
+## Installation
+
+1. Install Fabric Loader and both dependencies above;
+2. Drop `sephiria-<version>.jar` into `mods/`;
+3. Launch the game — it works in singleplayer right away; for a server, install the same jar on the server side too.
+
+## Known issues / not done yet
+
+- Most content has not been playtested thoroughly; numbers and feel are still being tuned;
+- Backpack expansion, slate upgrades, forging and the companion system are not implemented yet;
+- Some texts and icons will still change.
+
+## Disclaimer
+
+- Not affiliated with Mojang Studios or Microsoft. *SEPHIRIA* and its settings belong to their original author, TEAM HORAY.
+- About 99% of this project is AI-made. It is for learning and personal use only, and **commercial use is prohibited** — see the LICENSE file in the repository for the full terms.
+- Source code and issue tracker: <https://github.com/Lch2018/sephiria>
+
+---
+
+# SEPHIRIA（中文）
+
 把《SEPHIRIA（赛菲莉娅）》的武器系统搬进 Minecraft 的同人模组。**非官方同人作品**，约 **99% 由 AI 制作**，仅供学习交流，**禁止商业行为**。
 
 > 目前是 A 测（alpha）阶段：内容量不小，但大部分还没经过充分实测，数值与手感会持续调整。
@@ -8,7 +72,7 @@
 
 ### 六把基础武器
 
-刀 / 巨剑 / 匕首 / 盾剑 / 长棍 / 法杖，各自有独立的普通攻击手感与武器技能（横扫、旋风、突刺、范围突进等）；两把刀由 GeckoLib 驱动骨骼动画。
+刀 / 钢铁巨剑 / 匕首 / 标准剑盾 / 长棍 / 重型弩，各自有独立的普通攻击手感与武器技能（横扫、旋风、突刺、范围突进等）；刀类武器由 GeckoLib 驱动骨骼动画。
 
 ### 十套「连击」与 55 件神器
 

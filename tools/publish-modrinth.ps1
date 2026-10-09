@@ -154,7 +154,8 @@ try {
     # 项目资料（正文 + 摘要 + 分类 + 环境 + 许可证 + 链接）：新建时用一次，之后每次发布再刷新一遍
     $projectPayload = @{
         title         = 'SEPHIRIA'
-        description   = '把《SEPHIRIA》的武器系统带进 Minecraft 的同人模组：六把武器、十套连击、55 件神器、触电与灼伤减益、神器技能。约 99% 由 AI 制作，仅供学习交流，禁止商业行为。'
+        # 摘要中英双语（Modrinth 上限 256 字符，这段 246）
+        description   = '把《SEPHIRIA》的武器系统带进 Minecraft 的同人模组：六把武器、十套连击、55 件神器、减益与神器技能。约 99% 由 AI 制作，仅供学习交流，禁止商业行为。 Unofficial fan mod bringing SEPHIRIA''s weapons into Minecraft: 6 weapons, 10 combos, 55 artifacts, debuffs and artifact skills. ~99% AI-made, non-commercial.'
         body          = (Get-Content -Path $description -Raw -Encoding UTF8)
         # 分类上限就是 3 个：给 4 个 API 会回 `field categories failed validation with error: length`
         categories    = @('adventure', 'equipment', 'game-mechanics')
@@ -218,6 +219,22 @@ try {
 
         if ($already) {
             Write-Output "项目里已经有 $version 这个版本（id $($already.id)），跳过上传。"
+
+            # 顺手把更新说明刷新成 tools/modrinth/changelog.md 的内容：改了说明重跑一次就同步了
+            $changelogFile = Join-Path $tempDir 'version-patch.json'
+            Write-JsonFile -path $changelogFile -payload @{
+                changelog = (Get-Content -Path $changelogPath -Raw -Encoding UTF8)
+            }
+
+            $refreshed = Invoke-Api -Method 'PATCH' -Path "/version/$($already.id)" -BodyFile $changelogFile `
+                -ExtraArgs @('-H', 'Content-Type: application/json')
+
+            if ($refreshed.status -eq 204 -or $refreshed.status -eq 200) {
+                Write-Output '更新说明已刷新'
+            } else {
+                Write-Output "更新说明刷新失败（HTTP $($refreshed.status)）：$($refreshed.body)"
+            }
+
             Write-Output ('项目页： https://modrinth.com/mod/' + $project.slug)
             return
         }

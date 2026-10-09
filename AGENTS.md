@@ -35,8 +35,14 @@
   先 `CRED=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill)`，
   再 `export GH_TOKEN=$(printf '%s\n' "$CRED" | sed -n 's/^password=//p')`，
   同时 `export HTTPS_PROXY=http://127.0.0.1:7897`（gh 也要走代理）。
-- 发布说明用中文写四块：运行环境（26.3 + Fabric Loader 0.19.5 + Fabric API + GeckoLib）、
+- 发布说明（GitHub Release 与 Modrinth 的项目正文 / 更新说明）**一律中英双语**：中文在前，
+  之后 `## English` 一节写同样的四块——运行环境（26.3 + Fabric Loader 0.19.5 + Fabric API + GeckoLib）、
   这一版有什么、已知问题 / 未完成、以及「同人模组 / 99% AI 制作 / 禁止商业行为」的声明。
+  **译文里的专有名词跟 `src/main/resources/assets/sephiria/lang/en_us.json` 走**（那是模组自己的官方英文）：
+  武器 Blade / Steel Greatsword / Dagger / Default Sword and Shield / Quarterstaff / Colossal Crossbow，
+  连击 Sturdy / Wind Song / Precision / Shadow / Negotiation / Element / Magitech / Dark Cloud /
+  Sun Sword / Embers，减益 Shock / Burn，属性页是 Attributes。
+- Modrinth 的摘要字段（`description`）上限 **256 字符**，中英都要塞进去（当前那条 246）——改了先数一下长度。
 - 同一版**同时发 Modrinth**：`powershell -NoProfile -ExecutionPolicy Bypass -File tools\publish-modrinth.ps1`
   （slug `sephiria`；项目没建过就建、建过就直接传新版本）。它要一份 Modrinth 个人访问令牌（PAT）——
   <https://modrinth.com/settings/pats> 新建，勾 **PROJECT_CREATE** 与 **VERSION_CREATE**，
