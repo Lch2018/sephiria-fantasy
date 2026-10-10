@@ -90,6 +90,13 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.RAVEN_TABLET);
 						output.accept(ModItems.SOLIS_FRACTO);
 						output.accept(ModItems.SOLIS_PARVO);
+						output.accept(ModItems.CRIMSON_SUNSET);
+						output.accept(ModItems.ETERNAL_FURNACE);
+						output.accept(ModItems.SOLIS_DECUSA);
+						output.accept(ModItems.METEORIC_EARRING);
+						output.accept(ModItems.SOLIS_DEKURI);
+						output.accept(ModItems.NOON_WHETSTONE);
+						output.accept(ModItems.METEORIC_MIRROR);
 						output.accept(ModItems.RED_SNAKE_EYE);
 						output.accept(ModItems.AMBERGRIS);
 						output.accept(ModItems.RED_YARN_BALL);

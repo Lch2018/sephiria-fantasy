@@ -60,6 +60,9 @@ public final class ArtifactLoot {
 				ModItems.POINTY_ACORN, ModItems.THUNDER_STONE, ModItems.CLOUDSEED_ARROW,
 				ModItems.MAST_MODEL, ModItems.RAVEN_TABLET,
 				ModItems.SOLIS_FRACTO, ModItems.SOLIS_PARVO,
+				ModItems.CRIMSON_SUNSET, ModItems.ETERNAL_FURNACE, ModItems.SOLIS_DECUSA,
+				ModItems.METEORIC_EARRING, ModItems.SOLIS_DEKURI, ModItems.NOON_WHETSTONE,
+				ModItems.METEORIC_MIRROR,
 				ModItems.RED_SNAKE_EYE, ModItems.AMBERGRIS, ModItems.RED_YARN_BALL,
 				ModItems.OAK_CHARCOAL, ModItems.FIRE_BUG, ModItems.LAVA_BEAD);
 	}

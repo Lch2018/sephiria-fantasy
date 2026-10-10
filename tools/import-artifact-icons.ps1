@@ -57,6 +57,8 @@ $wechat = 'C:\Users\28237\Documents\xwechat_files\wxid_v1oblkxkkuq222_3365\temp\
 $wechat2 = 'C:\Users\28237\Documents\xwechat_files\wxid_v1oblkxkkuq222_3365\temp\RWTemp\2026-09\9e20f478899dc29eb19741386f9343c8'
 # the ember batch (combo icon) landed in a newer zcode session cache; same lifecycle as cache3.
 $cache4 = 'C:\Users\28237\.zcode\cli\image-cache\sess_da3fb70d-3f37-4d0d-9565-6509fd39e4d0'
+# the sun-sword batch (seven artifacts) arrived in this session's image cache; same lifecycle as cache4.
+$cache5 = 'C:\Users\28237\.zcode\cli\image-cache\sess_891ddd3d-4c82-4d37-b9da-bf35030e89b5'
 
 foreach ($dir in @($texDir, $guiDir, $previewDir)) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -651,6 +653,22 @@ $jobs = @(
     @{ name = 'fire_bug'; root = 'cache4'; source = 'image-449098c42453aa58162db15911626e34.png';
        target = 16; dir = 'item' },
     @{ name = 'lava_bead'; root = 'cache4'; source = 'image-fdd055ac3e8bcd69e4b95b9fb76e772d.png';
+       target = 16; dir = 'item' },
+
+    # batch 19: the seven sun-sword artifacts.
+    @{ name = 'crimson_sunset'; root = 'cache5'; source = 'image-d5fe21ab31a5daed1952d6041964c249.png';
+       target = 16; dir = 'item' },
+    @{ name = 'eternal_furnace'; root = 'cache5'; source = 'image-a6b3ed3c81270be1acc97d41d68e1d20.png';
+       target = 16; dir = 'item' },
+    @{ name = 'solis_decusa'; root = 'cache5'; source = 'image-f02c7e2191a83f43660e0786ed38f284.png';
+       target = 16; dir = 'item' },
+    @{ name = 'meteoric_earring'; root = 'cache5'; source = 'image-7e87f16596cbccfc678c7b13525bb955.png';
+       target = 16; dir = 'item' },
+    @{ name = 'solis_dekuri'; root = 'cache5'; source = 'image-f96b72a3e0d8a2abd4826b1e772efedd.png';
+       target = 16; dir = 'item' },
+    @{ name = 'noon_whetstone'; root = 'cache5'; source = 'image-57e4e91f2332b614abca6f202a81d49d.png';
+       target = 16; dir = 'item' },
+    @{ name = 'meteoric_mirror'; root = 'cache5'; source = 'image-9412ae5d59453704447a234e1103ba95.png';
        target = 16; dir = 'item' }
 )
 
@@ -666,7 +684,7 @@ foreach ($job in $jobs) {
     $outDir = if ($job.dir -eq 'gui') { $guiDir } else { $texDir }
     $outFile = Join-Path $outDir ($name + '.png')
 
-    $sourceRoot = if ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
+    $sourceRoot = if ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
 
     if (-not (Test-Path $sourceRoot)) {
         # the wechat temp folder is recycled by the chat client: once a whole batch's reference
@@ -684,7 +702,7 @@ foreach ($job in $jobs) {
         # there can hold a newer batch while an older batch's files are already gone. For the wechat
         # roots and the newest cache roots (cache3 / cache4) that is an expired reference whose
         # texture is committed, not a typo; a missing file under cache / cache2 still stops the run.
-        if (@('wechat', 'wechat2', 'cache3', 'cache4') -contains $job.root) {
+        if (@('wechat', 'wechat2', 'cache3', 'cache4', 'cache5') -contains $job.root) {
             $skipped += $name
             Write-Warning "$name : reference file no longer in its temp folder, skipped"
             continue

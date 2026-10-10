@@ -3,6 +3,7 @@ package com.sephiria.artifact;
 import com.sephiria.debuff.Debuffs;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.registry.ModItems;
+import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.util.Numbers;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -101,6 +102,11 @@ public class SandeEarringsItem extends ArtifactItem {
 
 			if (targets <= 0) {
 				LAST_ATTACK.remove(player.getUUID());
+				continue;
+			}
+
+			// 自动攻击类效果的统一前提：只在战斗中打（与乌云雷击、红蛇之眼陨石同一套口径）
+			if (!CombatState.isInCombat(player)) {
 				continue;
 			}
 

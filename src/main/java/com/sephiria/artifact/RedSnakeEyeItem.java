@@ -3,6 +3,7 @@ package com.sephiria.artifact;
 import com.sephiria.debuff.Debuffs;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.registry.ModItems;
+import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.util.Numbers;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -194,6 +195,12 @@ public class RedSnakeEyeItem extends ArtifactItem {
 
 			if (count <= 0) {
 				LAST_METEOR.remove(player.getUUID());
+				continue;
+			}
+
+			// 自动攻击类效果的统一前提：只有战斗中才落石（与乌云雷击同一套口径；
+			// 脱战时不落石、也不吃冷却，等打上门来再砸）
+			if (!CombatState.isInCombat(player)) {
 				continue;
 			}
 

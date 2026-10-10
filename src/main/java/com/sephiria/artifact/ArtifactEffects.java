@@ -342,6 +342,46 @@ public final class ArtifactEffects {
 		return (int) sumAffix(player, SephiriaArtifact::sunSwordCapacityBonus);
 	}
 
+	/** 神器给的「太阳剑伤害」加成总和（%）：与连击档位那一项相加（索利斯·德库萨、陨铁镜）。 */
+	public static double sunSwordDamagePercentBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::sunSwordDamagePercentBonus);
+	}
+
+	/** 神器给的「太阳剑暴击几率」加成总和（百分点）：只加在太阳剑那一下（索利斯·德克里）。 */
+	public static double sunSwordCritChanceBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::sunSwordCritChanceBonus);
+	}
+
+	/** 神器给的「太阳剑无视目标防御力」总和（%）：太阳剑那一下少受目标这么多减伤（索利斯·德克里）。 */
+	public static double sunSwordDefenseIgnorePercent(ServerPlayer player) {
+		return Math.min(90.0D, sumAffix(player, SephiriaArtifact::sunSwordDefenseIgnorePercent));
+	}
+
+	/** 神器给的「太阳剑额外触发次数」总和（次）：造成武器伤害时多投几支（正午磨刀石）。 */
+	public static int sunSwordExtraTriggers(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::sunSwordExtraTriggers);
+	}
+
+	/** 神器给的「太阳剑投掷时增大」概率（%）：命中就伤害 ×1.33、划痕更长（火红的夕阳）。 */
+	public static double sunSwordEnlargeChance(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::sunSwordEnlargeChance);
+	}
+
+	/** 神器给的「回收时额外回收」总和（支）：每次捡起地上的剑多收这么多（陨铁镜）。 */
+	public static int sunSwordPickupBonus(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::sunSwordPickupBonus);
+	}
+
+	/** 太阳剑是不是掉在玩家附近而不是被打的人脚下（陨铁耳环）。 */
+	public static boolean sunSwordDropNearPlayer(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::sunSwordDropNearPlayer) > 0.0D;
+	}
+
+	/** 神器给的「每隔几秒 +1 支太阳剑上限」（0 = 没有；永恒熔炉）。 */
+	public static int sunSwordCapacityEverySeconds(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::sunSwordCapacityEverySeconds);
+	}
+
 	/** 神器给的「电属性攻击的暴击几率」加成总和（%）：只加在电属性伤害上。 */
 	public static double electricCritChanceBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::electricCritChanceBonus);

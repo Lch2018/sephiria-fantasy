@@ -59,6 +59,13 @@ import com.sephiria.artifact.PressureBandageItem;
 import com.sephiria.artifact.ProjectionSwordItem;
 import com.sephiria.artifact.WandererNecklaceItem;
 import com.sephiria.artifact.WarriorsProofItem;
+import com.sephiria.artifact.CrimsonSunsetItem;
+import com.sephiria.artifact.EternalFurnaceItem;
+import com.sephiria.artifact.MeteoricEarringItem;
+import com.sephiria.artifact.MeteoricMirrorItem;
+import com.sephiria.artifact.NoonWhetstoneItem;
+import com.sephiria.artifact.SolisDecusaItem;
+import com.sephiria.artifact.SolisDekuriItem;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.potion.PotionEffect;
 import com.sephiria.potion.Potions;
@@ -472,6 +479,41 @@ public final class ModItems {
 	/** 索利斯·帕尔沃（太阳剑，高级）：【唯一】太阳剑数量上限 +1/1/2/2/3、移动速度 +1/2/4/6/8%。 */
 	public static final Item SOLIS_PARVO = register(key("solis_parvo"),
 			p -> new SolisParvoItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 火红的夕阳（太阳剑，稀有）：【唯一】投掷时 20..100% 概率增大（伤害 ×1.33）。 */
+	public static final Item CRIMSON_SUNSET = register(key("crimson_sunset"),
+			p -> new CrimsonSunsetItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 永恒熔炉（太阳剑，普通）：【唯一】每 10/8/5 秒 +1 支、暴击几率 +1/2.5/5%。 */
+	public static final Item ETERNAL_FURNACE = register(key("eternal_furnace"),
+			p -> new EternalFurnaceItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 索利斯·德库萨（太阳剑，高级）：【唯一】太阳剑伤害 +5..20%、暴击伤害 +4..16%。 */
+	public static final Item SOLIS_DECUSA = register(key("solis_decusa"),
+			p -> new SolisDecusaItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 陨铁耳环（太阳剑，稀有）：【唯一】投掷的太阳剑落在你附近、火焰属性伤害 +2/4/7。 */
+	public static final Item METEORIC_EARRING = register(key("meteoric_earring"),
+			p -> new MeteoricEarringItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 索利斯·德克里（太阳剑，传说）：【唯一】太阳剑无视防御力 +2..14%、太阳剑暴击几率 +5..50%。 */
+	public static final Item SOLIS_DEKURI = register(key("solis_dekuri"),
+			p -> new SolisDekuriItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 正午磨刀石（太阳剑，传说）：【唯一】武器伤害额外触发 0/1/1/1/2 次、攻速 +3..15%、无视防御伤害 +1/1/2/2/2。 */
+	public static final Item NOON_WHETSTONE = register(key("noon_whetstone"),
+			p -> new NoonWhetstoneItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 陨铁镜（太阳剑，高级）：【唯一】回收时额外回收 1 个、太阳剑伤害 +3..12%。 */
+	public static final Item METEORIC_MIRROR = register(key("meteoric_mirror"),
+			p -> new MeteoricMirrorItem(p),
 			new Item.Properties().stacksTo(1));
 
 	/** 红蛇之眼（余烬，高级）：【唯一】每 5 秒在附近掉落 1/1/2/2/3/4 颗陨石，火属性伤害 60..80% 并附加灼伤。 */

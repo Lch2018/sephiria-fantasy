@@ -65,6 +65,9 @@ public final class SunSword {
 	private static final DustParticleOptions SLASH_EDGE = new DustParticleOptions(0xFDA542, 0.8F);
 	private static final DustParticleOptions SLASH_MIDDLE = new DustParticleOptions(0xFDFD64, 0.8F);
 	private static final DustParticleOptions SLASH_CENTER = new DustParticleOptions(0xFDFDFB, 0.8F);
+	/** 火红的夕阳「增大」那一发：伤害 ×1.33、划痕长度 ×1.6。 */
+	private static final double ENLARGE_DAMAGE_MULTIPLIER = 1.33D;
+	private static final double ENLARGE_SLASH_SCALE = 1.6D;
 
 	/** 掉落的太阳剑记着主人：只有本人走过去才会被拾取（也用它在重登后认领地上的剑）。 */
 	public static final DataComponentType<UUID> OWNER = Registry.register(
@@ -79,6 +82,8 @@ public final class SunSword {
 	private static final class State {
 		private double current = BASE_CAPACITY;
 		private int regenTimer;
+		/** 永恒熔炉的计时器：攒够 sunSwordCapacityEverySeconds × 20 刻就 +1 支。 */
+		private int generatorTimer;
 		/** 上一次推给客户端的数量 / 上限（NaN = 还没推过，首刻必定同步一次给 HUD）。 */
 		private double syncedCurrent = Double.NaN;
 		private double syncedMax = Double.NaN;
@@ -108,7 +113,15 @@ public final class SunSword {
 				return;
 			}
 
-			throwSword(player, entity);
+			// 正午磨刀石：「造成武器伤害时太阳剑额外触发 N 次」——这一下连着投 N+1 支，
+			// 每一支照常扣一支、没剑就停（throwSword 返回 false 即结束）
+			int times = 1 + ArtifactEffects.sunSwordExtraTriggers(player);
+
+			for (int index = 0; index < times; index++) {
+				if (!throwSword(player, entity)) {
+					break;
+				}
+			}
 		});
 	}
 
@@ -152,6 +165,7 @@ public final class SunSword {
 			double max = maxCapacity(player, comboLevel);
 			state.current = Math.min(max, state.current);
 			regen(player, state, max);
+			generate(player, state, max);
 			pickUp(player, state, level, max);
 			sync(player, state, max);
 		}
@@ -171,8 +185,10 @@ public final class SunSword {
 		}
 	}
 
-	/** 走到自己掉的太阳剑跟前就捡起来：每支 +1，满了就不捡（留在地上等以后）。 */
+	/** 走到自己掉的太阳剑跟前就捡起来：每支 +1（陨铁镜再多收），满了就不捡（留在地上等以后）。 */
 	private static void pickUp(ServerPlayer player, State state, ServerLevel level, double max) {
+		double perSword = 1.0D + ArtifactEffects.sunSwordPickupBonus(player);
+
 		for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class,
 				player.getBoundingBox().inflate(PICKUP_RADIUS))) {
 			if (state.current >= max) {
@@ -181,8 +197,28 @@ public final class SunSword {
 
 			if (isOurDrop(drop, player)) {
 				drop.discard();
-				state.current = Math.min(max, state.current + 1.0D);
+				state.current = Math.min(max, state.current + perSword);
 			}
+		}
+	}
+
+	/**
+	 * 永恒熔炉：每隔 sunSwordCapacityEverySeconds 秒 +1 支上限内的数量（「生成太阳剑」= 容量增加）。
+	 * 只在太阳剑激活时走表（整段 tick 本来就在激活分支里），到上限就停、计时器归零。
+	 */
+	private static void generate(ServerPlayer player, State state, double max) {
+		int everySeconds = ArtifactEffects.sunSwordCapacityEverySeconds(player);
+
+		if (everySeconds <= 0 || state.current >= max) {
+			state.generatorTimer = 0;
+			return;
+		}
+
+		state.generatorTimer++;
+
+		if (state.generatorTimer >= everySeconds * 20) {
+			state.generatorTimer = 0;
+			state.current = Math.min(max, state.current + 1.0D);
 		}
 	}
 
@@ -205,55 +241,94 @@ public final class SunSword {
 
 	/**
 	 * 投一支太阳剑：直接在被命中者身上结算一次火属性伤害 + 一道笔直的划痕，然后把那支剑
-	 * 掉在他脚下。没有剑、或者火元素强度为 0（打不出伤害）时这一发不投。
+	 * 掉在他脚下（带陨铁耳环时掉在自己附近）。没有剑、或者火元素强度为 0（打不出伤害）时这一发不投。
+	 *
+	 * @return 这一发有没有真的投出去（正午磨刀石的连投靠它决定要不要继续）
 	 */
-	private static void throwSword(ServerPlayer player, LivingEntity target) {
+	private static boolean throwSword(ServerPlayer player, LivingEntity target) {
 		State state = STATES.get(player.getUUID());
 
 		// 没激活就没有状态：连击 2 档才有太阳剑
 		if (state == null || !(target.level() instanceof ServerLevel level)) {
-			return;
+			return false;
 		}
 
 		int comboLevel = ArtifactEffects.comboLevels(player).getOrDefault(ArtifactCombo.SUN_SWORD, 0);
 		double max = maxCapacity(player, comboLevel);
 
 		if (state.current < 1.0D) {
-			return;
+			return false;
 		}
 
 		double damage = PlayerStats.elementTotal(player, PlayerStats.Element.FIRE) * DAMAGE_PERCENT / 100.0D
-				* (1.0D + ArtifactCombo.SUN_SWORD.sunSwordDamagePercent(comboLevel) / 100.0D);
+				* (1.0D + ArtifactCombo.SUN_SWORD.sunSwordDamagePercent(comboLevel) / 100.0D)
+				* (1.0D + ArtifactEffects.sunSwordDamagePercentBonus(player) / 100.0D);
 
 		if (damage <= 0.0D) {
-			return;
+			return false;
 		}
+
+		// 火红的夕阳：「概率增大」——伤害 ×1.33，划痕也画得更长
+		boolean enlarged = level.getRandom().nextDouble() * 100.0D
+				< ArtifactEffects.sunSwordEnlargeChance(player);
+
+		if (enlarged) {
+			damage *= ENLARGE_DAMAGE_MULTIPLIER;
+		}
+
+		// 索利斯·德克里：无视目标防御力 X%（结算时目标还会再吃一次减伤，这里先补回去）
+		damage = withDefenseIgnored(target, player, damage);
 
 		state.current -= 1.0D;
 
 		// 直接打在敌人身上（不是从玩家那儿飞过去的实体），所以先清无敌帧，保证这一下落地
 		target.setInvulnerableTime(0);
 		target.hurtServer(level, SephiriaDamage.sunSword(level, player), (float) damage);
-		slash(level, target, player);
-		drop(level, player, target.position());
+		slash(level, target, player, enlarged);
+		drop(level, player, ArtifactEffects.sunSwordDropNearPlayer(player) ? player.position() : target.position());
 		sync(player, state, max);
+		return true;
 	}
 
-	/** 笔直的划痕：一条横贯被命中者身体的直线，边缘橙 → 近中黄 → 正中白。 */
-	private static void slash(ServerLevel level, LivingEntity target, ServerPlayer player) {
+	/**
+	 * 「太阳剑无视目标防御力 X%」：目标原本减伤 (1 − m)，现在只吃 (1 − m) × (1 − x)。
+	 *
+	 * <p>减伤是在伤害结算里乘的（这里够不着），所以先把伤害除以 m、再乘上等效减伤，
+	 * 等结算乘完 m 之后就正好是「只吃那么多减伤」。完全免疫或本来不减伤时原样返回。
+	 */
+	private static double withDefenseIgnored(LivingEntity target, ServerPlayer player, double damage) {
+		double ignore = ArtifactEffects.sunSwordDefenseIgnorePercent(player) / 100.0D;
+
+		if (ignore <= 0.0D) {
+			return damage;
+		}
+
+		float reduction = SephiriaDamage.damageMultiplier(target);
+
+		if (reduction <= 0.0F || reduction >= 1.0F) {
+			return damage;
+		}
+
+		double effective = 1.0D - (1.0D - reduction) * (1.0D - ignore);
+		return damage * effective / reduction;
+	}
+
+	/** 笔直的划痕：一条横贯被命中者身体的直线，边缘橙 → 近中黄 → 正中白；增大那一发更长。 */
+	private static void slash(ServerLevel level, LivingEntity target, ServerPlayer player, boolean enlarged) {
 		Vec3 center = target.position().add(0.0D, target.getBbHeight() / 2.0D, 0.0D);
 		Vec3 look = target.position().subtract(player.position());
+		double length = SLASH_LENGTH * (enlarged ? ENLARGE_SLASH_SCALE : 1.0D);
 
 		// 划痕与「玩家 → 目标」的水平方向垂直，看起来就是横着划过去的一刀
 		double angle = Math.atan2(look.z, look.x) + Math.PI / 2.0D;
 		double stepX = Math.cos(angle) * SLASH_STEP;
 		double stepZ = Math.sin(angle) * SLASH_STEP;
-		int steps = (int) Math.round(SLASH_LENGTH / SLASH_STEP / 2.0D);
+		int steps = (int) Math.round(length / SLASH_STEP / 2.0D);
 
 		for (int index = -steps; index <= steps; index++) {
 			double offset = index * SLASH_STEP;
 			// 中间那两三颗是白的，往外是黄，最外圈是橙
-			double edge = Math.abs(offset) / (SLASH_LENGTH / 2.0D);
+			double edge = Math.abs(offset) / (length / 2.0D);
 			DustParticleOptions colour = edge < 0.15D ? SLASH_CENTER : edge < 0.6D ? SLASH_MIDDLE : SLASH_EDGE;
 			level.sendParticles(colour, center.x + stepX * index, center.y, center.z + stepZ * index,
 					1, 0.0D, 0.0D, 0.0D, 0.0D);

@@ -230,6 +230,50 @@ public interface SephiriaArtifact extends Quality {
 		return 0;
 	}
 
+	/** 该等级给的「太阳剑伤害」加成（%）：与连击档位的同一项相加（索利斯·德库萨、陨铁镜）。 */
+	default double sunSwordDamagePercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「太阳剑暴击几率」加成（百分点）：只加在太阳剑自己那一下上（索利斯·德克里）。 */
+	default double sunSwordCritChanceBonus(int level) {
+		return 0.0D;
+	}
+
+	/**
+	 * 该等级给的「太阳剑无视目标防御力」（%）：太阳剑那一下少受目标这么多减伤（索利斯·德克里）。
+	 *
+	 * <p>口径：目标原本减伤 (1 − m)，现在只吃 (1 − m) × (1 − x)。不是「无视防御伤害」那套额外一击。
+	 */
+	default double sunSwordDefenseIgnorePercent(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「太阳剑额外触发次数」（次）：造成武器伤害时太阳剑多投这么多支（正午磨刀石）。 */
+	default int sunSwordExtraTriggers(int level) {
+		return 0;
+	}
+
+	/** 该等级给的「太阳剑投掷时增大」的概率（%）：命中就伤害 ×1.33、划痕也更长（火红的夕阳）。 */
+	default double sunSwordEnlargeChance(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「回收时额外回收」（支）：每次捡起地上的太阳剑多收这么多（陨铁镜）。 */
+	default int sunSwordPickupBonus(int level) {
+		return 0;
+	}
+
+	/** 有这个词条时太阳剑会掉在玩家附近而不是被打的人脚下（陨铁耳环）。 */
+	default int sunSwordDropNearPlayer(int level) {
+		return 0;
+	}
+
+	/** 每隔多少秒 +1 支太阳剑上限（0 = 没有；只在太阳剑激活时走表，永恒熔炉）。 */
+	default int sunSwordCapacityEverySeconds(int level) {
+		return 0;
+	}
+
 	/**
 	 * 该等级给的「电属性攻击的暴击几率」加成（百分点）。
 	 *

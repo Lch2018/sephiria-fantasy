@@ -117,16 +117,10 @@ public final class SephiriaDamage {
 	}
 
 	public static boolean fromSephiria(DamageSource source) {
-		if (source.getDirectEntity() instanceof Source) {
-			return true;
-		}
-
-		if (source.getEntity() instanceof LivingEntity attacker) {
-			return attacker.getMainHandItem().getItem() instanceof SephiriaWeapon
-					|| attacker.getOffhandItem().getItem() instanceof SephiriaWeapon;
-		}
-
-		return false;
+		// 「本模组造成的伤害」= kindOf 认得出来的那几类：模组的伤害类型（artifact_damage /
+		// sun_sword / burn / electric_* / fire_attack / true_damage）、实现 Source 标记的投掷物，
+		// 以及拿着本模组武器打人的那一下。其余一律 OTHER（原版武器、环境伤害……）。
+		return kindOf(source) != Kind.OTHER;
 	}
 
 	/** 这发伤害属于哪一类。 */
@@ -219,6 +213,8 @@ public final class SephiriaDamage {
 		double chance = switch (kind) {
 			case WEAPON -> PlayerStats.weaponCritChanceTotal(player);
 			case ELECTRIC -> PlayerStats.critChanceTotal(player) + PlayerStats.electricCritChanceTotal(player);
+			// 太阳剑那一下：通用之上再加「太阳剑暴击几率」（索利斯·德克里）
+			case SUN -> PlayerStats.critChanceTotal(player) + ArtifactEffects.sunSwordCritChanceBonus(player);
 			default -> PlayerStats.critChanceTotal(player);
 		};
 
