@@ -1,4 +1,4 @@
-# Bake the bbmodel "reload" animation into per-frame game models.
+﻿# Bake the bbmodel "reload" animation into per-frame game models.
 #
 # For each sample time t the animated nodes (cube 弹匣, groups 弦 and 弩) contribute an
 # affine transform; every cube's box is re-expressed so that the game's model format
@@ -21,7 +21,7 @@ param(
 
 $root = Split-Path -Parent $PSScriptRoot
 $bbPath = Join-Path $root 'models\colossal_crossbow.bbmodel'
-$itemDir = Join-Path $root 'src\main\resources\assets\sephiria\models\item'
+$itemDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\models\item'
 $inHandPath = Join-Path $itemDir 'colossal_crossbow_in_hand.json'
 $inv = [System.Globalization.CultureInfo]::InvariantCulture
 
@@ -264,7 +264,7 @@ for ($f = 0; $f -lt $Frames; $f++) {
     }
 
     $out = '{' + "`n" +
-    "`t`"parent`": `"sephiria:item/colossal_crossbow_in_hand`",`n" +
+    "`t`"parent`": `"sephiria_fantasy:item/colossal_crossbow_in_hand`",`n" +
     "`t`"elements`": [`n" + ($lines -join ",`n") + "`n`t]`n" + '}' + "`n"
     $check = $out | ConvertFrom-Json
     if ((@($check.elements)).Count -ne @($inHand.elements).Count) { Write-Output ('ABORT frame ' + $f); exit 1 }

@@ -30,7 +30,7 @@ public class ShieldTextbookItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.shield_textbook.flavor";
+		return "artifact.sephiria_fantasy.shield_textbook.flavor";
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class ShieldTextbookItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.special_attack",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.special_attack",
 				Component.literal(Numbers.format(this.specialAttackBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

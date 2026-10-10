@@ -31,7 +31,7 @@ public class AmbergrisItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.ambergris.flavor";
+		return "artifact.sephiria_fantasy.ambergris.flavor";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class AmbergrisItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.fire_element",
+				Component.translatable("artifact.sephiria_fantasy.affix.fire_element",
 						Component.literal(Numbers.format(this.fireElementBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

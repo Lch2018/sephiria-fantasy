@@ -87,13 +87,13 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 		return java.util.List.of(
 				// 弩没有近战加成（等同空手），远程也不触发横扫，所以这一行不写范围
 				Line.attackRanged(MELEE_DAMAGE, MELEE_ATTACK_SPEED).build(),
-				Line.titled("tooltip.sephiria.skill.fire")
+				Line.titled("tooltip.sephiria_fantasy.skill.fire")
 						.damage(SephiriaBoltArrow.FIXED_DAMAGE).cooldownTicks(FIRE_COOLDOWN_TICKS)
-						.stat("tooltip.sephiria.part.magazine", MAGAZINE_SIZE, COLOR_RANGE).build(),
-				desc("tooltip.sephiria.skill.fire", "tooltip.sephiria.desc.fire"),
-				Line.titled("tooltip.sephiria.skill.reload")
-						.stat("tooltip.sephiria.part.reload", RELOAD_TICKS / 20.0D, COLOR_COOLDOWN).build(),
-				desc("tooltip.sephiria.skill.reload", "tooltip.sephiria.desc.reload"));
+						.stat("tooltip.sephiria_fantasy.part.magazine", MAGAZINE_SIZE, COLOR_RANGE).build(),
+				desc("tooltip.sephiria_fantasy.skill.fire", "tooltip.sephiria_fantasy.desc.fire"),
+				Line.titled("tooltip.sephiria_fantasy.skill.reload")
+						.stat("tooltip.sephiria_fantasy.part.reload", RELOAD_TICKS / 20.0D, COLOR_COOLDOWN).build(),
+				desc("tooltip.sephiria_fantasy.skill.reload", "tooltip.sephiria_fantasy.desc.reload"));
 	}
 
 

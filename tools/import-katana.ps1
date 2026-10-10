@@ -1,4 +1,4 @@
-# Stage the katana model resources exported from the Blockbench project.
+﻿# Stage the katana model resources exported from the Blockbench project.
 #
 # Source of truth: the user's Blockbench project (GeckoLib Animated Model format).
 #   C:\Users\28237\Desktop\Blockbench_JIANMO\刀\katana.bbmodel   (never modified by us)
@@ -6,8 +6,8 @@
 # tmp_fix/export/, then this script installs them into the resource pack.
 #
 # GeckoLib only reads these two locations (verified against GeckoLibResources):
-#   assets/sephiria/geckolib/models/<name>.geo.json
-#   assets/sephiria/geckolib/animations/<name>.animation.json
+#   assets/sephiria_fantasy/geckolib/models/<name>.geo.json
+#   assets/sephiria_fantasy/geckolib/animations/<name>.animation.json
 #
 # ASCII-only on purpose: Windows PowerShell 5.1 reads non-ASCII .ps1 as GBK.
 
@@ -23,8 +23,8 @@ if (-not $src) { throw 'could not locate the katana authoring folder on the Desk
 
 $export = Join-Path $root 'tmp_fix\export'
 
-$resModels = Join-Path $root 'src\main\resources\assets\sephiria\geckolib\models'
-$resAnims = Join-Path $root 'src\main\resources\assets\sephiria\geckolib\animations'
+$resModels = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\geckolib\models'
+$resAnims = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\geckolib\animations'
 $keep = Join-Path $root 'models'
 
 $geo = Join-Path $export 'katana.geo.json'

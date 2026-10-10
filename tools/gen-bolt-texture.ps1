@@ -1,9 +1,9 @@
-# Generate the crossbow bolt icon (16x16 pixel art) in the mod's palette.
+﻿# Generate the crossbow bolt icon (16x16 pixel art) in the mod's palette.
 # ASCII-only on purpose.
 Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path -Parent $PSScriptRoot
-$out = Join-Path $root 'src\main\resources\assets\sephiria\textures\item\crossbow_bolt.png'
+$out = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\item\crossbow_bolt.png'
 
 # H = steel head, S = wooden shaft, W = white fletching, . = transparent
 $art = @(

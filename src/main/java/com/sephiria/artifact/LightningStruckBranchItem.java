@@ -47,7 +47,7 @@ public class LightningStruckBranchItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.lightning_struck_branch.flavor";
+		return "artifact.sephiria_fantasy.lightning_struck_branch.flavor";
 	}
 
 	@Override
@@ -114,7 +114,7 @@ public class LightningStruckBranchItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.on_hit_lightning",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.on_hit_lightning",
 				Component.literal(Numbers.format(this.onHitLightningDamage(level))).withColor(COLOUR_BONUS)));
 	}
 }

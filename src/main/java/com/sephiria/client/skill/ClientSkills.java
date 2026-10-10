@@ -83,12 +83,12 @@ public final class ClientSkills {
 
 	/** 技能名：{@code sephiria.artifact_skill.<id>}。 */
 	public static Component skillName(ArtifactSkill skill) {
-		return Component.translatable("sephiria.artifact_skill." + skill.id());
+		return Component.translatable("sephiria_fantasy.artifact_skill." + skill.id());
 	}
 
 	/** 神器名 + 等级，技能页里每条技能都带上它（两件同种神器要靠等级区分）。 */
 	public static Component label(Item item, int level) {
-		return Component.translatable("screen.sephiria.artifact_skills.entry",
+		return Component.translatable("screen.sephiria_fantasy.artifact_skills.entry",
 				item.getName(item.getDefaultInstance()), level);
 	}
 
@@ -97,7 +97,7 @@ public final class ClientSkills {
 		Item item = itemOf(entry);
 
 		if (item == null) {
-			return Component.translatable("screen.sephiria.artifact_skills.empty");
+			return Component.translatable("screen.sephiria_fantasy.artifact_skills.empty");
 		}
 
 		return label(item, levelOf(entry));

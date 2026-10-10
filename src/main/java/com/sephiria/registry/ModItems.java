@@ -230,7 +230,7 @@ public final class ModItems {
 	private static Item registerSlate(String name, ArtifactRarity rarity, java.util.List<PatternSlateItem.Cell> pattern,
 			boolean rotatable) {
 		return register(key(name),
-				p -> new PatternSlateItem(p, rarity, "artifact.sephiria." + name + ".flavor", pattern, rotatable),
+				p -> new PatternSlateItem(p, rarity, "artifact.sephiria_fantasy." + name + ".flavor", pattern, rotatable),
 				new Item.Properties().stacksTo(1));
 	}
 

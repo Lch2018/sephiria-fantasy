@@ -33,7 +33,7 @@ public class SilverPlateItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.silver_plate.flavor";
+		return "artifact.sephiria_fantasy.silver_plate.flavor";
 	}
 
 	@Override
@@ -59,10 +59,10 @@ public class SilverPlateItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.normal_attack_damage",
+				Component.translatable("artifact.sephiria_fantasy.affix.normal_attack_damage",
 						Component.literal(Numbers.format(this.normalAttackDamagePercentBonus(level)))
 								.withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.special_attack",
+				Component.translatable("artifact.sephiria_fantasy.affix.special_attack",
 						Component.literal(Numbers.format(this.specialAttackBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

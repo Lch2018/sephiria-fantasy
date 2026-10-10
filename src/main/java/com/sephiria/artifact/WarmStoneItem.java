@@ -30,7 +30,7 @@ public class WarmStoneItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.warm_stone.flavor";
+		return "artifact.sephiria_fantasy.warm_stone.flavor";
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class WarmStoneItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.crit_damage",
+				Component.translatable("artifact.sephiria_fantasy.affix.crit_damage",
 						Component.literal(Numbers.format(this.critDamageBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

@@ -149,7 +149,7 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 
 			@Override
 			public Component getDisplayName() {
-				return Component.translatable("screen.sephiria.enchant");
+				return Component.translatable("screen.sephiria_fantasy.enchant");
 			}
 
 			@Override

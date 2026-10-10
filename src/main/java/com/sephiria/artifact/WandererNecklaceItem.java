@@ -29,7 +29,7 @@ public class WandererNecklaceItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.wanderer_necklace.flavor";
+		return "artifact.sephiria_fantasy.wanderer_necklace.flavor";
 	}
 
 	@Override
@@ -55,9 +55,9 @@ public class WandererNecklaceItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.attack_speed",
+				Component.translatable("artifact.sephiria_fantasy.affix.attack_speed",
 						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.highest_element",
+				Component.translatable("artifact.sephiria_fantasy.affix.highest_element",
 						Component.literal(Numbers.format(this.highestElementBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

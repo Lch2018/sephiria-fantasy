@@ -21,7 +21,7 @@ public final class ModCreativeTabs {
 			WEAPONS_KEY,
 			// 26.2 的 Fabric API 里这个模块叫 fabric-creative-tab-api-v1（老的 item-group-api 已改名）。
 			FabricCreativeModeTab.builder()
-					.title(Component.translatable("itemGroup.sephiria.weapons"))
+					.title(Component.translatable("itemGroup.sephiria_fantasy.weapons"))
 					.icon(() -> new ItemStack(ModItems.DEFAULT_SWORD_AND_SHIELD))
 					.displayItems((parameters, output) -> {
 						ModItems.BASE_WEAPONS.forEach(weapon -> output.accept(weapon.item()));
@@ -38,7 +38,7 @@ public final class ModCreativeTabs {
 			BuiltInRegistries.CREATIVE_MODE_TAB,
 			ARTIFACTS_KEY,
 			FabricCreativeModeTab.builder()
-					.title(Component.translatable("itemGroup.sephiria.artifacts"))
+					.title(Component.translatable("itemGroup.sephiria_fantasy.artifacts"))
 					.icon(() -> new ItemStack(ModItems.ARTIFACT_TAB_ICON))
 					.displayItems((parameters, output) -> {
 						output.accept(ModItems.CHARM_OF_STRENGTH);
@@ -108,7 +108,7 @@ public final class ModCreativeTabs {
 			BuiltInRegistries.CREATIVE_MODE_TAB,
 			SLATES_KEY,
 			FabricCreativeModeTab.builder()
-					.title(Component.translatable("itemGroup.sephiria.slates"))
+					.title(Component.translatable("itemGroup.sephiria_fantasy.slates"))
 					.icon(() -> new ItemStack(ModItems.SLATE_TAB_ICON))
 					.displayItems((parameters, output) -> {
 						output.accept(ModItems.SLATE_OF_FUTURE);
@@ -132,7 +132,7 @@ public final class ModCreativeTabs {
 			BuiltInRegistries.CREATIVE_MODE_TAB,
 			ITEMS_KEY,
 			FabricCreativeModeTab.builder()
-					.title(Component.translatable("itemGroup.sephiria.items"))
+					.title(Component.translatable("itemGroup.sephiria_fantasy.items"))
 					.icon(() -> new ItemStack(ModItems.ENCHANT_COIN))
 					.displayItems((parameters, output) -> {
 						output.accept(ModItems.ENCHANT_COIN);
@@ -152,7 +152,7 @@ public final class ModCreativeTabs {
 			BuiltInRegistries.CREATIVE_MODE_TAB,
 			POTIONS_KEY,
 			FabricCreativeModeTab.builder()
-					.title(Component.translatable("itemGroup.sephiria.potions"))
+					.title(Component.translatable("itemGroup.sephiria_fantasy.potions"))
 					.icon(() -> new ItemStack(ModItems.REGENERATION_POTION))
 					.displayItems((parameters, output) -> ModItems.POTIONS.forEach(output::accept))
 					.build());

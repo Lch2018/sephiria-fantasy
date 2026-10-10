@@ -45,7 +45,7 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 ## Installation
 
 1. Install Fabric Loader and both dependencies above;
-2. Drop `sephiria-<version>.jar` into `mods/`;
+2. Drop `sephiria-fantasy-<version>.jar` into `mods/`;
 3. Launch the game — it works in singleplayer right away; for a server, install the same jar on the server side too.
 
 ## Known issues / not done yet
@@ -109,7 +109,7 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 ## 安装
 
 1. 装好 Fabric Loader 以及上面的两个依赖；
-2. 把 `sephiria-<版本>.jar` 放进 `mods/`；
+2. 把 `sephiria-fantasy-<版本>.jar` 放进 `mods/`；
 3. 启动游戏即可——单人存档直接用，服务器需要服务端也装同样的 jar。
 
 ## 已知问题 / 未完成

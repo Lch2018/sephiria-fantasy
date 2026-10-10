@@ -31,7 +31,7 @@ public class CloudseedArrowItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.cloudseed_arrow.flavor";
+		return "artifact.sephiria_fantasy.cloudseed_arrow.flavor";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class CloudseedArrowItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.cloud_enhanced",
+				Component.translatable("artifact.sephiria_fantasy.affix.cloud_enhanced",
 						Component.literal(Numbers.format(this.cloudEnhancedChance(level))).withColor(COLOUR_BONUS)));
 	}
 }

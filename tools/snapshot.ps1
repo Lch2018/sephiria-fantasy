@@ -10,7 +10,7 @@ param([string]$Label = '')
 
 $root = Split-Path -Parent $PSScriptRoot
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$name = if ($Label) { 'sephiria-' + $Label + '-' + $stamp } else { 'sephiria-' + $stamp }
+$name = if ($Label) { 'sephiria-fantasy-' + $Label + '-' + $stamp } else { 'sephiria-fantasy-' + $stamp }
 
 $outDir = Join-Path $root 'snapshots'
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -31,10 +31,10 @@ function Copy-Tree {
 
 foreach ($rel in @('src', 'models', 'tools')) { Copy-Tree -Rel $rel }
 
-$jar = Join-Path $root 'build\libs\sephiria-0.1.0.jar'
+$jar = Join-Path $root 'build\libs\sephiria-fantasy-0.1.0.jar'
 if (Test-Path $jar) {
     New-Item -ItemType Directory -Force -Path (Join-Path $stage 'build') | Out-Null
-    Copy-Item $jar (Join-Path $stage 'build\sephiria-0.1.0.jar') -Force
+    Copy-Item $jar (Join-Path $stage 'build\sephiria-fantasy-0.1.0.jar') -Force
 }
 
 # a short note so a snapshot is self-describing months later
@@ -44,17 +44,17 @@ $note = @(
     'project : ' + $root,
     '',
     'contents: src/ (mod sources), models/ (Blockbench authoring copies),',
-    '          tools/ (build + import scripts), build/sephiria-0.1.0.jar',
+    '          tools/ (build + import scripts), build/sephiria-fantasy-0.1.0.jar',
     '',
     'katana state at this snapshot:',
     '  - model/animation imported from the Blockbench GeckoLib project (katana.bbmodel)',
-    '  - texture path returns sephiria:textures/item/katana.png (full file path, GeckoLib requirement)',
+    '  - texture path returns sephiria_fantasy:textures/item/katana.png (full file path, GeckoLib requirement)',
     '  - controller: state handler loops animation.idle_unsheathed; switch_to_sheathed/',
     '    switch_to_unsheathed are triggerable animations (no receiveTriggeredAnimations!)',
     '  - render pose rotated +90 deg about the model Y axis so the blade edge faces forward',
     '  - scabbard hidden by the idle_unsheathed animation scaling it to 0',
     '',
-    'deploy target: D:\PCL\.minecraft\versions\26.2-Fabric 0.19.5\mods\sephiria-0.1.0.jar'
+    'deploy target: D:\PCL\.minecraft\versions\26.2-Fabric 0.19.5\mods\sephiria-fantasy-0.1.0.jar'
 )
 [System.IO.File]::WriteAllLines((Join-Path $stage 'SNAPSHOT.txt'), $note, (New-Object System.Text.UTF8Encoding($false)))
 

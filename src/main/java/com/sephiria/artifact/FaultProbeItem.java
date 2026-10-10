@@ -31,7 +31,7 @@ public class FaultProbeItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.fault_probe.flavor";
+		return "artifact.sephiria_fantasy.fault_probe.flavor";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class FaultProbeItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.crit_chance",
+				Component.translatable("artifact.sephiria_fantasy.affix.crit_chance",
 						Component.literal(Numbers.format(this.critChanceBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

@@ -32,7 +32,7 @@ public class RedDewItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.red_dew.flavor";
+		return "artifact.sephiria_fantasy.red_dew.flavor";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class RedDewItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.crit_splash",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.crit_splash",
 				Component.literal(Numbers.format(this.critSplashPercent(level))).withColor(COLOUR_BONUS)));
 	}
 }

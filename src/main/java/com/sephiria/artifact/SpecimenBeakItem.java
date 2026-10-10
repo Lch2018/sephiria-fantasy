@@ -30,7 +30,7 @@ public class SpecimenBeakItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.specimen_beak.flavor";
+		return "artifact.sephiria_fantasy.specimen_beak.flavor";
 	}
 
 	@Override
@@ -56,9 +56,9 @@ public class SpecimenBeakItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.physical",
+				Component.translatable("artifact.sephiria_fantasy.affix.physical",
 						Component.literal(Numbers.format(this.physicalBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.dodge",
+				Component.translatable("artifact.sephiria_fantasy.affix.dodge",
 						Component.literal(Numbers.format(this.dodgeBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

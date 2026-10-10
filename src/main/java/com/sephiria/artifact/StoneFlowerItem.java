@@ -33,7 +33,7 @@ public class StoneFlowerItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.stone_flower.flavor";
+		return "artifact.sephiria_fantasy.stone_flower.flavor";
 	}
 
 	@Override
@@ -59,9 +59,9 @@ public class StoneFlowerItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.lightning_element",
+				Component.translatable("artifact.sephiria_fantasy.affix.lightning_element",
 						Component.literal(Numbers.format(this.lightningElementBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.crit_damage",
+				Component.translatable("artifact.sephiria_fantasy.affix.crit_damage",
 						Component.literal(Numbers.format(this.critDamageBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

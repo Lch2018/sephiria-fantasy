@@ -24,7 +24,7 @@ public class SwordTextbookItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.sword_textbook.flavor";
+		return "artifact.sephiria_fantasy.sword_textbook.flavor";
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class SwordTextbookItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.attack_speed",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.attack_speed",
 				Component.literal(Numbers.format(this.attackSpeedBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

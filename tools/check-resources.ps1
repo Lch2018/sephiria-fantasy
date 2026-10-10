@@ -1,4 +1,4 @@
-# Static consistency check for SEPHIRIA resources.
+﻿# Static consistency check for SEPHIRIA resources.
 #
 # Structure-agnostic on purpose: item definitions are walked for model references, every
 # referenced model must exist, every element model must be well formed, every palette texture
@@ -6,7 +6,7 @@
 # ASCII-only on purpose: Windows PowerShell 5.1 reads non-ASCII .ps1 as GBK.
 
 $root = Split-Path -Parent $PSScriptRoot
-$assets = Join-Path $root 'src\main\resources\assets\sephiria'
+$assets = Join-Path $root 'src\main\resources\assets\sephiria_fantasy'
 $modelsDir = Join-Path $assets 'models\item'
 $texDir = Join-Path $assets 'textures\item'
 
@@ -42,7 +42,7 @@ function Get-JarNames($jar, $pattern) {
 
 function Get-Refs($text) {
     $refs = New-Object System.Collections.Generic.List[string]
-    foreach ($m in [regex]::Matches($text, 'sephiria:item/([A-Za-z0-9_]+)')) { $refs.Add($m.Groups[1].Value) }
+    foreach ($m in [regex]::Matches($text, 'sephiria_fantasy:item/([A-Za-z0-9_]+)')) { $refs.Add($m.Groups[1].Value) }
     return $refs
 }
 
@@ -66,8 +66,8 @@ foreach ($file in Get-ChildItem $modelsDir -Filter *.json) {
     $text = ReadText $file.FullName
     $json = $text | ConvertFrom-Json
 
-    if ($json.parent -like 'sephiria:item/*') {
-        $parentName = $json.parent.Substring('sephiria:item/'.Length)
+    if ($json.parent -like 'sephiria_fantasy:item/*') {
+        $parentName = $json.parent.Substring('sephiria_fantasy:item/'.Length)
         if (-not (Test-Path (Join-Path $modelsDir ($parentName + '.json')))) {
             Fail "models/item/$name.json parent '$($json.parent)' is missing"
         }
@@ -89,7 +89,7 @@ foreach ($file in Get-ChildItem $modelsDir -Filter *.json) {
             }
         }
         $tex = $json.textures.'0'
-        if ($tex -like 'sephiria:item/*') {
+        if ($tex -like 'sephiria_fantasy:item/*') {
             $texFile = Join-Path $texDir (($tex -split '/')[-1] + '.png')
             if (-not (Test-Path $texFile)) { Fail "models/item/$name.json palette $tex is missing" }
         }
@@ -101,8 +101,8 @@ foreach ($id in $items) {
     $path = Join-Path $modelsDir ($id + '.json')
     if (-not (Test-Path $path)) { continue }
     $json = ReadJson $path
-    if ($json.parent -notlike 'sephiria:item/*') { continue }
-    $baseName = $json.parent.Substring('sephiria:item/'.Length)
+    if ($json.parent -notlike 'sephiria_fantasy:item/*') { continue }
+    $baseName = $json.parent.Substring('sephiria_fantasy:item/'.Length)
     $basePath = Join-Path $modelsDir ($baseName + '.json')
     if (-not (Test-Path $basePath)) { continue }
     $base = ReadJson $basePath
@@ -120,21 +120,21 @@ foreach ($lang in @('en_us', 'zh_cn')) {
     $json = ReadJson $langPath
     $keys = $json.PSObject.Properties.Name
     foreach ($id in $items) {
-        if ($keys -notcontains "item.sephiria.$id") { Fail "lang/$lang.json missing key item.sephiria.$id" }
+        if ($keys -notcontains "item.sephiria_fantasy.$id") { Fail "lang/$lang.json missing key item.sephiria_fantasy.$id" }
     }
     foreach ($b in $branches) {
-        if ($keys -notcontains "sephiria.branch.$b") { Fail "lang/$lang.json missing key sephiria.branch.$b" }
+        if ($keys -notcontains "sephiria_fantasy.branch.$b") { Fail "lang/$lang.json missing key sephiria_fantasy.branch.$b" }
     }
     # 提示框的格式（颜色、斜杠分隔、括号说明）都靠这几个键拼，占位符数量写错就会显示成 %s
     $placeholders = @{
-        'tooltip.sephiria.tip.label'         = 1
-        'tooltip.sephiria.tip.attack_state'  = 1
-        'tooltip.sephiria.tip.desc'          = 2
-        'tooltip.sephiria.part.damage'       = 2
-        'tooltip.sephiria.part.attack_speed' = 2
-        'tooltip.sephiria.part.range'        = 2
-        'tooltip.sephiria.part.cooldown'     = 1
-        'tooltip.sephiria.part.distance'     = 1
+        'tooltip.sephiria_fantasy.tip.label'         = 1
+        'tooltip.sephiria_fantasy.tip.attack_state'  = 1
+        'tooltip.sephiria_fantasy.tip.desc'          = 2
+        'tooltip.sephiria_fantasy.part.damage'       = 2
+        'tooltip.sephiria_fantasy.part.attack_speed' = 2
+        'tooltip.sephiria_fantasy.part.range'        = 2
+        'tooltip.sephiria_fantasy.part.cooldown'     = 1
+        'tooltip.sephiria_fantasy.part.distance'     = 1
     }
     foreach ($key in $placeholders.Keys) {
         $line = $json.$key
@@ -154,7 +154,7 @@ if (-not (Test-Path (Join-Path $assets 'icon.png'))) { Fail "missing icon.png" }
 #    symbols must be used, the result must be one of this mod's items, and every referenced
 #    tag file must exist. Vanilla ids are checked against the Minecraft jars in the loom
 #    cache when they are there, and skipped otherwise (the cache path differs per machine).
-$dataDir = Join-Path $root 'src\main\resources\data\sephiria'
+$dataDir = Join-Path $root 'src\main\resources\data\sephiria_fantasy'
 $recipeDir = Join-Path $dataDir 'recipe'
 $tagDir = Join-Path $dataDir 'tags\item'
 $weaponItems = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'blade', 'quarterstaff')
@@ -187,7 +187,7 @@ function Test-Ingredient($value) {
         } elseif ($null -ne $vanillaItems -and -not $vanillaItems.Contains($parts[1])) {
             return "unknown vanilla item $value"
         }
-    } elseif ($parts[0] -eq 'sephiria') {
+    } elseif ($parts[0] -eq 'sephiria_fantasy') {
         if ($tagged) {
             if (-not (Test-Path (Join-Path $tagDir ($parts[1] + '.json')))) { return "no tags/item/$($parts[1]).json for #$value" }
         } elseif ($items -notcontains $parts[1]) {
@@ -208,7 +208,7 @@ foreach ($file in Get-ChildItem $recipeDir -Filter *.json) {
     if ($json.type -ne 'minecraft:crafting_shaped') { Fail "recipe/$name.json: unsupported type '$($json.type)'"; continue }
 
     $result = $json.result.id
-    if ($result -notlike 'sephiria:*' -or $items -notcontains $result.Substring('sephiria:'.Length)) {
+    if ($result -notlike 'sephiria_fantasy:*' -or $items -notcontains $result.Substring('sephiria_fantasy:'.Length)) {
         Fail "recipe/$name.json: result '$result' is not one of this mod's items"
     }
     $crafted.Add($result)
@@ -242,7 +242,7 @@ foreach ($file in Get-ChildItem $recipeDir -Filter *.json) {
 }
 
 foreach ($id in $weaponItems) {
-    if (-not $crafted.Contains("sephiria:$id")) { Fail "no recipe crafts sephiria:$id" }
+    if (-not $crafted.Contains("sephiria_fantasy:$id")) { Fail "no recipe crafts sephiria_fantasy:$id" }
 }
 
 foreach ($file in Get-ChildItem $tagDir -Filter *.json) {

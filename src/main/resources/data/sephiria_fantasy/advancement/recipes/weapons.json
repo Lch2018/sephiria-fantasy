@@ -1,0 +1,37 @@
+{
+  "display": {
+    "icon": {
+      "id": "sephiria_fantasy:default_sword_and_shield"
+    },
+    "title": {
+      "text": "SEPHIRIA"
+    },
+    "description": {
+      "text": "武器合成表：把鼠标放在条目上"
+    },
+    "background": "sephiria_fantasy:gui/advancement_background",
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "tick": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "requirements": [
+    [
+      "tick"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "sephiria_fantasy:default_sword_and_shield",
+      "sephiria_fantasy:steel_greatsword",
+      "sephiria_fantasy:dagger",
+      "sephiria_fantasy:colossal_crossbow",
+      "sephiria_fantasy:blade",
+      "sephiria_fantasy:quarterstaff"
+    ]
+  }
+}

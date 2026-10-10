@@ -1,8 +1,8 @@
-# Build the SEPHIRIA item textures from the original in-game pixel sprites.
+﻿# Build the SEPHIRIA item textures from the original in-game pixel sprites.
 #
 # Source : tools/weapon-ref/*.png  (102x120, the game's branch weapon sprites)
-# Output : src/main/resources/assets/sephiria/textures/item/<item>.png  (128x128)
-#          src/main/resources/assets/sephiria/icon.png                (128x128)
+# Output : src/main/resources/assets/sephiria_fantasy/textures/item/<item>.png  (128x128)
+#          src/main/resources/assets/sephiria_fantasy/icon.png                (128x128)
 #
 # The sprites are copied pixel for pixel onto a 128x128 canvas and centred, so nothing
 # is resampled: the textures keep the original artwork exactly.
@@ -13,8 +13,8 @@ Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path -Parent $PSScriptRoot
 $refDir = Join-Path $root 'tools\weapon-ref'
-$itemDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\item'
-$assetDir = Join-Path $root 'src\main\resources\assets\sephiria'
+$itemDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\item'
+$assetDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy'
 
 New-Item -ItemType Directory -Force -Path $itemDir | Out-Null
 

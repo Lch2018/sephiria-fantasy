@@ -33,7 +33,7 @@ public class PointyAcornItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.pointy_acorn.flavor";
+		return "artifact.sephiria_fantasy.pointy_acorn.flavor";
 	}
 
 	@Override
@@ -59,9 +59,9 @@ public class PointyAcornItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.cloud_combat_regen",
+				Component.translatable("artifact.sephiria_fantasy.affix.cloud_combat_regen",
 						Component.literal(Numbers.format(this.cloudCombatRegenPercent(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.dodge",
+				Component.translatable("artifact.sephiria_fantasy.affix.dodge",
 						Component.literal(Numbers.format(this.dodgeBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

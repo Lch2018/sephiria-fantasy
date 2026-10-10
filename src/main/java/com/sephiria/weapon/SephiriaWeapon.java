@@ -45,7 +45,7 @@ public interface SephiriaWeapon {
 
 	/** 技能效果描述行：{@code 技能名描述：效果}。 */
 	default Component desc(String skillKey, String descKey) {
-		return Component.translatable("tooltip.sephiria.tip.desc",
+		return Component.translatable("tooltip.sephiria_fantasy.tip.desc",
 				Component.translatable(skillKey), Component.translatable(descKey));
 	}
 
@@ -83,22 +83,22 @@ public interface SephiriaWeapon {
 		 * 同一个名称键还能给描述行（{@code 招架描述：…}）复用。
 		 */
 		static Line titled(String nameKey, Object... nameArgs) {
-			return new Line("tooltip.sephiria.tip.label", Component.translatable(nameKey, nameArgs));
+			return new Line("tooltip.sephiria_fantasy.tip.label", Component.translatable(nameKey, nameArgs));
 		}
 
 		/** 普通攻击行：伤害 / 攻速 / 范围。 */
 		static Line attack(double damage, double attackSpeed, double range) {
-			return titled("tooltip.sephiria.tip.attack").damage(damage).attackSpeed(attackSpeed).range(range);
+			return titled("tooltip.sephiria_fantasy.tip.attack").damage(damage).attackSpeed(attackSpeed).range(range);
 		}
 
 		/** 远程武器的普通攻击行：没有横扫，所以不写范围，改写「无」。 */
 		static Line attackRanged(double damage, double attackSpeed) {
-			return titled("tooltip.sephiria.tip.attack").damage(damage).attackSpeed(attackSpeed).rangeNone();
+			return titled("tooltip.sephiria_fantasy.tip.attack").damage(damage).attackSpeed(attackSpeed).rangeNone();
 		}
 
 		/** 同上，但名称带上状态（刀的入鞘 / 出鞘）。 */
 		static Line attack(String stateKey, double damage, double attackSpeed, double range) {
-			return titled("tooltip.sephiria.tip.attack_state", Component.translatable(stateKey))
+			return titled("tooltip.sephiria_fantasy.tip.attack_state", Component.translatable(stateKey))
 					.damage(damage).attackSpeed(attackSpeed).range(range);
 		}
 
@@ -116,14 +116,14 @@ public interface SephiriaWeapon {
 		}
 
 		private Line damage(double value, double scale) {
-			return part(Component.translatable("tooltip.sephiria.part.damage",
+			return part(Component.translatable("tooltip.sephiria_fantasy.part.damage",
 					number(value * scale, COLOR_DAMAGE),
 					number(value / PlayerStats.DEFAULT_STRENGTH * 100.0D) + "%"));
 		}
 
 		/** 攻速：主数值黄色、按当前攻击速度换算；括号里给出「基准值 ×攻击速度」这个换算关系。 */
 		Line attackSpeed(double value) {
-			return part(Component.translatable("tooltip.sephiria.part.attack_speed",
+			return part(Component.translatable("tooltip.sephiria_fantasy.part.attack_speed",
 					number(value * TooltipScale.attackSpeed(), COLOR_ATTACK_SPEED), number(value)));
 		}
 
@@ -135,18 +135,18 @@ public interface SephiriaWeapon {
 			double basis = blocks * RANGE_BASIS * TooltipScale.range();
 			double baseBasis = blocks * RANGE_BASIS;
 
-			return part(Component.translatable("tooltip.sephiria.part.range",
+			return part(Component.translatable("tooltip.sephiria_fantasy.part.range",
 					number(basis, COLOR_RANGE), number(baseBasis)));
 		}
 
 		/** 该项没有范围时用（远程武器不触发横扫）。 */
 		Line rangeNone() {
-			return part(Component.translatable("tooltip.sephiria.part.range_none"));
+			return part(Component.translatable("tooltip.sephiria_fantasy.part.range_none"));
 		}
 
 		/** 冷却：青色。 */
 		Line cooldown(double seconds) {
-			return part(Component.translatable("tooltip.sephiria.part.cooldown", number(seconds, COLOR_COOLDOWN)));
+			return part(Component.translatable("tooltip.sephiria_fantasy.part.cooldown", number(seconds, COLOR_COOLDOWN)));
 		}
 
 		/** 冷却：按 tick 传（内部换算成秒），省得各处再写一遍除法。 */
@@ -156,12 +156,12 @@ public interface SephiriaWeapon {
 
 		/** 冷却与上一项共用（回击 2/3 是同一个技能的后续段）。 */
 		Line cooldownSame() {
-			return part(Component.translatable("tooltip.sephiria.part.cooldown_same"));
+			return part(Component.translatable("tooltip.sephiria_fantasy.part.cooldown_same"));
 		}
 
 		/** 位移距离：白色。 */
 		Line distance(double blocks) {
-			return part(Component.translatable("tooltip.sephiria.part.distance", number(blocks, COLOR_RANGE)));
+			return part(Component.translatable("tooltip.sephiria_fantasy.part.distance", number(blocks, COLOR_RANGE)));
 		}
 
 		/**

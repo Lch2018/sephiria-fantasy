@@ -150,7 +150,7 @@ public class ShopMenu extends AbstractContainerMenu {
 
 			@Override
 			public Component getDisplayName() {
-				return Component.translatable("screen.sephiria.shop");
+				return Component.translatable("screen.sephiria_fantasy.shop");
 			}
 
 			@Override

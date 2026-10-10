@@ -1,9 +1,9 @@
-# Move the leftover "shotgun" GeckoLib resource copies out of the resource pack.
+﻿# Move the leftover "shotgun" GeckoLib resource copies out of the resource pack.
 #
 # When hunting for GeckoLib's resource-path convention I staged the katana geo/animation
 # in every plausible folder. Only one layout is actually read:
-#   assets/sephiria/geckolib/models/<name>.geo.json
-#   assets/sephiria/geckolib/animations/<name>.animation.json
+#   assets/sephiria_fantasy/geckolib/models/<name>.geo.json
+#   assets/sephiria_fantasy/geckolib/animations/<name>.animation.json
 # Everything else is unreferenced (verified: no JSON mentions them), so it is moved to
 # tmp_fix/removed-resources/ instead of deleted -- easy to restore if the convention
 # ever changes back.
@@ -15,20 +15,20 @@ $res = Join-Path $root 'src\main\resources'
 $bin = Join-Path $root 'tmp_fix\removed-resources'
 
 $targets = @(
-    'assets\sephiria\geo',
-    'assets\sephiria\animations',
-    'assets\sephiria\item',
-    'assets\sephiria\geckolib\geo',
-    'assets\sephiria\geckolib\katana.geo.json',
-    'assets\sephiria\geckolib\katana.animation.json',
-    'assets\sephiria\models\item\katana_3d.json',
-    'assets\sephiria\models\item\katana_drawing.json',
-    'assets\sephiria\models\item\katana_in_hand.json',
-    'assets\sephiria\models\item\katana_sheathed.json',
-    'assets\sephiria\textures\item\katana_3d.png',
-    'assets\sephiria\textures\item\katana_drawing.png',
-    'assets\sephiria\textures\item\katana_sheathed.png',
-    'data\sephiria'
+    'assets\sephiria_fantasy\geo',
+    'assets\sephiria_fantasy\animations',
+    'assets\sephiria_fantasy\item',
+    'assets\sephiria_fantasy\geckolib\geo',
+    'assets\sephiria_fantasy\geckolib\katana.geo.json',
+    'assets\sephiria_fantasy\geckolib\katana.animation.json',
+    'assets\sephiria_fantasy\models\item\katana_3d.json',
+    'assets\sephiria_fantasy\models\item\katana_drawing.json',
+    'assets\sephiria_fantasy\models\item\katana_in_hand.json',
+    'assets\sephiria_fantasy\models\item\katana_sheathed.json',
+    'assets\sephiria_fantasy\textures\item\katana_3d.png',
+    'assets\sephiria_fantasy\textures\item\katana_drawing.png',
+    'assets\sephiria_fantasy\textures\item\katana_sheathed.png',
+    'data\sephiria_fantasy'
 )
 
 $moved = 0
@@ -53,6 +53,6 @@ foreach ($rel in $targets) {
 
 Write-Output ('moved ' + $moved + ' entries -> ' + $bin)
 Write-Output '--- surviving katana resources ---'
-Get-ChildItem (Join-Path $res 'assets\sephiria') -Recurse -File |
+Get-ChildItem (Join-Path $res 'assets\sephiria_fantasy') -Recurse -File |
     Where-Object { $_.Name -like '*katana*' -or $_.Name -eq 'blade.png' -or $_.Name -eq 'blade.json' } |
     ForEach-Object { Write-Output ('  ' + $_.FullName.Substring($res.Length + 1)) }

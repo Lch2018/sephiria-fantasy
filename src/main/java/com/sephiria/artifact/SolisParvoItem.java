@@ -33,7 +33,7 @@ public class SolisParvoItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.solis_parvo.flavor";
+		return "artifact.sephiria_fantasy.solis_parvo.flavor";
 	}
 
 	@Override
@@ -59,9 +59,9 @@ public class SolisParvoItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.sun_sword_capacity",
+				Component.translatable("artifact.sephiria_fantasy.affix.sun_sword_capacity",
 						Component.literal(Numbers.format(this.sunSwordCapacityBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.move_speed",
+				Component.translatable("artifact.sephiria_fantasy.affix.move_speed",
 						Component.literal(Numbers.format(this.moveSpeedPercentBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

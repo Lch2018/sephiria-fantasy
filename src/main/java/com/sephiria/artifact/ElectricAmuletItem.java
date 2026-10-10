@@ -31,7 +31,7 @@ public class ElectricAmuletItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.electric_amulet.flavor";
+		return "artifact.sephiria_fantasy.electric_amulet.flavor";
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class ElectricAmuletItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.lightning_element",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.lightning_element",
 				Component.literal(Numbers.format(this.lightningElementBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

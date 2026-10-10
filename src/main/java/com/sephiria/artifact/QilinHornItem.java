@@ -37,7 +37,7 @@ public class QilinHornItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.qilin_horn.flavor";
+		return "artifact.sephiria_fantasy.qilin_horn.flavor";
 	}
 
 	@Override
@@ -63,9 +63,9 @@ public class QilinHornItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.electric_crit",
+				Component.translatable("artifact.sephiria_fantasy.affix.electric_crit",
 						Component.literal(Numbers.format(this.electricCritChanceBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.ice_element",
+				Component.translatable("artifact.sephiria_fantasy.affix.ice_element",
 						Component.literal(Numbers.format(this.iceElementBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

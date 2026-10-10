@@ -36,7 +36,7 @@ public class LightningRodItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.lightning_rod.flavor";
+		return "artifact.sephiria_fantasy.lightning_rod.flavor";
 	}
 
 	@Override
@@ -67,11 +67,11 @@ public class LightningRodItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.cloud_capacity",
+				Component.translatable("artifact.sephiria_fantasy.affix.cloud_capacity",
 						Component.literal(Numbers.format(this.cloudCapacityBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.cloud_combat_regen",
+				Component.translatable("artifact.sephiria_fantasy.affix.cloud_combat_regen",
 						Component.literal(Numbers.format(this.cloudCombatRegenPercent(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.lightning_element",
+				Component.translatable("artifact.sephiria_fantasy.affix.lightning_element",
 						Component.literal(Numbers.format(this.lightningElementBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

@@ -31,7 +31,7 @@ public class OakCharcoalItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.oak_charcoal.flavor";
+		return "artifact.sephiria_fantasy.oak_charcoal.flavor";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class OakCharcoalItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.burn_tick_speed",
+				Component.translatable("artifact.sephiria_fantasy.affix.burn_tick_speed",
 						Component.literal(Numbers.format(this.burnTickSpeedPercent(level))).withColor(COLOUR_BONUS)));
 	}
 }

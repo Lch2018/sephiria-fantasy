@@ -1,4 +1,4 @@
-# Merge the katana's side-exported animations into the main animation file.
+﻿# Merge the katana's side-exported animations into the main animation file.
 #
 # The Blockbench project exports animations either all together or one at a time, so the
 # sheathed attack animation arrives as its own file (katana1.animation.json). GeckoLib
@@ -12,7 +12,7 @@
 
 $root = Split-Path -Parent $PSScriptRoot
 $export = Join-Path $root 'tmp_fix\export'
-$resAnims = Join-Path $root 'src\main\resources\assets\sephiria\geckolib\animations'
+$resAnims = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\geckolib\animations'
 $keep = Join-Path $root 'models'
 
 $mainPath = Join-Path $resAnims 'katana.animation.json'

@@ -60,7 +60,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 		super.init();
 		SephiriaTabs.add(this, this.leftPos, this.topPos - TAB_HEIGHT, SephiriaTab.SHOP);
 
-		Button refresh = Button.builder(Component.translatable("screen.sephiria.shop.refresh_button"),
+		Button refresh = Button.builder(Component.translatable("screen.sephiria_fantasy.shop.refresh_button"),
 						pressed -> ClientPlayNetworking.send(RefreshShopPayload.INSTANCE))
 				.bounds(this.leftPos + ShopMenu.REFRESH_BUTTON_X, this.topPos + ShopMenu.BUTTON_Y,
 						ShopMenu.BUTTON_WIDTH, ShopMenu.BUTTON_HEIGHT)
@@ -68,7 +68,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 		this.refreshButton = refresh;
 		addRenderableWidget(refresh);
 
-		Button sell = Button.builder(Component.translatable("screen.sephiria.shop.sell_button"),
+		Button sell = Button.builder(Component.translatable("screen.sephiria_fantasy.shop.sell_button"),
 						pressed -> ClientPlayNetworking.send(SellItemPayload.INSTANCE))
 				.bounds(this.leftPos + ShopMenu.BUTTON_X, this.topPos + ShopMenu.BUTTON_Y,
 						ShopMenu.BUTTON_WIDTH, ShopMenu.BUTTON_HEIGHT)
@@ -119,7 +119,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 	@Override
 	protected void extractLabels(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
 		super.extractLabels(extractor, mouseX, mouseY);
-		Component balance = Component.translatable("screen.sephiria.shop.balance",
+		Component balance = Component.translatable("screen.sephiria_fantasy.shop.balance",
 				Component.literal(Numbers.format(ClientStats.leaves())).withColor(HEADER_COLOR));
 		// 右对齐，免得和左上角的标题挤在一起
 		extractor.text(this.font, balance,
@@ -136,10 +136,10 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 		if (index >= ShopStock.SLOT_COUNT) {
 			// 骰子栏 / 出售栏：图标下面写用途
 			if (index == ShopMenu.DICE_SLOT) {
-				drawSmall(extractor, Component.translatable("screen.sephiria.shop.dice"), slot.x, slot.y + 18,
+				drawSmall(extractor, Component.translatable("screen.sephiria_fantasy.shop.dice"), slot.x, slot.y + 18,
 						HINT_COLOR);
 			} else if (index == ShopMenu.SELL_SLOT) {
-				drawSmall(extractor, Component.translatable("screen.sephiria.shop.sell"), slot.x, slot.y + 18,
+				drawSmall(extractor, Component.translatable("screen.sephiria_fantasy.shop.sell"), slot.x, slot.y + 18,
 						HINT_COLOR);
 			}
 
@@ -153,7 +153,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 			extractor.fill(slot.x, slot.y, slot.x + 16, slot.y + 16, SOLD_OUT_SHADE);
 			boolean potion = stack.isEmpty() && index >= ShopStock.POTION_START;
 			drawSmall(extractor,
-					Component.translatable(potion ? "screen.sephiria.shop.potion" : "screen.sephiria.shop.sold_out"),
+					Component.translatable(potion ? "screen.sephiria_fantasy.shop.potion" : "screen.sephiria_fantasy.shop.sold_out"),
 					slot.x, slot.y + 18, SOLD_OUT_COLOR);
 			return;
 		}
@@ -208,13 +208,13 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 		Component line;
 
 		if (stack.isEmpty()) {
-			line = Component.translatable("screen.sephiria.shop.sold_out").withColor(SOLD_OUT_COLOR);
+			line = Component.translatable("screen.sephiria_fantasy.shop.sold_out").withColor(SOLD_OUT_COLOR);
 		} else if (this.menu.remaining(index) <= 0) {
-			line = Component.translatable("screen.sephiria.shop.sold_out").withColor(SOLD_OUT_COLOR);
+			line = Component.translatable("screen.sephiria_fantasy.shop.sold_out").withColor(SOLD_OUT_COLOR);
 		} else {
 			int price = ShopPrices.discounted(ShopPrices.buy(stack), ClientStats.shopDiscount());
 
-			line = Component.translatable("screen.sephiria.shop.buy_hint",
+			line = Component.translatable("screen.sephiria_fantasy.shop.buy_hint",
 					Component.literal(String.valueOf(price)).withColor(PRICE_OK));
 		}
 

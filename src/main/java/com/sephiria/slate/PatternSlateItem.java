@@ -72,15 +72,15 @@ public class PatternSlateItem extends SlateItem {
 		deltas.sort(java.util.Comparator.reverseOrder());
 
 		for (int delta : deltas) {
-			lines.add(Component.translatable("artifact.sephiria.slate.effect.cells",
+			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.effect.cells",
 					Component.literal((delta > 0 ? "+" : "") + Numbers.format(delta))
 							.withColor(delta > 0 ? COLOUR_POSITIVE : COLOUR_NEGATIVE),
 					Component.literal(String.valueOf(counts.get(delta))).withColor(COLOUR_POSITIVE)));
 		}
 
 		lines.add(this.rotatable
-				? Component.translatable("artifact.sephiria.slate.effect.rotate")
-				: Component.translatable("artifact.sephiria.slate.effect.fixed").withColor(COLOUR_NEGATIVE));
+				? Component.translatable("artifact.sephiria_fantasy.slate.effect.rotate")
+				: Component.translatable("artifact.sephiria_fantasy.slate.effect.fixed").withColor(COLOUR_NEGATIVE));
 
 		return lines;
 	}

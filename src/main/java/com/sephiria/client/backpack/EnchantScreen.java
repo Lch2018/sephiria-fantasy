@@ -59,7 +59,7 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 		for (int index = 0; index < EnchantMenu.UPGRADE_STEPS.length; index++) {
 			int levels = EnchantMenu.UPGRADE_STEPS[index];
 			Button button = Button.builder(
-							Component.translatable("screen.sephiria.enchant.upgrade_n", levels),
+							Component.translatable("screen.sephiria_fantasy.enchant.upgrade_n", levels),
 							pressed -> ClientPlayNetworking.send(new UpgradeArtifactPayload(levels)))
 					.bounds(this.leftPos + EnchantMenu.BUTTON_X,
 							this.topPos + EnchantMenu.BUTTON_Y + index * EnchantMenu.BUTTON_SPACING,
@@ -143,13 +143,13 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 		// extractBackground 的绝对坐标不是一套——这里再加 leftPos/topPos 会把字画出面板
 		Font font = this.font;
 		int left = 8;
-		extractor.text(font, Component.translatable("screen.sephiria.enchant.artifact"),
+		extractor.text(font, Component.translatable("screen.sephiria_fantasy.enchant.artifact"),
 				left, EnchantMenu.ARTIFACT_SLOT_Y + 22, HINT_COLOR);
-		extractor.text(font, Component.translatable("screen.sephiria.enchant.coins", coinText()),
+		extractor.text(font, Component.translatable("screen.sephiria_fantasy.enchant.coins", coinText()),
 				left, EnchantMenu.COIN_SLOT_Y + 22, HINT_COLOR);
 
 		// 背包格区的列头，与左上角的标题同一行
-		extractor.text(font, Component.translatable("screen.sephiria.backpack"),
+		extractor.text(font, Component.translatable("screen.sephiria_fantasy.backpack"),
 				EnchantMenu.BACKPACK_SLOT_X, EnchantMenu.BACKPACK_SLOT_Y - 12, HINT_COLOR);
 	}
 

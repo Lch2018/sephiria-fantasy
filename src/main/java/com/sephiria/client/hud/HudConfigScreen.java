@@ -15,7 +15,7 @@ public class HudConfigScreen extends Screen {
 	private final Screen parent;
 
 	public HudConfigScreen(Screen parent) {
-		super(Component.translatable("screen.sephiria.hud"));
+		super(Component.translatable("screen.sephiria_fantasy.hud"));
 		this.parent = parent;
 	}
 
@@ -25,7 +25,7 @@ public class HudConfigScreen extends Screen {
 		int y = 40;
 
 		for (String key : HudConfig.MODULES) {
-			addRenderableWidget(Button.builder(Component.translatable("screen.sephiria.hud." + key),
+			addRenderableWidget(Button.builder(Component.translatable("screen.sephiria_fantasy.hud." + key),
 							button -> Minecraft.getInstance().setScreenAndShow(new HudModuleScreen(this, key)))
 					.bounds(left, y, 200, 20)
 					.build());

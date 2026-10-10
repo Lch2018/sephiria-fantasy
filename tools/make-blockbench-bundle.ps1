@@ -1,4 +1,4 @@
-# Assemble a Blockbench-friendly folder: every hand model together with the palette texture it
+﻿# Assemble a Blockbench-friendly folder: every hand model together with the palette texture it
 # uses, named the same so a model and its texture sit side by side.
 #
 # Blockbench can open the mod's own JSON files directly (they are plain Java item models), this
@@ -7,8 +7,8 @@
 # ASCII-only on purpose: Windows PowerShell 5.1 reads non-ASCII .ps1 as GBK.
 
 $root = Split-Path -Parent $PSScriptRoot
-$modelsDir = Join-Path $root 'src\main\resources\assets\sephiria\models\item'
-$texDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\item'
+$modelsDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\models\item'
+$texDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\item'
 $outDir = Join-Path $root 'blockbench'
 
 # rebuild from scratch so stale copies of renamed or deleted models cannot linger

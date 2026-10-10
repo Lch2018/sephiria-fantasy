@@ -31,7 +31,7 @@ public class RavenTabletItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.raven_tablet.flavor";
+		return "artifact.sephiria_fantasy.raven_tablet.flavor";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class RavenTabletItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.cloud_free_shot",
+				Component.translatable("artifact.sephiria_fantasy.affix.cloud_free_shot",
 						Component.literal(Numbers.format(this.cloudFreeShotChance(level))).withColor(COLOUR_BONUS)));
 	}
 }

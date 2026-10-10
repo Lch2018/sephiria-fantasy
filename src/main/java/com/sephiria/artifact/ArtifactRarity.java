@@ -35,7 +35,7 @@ public enum ArtifactRarity {
 	}
 
 	public String translationKey() {
-		return "sephiria.rarity." + this.id;
+		return "sephiria_fantasy.rarity." + this.id;
 	}
 
 	/** 名字用的颜色：彩色品质逐字上色。 */

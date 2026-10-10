@@ -41,7 +41,7 @@ public enum WeaponBranch {
 
 	/** 语言文件里的分支名字键，如 {@code sephiria.branch.greatsword}。 */
 	public String translationKey() {
-		return "sephiria.branch." + this.id;
+		return "sephiria_fantasy.branch." + this.id;
 	}
 
 	/** 弩是唯一的远程分支，其余都是近战。 */

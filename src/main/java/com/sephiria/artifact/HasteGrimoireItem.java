@@ -32,7 +32,7 @@ public class HasteGrimoireItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.haste_grimoire.flavor";
+		return "artifact.sephiria_fantasy.haste_grimoire.flavor";
 	}
 
 	@Override
@@ -58,7 +58,7 @@ public class HasteGrimoireItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.haste_skill",
+				Component.translatable("artifact.sephiria_fantasy.affix.haste_skill",
 						Component.literal(Numbers.format(hasteMpCost(level))).withColor(COLOUR_BONUS)));
 	}
 }

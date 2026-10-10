@@ -28,7 +28,7 @@
 
 四、素材说明
 ------------
-`src/main/resources/assets/sephiria/textures/` 与 `tools/weapon-ref/` 下的武器美术来自
+`src/main/resources/assets/sephiria_fantasy/textures/` 与 `tools/weapon-ref/` 下的武器美术来自
 《SEPHIRIA（赛菲莉娅）》原作，其知识产权归 TEAM HORAY 所有，本项目仅在同人范围内引用，
 本声明不覆盖这部分素材。若相关权利方提出异议，请停止使用并联系删除。
 
@@ -52,5 +52,5 @@ Copyright (c) 2026 Lch2018. All rights reserved.
 - Personal play, free redistribution (with credit and this notice), and videos/streams
   (with credit) are allowed.
 - Provided "as is", without warranty of any kind.
-- Weapon artwork under `src/main/resources/assets/sephiria/textures/` and `tools/weapon-ref/`
+- Weapon artwork under `src/main/resources/assets/sephiria_fantasy/textures/` and `tools/weapon-ref/`
   originates from the game SEPHIRIA and belongs to TEAM HORAY; this notice does not cover it.

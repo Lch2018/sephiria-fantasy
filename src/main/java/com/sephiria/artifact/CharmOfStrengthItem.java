@@ -31,7 +31,7 @@ public class CharmOfStrengthItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.charm_of_strength.flavor";
+		return "artifact.sephiria_fantasy.charm_of_strength.flavor";
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class CharmOfStrengthItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.physical",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.physical",
 				Component.literal(Numbers.format(this.physicalBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

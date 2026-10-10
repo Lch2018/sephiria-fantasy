@@ -66,19 +66,19 @@ public class SephiriaClient implements ClientModInitializer {
 	private static final int INVENTORY_HEIGHT = 166;
 
 	private static final KeyMapping DASH_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-			"key.sephiria.dash",
+			"key.sephiria_fantasy.dash",
 			InputConstants.Type.MOUSE,
 			InputConstants.MOUSE_BUTTON_4,
 			KeyMapping.Category.GAMEPLAY));
 
 	private static final KeyMapping RELOAD_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-			"key.sephiria.reload",
+			"key.sephiria_fantasy.reload",
 			InputConstants.Type.KEYBOARD,
 			InputConstants.KEY_R,
 			KeyMapping.Category.GAMEPLAY));
 
 	private static final KeyMapping HUD_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-			"key.sephiria.hud",
+			"key.sephiria_fantasy.hud",
 			InputConstants.Type.KEYBOARD,
 			InputConstants.KEY_H,
 			KeyMapping.Category.GAMEPLAY));
@@ -92,7 +92,7 @@ public class SephiriaClient implements ClientModInitializer {
 	static {
 		for (int slot = 0; slot < SKILL_KEYS.length; slot++) {
 			SKILL_KEYS[slot] = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-					"key.sephiria.artifact_skill_" + (slot + 1),
+					"key.sephiria_fantasy.artifact_skill_" + (slot + 1),
 					InputConstants.Type.KEYBOARD,
 					InputConstants.UNKNOWN.getValue(),
 					KeyMapping.Category.GAMEPLAY));
@@ -139,7 +139,7 @@ public class SephiriaClient implements ClientModInitializer {
 			}
 
 			if (stack.getItem() instanceof SephiriaCrossbowItem) {
-				lines.add(Component.translatable("tooltip.sephiria.magazine",
+				lines.add(Component.translatable("tooltip.sephiria_fantasy.magazine",
 						Component.literal(format(SkillClientData.current(SephiriaCrossbowItem.STORAGE))),
 						Component.literal(format(SkillClientData.max(SephiriaCrossbowItem.STORAGE)))));
 			}

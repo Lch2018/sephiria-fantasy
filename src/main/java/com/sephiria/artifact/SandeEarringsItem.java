@@ -62,7 +62,7 @@ public class SandeEarringsItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.sande_earrings.flavor";
+		return "artifact.sephiria_fantasy.sande_earrings.flavor";
 	}
 
 	@Override
@@ -170,10 +170,10 @@ public class SandeEarringsItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.sande_attack",
+				Component.translatable("artifact.sephiria_fantasy.affix.sande_attack",
 						Component.literal(Numbers.format(this.sandeTargetCount(level))).withColor(COLOUR_BONUS),
 						Component.literal(Numbers.format(ATTACK_PERCENT)).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.lightning_element",
+				Component.translatable("artifact.sephiria_fantasy.affix.lightning_element",
 						Component.literal(Numbers.format(this.lightningElementBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

@@ -325,9 +325,9 @@ HUD 布局设置             H
   修饰符不随实体继承，只记「上次算出来是多少」的话复活后就会一直以为已经写过了，
   普通攻击会悄悄退回基础伤害。
 
-  存档：属性跟着玩家存档走（Fabric 数据附件 sephiria:player_stats，每次改动写回，
+  存档：属性跟着玩家存档走（Fabric 数据附件 sephiria_fantasy:player_stats，每次改动写回，
   死亡不清空）。所以药水给的永久加成（物理伤害 +2、HP 偷取 +1）、叶子与升级宝箱的
-  进度都不会因为重登或重启而丢。**商店货架也存附件**（sephiria:shop_stock，内容 + 限购次数
+  进度都不会因为重登或重启而丢。**商店货架也存附件**（sephiria_fantasy:shop_stock，内容 + 限购次数
   一起存、死亡带着走）——重登/重启读回同一批货，只有放骰子才换新。
   仍然只存内存的只有技能存储（按设计重登恢复满值）。
 
@@ -554,7 +554,7 @@ HUD 布局设置             H
   打玩家不算）投掷一支太阳剑——不是从玩家身上飞出去的实体，而是<b>直接在被命中者身上</b>结算一次
   火属性伤害：<b>火元素强度面板值 × 10% × (1 + 档位伤害加成)</b>，没有攻击间隔（每发符合条件
   的伤害都投一支，有剑可投时）。
-  伤害类型是 sephiria:sun_sword（Kind.SUN）：吃通用暴击与黄金之手、正常吃减伤，但既不算武器
+  伤害类型是 sephiria_fantasy:sun_sword（Kind.SUN）：吃通用暴击与黄金之手、正常吃减伤，但既不算武器
   也不算神器攻击——不触发电击之触 / 树枝 / 台风那类「造成武器或神器伤害时」的效果（防链式自投）。
   特效是敌人身上一道<b>笔直的划痕</b>（横贯身体、与「玩家→目标」的水平方向垂直）：
   边缘橙 #FDA542 → 近中黄 #FDFD64 → 正中白 #FDFDFB。
@@ -562,7 +562,7 @@ HUD 布局设置             H
   投出的那支<b>掉在被命中者脚下</b>——走过去即可拾回（每支 +1、不超过上限，满了就留在地上），
   这是最主要的回剑方式；另一条是<b>脱战</b>时每 0.1 秒回上限的 10%（从 0 到满约 1 秒）。
   掉落的剑不是物品：是一个关闭了原版拾取与自然消失的物品实体（不占物品栏），主人记在
-  物品栈组件 sephiria:sun_sword_owner 上，所以重登、跨维度回来照样能捡。
+  物品栈组件 sephiria_fantasy:sun_sword_owner 上，所以重登、跨维度回来照样能捡。
   <b>太阳剑 UI</b>：仅在激活（连击 ≥ 2 档）时显示「太阳剑：当前/上限」+ 进度条
   （条色 #FDF74C）；位置与缩放在 HUD 布局设置（H 键）里调，默认在左下角乌云条上方。
   来源：索利斯·弗拉克托 / 索利斯·帕尔沃——两件都挂太阳剑连击。
@@ -574,8 +574,8 @@ HUD 布局设置             H
   <b>火焰之触</b>：造成伤害时给目标附加「灼伤」减益，冷却 2 秒按攻击者记
   （8 档加速后 = 间隔 ÷ 2.5 → 0.8 秒，口径同电击之触）。
   触发口径与电击之触同一套：玩家的<b>武器 / 神器伤害</b>，以及**攻击打出的火属性伤害**
-  （太阳剑的 sephiria:sun_sword、红蛇之眼陨石的 sephiria:fire_attack）都算；灼伤自己的结算
-  （sephiria:burn 类型）是减益伤害，不进触发口径——即文案里的「不包括减益伤害」，防链式自触。
+  （太阳剑的 sephiria_fantasy:sun_sword、红蛇之眼陨石的 sephiria_fantasy:fire_attack）都算；灼伤自己的结算
+  （sephiria_fantasy:burn 类型）是减益伤害，不进触发口径——即文案里的「不包括减益伤害」，防链式自触。
   （原版火焰附魔 / 岩浆那类环境火不触发：它们的伤害来源不是武器也不是神器。）
   层数满了不加、也不吃掉这次冷却（与电击之触同）。
   来源：红蛇之眼 / 龙涎香 / 红色线球 / 橡木炭 / 火焰虫 / 熔岩珠——六件都挂余烬连击，
@@ -641,9 +641,9 @@ HUD 布局设置             H
 
 被雷击中的树枝   连击 魔法科技 · 品质 普通(白) · 【唯一】
                  词条：使用武器攻击或魔法书造成伤害时，对目标附加 10/20/30 闪电属性伤害（冷却 2 秒）（0..2 级，3 档）
-                 附加那一下走 sephiria:electric_attack（Kind.ELECTRIC）：固定值、不吃减伤与黄金之手，
+                 附加那一下走 sephiria_fantasy:electric_attack（Kind.ELECTRIC）：固定值、不吃减伤与黄金之手，
                  暴击几率 = 通用 + 「电属性攻击的暴击几率」（麒麟的角）；与其它电属性攻击一样会触发电击之触
-                 （只有触电自己的结算 sephiria:electric_shock 被挡在触发之外，防链式）。
+                 （只有触电自己的结算 sephiria_fantasy:electric_shock 被挡在触发之外，防链式）。
                  「武器攻击或魔法书」的实现口径与电击之触同一套守门（Kind.WEAPON / ARTIFACT），冷却按攻击者记 2 秒。
                  风味：有一种沉重而独特的气味。
 
@@ -770,7 +770,7 @@ HUD 布局设置             H
                  陨石数多于敌人数就绕回来重复砸同一个目标，落点带 ±1.6 格随机偏移），
                  从落点上方 14 格砸下（出现 → 下落 → 撞击 → 消失四段演出，见下面【陨石】），
                  落地对 2.5 格内所有有威胁生物结算一次
-                 sephiria:fire_attack（吃通用暴击、减伤与黄金之手，也会触发火焰之触），
+                 sephiria_fantasy:fire_attack（吃通用暴击、减伤与黄金之手，也会触发火焰之触），
                  并<b>直接</b>调用灼伤附加入口——不要求余烬到 2 档、也不吃火焰之触的 2 秒冷却。
                  附近没有威胁生物就不落石、也不吃这次冷却（等人打上门来再砸）。
                  伤害在发出陨石那一刻按火元素强度算好（下落途中换装不改这一发）。
@@ -842,8 +842,8 @@ HUD 布局设置             H
   · 「强化触电」（雷云追踪指南针）：施加触电时按概率立即额外结算一次——公式与周期跳相同
     （× 5% × 层数 × x），不延长持续时间、也不改变层数；电击之触与桑德耳环施加的都算。
   · 「造成雷电伤害」的实现口径：玩家造成的武器 / 神器伤害，以及**攻击打出的电属性伤害**
-    （sephiria:electric_attack 类型：乌云雷击、雷之裁决光束、桑德耳环、树枝与台风的附加闪电）
-    都触发电击之触；唯一被挡下的是触电自己的结算（sephiria:electric_shock 类型）——
+    （sephiria_fantasy:electric_attack 类型：乌云雷击、雷之裁决光束、桑德耳环、树枝与台风的附加闪电）
+    都触发电击之触；唯一被挡下的是触电自己的结算（sephiria_fantasy:electric_shock 类型）——
     即文案里的「不包括减益伤害」，防链式自触。桑德耳环的「直接上触电」是它自己的词条，
     与电击之触无关（不过它的闪电伤害本身也照样能触发一次电击之触）。
   · 电元素强度在结算那一刻向触发者现查（换装跟着走；触发者不在线的那一跳静默跳过）。
@@ -851,14 +851,14 @@ HUD 布局设置             H
     （口径同冲刺恢复速度：实际间隔 = 基础间隔 ÷ (1 + 加成)，向上取整）。
   · 10 档「触电激活时间-1秒」= 周期间隔 1.5 秒 → 0.5 秒。
   · 特效：挂着触电的目标身上每刻冒<b>蓝色（#7EFAFF）</b>的电火花（自定义粒子
-    sephiria:blue_spark，形状与原版电火花一致、只染了色），结算时再爆一捧大的；
+    sephiria_fantasy:blue_spark，形状与原版电火花一致、只染了色），结算时再爆一捧大的；
     音效只<b>在造成伤害的那一下</b>响：自定义短促的电流火花声（约 0.3~0.4 秒的「呲呲啦啦」，
     三个变体随机、音高微随机；生成脚本 tools/make-electric-spark.ps1）。
   · <b>层数标签</b>：敌人脚下显示小字「触电：x」（比原版名牌小一档，32 格内可见），
     层数变化时同步给附近 64 格内的玩家；减益消失（层数归零 / 时间走完 / 目标死亡）
     的同时标签消失。
   · 结算前先清一次目标的受伤无敌帧（真实伤害同款手法），防止结算被无敌帧顶掉；
-    伤害类型 sephiria:electric_shock。
+    伤害类型 sephiria_fantasy:electric_shock。
 
   【灼伤】「火焰之触」（余烬 2 档）在造成伤害时给目标挂上：持续 4 秒，每 0.5 秒跳一次，
   一共八跳（t=0.5s ~ 4s），时间走完直接消失——<b>没有终结跳</b>（那是触电独有的）。
@@ -871,7 +871,7 @@ HUD 布局设置             H
     那一下多叠 N 层（1 + N，仍受上限管着），层满的一击不加、也不吃火焰之触的冷却。
   · 每跳间隔 = 基础 10 刻 ÷ (1 + 橡木炭的「灼伤的攻击速度」)，在施加那一刻定下来（之后换装不改）。
   · 减益伤害：吃通用暴击（2026-10 起）、不吃减伤与黄金之手（与触电同口径），也不触发火焰之触
-    （防链式自触）；伤害类型 sephiria:burn。
+    （防链式自触）；伤害类型 sephiria_fantasy:burn。
   · 火元素强度与倍率都在结算那一刻向触发者现查（换装、档位变了跟着走；触发者不在线的那一跳
     用默认的 8% 静默结算）。
   · 特效：挂着灼伤的目标身上每刻冒火苗，每跳结算时再爆一捧火苗 + 少量烟；粒子浓度随层数
@@ -881,7 +881,7 @@ HUD 布局设置             H
     64 格内的玩家，消失/死亡时标签一起收掉）。
 
   【陨石】（红蛇之眼，余烬）：每 5 秒一轮，机制见上面那件神器的条目。
-  · 伤害类型 sephiria:fire_attack（Kind.FIRE_ATTACK，与电的 electric_attack 对称）：
+  · 伤害类型 sephiria_fantasy:fire_attack（Kind.FIRE_ATTACK，与电的 electric_attack 对称）：
     吃通用暴击、减伤与黄金之手，也触发火焰之触（「攻击打出的火属性伤害」那一类）；
     既不算武器也不算神器伤害——树枝 / 台风 / 太阳剑那些「造成武器或神器伤害时」的口径都不牵动。
   · 陨石砸中后直接调 Debuffs.applyBurn（与桑德耳环「直接上触电」同型）：不走火焰之触的 2 秒冷却。
@@ -982,7 +982,7 @@ HP 偷取          新属性（俗称吸血），默认 0：造成的<b>所有</
 十五、合成表（基础武器）
 ────────────────────────────────────────────────────────────────────────
 六张表都用同样三样材料：
-  原版铁制武器   #sephiria:iron_weapons = 铁剑、铁斧（想放宽到铁镐之类，改这个标签即可）
+  原版铁制武器   #sephiria_fantasy:iron_weapons = 铁剑、铁斧（想放宽到铁镐之类，改这个标签即可）
   铁锭           minecraft:iron_ingot
   任意原版树苗   #minecraft:saplings（橡树…樱花树苗，以及杜鹃、红树胎生苗都算）
 三样各有分工：铁制武器当刃与弩臂、铁锭当护手与配重、树苗当手柄与木杆。
@@ -998,7 +998,7 @@ HP 偷取          新属性（俗称吸血），默认 0：造成的<b>所有</
   · 匕首是 2×2，在背包自带的合成格里就能做；其余五张是 3×3，要工作台。
   · 弩矢没有合成表：它靠装填回复，不做成可合成的消耗品。
   · 六张表在拿到任意一样材料时一起解锁，也就是配方书里能直接搜到；
-    合成表本体在 data/sephiria/recipe/<武器 id>.json，解锁写在 advancement/recipes/weapons.json。
+    合成表本体在 data/sephiria_fantasy/recipe/<武器 id>.json，解锁写在 advancement/recipes/weapons.json。
 
 
 ────────────────────────────────────────────────────────────────────────
@@ -1029,7 +1029,7 @@ HUD 与界面               src/main/java/com/sephiria/client/hud/
 赛菲利亚背包             src/main/java/com/sephiria/backpack/（ArtifactBackpack / ArtifactBackpackMenu）
 神器提示框与背包界面     src/main/java/com/sephiria/client/artifact/、client/backpack/
 商店：货架 / 价格 / 界面  src/main/java/com/sephiria/shop/（ShopStock / ShopPrices / ShopMenu）
-基础武器合成表           src/main/resources/data/sephiria/（recipe / tags/item / advancement）
+基础武器合成表           src/main/resources/data/sephiria_fantasy/（recipe / tags/item / advancement）
 药水：效果与计时        src/main/java/com/sephiria/potion/（SephiriaPotionItem / PotionEffect / Potions / PotionTimers）
 HP 偷取                  src/main/java/com/sephiria/stats/Lifesteal.java
 暴击与真实伤害           src/main/java/com/sephiria/damage/SephiriaDamage.java（+ mixin/DamageReductionMixin）
@@ -1038,7 +1038,7 @@ HP 偷取                  src/main/java/com/sephiria/stats/Lifesteal.java
                          src/main/java/com/sephiria/mixin/DebuffTickMixin.java
 经验→叶子结算            src/main/java/com/sephiria/mixin/LeafExperienceMixin.java
 伪随机（暴击 / 闪避）     src/main/java/com/sephiria/stats/PseudoRandom.java
-数据包：伤害类型           src/main/resources/data/sephiria/damage_type/（true_damage / artifact_damage /
+数据包：伤害类型           src/main/resources/data/sephiria_fantasy/damage_type/（true_damage / artifact_damage /
                          electric_shock / electric_attack / sun_sword / burn / fire_attack）
 神器技能系统             src/main/java/com/sephiria/artifact/skill/（ArtifactSkill / ArtifactSkills / 两个技能 / SkillSlots）
                           src/main/java/com/sephiria/client/skill/（技能页与客户端镜像）

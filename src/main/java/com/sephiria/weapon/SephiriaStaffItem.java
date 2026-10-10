@@ -132,15 +132,15 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
 				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, VANILLA_SWEEP_RANGE * SWEEP_RANGE_SCALE).build(),
-				Line.titled("tooltip.sephiria.skill.riposte1")
+				Line.titled("tooltip.sephiria_fantasy.skill.riposte1")
 						.skillDamage(RIPOSTE1_DAMAGE).cooldownTicks(COOLDOWN_TICKS)
 						.range(PARRY_RANGE).distance(STEP1_DISTANCE).build(),
-				Line.titled("tooltip.sephiria.skill.riposte2")
+				Line.titled("tooltip.sephiria_fantasy.skill.riposte2")
 						.skillDamage(RIPOSTE2_DAMAGE).cooldownSame()
 						.range(RIPOSTE2_RANGE).distance(STEP2_DISTANCE).build(),
-				Line.titled("tooltip.sephiria.skill.riposte3")
+				Line.titled("tooltip.sephiria_fantasy.skill.riposte3")
 						.skillDamage(RIPOSTE3_DAMAGE).cooldownSame().range(RIPOSTE3_RANGE).build(),
-				desc("tooltip.sephiria.skill.riposte", "tooltip.sephiria.desc.riposte"));
+				desc("tooltip.sephiria_fantasy.skill.riposte", "tooltip.sephiria_fantasy.desc.riposte"));
 	}
 
 

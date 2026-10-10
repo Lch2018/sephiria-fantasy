@@ -137,7 +137,7 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 
 			@Override
 			public Component getDisplayName() {
-				return Component.translatable("screen.sephiria.backpack");
+				return Component.translatable("screen.sephiria_fantasy.backpack");
 			}
 
 			@Override

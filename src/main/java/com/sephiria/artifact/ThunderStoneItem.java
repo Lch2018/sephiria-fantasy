@@ -31,7 +31,7 @@ public class ThunderStoneItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.thunder_stone.flavor";
+		return "artifact.sephiria_fantasy.thunder_stone.flavor";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class ThunderStoneItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.cloud_damage",
+				Component.translatable("artifact.sephiria_fantasy.affix.cloud_damage",
 						Component.literal(Numbers.format(this.cloudDamagePercent(level))).withColor(COLOUR_BONUS)));
 	}
 }

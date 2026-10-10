@@ -34,7 +34,7 @@ public class SapoteFruitItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.sapote_fruit.flavor";
+		return "artifact.sephiria_fantasy.sapote_fruit.flavor";
 	}
 
 	@Override
@@ -60,9 +60,9 @@ public class SapoteFruitItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.cloud_capacity",
+				Component.translatable("artifact.sephiria_fantasy.affix.cloud_capacity",
 						Component.literal(Numbers.format(this.cloudCapacityBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.mp_regen",
+				Component.translatable("artifact.sephiria_fantasy.affix.mp_regen",
 						Component.literal(Numbers.format(this.mpRegenBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

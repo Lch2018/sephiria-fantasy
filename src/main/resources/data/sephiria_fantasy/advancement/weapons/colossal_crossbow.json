@@ -1,0 +1,27 @@
+{
+  "parent": "sephiria_fantasy:recipes/weapons",
+  "display": {
+    "icon": {
+      "id": "sephiria_fantasy:colossal_crossbow"
+    },
+    "title": {
+      "text": "巨型弩"
+    },
+    "description": {
+      "text": "合成：SIS / WWW / .S.（W=铁制武器 I=铁锭 S=树苗），悬停查看"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "tick": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "requirements": [
+    [
+      "tick"
+    ]
+  ]
+}

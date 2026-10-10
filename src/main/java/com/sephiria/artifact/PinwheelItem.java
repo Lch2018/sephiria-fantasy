@@ -39,7 +39,7 @@ public class PinwheelItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.pinwheel.flavor";
+		return "artifact.sephiria_fantasy.pinwheel.flavor";
 	}
 
 	@Override
@@ -65,9 +65,9 @@ public class PinwheelItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.attack_speed",
+				Component.translatable("artifact.sephiria_fantasy.affix.attack_speed",
 						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.dodge",
+				Component.translatable("artifact.sephiria_fantasy.affix.dodge",
 						Component.literal(Numbers.format(this.dodgeBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

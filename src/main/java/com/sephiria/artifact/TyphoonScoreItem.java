@@ -51,7 +51,7 @@ public class TyphoonScoreItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.typhoon_score.flavor";
+		return "artifact.sephiria_fantasy.typhoon_score.flavor";
 	}
 
 	@Override
@@ -112,12 +112,12 @@ public class TyphoonScoreItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.cloud_speed",
+				Component.translatable("artifact.sephiria_fantasy.affix.cloud_speed",
 						Component.literal(Numbers.format(this.cloudSpeedPercentOfAttackSpeed(level)))
 								.withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.weapon_lightning",
+				Component.translatable("artifact.sephiria_fantasy.affix.weapon_lightning",
 						Component.literal(Numbers.format(this.weaponLightningDamage(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.attack_speed",
+				Component.translatable("artifact.sephiria_fantasy.affix.attack_speed",
 						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

@@ -42,7 +42,7 @@ public class FireflyItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.firefly.flavor";
+		return "artifact.sephiria_fantasy.firefly.flavor";
 	}
 
 	@Override
@@ -82,7 +82,7 @@ public class FireflyItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.firefly_element",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.firefly_element",
 				Component.literal(Numbers.format(this.fireflyLightningElement(level))).withColor(COLOUR_BONUS)));
 	}
 }

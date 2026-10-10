@@ -30,7 +30,7 @@ public class GoldenMapleLeafItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.golden_maple_leaf.flavor";
+		return "artifact.sephiria_fantasy.golden_maple_leaf.flavor";
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class GoldenMapleLeafItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.xp_drop",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.xp_drop",
 				Component.literal(Numbers.format(this.xpDropPercentBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

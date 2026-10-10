@@ -1,4 +1,4 @@
-# Build the SEPHIRIA artifact / slate / combo icons from the reference images the user supplied.
+﻿# Build the SEPHIRIA artifact / slate / combo icons from the reference images the user supplied.
 #
 #   textures/item/<name>.png   16x16   artifacts and slates
 #   textures/gui/<name>.png    16x16   combo counter icons
@@ -42,8 +42,8 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path -Parent $PSScriptRoot
-$texDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\item'
-$guiDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\gui'
+$texDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\item'
+$guiDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\gui'
 $previewDir = Join-Path $root '.preview'
 $cache = 'C:\Users\28237\.zcode\cli\image-cache\sess_30e8ce6e-bd9a-4f06-a1a0-7ff99b2cb644'
 $cache2 = 'C:\Users\28237\.zcode\cli\image-cache\sess_ef7ea5c6-ffe1-4f26-8dae-12227ec34263'
@@ -81,13 +81,13 @@ function Save-Preview([System.Drawing.Bitmap]$bmp, [string]$name) {
 }
 
 # An item texture alone does not make the item render: it also needs the item model definition
-# (assets/sephiria/items/<id>.json, the 1.21.4+ system) and the model itself
-# (assets/sephiria/models/item/<id>.json). Batch 15 shipped without them and the icons showed up
+# (assets/sephiria_fantasy/items/<id>.json, the 1.21.4+ system) and the model itself
+# (assets/sephiria_fantasy/models/item/<id>.json). Batch 15 shipped without them and the icons showed up
 # as missing models in game, so every item-dir job now writes both - only when absent, so
 # hand-made special models (weapons, animated sprites) are never overwritten.
 function Write-ItemDefinitions([string]$name) {
-    $defDir = Join-Path $root 'src\main\resources\assets\sephiria\items'
-    $modelDir = Join-Path $root 'src\main\resources\assets\sephiria\models\item'
+    $defDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\items'
+    $modelDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\models\item'
     New-Item -ItemType Directory -Force -Path $defDir, $modelDir | Out-Null
 
     $utf8 = New-Object System.Text.UTF8Encoding($false)
@@ -99,7 +99,7 @@ function Write-ItemDefinitions([string]$name) {
         # with newlines writes the value split across lines - invalid JSON (batch 15's slate.json
         # came out exactly like that).
         $lines = @('{', '  "model": {', '    "type": "minecraft:model",',
-                   ('    "model": "sephiria:item/' + $name + '"'), '  }', '}')
+                   ('    "model": "sephiria_fantasy:item/' + $name + '"'), '  }', '}')
         [IO.File]::WriteAllText($defFile, (($lines -join "`n") + "`n"), $utf8)
         Write-Output ("wrote items/" + $name + '.json')
     }
@@ -108,7 +108,7 @@ function Write-ItemDefinitions([string]$name) {
 
     if (-not (Test-Path $modelFile)) {
         $lines = @('{', '  "parent": "minecraft:item/generated",', '  "textures": {',
-                   ('    "layer0": "sephiria:item/' + $name + '"'), '  }', '}')
+                   ('    "layer0": "sephiria_fantasy:item/' + $name + '"'), '  }', '}')
         [IO.File]::WriteAllText($modelFile, (($lines -join "`n") + "`n"), $utf8)
         Write-Output ("wrote models/item/" + $name + '.json')
     }

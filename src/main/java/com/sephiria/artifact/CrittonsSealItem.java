@@ -31,7 +31,7 @@ public class CrittonsSealItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.crittons_seal.flavor";
+		return "artifact.sephiria_fantasy.crittons_seal.flavor";
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class CrittonsSealItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.leaf_gain",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.leaf_gain",
 				Component.literal(Numbers.format(this.leafGainPercentBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

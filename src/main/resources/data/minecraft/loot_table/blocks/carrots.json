@@ -61,7 +61,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "sephiria:dice"
+          "name": "sephiria_fantasy:dice"
         }
       ],
       "rolls": 1

@@ -1,0 +1,6 @@
+{
+	"parent": "sephiria_fantasy:item/weapon",
+	"textures": {
+		"layer0": "sephiria_fantasy:item/default_sword_and_shield"
+	}
+}

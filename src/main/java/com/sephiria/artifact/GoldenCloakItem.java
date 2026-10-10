@@ -25,7 +25,7 @@ public class GoldenCloakItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.golden_cloak.flavor";
+		return "artifact.sephiria_fantasy.golden_cloak.flavor";
 	}
 
 	@Override
@@ -53,9 +53,9 @@ public class GoldenCloakItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		// 数值本身不带「+」——加号在语言文件里，和别的词条保持一致
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.dash_charges",
+				Component.translatable("artifact.sephiria_fantasy.affix.dash_charges",
 						Component.literal(Numbers.format(this.dashChargesBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.attack_speed",
+				Component.translatable("artifact.sephiria_fantasy.affix.attack_speed",
 						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

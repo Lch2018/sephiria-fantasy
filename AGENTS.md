@@ -11,7 +11,7 @@
 - 改动完成后**直接实装**：运行 `tools/deploy.ps1`。它做三件事——Gradle 构建、清掉 mods 里
   其它名字的旧 jar（同 mod id 有两个 jar 会报重复 mod）、把新 jar 复制到 PCL 实例的 mods 目录。
 - jar 名字跟 `gradle.properties` 里的 `version` 走（当前 `0.1.10.9-a`），
-  所以是 `build/libs/sephiria-<version>.jar` → `mods\sephiria-<version>.jar`；改版本号只要改那一处。
+  所以是 `build/libs/sephiria-fantasy-<version>.jar` → `mods\sephiria-fantasy-<version>.jar`；改版本号只要改那一处。
 - **版本号用日期**：`0.1.<月>.<日>-a`（10 月 9 日 → `0.1.10.9-a`；`-a` = A 测）。
   **每次「发布」前先把 `gradle.properties` 的 `version` 改成当天的日期**再构建实装——
   jar 名、release 的 tag（`v<版本>`）与游戏里 mod 列表显示的版本都跟着它。
@@ -30,7 +30,7 @@
   代理没开时推送会报 `Failed to connect ... over proxy`，此时直连也解析不了域名，
   必须等用户把代理打开再推。
 - 用户说「发布」= 建 GitHub Release（仓库本身已经是 public）：
-  `gh release create v<版本> build/libs/sephiria-<版本>.jar --title "赛菲莉亚幻想 <版本>（A 测）" --notes-file <说明.md> --target main`。
+  `gh release create v<版本> build/libs/sephiria-fantasy-<版本>.jar --title "赛菲莉亚幻想 <版本>（A 测）" --notes-file <说明.md> --target main`。
   **本机的 `gh` 没有登录**，发布前先用 git 自己的凭据喂给它（别把 token 打印出来）：
   先 `CRED=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill)`，
   再 `export GH_TOKEN=$(printf '%s\n' "$CRED" | sed -n 's/^password=//p')`，
@@ -38,7 +38,7 @@
 - 发布说明（GitHub Release 与 Modrinth 的项目正文 / 更新说明）**一律中英双语**：中文在前，
   之后 `## English` 一节写同样的四块——运行环境（26.3 + Fabric Loader 0.19.5 + Fabric API + GeckoLib）、
   这一版有什么、已知问题 / 未完成、以及「同人模组 / 大量使用 AI 生成代码 / 禁止商业行为」的声明。
-  **译文里的专有名词跟 `src/main/resources/assets/sephiria/lang/en_us.json` 走**（那是模组自己的官方英文）：
+  **译文里的专有名词跟 `src/main/resources/assets/sephiria_fantasy/lang/en_us.json` 走**（那是模组自己的官方英文）：
   武器 Blade / Steel Greatsword / Dagger / Default Sword and Shield / Quarterstaff / Colossal Crossbow，
   连击 Sturdy / Wind Song / Precision / Shadow / Negotiation / Element / Magitech / Dark Cloud /
   Sun Sword / Embers，减益 Shock / Burn，属性页是 Attributes。
@@ -46,7 +46,7 @@
 - 同一版**同时发 Modrinth**：`powershell -NoProfile -ExecutionPolicy Bypass -File tools\publish-modrinth.ps1`
   （slug `sephiria`；项目没建过就建、建过就直接传新版本）。它要一份 Modrinth 个人访问令牌（PAT）——
   <https://modrinth.com/settings/pats> 新建，勾 **PROJECT_CREATE** 与 **VERSION_CREATE**，
-  然后按 `-Token` → 环境变量 `MODRINTH_TOKEN` → `%USERPROFILE%\.sephiria-modrinth-token`（首行）的顺序找。
+  然后按 `-Token` → 环境变量 `MODRINTH_TOKEN` → `%USERPROFILE%\.sephiria-fantasy-modrinth-token`（首行）的顺序找。
   **令牌不进仓库**（那个文件刻意放在仓库外）。项目正文 `tools/modrinth/description.md`、
   本次版本说明 `tools/modrinth/changelog.md`（每次发布前改写它），脚本会带上 Fabric API 与 GeckoLib
   两个必需依赖。走 API 而不是网页：内置浏览器不支持文件选择框，网页端传不了 jar。
@@ -55,7 +55,7 @@
 
 ## 资源与模型
 
-- 游戏实际读取的资源以 `src/main/resources/assets/sephiria/` 为唯一来源；
+- 游戏实际读取的资源以 `src/main/resources/assets/sephiria_fantasy/` 为唯一来源；
   Blockbench 工程副本与导出留档放在 `models/`。
 - GeckoLib 的资源路径规则（踩过坑）：
   - 模型/动画只扫描 `assets/<ns>/geckolib/models/` 与 `assets/<ns>/geckolib/animations/`，

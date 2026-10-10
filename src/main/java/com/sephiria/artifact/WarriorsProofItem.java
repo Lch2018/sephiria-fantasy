@@ -32,7 +32,7 @@ public class WarriorsProofItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.warriors_proof.flavor";
+		return "artifact.sephiria_fantasy.warriors_proof.flavor";
 	}
 
 	@Override
@@ -58,9 +58,9 @@ public class WarriorsProofItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.physical",
+				Component.translatable("artifact.sephiria_fantasy.affix.physical",
 						Component.literal(Numbers.format(this.physicalBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.attack_speed",
+				Component.translatable("artifact.sephiria_fantasy.affix.attack_speed",
 						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "W": "#sephiria_fantasy:iron_weapons",
+    "I": "minecraft:iron_ingot",
+    "S": "#minecraft:saplings"
+  },
+  "pattern": [
+    "IW",
+    " S"
+  ],
+  "result": {
+    "id": "sephiria_fantasy:dagger"
+  }
+}

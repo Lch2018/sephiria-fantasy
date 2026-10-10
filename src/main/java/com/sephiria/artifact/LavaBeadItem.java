@@ -34,7 +34,7 @@ public class LavaBeadItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.lava_bead.flavor";
+		return "artifact.sephiria_fantasy.lava_bead.flavor";
 	}
 
 	@Override
@@ -60,9 +60,9 @@ public class LavaBeadItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.burn_extra",
+				Component.translatable("artifact.sephiria_fantasy.affix.burn_extra",
 						Component.literal(Numbers.format(this.burnExtraApplications(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.burn_stack",
+				Component.translatable("artifact.sephiria_fantasy.affix.burn_stack",
 						Component.literal(Numbers.format(this.burnStackBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

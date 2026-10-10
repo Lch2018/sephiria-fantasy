@@ -1,9 +1,0 @@
-{
-    "electric_spark":  {
-        "sounds":  [
-            { "name":  "sephiria:electric_spark_1" },
-            { "name":  "sephiria:electric_spark_2" },
-            { "name":  "sephiria:electric_spark_3" }
-        ]
-    }
-}

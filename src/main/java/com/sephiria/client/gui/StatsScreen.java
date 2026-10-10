@@ -37,7 +37,7 @@ public class StatsScreen extends Screen {
 	private int rowsRight;
 
 	public StatsScreen() {
-		super(Component.translatable("screen.sephiria.stats"));
+		super(Component.translatable("screen.sephiria_fantasy.stats"));
 	}
 
 	/**
@@ -76,40 +76,40 @@ public class StatsScreen extends Screen {
 		this.leafRowY = y;
 		y += ROW_HEIGHT;
 
-		row(left, y, "screen.sephiria.stats.hp", health);
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.mp", format(ClientStats.mp()));
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.mp_regen", format(ClientStats.mpRegen()));
+		row(left, y, "screen.sephiria_fantasy.stats.hp", health);
+		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.mp", format(ClientStats.mp()));
+		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.mp_regen", format(ClientStats.mpRegen()));
 		this.physicalRowY = y += ROW_HEIGHT;
-		row(left, this.physicalRowY, "screen.sephiria.stats.physical", format(ClientStats.physical()));
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.fire", format(ClientStats.fire()));
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.ice", format(ClientStats.ice()));
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.lightning", format(ClientStats.lightning()));
-		row(left, y += ROW_HEIGHT, "screen.sephiria.stats.defense", format(ClientStats.defense()));
+		row(left, this.physicalRowY, "screen.sephiria_fantasy.stats.physical", format(ClientStats.physical()));
+		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.fire", format(ClientStats.fire()));
+		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.ice", format(ClientStats.ice()));
+		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.lightning", format(ClientStats.lightning()));
+		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.defense", format(ClientStats.defense()));
 		this.ampRowY = y += ROW_HEIGHT;
-		row(left, this.ampRowY, "screen.sephiria.stats.physical_amp", format(ClientStats.physicalAmp()) + "%");
+		row(left, this.ampRowY, "screen.sephiria_fantasy.stats.physical_amp", format(ClientStats.physicalAmp()) + "%");
 		this.attackSpeedRowY = y += ROW_HEIGHT;
-		row(left, this.attackSpeedRowY, "screen.sephiria.stats.attack_speed",
+		row(left, this.attackSpeedRowY, "screen.sephiria_fantasy.stats.attack_speed",
 				format(ClientStats.attackSpeed()) + "%");
 		y = 34;
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.melee_range", format(ClientStats.meleeRange()) + "%");
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.weapon_damage", format(ClientStats.weaponDamage()) + "%");
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.special_attack", format(ClientStats.specialAttack()) + "%");
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.normal_attack_damage", format(ClientStats.normalAttackDamage()) + "%");
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.crit_chance", format(ClientStats.critChance()) + "%");
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.crit_damage", format(ClientStats.critDamage()) + "%");
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.ignore_defense", format(ClientStats.ignoreDefense()));
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.move_speed", format(ClientStats.moveSpeed()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.melee_range", format(ClientStats.meleeRange()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.weapon_damage", format(ClientStats.weaponDamage()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.special_attack", format(ClientStats.specialAttack()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.normal_attack_damage", format(ClientStats.normalAttackDamage()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.crit_chance", format(ClientStats.critChance()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.crit_damage", format(ClientStats.critDamage()) + "%");
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.ignore_defense", format(ClientStats.ignoreDefense()));
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.move_speed", format(ClientStats.moveSpeed()) + "%");
 		// 闪避直接显示折算后的闪避率（带 %），点数在悬停的算式里给
 		this.dodgeRowY = y += ROW_HEIGHT;
 		// 行里显示闪避点数（与词条/其它来源的口径一致），闪避率放在悬停算式里
-		row(rightX, this.dodgeRowY, "screen.sephiria.stats.dodge", format(ClientStats.dodge()));
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.lifesteal", format(ClientStats.lifesteal()));
+		row(rightX, this.dodgeRowY, "screen.sephiria_fantasy.stats.dodge", format(ClientStats.dodge()));
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.lifesteal", format(ClientStats.lifesteal()));
 		// 商店折扣是谈判力换算出来的，单独占一行太浪费——藏进谈判力的悬停里
 		this.negotiationRowY = y += ROW_HEIGHT;
-		row(rightX, this.negotiationRowY, "screen.sephiria.stats.negotiation", format(ClientStats.negotiation()));
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.leaf_gain",
+		row(rightX, this.negotiationRowY, "screen.sephiria_fantasy.stats.negotiation", format(ClientStats.negotiation()));
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.leaf_gain",
 				format(ClientStats.leafGainPercent()) + "%");
-		row(rightX, y += ROW_HEIGHT, "screen.sephiria.stats.xp_drop",
+		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.xp_drop",
 				format(ClientStats.xpDropPercent()) + "%");
 		this.rowsLeft = left;
 		this.rowsRight = rightX;
@@ -129,7 +129,7 @@ public class StatsScreen extends Screen {
 		// 叶子：图标在文字左边，数值黄色
 		extractor.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, LEAF_ICON,
 				this.rowsLeft, this.leafRowY, 0.0F, 0.0F, 12, 12, 16, 16);
-		extractor.text(this.font, Component.translatable("screen.sephiria.stats.leaves",
+		extractor.text(this.font, Component.translatable("screen.sephiria_fantasy.stats.leaves",
 						Component.literal(format(ClientStats.leaves())).withColor(0xFFFFD24A)),
 				this.rowsLeft + 15, this.leafRowY + 2, 0xFFFFFFFF);
 
@@ -154,13 +154,13 @@ public class StatsScreen extends Screen {
 			drawBreakdown(extractor, this.attackSpeedRowY, ClientStats.attackSpeedBreakdown());
 		} else if (inRow(this.dodgeRowY, mouseY)) {
 			// 闪避率 = 0.8 × (1 − e^(−闪避 / 43.28))：把点数与结果一起写出来
-			extractor.text(this.font, Component.translatable("screen.sephiria.stats.dodge_formula",
+			extractor.text(this.font, Component.translatable("screen.sephiria_fantasy.stats.dodge_formula",
 					format(ClientStats.dodgeRate()), format(ClientStats.dodge())), this.rowsRight, this.dodgeRowY + 10,
 					0xFFDDDDDD);
 		} else {
 			// 商店折扣 = 70×(1−e^(−谈判力/27.94))：数值与叶子一样用黄色，方便和其它悬停算式区分
 			extractor.text(this.font,
-					Component.translatable("screen.sephiria.stats.shop_discount",
+					Component.translatable("screen.sephiria_fantasy.stats.shop_discount",
 							Component.literal(formatDecimal(ClientStats.shopDiscount()) + "%").withColor(0xFFFFD24A)),
 					this.rowsRight, this.negotiationRowY + 10, 0xFFDDDDDD);
 		}

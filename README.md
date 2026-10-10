@@ -43,7 +43,7 @@
 gradlew.bat build
 ```
 
-产物在 `build/libs/sephiria-0.1.0.jar`，丢进 `.minecraft/mods` 即可（需要 Fabric API）。
+产物在 `build/libs/sephiria-fantasy-<版本>.jar`（版本号见 `gradle.properties`），丢进 `.minecraft/mods` 即可（需要 Fabric API 与 GeckoLib）。
 
 调试运行开发客户端：
 
@@ -114,7 +114,7 @@ src/main/java/com/sephiria/
 《SEPHIRIA / 赛菲莉娅》游戏本体及其武器名称、武器美术等知识产权均归 TEAM HORAY 所有。
 本项目与 TEAM HORAY 无关联，也未获得其授权或认可。
 
-因此上面的许可**不覆盖 `src/main/resources/assets/sephiria/textures/` 与 `tools/weapon-ref/`
+因此上面的许可**不覆盖 `src/main/resources/assets/sephiria_fantasy/textures/` 与 `tools/weapon-ref/`
 下的武器美术**（那是原作的素材，仅作为个人同人用途引用）；若要把本项目公开分发或商用，
 请先自行替换这部分美术或取得授权。
 
@@ -186,7 +186,7 @@ src/main/java/com/sephiria/
 ```bat
 :: 重新生成（先编译工具）
 javac -d <临时目录> tools\Voxelizer.java tools\Preview.java
-java -cp <临时目录> Voxelizer <贴图.png> <输出模型.json> <调色板.png> 128 <名字>_in_hand sephiria:item/weapon_3d <预览.png>
+java -cp <临时目录> Voxelizer <贴图.png> <输出模型.json> <调色板.png> 128 <名字>_in_hand sephiria_fantasy:item/weapon_3d <预览.png>
 ```
 
 （`tools/gen-item-definitions.ps1` 负责写六个物品定义，`tools/check-resources.ps1` 会校验

@@ -31,7 +31,7 @@ public class MastModelItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.mast_model.flavor";
+		return "artifact.sephiria_fantasy.mast_model.flavor";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class MastModelItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.cloud_speed_bonus",
+				Component.translatable("artifact.sephiria_fantasy.affix.cloud_speed_bonus",
 						Component.literal(Numbers.format(this.cloudSpeedBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

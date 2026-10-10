@@ -30,7 +30,7 @@ public class DeftAmuletItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.deft_amulet.flavor";
+		return "artifact.sephiria_fantasy.deft_amulet.flavor";
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class DeftAmuletItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.dodge",
+				Component.translatable("artifact.sephiria_fantasy.affix.dodge",
 						Component.literal(Numbers.format(this.dodgeBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

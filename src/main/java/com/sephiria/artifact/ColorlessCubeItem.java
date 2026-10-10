@@ -35,7 +35,7 @@ public class ColorlessCubeItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.colorless_cube.flavor";
+		return "artifact.sephiria_fantasy.colorless_cube.flavor";
 	}
 
 	@Override
@@ -66,11 +66,11 @@ public class ColorlessCubeItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.ignore_defense",
+				Component.translatable("artifact.sephiria_fantasy.affix.ignore_defense",
 						Component.literal(Numbers.format(this.ignoreDefenseBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.move_speed",
+				Component.translatable("artifact.sephiria_fantasy.affix.move_speed",
 						Component.literal(Numbers.format(this.moveSpeedPercentBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.attack_speed",
+				Component.translatable("artifact.sephiria_fantasy.affix.attack_speed",
 						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

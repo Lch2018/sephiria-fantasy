@@ -34,7 +34,7 @@ public class LuckyMedalItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.lucky_medal.flavor";
+		return "artifact.sephiria_fantasy.lucky_medal.flavor";
 	}
 
 	@Override
@@ -60,9 +60,9 @@ public class LuckyMedalItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.potion_buy_leaves",
+				Component.translatable("artifact.sephiria_fantasy.affix.potion_buy_leaves",
 						Component.literal(Numbers.format(this.potionBuyLeafBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.negotiation",
+				Component.translatable("artifact.sephiria_fantasy.affix.negotiation",
 						Component.literal(Numbers.format(this.negotiationBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

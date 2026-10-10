@@ -31,7 +31,7 @@ public class FireBugItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.fire_bug.flavor";
+		return "artifact.sephiria_fantasy.fire_bug.flavor";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class FireBugItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.burn_stack",
+				Component.translatable("artifact.sephiria_fantasy.affix.burn_stack",
 						Component.literal(Numbers.format(this.burnStackBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

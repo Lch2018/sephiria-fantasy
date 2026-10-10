@@ -30,7 +30,7 @@ public class RedYarnBallItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.red_yarn_ball.flavor";
+		return "artifact.sephiria_fantasy.red_yarn_ball.flavor";
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class RedYarnBallItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.burn_damage",
+				Component.translatable("artifact.sephiria_fantasy.affix.burn_damage",
 						Component.literal(Numbers.format(this.burnDamagePercent(level))).withColor(COLOUR_BONUS)));
 	}
 }

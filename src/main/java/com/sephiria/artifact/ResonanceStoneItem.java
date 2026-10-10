@@ -31,7 +31,7 @@ public class ResonanceStoneItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.resonance_stone.flavor";
+		return "artifact.sephiria_fantasy.resonance_stone.flavor";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class ResonanceStoneItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.highest_element",
+				Component.translatable("artifact.sephiria_fantasy.affix.highest_element",
 						Component.literal(Numbers.format(this.highestElementBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

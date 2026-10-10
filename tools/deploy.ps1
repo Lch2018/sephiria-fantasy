@@ -1,4 +1,4 @@
-# Build the mod and install the jar into the PCL dev instance's mods folder.
+﻿# Build the mod and install the jar into the PCL dev instance's mods folder.
 #
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File tools\deploy.ps1
 #
@@ -16,7 +16,7 @@ if (-not (Test-Path $mods)) { throw "mods folder not found: $mods" }
 # jar name = <project name>-<version>.jar, same as gradle builds it
 $version = (Select-String -Path (Join-Path $root 'gradle.properties') -Pattern '^version=' |
     Select-Object -First 1).Line.Split('=')[1].Trim()
-$name = 'sephiria-' + $version + '.jar'
+$name = 'sephiria-fantasy-' + $version + '.jar'
 
 Push-Location $root
 try {
@@ -33,7 +33,7 @@ $jar = Join-Path $root ('build\libs\' + $name)
 if (-not (Test-Path $jar)) { throw "built jar not found: $jar" }
 
 # 旧名字的 jar 要清掉：mods 目录里同时存在两个同 mod id 的 jar，进游戏会报重复 mod
-Get-ChildItem $mods -Filter 'sephiria-*.jar' | Where-Object { $_.Name -ne $name } | ForEach-Object {
+Get-ChildItem $mods -Filter 'sephiria*.jar' | Where-Object { $_.Name -ne $name } | ForEach-Object {
     Remove-Item $_.FullName -Force
     Write-Output ("removed stale " + $_.Name)
 }

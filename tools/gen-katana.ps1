@@ -1,4 +1,4 @@
-# Build the SEPHIRIA katana: Blockbench project + game models.
+﻿# Build the SEPHIRIA katana: Blockbench project + game models.
 #
 # Structure (per spec):
 #   group 刀身 (blade + tsuba + handle)  and  group 刀鞘 (scabbard)
@@ -24,8 +24,8 @@ param(
 )
 
 $root = Split-Path -Parent $PSScriptRoot
-$itemDir = Join-Path $root 'src\main\resources\assets\sephiria\models\item'
-$texDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\item'
+$itemDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\models\item'
+$texDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\item'
 $inv = [System.Globalization.CultureInfo]::InvariantCulture
 
 Add-Type -AssemblyName System.Drawing
@@ -186,7 +186,7 @@ function EmitModel($path, $includeSheath, $dy, $deg, $parent) {
     else {
         $out += "`t`"gui_light`": `"front`"," + $nl
         $out += "`t`"ambientocclusion`": false," + $nl
-        $out += "`t`"textures`": {" + $nl + "`t`t`"0`": `"sephiria:item/katana_3d`"," + $nl + "`t`t`"particle`": `"sephiria:item/katana_3d`"" + $nl + "`t}," + $nl
+        $out += "`t`"textures`": {" + $nl + "`t`t`"0`": `"sephiria_fantasy:item/katana_3d`"," + $nl + "`t`t`"particle`": `"sephiria_fantasy:item/katana_3d`"" + $nl + "`t}," + $nl
         $out += "`t`"display`": {" + $nl
         $out += "`t`t`"thirdperson_righthand`": { `"rotation`": [0, -90, 10], `"translation`": [0, 4.2, 0.5], `"scale`": [0.95, 0.95, 0.95] }," + $nl
         $out += "`t`t`"thirdperson_lefthand`": { `"rotation`": [0, 90, -10], `"translation`": [0, 4.2, 0.5], `"scale`": [0.95, 0.95, 0.95] }," + $nl
@@ -207,11 +207,11 @@ if ($GameModels) {
     for ($f = 1; $f -lt $Frames - 1; $f++) {
         $t = $f / ($Frames - 1)
         $st = FrameState $t
-        $n = EmitModel (Join-Path $itemDir ('katana_switch_' + $f + '.json')) $true $st.dy $st.deg 'sephiria:item/katana_drawn'
+        $n = EmitModel (Join-Path $itemDir ('katana_switch_' + $f + '.json')) $true $st.dy $st.deg 'sephiria_fantasy:item/katana_drawn'
         Write-Output ('  katana_switch_' + $f + '.json  t=' + (FmtNum $t) + ' dy=' + (FmtNum $st.dy) + ' deg=' + (FmtNum $st.deg) + ' elements=' + $n)
     }
     $stN = FrameState 1.0
-    $nN = EmitModel (Join-Path $itemDir 'katana_sheathed.json') $true $stN.dy $stN.deg 'sephiria:item/katana_drawn'
+    $nN = EmitModel (Join-Path $itemDir 'katana_sheathed.json') $true $stN.dy $stN.deg 'sephiria_fantasy:item/katana_drawn'
     Write-Output ('  katana_sheathed.json elements=' + $nN)
 } else {
     Write-Output '  skipped (no -GameModels)'
@@ -402,7 +402,7 @@ $bb = [ordered]@{
     groups = $groups
     outliner = $outliner
     textures = @([ordered]@{
-            path = ''; name = 'katana_3d'; folder = 'item'; namespace = 'sephiria'
+            path = ''; name = 'katana_3d'; folder = 'item'; namespace = 'sephiria_fantasy'
             id = '0'; particle = $true; render_mode = 'default'; visible = $true
             mode = 'bitmap'; saved = $false; uuid = '00000000-0000-0000-0000-000000000301'
             source = ('data:image/png;base64,' + $b64)

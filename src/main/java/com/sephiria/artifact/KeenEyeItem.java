@@ -37,7 +37,7 @@ public class KeenEyeItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.keen_eye.flavor";
+		return "artifact.sephiria_fantasy.keen_eye.flavor";
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class KeenEyeItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.keen_eye_skill",
+				Component.translatable("artifact.sephiria_fantasy.affix.keen_eye_skill",
 						Component.literal(Numbers.format(this.critBonusPercent(level))).withColor(COLOUR_BONUS),
 						Component.literal(String.valueOf(durationSeconds(level))),
 						Component.literal(Numbers.format(keenMpCost(level))).withColor(COLOUR_BONUS)));

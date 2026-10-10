@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * HUD 布局配置：每个界面元素的位置（屏幕绝对坐标）和缩放，存在 config/sephiria-hud.json。
+ * HUD 布局配置：每个界面元素的位置（屏幕绝对坐标）和缩放，存在 config/sephiria-fantasy-hud.json。
  *
  * <p>首次使用时按各自的默认角落初始化——武器在右下、冲刺在左下——因为默认值依赖当前
  * 分辨率，不能在类加载时写死。之后位置就是绝对坐标，配置界面里拖动滑块直接改它。
@@ -158,6 +158,6 @@ public final class HudConfig {
 	}
 
 	private static Path configPath() {
-		return FabricLoader.getInstance().getConfigDir().resolve("sephiria-hud.json");
+		return FabricLoader.getInstance().getConfigDir().resolve("sephiria-fantasy-hud.json");
 	}
 }

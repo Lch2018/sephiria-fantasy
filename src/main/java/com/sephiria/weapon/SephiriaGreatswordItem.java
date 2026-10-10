@@ -97,11 +97,11 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
 				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, KATANA_SHEATHED_SWEEP_RANGE * SWEEP_RANGE_SCALE).build(),
-				Line.titled("tooltip.sephiria.skill.whirlwind")
+				Line.titled("tooltip.sephiria_fantasy.skill.whirlwind")
 						.skillDamage(WHIRLWIND_DAMAGE)
-						.stat("tooltip.sephiria.part.charge", CHARGE_TICKS / 20.0D, COLOR_COOLDOWN)
+						.stat("tooltip.sephiria_fantasy.part.charge", CHARGE_TICKS / 20.0D, COLOR_COOLDOWN)
 						.range(RING_RADIUS).distance(DASH_DISTANCE).build(),
-				desc("tooltip.sephiria.skill.whirlwind", "tooltip.sephiria.desc.whirlwind"));
+				desc("tooltip.sephiria_fantasy.skill.whirlwind", "tooltip.sephiria_fantasy.desc.whirlwind"));
 	}
 
 

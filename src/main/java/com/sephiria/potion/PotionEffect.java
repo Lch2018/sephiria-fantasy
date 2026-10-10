@@ -51,12 +51,12 @@ public record PotionEffect(Kind kind, double amount, int seconds) {
 	/** 提示框里的那一行效果说明。 */
 	public Component describe() {
 		return switch (this.kind) {
-			case HEAL_PERCENT -> Component.translatable("potion.sephiria.regen_percent", num(this.amount));
-			case HEAL_PER_SECOND -> Component.translatable("potion.sephiria.heal_per_second", num(this.amount),
+			case HEAL_PERCENT -> Component.translatable("potion.sephiria_fantasy.regen_percent", num(this.amount));
+			case HEAL_PER_SECOND -> Component.translatable("potion.sephiria_fantasy.heal_per_second", num(this.amount),
 					num(this.seconds));
-			case PHYSICAL -> Component.translatable("potion.sephiria.physical", num(this.amount));
-			case DICE -> Component.translatable("potion.sephiria.dice", num(this.amount));
-			case LIFESTEAL -> Component.translatable("potion.sephiria.lifesteal", num(this.amount));
+			case PHYSICAL -> Component.translatable("potion.sephiria_fantasy.physical", num(this.amount));
+			case DICE -> Component.translatable("potion.sephiria_fantasy.dice", num(this.amount));
+			case LIFESTEAL -> Component.translatable("potion.sephiria_fantasy.lifesteal", num(this.amount));
 		};
 	}
 

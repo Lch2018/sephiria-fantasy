@@ -88,7 +88,7 @@ public final class SephiriaHud implements HudElement {
 		double max = SunSwordClientData.max();
 		double current = Math.min(SunSwordClientData.current(), max);
 		float fraction = (float) Math.clamp(current / max, 0.0D, 1.0D);
-		Component text = Component.translatable("ui.sephiria.sun_sword", cloudAmount(current), cloudAmount(max));
+		Component text = Component.translatable("ui.sephiria_fantasy.sun_sword", cloudAmount(current), cloudAmount(max));
 		int textWidth = font.width(text);
 		int barWidth = 60;
 		int width = textWidth + barWidth + PAD * 4;
@@ -123,7 +123,7 @@ public final class SephiriaHud implements HudElement {
 		double max = CloudClientData.max();
 		double current = Math.min(CloudClientData.capacity(), max);
 		float fraction = (float) Math.clamp(current / max, 0.0D, 1.0D);
-		Component text = Component.translatable("ui.sephiria.cloud", cloudAmount(current), cloudAmount(max));
+		Component text = Component.translatable("ui.sephiria_fantasy.cloud", cloudAmount(current), cloudAmount(max));
 		int textWidth = font.width(text);
 		int barWidth = 60;
 		int width = textWidth + barWidth + PAD * 4;
@@ -261,7 +261,7 @@ public final class SephiriaHud implements HudElement {
 
 	private void renderDash(GuiGraphicsExtractor extractor, Minecraft client) {
 		Font font = client.font;
-		Component text = Component.translatable("ui.sephiria.dash",
+		Component text = Component.translatable("ui.sephiria_fantasy.dash",
 				format(SkillClientData.current(DashSkill.STORAGE)),
 				format(SkillClientData.max(DashSkill.STORAGE)));
 
@@ -322,27 +322,27 @@ public final class SephiriaHud implements HudElement {
 	/** 武器的特有属性行；没有特有属性的武器返回 null（先留空）。 */
 	private static Component propertyLine(ItemStack stack) {
 		if (stack.getItem() instanceof SephiriaCrossbowItem) {
-			return Component.translatable("ui.sephiria.magazine",
+			return Component.translatable("ui.sephiria_fantasy.magazine",
 					format(SkillClientData.current(SephiriaCrossbowItem.STORAGE)),
 					format(SkillClientData.max(SephiriaCrossbowItem.STORAGE)));
 		}
 
 		if (stack.getItem() instanceof SephiriaGreatswordItem) {
-			return Component.translatable("ui.sephiria.whirlwind");
+			return Component.translatable("ui.sephiria_fantasy.whirlwind");
 		}
 
 		if (stack.getItem() instanceof SephiriaDaggerItem) {
-			return Component.translatable("ui.sephiria.focus",
+			return Component.translatable("ui.sephiria_fantasy.focus",
 					format(SkillClientData.current(SephiriaDaggerItem.FOCUS)),
 					format(SkillClientData.max(SephiriaDaggerItem.FOCUS)));
 		}
 
 		if (stack.getItem() instanceof SephiriaKatanaItem) {
 			// 状态 + 剑意：层数用进度条表示（和旋风同一种画法），满层条会转金色
-			return Component.translatable("ui.sephiria.katana",
+			return Component.translatable("ui.sephiria_fantasy.katana",
 					Component.translatable(SephiriaKatanaItem.isSheathed(stack)
-							? "ui.sephiria.sheathed"
-							: "ui.sephiria.unsheathed"));
+							? "ui.sephiria_fantasy.sheathed"
+							: "ui.sephiria_fantasy.unsheathed"));
 		}
 
 		return null;

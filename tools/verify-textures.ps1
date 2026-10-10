@@ -1,4 +1,4 @@
-# Verify the generated item textures are a pixel-exact copy of the reference weapon sprites.
+﻿# Verify the generated item textures are a pixel-exact copy of the reference weapon sprites.
 #
 # The generator pastes each 102x120 game sprite onto a 128x128 canvas without resampling,
 # so the check is: same number of opaque pixels, same colour histogram, content inside canvas.
@@ -9,7 +9,7 @@ Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path -Parent $PSScriptRoot
 $refDir = Join-Path $root 'tools\weapon-ref'
-$itemDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\item'
+$itemDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\item'
 
 $map = [ordered]@{
     'shield_sword' = 'default_sword_and_shield'
@@ -70,7 +70,7 @@ foreach ($src in $map.Keys) {
 }
 
 # the mod icon must also exist at 128x128
-$iconPath = Join-Path $root 'src\main\resources\assets\sephiria\icon.png'
+$iconPath = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\icon.png'
 if (-not (Test-Path $iconPath)) {
     Fail 'missing icon.png'
 } else {

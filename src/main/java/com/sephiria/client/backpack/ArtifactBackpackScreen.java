@@ -183,7 +183,7 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		Font font = this.font;
 		int left = this.leftPos + 8;
 		int headerY = this.topPos + 8;
-		extractor.text(font, Component.translatable("screen.sephiria.combo.header"), left, headerY, HEADER_COLOR, true);
+		extractor.text(font, Component.translatable("screen.sephiria_fantasy.combo.header"), left, headerY, HEADER_COLOR, true);
 
 		List<Map.Entry<ArtifactCombo, Integer>> combos = activeCombos();
 		int maxScroll = maxComboScrollRow(combos.size());
@@ -234,7 +234,7 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	private void renderComboTooltip(GuiGraphicsExtractor extractor, ArtifactCombo combo, int level, int mouseX, int mouseY) {
 		Font font = this.font;
 		List<Component> lines = new ArrayList<>();
-		lines.add(Component.translatable("screen.sephiria.combo.header").withColor(0xFFAAAAAA));
+		lines.add(Component.translatable("screen.sephiria_fantasy.combo.header").withColor(0xFFAAAAAA));
 		lines.add(Component.empty());
 		lines.add(Component.translatable(combo.translationKey()).withColor(combo.nameColour(level)));
 

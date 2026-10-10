@@ -97,7 +97,7 @@ public class ChestMenu extends AbstractContainerMenu {
 
 			@Override
 			public Component getDisplayName() {
-				return Component.translatable("screen.sephiria.chest");
+				return Component.translatable("screen.sephiria_fantasy.chest");
 			}
 
 			@Override

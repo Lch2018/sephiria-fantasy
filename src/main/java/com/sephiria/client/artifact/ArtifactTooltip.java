@@ -59,7 +59,7 @@ public final class ArtifactTooltip {
 		}
 
 		if (artifact.unique()) {
-			lines.add(Component.translatable("artifact.sephiria.tag.unique").withColor(COLOUR_TAG));
+			lines.add(Component.translatable("artifact.sephiria_fantasy.tag.unique").withColor(COLOUR_TAG));
 		}
 
 		lines.addAll(artifact.affixLines(level));
@@ -68,14 +68,14 @@ public final class ArtifactTooltip {
 		if (artifact instanceof com.sephiria.artifact.SandeEarringsItem) {
 			double current = com.sephiria.client.ClientStats.lightning()
 					* com.sephiria.artifact.SandeEarringsItem.ATTACK_PERCENT / 100.0D;
-			lines.add(Component.translatable("artifact.sephiria.affix.sande_current",
+			lines.add(Component.translatable("artifact.sephiria_fantasy.affix.sande_current",
 					Component.literal(Numbers.format(current)).withColor(0xFF55FF55)));
 		}
 
-		lines.add(Component.translatable("artifact.sephiria.rarity_line",
+		lines.add(Component.translatable("artifact.sephiria_fantasy.rarity_line",
 						Component.translatable(artifact.rarity().translationKey()).withColor(artifact.rarity().color()))
 				.withStyle(ChatFormatting.GRAY));
-		lines.add(Component.translatable("artifact.sephiria.level_line", Numbers.format(level))
+		lines.add(Component.translatable("artifact.sephiria_fantasy.level_line", Numbers.format(level))
 				.withStyle(ChatFormatting.DARK_GRAY));
 		lines.add(Component.translatable(artifact.flavorKey()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 
@@ -86,13 +86,13 @@ public final class ArtifactTooltip {
 	private static List<Component> slateLines(ItemStack stack, com.sephiria.slate.SlateItem slate) {
 		List<Component> lines = new ArrayList<>();
 		lines.addAll(slate.effectLines());
-		lines.add(Component.translatable("artifact.sephiria.slate.rarity_line",
+		lines.add(Component.translatable("artifact.sephiria_fantasy.slate.rarity_line",
 						Component.translatable(slate.rarity().translationKey()).withColor(slate.rarity().color()))
 				.withStyle(ChatFormatting.GRAY));
 
 		// 不可旋转的石板没有朝向可言（永远是 0），这一行就不写了
 		if (slate.rotatable()) {
-			lines.add(Component.translatable("artifact.sephiria.slate.rotation",
+			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.rotation",
 							Numbers.format(com.sephiria.slate.SlateItem.rotationOf(stack)))
 					.withStyle(ChatFormatting.DARK_GRAY));
 		}
@@ -105,7 +105,7 @@ public final class ArtifactTooltip {
 	private static List<Component> potionLines(com.sephiria.potion.SephiriaPotionItem potion) {
 		List<Component> lines = new ArrayList<>();
 		lines.add(potion.effect().describe());
-		lines.add(Component.translatable("artifact.sephiria.rarity_line",
+		lines.add(Component.translatable("artifact.sephiria_fantasy.rarity_line",
 						Component.translatable(potion.rarity().translationKey()).withColor(potion.rarity().color()))
 				.withStyle(ChatFormatting.GRAY));
 		return lines;

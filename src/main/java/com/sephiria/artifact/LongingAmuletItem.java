@@ -32,7 +32,7 @@ public class LongingAmuletItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.longing_amulet.flavor";
+		return "artifact.sephiria_fantasy.longing_amulet.flavor";
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class LongingAmuletItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.weapon_crit_chance",
+				Component.translatable("artifact.sephiria_fantasy.affix.weapon_crit_chance",
 						Component.literal(Numbers.format(this.weaponCritChanceBonus(level)))
 								.withColor(COLOUR_BONUS)));
 	}

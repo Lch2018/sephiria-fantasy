@@ -4,7 +4,7 @@
 #
 # 需要一份 Modrinth 个人访问令牌（PAT）——网页 https://modrinth.com/settings/pats 新建，
 # 勾上 PROJECT_CREATE 与 VERSION_CREATE 两个权限。令牌按下面的顺序找：
-#   1) -Token 参数；2) 环境变量 MODRINTH_TOKEN；3) %USERPROFILE%\.sephiria-modrinth-token（首行）。
+#   1) -Token 参数；2) 环境变量 MODRINTH_TOKEN；3) %USERPROFILE%\.sephiria-fantasy-modrinth-token（首行）。
 # 令牌只在本地使用，绝不要写进仓库（那个文件也刻意放在仓库外）。
 #
 # 走本地代理：api.modrinth.com 直连不通，和 git 一样用 127.0.0.1:7897。
@@ -12,8 +12,11 @@
 param(
     [string]$Token = '',
     [string]$Proxy = 'http://127.0.0.1:7897',
-    [string]$Slug = 'sephiria',
-    [switch]$SkipProjectCheck
+    [string]$Slug = 'sephiria-fantasy',
+    [switch]$SkipProjectCheck,
+    # 同版本号已经存在时也照样再传一份：用来替换传坏 / 改过内容的同名 jar。
+    # 传完记得把旧的那条删掉（Modrinth 不允许项目里一个版本都不剩，所以只能先传后删）。
+    [switch]$Force
 )
 
 $ErrorActionPreference = 'Stop'
@@ -23,7 +26,7 @@ $root = Split-Path -Parent $PSScriptRoot
 if (-not $Token) { $Token = $env:MODRINTH_TOKEN }
 
 if (-not $Token) {
-    $tokenPath = Join-Path $env:USERPROFILE '.sephiria-modrinth-token'
+    $tokenPath = Join-Path $env:USERPROFILE '.sephiria-fantasy-modrinth-token'
 
     if (Test-Path $tokenPath) {
         $Token = (Get-Content -Path $tokenPath -Encoding UTF8 | Select-Object -First 1).Trim()
@@ -31,13 +34,13 @@ if (-not $Token) {
 }
 
 if (-not $Token) {
-    throw "找不到 Modrinth 令牌。请在 https://modrinth.com/settings/pats 建一个（勾 PROJECT_CREATE + VERSION_CREATE），把令牌粘进 $env:USERPROFILE\.sephiria-modrinth-token，或设环境变量 MODRINTH_TOKEN。"
+    throw "找不到 Modrinth 令牌。请在 https://modrinth.com/settings/pats 建一个（勾 PROJECT_CREATE + VERSION_CREATE），把令牌粘进 $env:USERPROFILE\.sephiria-fantasy-modrinth-token，或设环境变量 MODRINTH_TOKEN。"
 }
 
 # ---- 版本号与产物（与 deploy.ps1 同一处来源）----
 $version = (Select-String -Path (Join-Path $root 'gradle.properties') -Pattern '^version=' |
     Select-Object -First 1).Line.Split('=')[1].Trim()
-$jar = Join-Path $root ("build\libs\sephiria-$version.jar")
+$jar = Join-Path $root ("build\libs\sephiria-fantasy-$version.jar")
 
 if (-not (Test-Path $jar)) {
     throw "没找到构建产物 $jar —— 先跑 tools\deploy.ps1。"
@@ -56,7 +59,7 @@ if ($LASTEXITCODE -ne 0) { throw '没找到 curl.exe' }
 
 $api = 'https://api.modrinth.com/v2'
 $userAgent = 'SEPHIRIA-Mod-Publisher/1.0 (github.com/Lch2018/sephiria-fantasy)'
-$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("sephiria-modrinth-" + [guid]::NewGuid().ToString('N'))
+$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("sephiria-fantasy-modrinth-" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $tempDir | Out-Null
 
 # 拼 JSON 用自写的小序列化器，**不要**改成 ConvertTo-Json：本机 PowerShell 5.1 碰到
@@ -210,12 +213,17 @@ try {
     }
 
     # 同一个版本号已经传过就跳过：Modrinth **不拦**重复的 version_number，重复上传会在项目页多出
-    # 一个一模一样的版本（得按 id 删掉）。要重传同一个版本号，先去后台把旧的那条删了再跑。
+    # 一个一模一样的版本（得按 id 删掉）。要替换同名 jar 就用 -Force：先传新的、再把旧的那条删掉。
     $existingVersions = Invoke-Api -Method 'GET' -Path "/project/$($project.id)/version"
 
     if ($existingVersions.status -eq 200) {
         $already = ($existingVersions.body | ConvertFrom-Json) |
             Where-Object { $_.version_number -eq $version } | Select-Object -First 1
+
+        if ($already -and $Force) {
+            Write-Output "已有同名版本（id $($already.id)），-Force：继续上传一份新的，传完记得删旧的。"
+            $already = $null
+        }
 
         if ($already) {
             Write-Output "项目里已经有 $version 这个版本（id $($already.id)），跳过上传。"

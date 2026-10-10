@@ -1,12 +1,12 @@
-# Build a labelled contact sheet of the six generated item textures (and the mod icon),
+﻿# Build a labelled contact sheet of the six generated item textures (and the mod icon),
 # scaled up with nearest neighbour so the pixels stay readable.
 # ASCII-only on purpose: Windows PowerShell 5.1 reads non-ASCII .ps1 as GBK.
 
 Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path -Parent $PSScriptRoot
-$itemDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\item'
-$assetDir = Join-Path $root 'src\main\resources\assets\sephiria'
+$itemDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\item'
+$assetDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy'
 $outDir = Join-Path $root '.preview'
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 

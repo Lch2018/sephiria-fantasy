@@ -29,7 +29,7 @@ public class ProjectionSwordItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.projection_sword.flavor";
+		return "artifact.sephiria_fantasy.projection_sword.flavor";
 	}
 
 	@Override
@@ -49,7 +49,7 @@ public class ProjectionSwordItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.physical",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.physical",
 				Component.literal(Numbers.format(this.physicalBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

@@ -49,7 +49,7 @@ public class ArtifactSkillScreen extends Screen {
 	private String held;
 
 	public ArtifactSkillScreen() {
-		super(Component.translatable("screen.sephiria.artifact_skills"));
+		super(Component.translatable("screen.sephiria_fantasy.artifact_skills"));
 	}
 
 	@Override
@@ -75,13 +75,13 @@ public class ArtifactSkillScreen extends Screen {
 		this.entries.addAll(all);
 
 		addRenderableWidget(new StringWidget(LIST_X, TOP - 16, 150, 12,
-				Component.translatable("screen.sephiria.artifact_skills.available"), this.font));
+				Component.translatable("screen.sephiria_fantasy.artifact_skills.available"), this.font));
 		addRenderableWidget(new StringWidget(SLOT_X, TOP - 16, 150, 12,
-				Component.translatable("screen.sephiria.artifact_skills.slots"), this.font));
+				Component.translatable("screen.sephiria_fantasy.artifact_skills.slots"), this.font));
 
 		if (this.entries.isEmpty()) {
 			addRenderableWidget(new StringWidget(LIST_X, TOP, 150, 12,
-					Component.translatable("screen.sephiria.artifact_skills.none"), this.font));
+					Component.translatable("screen.sephiria_fantasy.artifact_skills.none"), this.font));
 		}
 
 		// 现有技能格：一行 3 个，技能多了往下长（3x3 → 3x4 → …）
@@ -94,7 +94,7 @@ public class ArtifactSkillScreen extends Screen {
 		}
 
 		addRenderableWidget(new StringWidget(LIST_X, TOP + SkillSlots.COUNT * ROW + 18, this.width - 2 * LIST_X, 24,
-				Component.translatable("screen.sephiria.artifact_skills.hint"), this.font));
+				Component.translatable("screen.sephiria_fantasy.artifact_skills.hint"), this.font));
 	}
 
 	@Override
@@ -118,7 +118,7 @@ public class ArtifactSkillScreen extends Screen {
 			drawCell(extractor, this.slotRects.get(slot), entry.isEmpty() ? 0xFF202030 : 0xFF2A3A4A,
 					inside(this.slotRects.get(slot), mouseX, mouseY));
 			drawIcon(extractor, ClientSkills.itemOf(entry), this.slotRects.get(slot));
-			extractor.text(this.font, Component.translatable("screen.sephiria.artifact_skills.slot", slot + 1),
+			extractor.text(this.font, Component.translatable("screen.sephiria_fantasy.artifact_skills.slot", slot + 1),
 					this.slotRects.get(slot)[0] + CELL + 6, this.slotRects.get(slot)[1] + 6, 0xFFAAAAAA);
 
 			if (inside(this.slotRects.get(slot), mouseX, mouseY) && !entry.isEmpty()) {

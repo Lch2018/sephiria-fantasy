@@ -1,4 +1,4 @@
-# Rebuild the colossal crossbow's game files from the user's Blockbench model.
+﻿# Rebuild the colossal crossbow's game files from the user's Blockbench model.
 #
 # Inputs:
 #   models/colossal_crossbow.bbmodel  - the authored model (source of truth)
@@ -8,8 +8,8 @@
 #     so nothing is re-derived by hand here.
 #
 # Outputs:
-#   src/main/resources/assets/sephiria/models/item/colossal_crossbow_in_hand.json
-#   src/main/resources/assets/sephiria/textures/item/colossal_crossbow_3d.png
+#   src/main/resources/assets/sephiria_fantasy/models/item/colossal_crossbow_in_hand.json
+#   src/main/resources/assets/sephiria_fantasy/textures/item/colossal_crossbow_3d.png
 #
 # Display transforms: the model is authored lying flat (muzzle -z, top +y), which already
 # is the correct held orientation, so only a placement offset is applied: the grip centre
@@ -22,8 +22,8 @@ param(
 )
 
 $root = Split-Path -Parent $PSScriptRoot
-$itemDir = Join-Path $root 'src\main\resources\assets\sephiria\models\item'
-$texDir = Join-Path $root 'src\main\resources\assets\sephiria\textures\item'
+$itemDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\models\item'
+$texDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\item'
 $bbPath = Join-Path $root 'models\colossal_crossbow.bbmodel'
 
 $inv = [System.Globalization.CultureInfo]::InvariantCulture
@@ -129,8 +129,8 @@ $text += '{'
 $text += "`t`"gui_light`": `"front`","
 $text += "`t`"ambientocclusion`": false,"
 $text += "`t`"textures`": {"
-$text += "`t`t`"0`": `"sephiria:item/colossal_crossbow_3d`","
-$text += "`t`t`"particle`": `"sephiria:item/colossal_crossbow_3d`""
+$text += "`t`t`"0`": `"sephiria_fantasy:item/colossal_crossbow_3d`","
+$text += "`t`t`"particle`": `"sephiria_fantasy:item/colossal_crossbow_3d`""
 $text += "`t},"
 $text += "`t`"display`": {"
 $text += ($displayLines -join ",`n")

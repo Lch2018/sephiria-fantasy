@@ -226,21 +226,21 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 
 		return java.util.List.of(
 				// 出鞘是默认状态，所以放在前面，和数据表一致
-				Line.attack("tooltip.sephiria.katana.drawn", UNSHEATHED_DAMAGE, drawnSpeed, drawnRange).build(),
-				Line.attack("tooltip.sephiria.katana.sheathed", SHEATHED_DAMAGE, sheathedSpeed, sheathedRange).build(),
-				Line.titled("tooltip.sephiria.skill.toggle")
+				Line.attack("tooltip.sephiria_fantasy.katana.drawn", UNSHEATHED_DAMAGE, drawnSpeed, drawnRange).build(),
+				Line.attack("tooltip.sephiria_fantasy.katana.sheathed", SHEATHED_DAMAGE, sheathedSpeed, sheathedRange).build(),
+				Line.titled("tooltip.sephiria_fantasy.skill.toggle")
 						.cooldownTicks(SWITCH_TICKS)
-						.stat("tooltip.sephiria.part.invuln", BLOCK_TICKS / 20.0D, COLOR_RANGE).build(),
-				desc("tooltip.sephiria.skill.toggle", "tooltip.sephiria.desc.toggle"),
-				Line.titled("tooltip.sephiria.skill.intent")
-						.stat("tooltip.sephiria.part.per_hit", INTENT_PER_HIT, COLOR_DAMAGE)
-						.stat("tooltip.sephiria.part.max", INTENT_MAX, COLOR_RANGE)
-						.stat("tooltip.sephiria.part.block_bonus", INTENT_SWITCH_BONUS, COLOR_DAMAGE).build(),
-				desc("tooltip.sephiria.skill.intent", "tooltip.sephiria.desc.intent"),
-				Line.titled("tooltip.sephiria.skill.slash")
+						.stat("tooltip.sephiria_fantasy.part.invuln", BLOCK_TICKS / 20.0D, COLOR_RANGE).build(),
+				desc("tooltip.sephiria_fantasy.skill.toggle", "tooltip.sephiria_fantasy.desc.toggle"),
+				Line.titled("tooltip.sephiria_fantasy.skill.intent")
+						.stat("tooltip.sephiria_fantasy.part.per_hit", INTENT_PER_HIT, COLOR_DAMAGE)
+						.stat("tooltip.sephiria_fantasy.part.max", INTENT_MAX, COLOR_RANGE)
+						.stat("tooltip.sephiria_fantasy.part.block_bonus", INTENT_SWITCH_BONUS, COLOR_DAMAGE).build(),
+				desc("tooltip.sephiria_fantasy.skill.intent", "tooltip.sephiria_fantasy.desc.intent"),
+				Line.titled("tooltip.sephiria_fantasy.skill.slash")
 						.skillDamage(POWERFUL_DAMAGE_AT_FULL).cooldownTicks(POWERFUL_COOLDOWN)
 						.range(POWERFUL_RANGE).distance(POWERFUL_DISTANCE).build(),
-				desc("tooltip.sephiria.skill.slash", "tooltip.sephiria.desc.slash"));
+				desc("tooltip.sephiria_fantasy.skill.slash", "tooltip.sephiria_fantasy.desc.slash"));
 	}
 
 

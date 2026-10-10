@@ -1,4 +1,4 @@
-# Generate the SEPHIRIA "electric spark" sound: a short crackling zap ("crackle"), used by the
+﻿# Generate the SEPHIRIA "electric spark" sound: a short crackling zap ("crackle"), used by the
 # Shock debuff instead of the long BEE_LOOP buzz (which overlapped into a constant drone).
 #
 # The sound is synthesized straight to WAV (PCM16 mono) and then encoded to .ogg with the
@@ -18,7 +18,7 @@
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$soundDir = Join-Path $root 'src\main\resources\assets\sephiria\sounds'
+$soundDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\sounds'
 New-Item -ItemType Directory -Force -Path $soundDir | Out-Null
 
 function Write-Wav([string]$path, [double[]]$samples, [int]$rate) {
@@ -123,4 +123,4 @@ foreach ($name in $variants) {
     Write-Output "$name encoded"
 }
 
-Write-Output 'done -> assets/sephiria/sounds/'
+Write-Output 'done -> assets/sephiria_fantasy/sounds/'

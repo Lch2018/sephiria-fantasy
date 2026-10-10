@@ -28,7 +28,7 @@ public class WindScoreItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.wind_score.flavor";
+		return "artifact.sephiria_fantasy.wind_score.flavor";
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class WindScoreItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.melee_range",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.melee_range",
 				Component.literal(Numbers.format(this.meleeRangePercentBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

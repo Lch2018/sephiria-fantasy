@@ -110,16 +110,16 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
 				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, WeaponSweep.RANGE).build(),
-				Line.titled("tooltip.sephiria.skill.parry")
+				Line.titled("tooltip.sephiria_fantasy.skill.parry")
 						.skillDamage(PARRY_DAMAGE).cooldownTicks(PARRY_COOLDOWN)
 						.range(PARRY_RANGE).distance(PARRY_DISTANCE).build(),
-				desc("tooltip.sephiria.skill.parry", "tooltip.sephiria.desc.parry"),
-				Line.titled("tooltip.sephiria.skill.fury")
+				desc("tooltip.sephiria_fantasy.skill.parry", "tooltip.sephiria_fantasy.desc.parry"),
+				Line.titled("tooltip.sephiria_fantasy.skill.fury")
 						.skillDamage(FURY_DAMAGE).cooldownTicks(FURY_COOLDOWN)
 						.range(FURY_PATH_RADIUS).distance(FURY_DISTANCE).build(),
-				desc("tooltip.sephiria.skill.fury", "tooltip.sephiria.desc.fury"),
-				Line.titled("tooltip.sephiria.skill.focus")
-						.stat("tooltip.sephiria.part.max", FOCUS_MAX, COLOR_RANGE).build());
+				desc("tooltip.sephiria_fantasy.skill.fury", "tooltip.sephiria_fantasy.desc.fury"),
+				Line.titled("tooltip.sephiria_fantasy.skill.focus")
+						.stat("tooltip.sephiria_fantasy.part.max", FOCUS_MAX, COLOR_RANGE).build());
 	}
 
 

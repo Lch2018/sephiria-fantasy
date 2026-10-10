@@ -17,89 +17,89 @@ import java.util.List;
 public enum ArtifactCombo {
 	/** 坚固：物理强度与物理伤害增幅。 */
 	STURDY("sturdy", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.sturdy.t2", 2.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(2, "artifact.sephiria_fantasy.combo.sturdy.t2", 2.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(4, "artifact.sephiria.combo.sturdy.t4", 4.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(4, "artifact.sephiria_fantasy.combo.sturdy.t4", 4.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(6, "artifact.sephiria.combo.sturdy.t6", 6.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(6, "artifact.sephiria_fantasy.combo.sturdy.t6", 6.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(8, "artifact.sephiria.combo.sturdy.t8", 8.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(8, "artifact.sephiria_fantasy.combo.sturdy.t8", 8.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(10, "artifact.sephiria.combo.sturdy.t10", 0.0D, 15.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(10, "artifact.sephiria_fantasy.combo.sturdy.t10", 0.0D, 15.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false)
 	}),
 
 	/** 风之歌：攻速、武器伤害与冲刺上限。 */
 	WIND_SONG("wind_song", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.wind.t2", 0.0D, 0.0D, 8.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(2, "artifact.sephiria_fantasy.combo.wind.t2", 0.0D, 0.0D, 8.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(4, "artifact.sephiria.combo.wind.t4", 0.0D, 0.0D, 12.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(4, "artifact.sephiria_fantasy.combo.wind.t4", 0.0D, 0.0D, 12.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(6, "artifact.sephiria.combo.wind.t6", 0.0D, 0.0D, 16.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(6, "artifact.sephiria_fantasy.combo.wind.t6", 0.0D, 0.0D, 16.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(8, "artifact.sephiria.combo.wind.t8", 0.0D, 0.0D, 20.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(8, "artifact.sephiria_fantasy.combo.wind.t8", 0.0D, 0.0D, 20.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(10, "artifact.sephiria.combo.wind.t10", 0.0D, 0.0D, 0.0D, 15.0D, 1, 0.0D, 0.0D, 0.0D,
+			new Tier(10, "artifact.sephiria_fantasy.combo.wind.t10", 0.0D, 0.0D, 0.0D, 15.0D, 1, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false)
 	}),
 
 	/** 影子：闪避（各档累加，10 级共 +33 点）。 */
 	SHADOW("shadow", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.shadow.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 4.0D,
+			new Tier(2, "artifact.sephiria_fantasy.combo.shadow.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 4.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(4, "artifact.sephiria.combo.shadow.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 5.0D,
+			new Tier(4, "artifact.sephiria_fantasy.combo.shadow.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 5.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(6, "artifact.sephiria.combo.shadow.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 6.0D,
+			new Tier(6, "artifact.sephiria_fantasy.combo.shadow.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 6.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(8, "artifact.sephiria.combo.shadow.t8", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 8.0D,
+			new Tier(8, "artifact.sephiria_fantasy.combo.shadow.t8", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 8.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(10, "artifact.sephiria.combo.shadow.t10", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 10.0D,
+			new Tier(10, "artifact.sephiria_fantasy.combo.shadow.t10", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 10.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false)
 	}),
 
 	/** 精密：暴击几率，10 级那档给暴击伤害。 */
 	PRECISION("precision", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.precision.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 4.0D, 0.0D, 0.0D,
+			new Tier(2, "artifact.sephiria_fantasy.combo.precision.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 4.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(4, "artifact.sephiria.combo.precision.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 6.0D, 0.0D, 0.0D,
+			new Tier(4, "artifact.sephiria_fantasy.combo.precision.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 6.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(6, "artifact.sephiria.combo.precision.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 8.0D, 0.0D, 0.0D,
+			new Tier(6, "artifact.sephiria_fantasy.combo.precision.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 8.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(8, "artifact.sephiria.combo.precision.t8", 0.0D, 0.0D, 0.0D, 0.0D, 0, 10.0D, 0.0D, 0.0D,
+			new Tier(8, "artifact.sephiria_fantasy.combo.precision.t8", 0.0D, 0.0D, 0.0D, 0.0D, 0, 10.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(10, "artifact.sephiria.combo.precision.t10", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 30.0D, 0.0D,
+			new Tier(10, "artifact.sephiria_fantasy.combo.precision.t10", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 30.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false)
 	}),
 
 	/** 谈判：谈判力（商店折扣）与叶子获得量，4 级解锁黄金之手。 */
 	NEGOTIATION("negotiation", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.negotiation.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(2, "artifact.sephiria_fantasy.combo.negotiation.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					10.0D, 15.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(4, "artifact.sephiria.combo.negotiation.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(4, "artifact.sephiria_fantasy.combo.negotiation.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					15.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, true)
 	}),
 
 	/** 元素：最高元素伤害，6 级那档把四项强度（含物理）一起放大。 */
 	ELEMENT("element", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.element.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(2, "artifact.sephiria_fantasy.combo.element.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 5.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(4, "artifact.sephiria.combo.element.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(4, "artifact.sephiria_fantasy.combo.element.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 6.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
-			new Tier(6, "artifact.sephiria.combo.element.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(6, "artifact.sephiria_fantasy.combo.element.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 10.0D, 0.0D, 0.0D, 0.0D, false, false)
 	}),
 
 	/** 魔法科技：2 档激活「电击之触」，电元素强度驱动触电的结算伤害。 */
-	MAGIC_TECH("magic_tech", "artifact.sephiria.combo.magic_tech.intro", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.magic_tech.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+	MAGIC_TECH("magic_tech", "artifact.sephiria_fantasy.combo.magic_tech.intro", new Tier[] {
+			new Tier(2, "artifact.sephiria_fantasy.combo.magic_tech.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, true, false),
-			new Tier(4, "artifact.sephiria.combo.magic_tech.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(4, "artifact.sephiria_fantasy.combo.magic_tech.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 6.0D, 0.0D, 0.0D, false, false),
-			new Tier(6, "artifact.sephiria.combo.magic_tech.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(6, "artifact.sephiria_fantasy.combo.magic_tech.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 150.0D, 0.0D, false, false),
-			new Tier(8, "artifact.sephiria.combo.magic_tech.t8", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(8, "artifact.sephiria_fantasy.combo.magic_tech.t8", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 8.0D, 0.0D, 0.0D, false, false),
-			new Tier(10, "artifact.sephiria.combo.magic_tech.t10", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(10, "artifact.sephiria_fantasy.combo.magic_tech.t10", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, -1.0D, false, false)
 	}),
 
@@ -109,35 +109,35 @@ public enum ArtifactCombo {
 	 * <p>与魔法科技同型（都靠一条「之触」把减益挂到目标身上），区别在减益本身：
 	 * 灼伤会<b>刷新持续时间</b>并按层数放大每跳，触电则不刷新。
 	 */
-	EMBER("ember", "artifact.sephiria.combo.ember.intro", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.ember.t2", 0.0D, 0.0D, 0.0D),
-			new Tier(4, "artifact.sephiria.combo.ember.t4", 6.0D, 0.0D, 0.0D),
-			new Tier(6, "artifact.sephiria.combo.ember.t6", 8.0D, 0.0D, 0.0D),
-			new Tier(8, "artifact.sephiria.combo.ember.t8", 0.0D, 150.0D, 0.0D),
-			new Tier(10, "artifact.sephiria.combo.ember.t10", 0.0D, 0.0D, 18.0D)
+	EMBER("ember", "artifact.sephiria_fantasy.combo.ember.intro", new Tier[] {
+			new Tier(2, "artifact.sephiria_fantasy.combo.ember.t2", 0.0D, 0.0D, 0.0D),
+			new Tier(4, "artifact.sephiria_fantasy.combo.ember.t4", 6.0D, 0.0D, 0.0D),
+			new Tier(6, "artifact.sephiria_fantasy.combo.ember.t6", 8.0D, 0.0D, 0.0D),
+			new Tier(8, "artifact.sephiria_fantasy.combo.ember.t8", 0.0D, 150.0D, 0.0D),
+			new Tier(10, "artifact.sephiria_fantasy.combo.ember.t10", 0.0D, 0.0D, 18.0D)
 	}),
 
 	/** 乌云：2 档点亮乌云（基础容量 15），4/6/8/10 档加容量，10 档解锁「2 点射」。 */
 	DARK_CLOUD("dark_cloud", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.dark_cloud.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(2, "artifact.sephiria_fantasy.combo.dark_cloud.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false, 0, true, false),
-			new Tier(4, "artifact.sephiria.combo.dark_cloud.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(4, "artifact.sephiria_fantasy.combo.dark_cloud.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false, 8, false, false),
-			new Tier(6, "artifact.sephiria.combo.dark_cloud.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(6, "artifact.sephiria_fantasy.combo.dark_cloud.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false, 12, false, false),
-			new Tier(8, "artifact.sephiria.combo.dark_cloud.t8", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(8, "artifact.sephiria_fantasy.combo.dark_cloud.t8", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false, 16, false, false),
-			new Tier(10, "artifact.sephiria.combo.dark_cloud.t10", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+			new Tier(10, "artifact.sephiria_fantasy.combo.dark_cloud.t10", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false, 20, false, true)
 	}),
 
 	/** 太阳剑：2 档激活（基础 5 支），4/6/8/10 档加伤害，6/8/10 档加数量上限。 */
-	SUN_SWORD("sun_sword", "artifact.sephiria.combo.sun_sword.intro", new Tier[] {
-			new Tier(2, "artifact.sephiria.combo.sun_sword.t2", 0.0D, 0),
-			new Tier(4, "artifact.sephiria.combo.sun_sword.t4", 6.0D, 0),
-			new Tier(6, "artifact.sephiria.combo.sun_sword.t6", 8.0D, 1),
-			new Tier(8, "artifact.sephiria.combo.sun_sword.t8", 10.0D, 2),
-			new Tier(10, "artifact.sephiria.combo.sun_sword.t10", 12.0D, 6)
+	SUN_SWORD("sun_sword", "artifact.sephiria_fantasy.combo.sun_sword.intro", new Tier[] {
+			new Tier(2, "artifact.sephiria_fantasy.combo.sun_sword.t2", 0.0D, 0),
+			new Tier(4, "artifact.sephiria_fantasy.combo.sun_sword.t4", 6.0D, 0),
+			new Tier(6, "artifact.sephiria_fantasy.combo.sun_sword.t6", 8.0D, 1),
+			new Tier(8, "artifact.sephiria_fantasy.combo.sun_sword.t8", 10.0D, 2),
+			new Tier(10, "artifact.sephiria_fantasy.combo.sun_sword.t10", 12.0D, 6)
 	});
 
 	/**
@@ -245,7 +245,7 @@ public enum ArtifactCombo {
 	}
 
 	public String translationKey() {
-		return "sephiria.combo." + this.id;
+		return "sephiria_fantasy.combo." + this.id;
 	}
 
 	/** 全部阈值（从低到高）。 */
@@ -468,7 +468,7 @@ public enum ArtifactCombo {
 
 		for (Tier tier : this.tiers) {
 			boolean unlocked = comboLevel >= tier.level();
-			net.minecraft.network.chat.MutableComponent line = Component.translatable("artifact.sephiria.combo.line",
+			net.minecraft.network.chat.MutableComponent line = Component.translatable("artifact.sephiria_fantasy.combo.line",
 					Component.literal(String.valueOf(tier.level())),
 					tier.line());
 			lines.add(unlocked ? line.withColor(0xFFFFFFFF) : line.withColor(0xFF808080));

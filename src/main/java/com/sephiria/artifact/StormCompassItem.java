@@ -34,7 +34,7 @@ public class StormCompassItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.storm_compass.flavor";
+		return "artifact.sephiria_fantasy.storm_compass.flavor";
 	}
 
 	@Override
@@ -60,9 +60,9 @@ public class StormCompassItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.lightning_element",
+				Component.translatable("artifact.sephiria_fantasy.affix.lightning_element",
 						Component.literal(Numbers.format(this.lightningElementBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.enhanced_shock",
+				Component.translatable("artifact.sephiria_fantasy.affix.enhanced_shock",
 						Component.literal(Numbers.format(this.enhancedShockChance(level))).withColor(COLOUR_BONUS)));
 	}
 }

@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "sephiria",
+	"id": "sephiria_fantasy",
 	"version": "${version}",
 	"name": "赛菲莉亚幻想",
 	"description": "把《SEPHIRIA（赛菲莉娅）》的武器系统带进 Minecraft。非官方同人模组，大量使用 AI 生成代码，仅供学习交流，禁止商业行为；完整条款见仓库 LICENSE。",
@@ -9,9 +9,9 @@
 	],
 	"contact": {},
 	"license": "LicenseRef-Sephiria-Fan-Mod-NonCommercial",
-	"icon": "assets/sephiria/icon.png",
+	"icon": "assets/sephiria_fantasy/icon.png",
 	"environment": "*",
-	"accessWidener": "sephiria.accesswidener",
+	"accessWidener": "sephiria_fantasy.accesswidener",
 	"entrypoints": {
 		"main": [
 			"com.sephiria.Sephiria"
@@ -27,9 +27,9 @@
 		"fabric-api": "*"
 	},
 	"mixins": [
-		"sephiria.mixins.json",
+		"sephiria_fantasy.mixins.json",
 		{
-			"config": "sephiria.client.mixins.json",
+			"config": "sephiria_fantasy.client.mixins.json",
 			"environment": "client"
 		}
 	]

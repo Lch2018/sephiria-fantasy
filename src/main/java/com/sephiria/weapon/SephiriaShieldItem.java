@@ -67,13 +67,13 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
 				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, WeaponSweep.RANGE).build(),
-				Line.titled("tooltip.sephiria.skill.defend")
-						.stat("tooltip.sephiria.part.reduction", DEFEND_REDUCTION * 100.0F, COLOR_RANGE).build(),
-				desc("tooltip.sephiria.skill.defend", "tooltip.sephiria.desc.defend"),
-				Line.titled("tooltip.sephiria.skill.shield_sweep")
+				Line.titled("tooltip.sephiria_fantasy.skill.defend")
+						.stat("tooltip.sephiria_fantasy.part.reduction", DEFEND_REDUCTION * 100.0F, COLOR_RANGE).build(),
+				desc("tooltip.sephiria_fantasy.skill.defend", "tooltip.sephiria_fantasy.desc.defend"),
+				Line.titled("tooltip.sephiria_fantasy.skill.shield_sweep")
 						.skillDamage(PlayerStats.DEFAULT_STRENGTH * SWEEP_DAMAGE_RATIO)
 						.cooldownTicks(SWEEP_COOLDOWN_TICKS).range(SWEEP_RANGE).build(),
-				desc("tooltip.sephiria.skill.shield_sweep", "tooltip.sephiria.desc.shield_sweep"));
+				desc("tooltip.sephiria_fantasy.skill.shield_sweep", "tooltip.sephiria_fantasy.desc.shield_sweep"));
 	}
 
 	/** 某玩家此刻是否在用它防御（右键按住期间，原版的使用状态就是判据）。 */

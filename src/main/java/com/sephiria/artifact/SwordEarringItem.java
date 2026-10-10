@@ -33,7 +33,7 @@ public class SwordEarringItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.sword_earring.flavor";
+		return "artifact.sephiria_fantasy.sword_earring.flavor";
 	}
 
 	@Override
@@ -59,9 +59,9 @@ public class SwordEarringItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.crit_damage",
+				Component.translatable("artifact.sephiria_fantasy.affix.crit_damage",
 						Component.literal(Numbers.format(this.critDamageBonus(level))).withColor(COLOUR_BONUS)),
-				Component.translatable("artifact.sephiria.affix.max_mp",
+				Component.translatable("artifact.sephiria_fantasy.affix.max_mp",
 						Component.literal(Numbers.format(this.maxMpBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }

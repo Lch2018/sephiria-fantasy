@@ -21,7 +21,7 @@ public class HudModuleScreen extends Screen {
 	private final HudConfig.Element element;
 
 	public HudModuleScreen(Screen parent, String module) {
-		super(Component.translatable("screen.sephiria.hud." + module));
+		super(Component.translatable("screen.sephiria_fantasy.hud." + module));
 		this.parent = parent;
 		this.module = module;
 		this.element = HudConfig.element(module);
@@ -71,8 +71,8 @@ public class HudModuleScreen extends Screen {
 
 		@Override
 		protected void updateMessage() {
-			setMessage(Component.translatable(this.horizontal ? "screen.sephiria.hud.x" : "screen.sephiria.hud.y",
-					Component.translatable("screen.sephiria.hud." + HudModuleScreen.this.module),
+			setMessage(Component.translatable(this.horizontal ? "screen.sephiria_fantasy.hud.x" : "screen.sephiria_fantasy.hud.y",
+					Component.translatable("screen.sephiria_fantasy.hud." + HudModuleScreen.this.module),
 					Component.literal(String.valueOf((int) Math.round(currentValue())))));
 		}
 
@@ -101,8 +101,8 @@ public class HudModuleScreen extends Screen {
 
 		@Override
 		protected void updateMessage() {
-			setMessage(Component.translatable("screen.sephiria.hud.scale",
-					Component.translatable("screen.sephiria.hud." + HudModuleScreen.this.module),
+			setMessage(Component.translatable("screen.sephiria_fantasy.hud.scale",
+					Component.translatable("screen.sephiria_fantasy.hud." + HudModuleScreen.this.module),
 					Component.literal(String.format("%.2f", currentValue()))));
 		}
 

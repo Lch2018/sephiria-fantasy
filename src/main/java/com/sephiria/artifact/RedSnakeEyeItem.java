@@ -104,7 +104,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 	 */
 	private static final float SKY_SOUND_VOLUME = 1.2F;
 	/** 本体的清理标签：演出表只在内存里，异常退出（崩服）时留在世界里的本体靠它扫掉。 */
-	private static final String METEOR_TAG = "sephiria_meteor";
+	private static final String METEOR_TAG = "sephiria_fantasy_meteor";
 	/** 清扫残留本体的半径（格）：落石都发生在玩家附近，按玩家位置扫就够。 */
 	private static final double SWEEP_RADIUS = 64.0D;
 
@@ -152,7 +152,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.red_snake_eye.flavor";
+		return "artifact.sephiria_fantasy.red_snake_eye.flavor";
 	}
 
 	@Override
@@ -545,7 +545,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.meteor",
+				Component.translatable("artifact.sephiria_fantasy.affix.meteor",
 						Component.literal(Numbers.format(this.meteorCount(level))).withColor(COLOUR_BONUS),
 						Component.literal(Numbers.format(this.meteorDamagePercent(level))).withColor(COLOUR_BONUS)));
 	}

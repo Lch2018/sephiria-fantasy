@@ -56,7 +56,7 @@ public class ChestScreen extends AbstractContainerScreen<ChestMenu> {
 	@Override
 	protected void extractLabels(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
 		super.extractLabels(extractor, mouseX, mouseY);
-		extractor.text(this.font, Component.translatable("screen.sephiria.chest.hint"),
+		extractor.text(this.font, Component.translatable("screen.sephiria_fantasy.chest.hint"),
 				this.leftPos + 8, this.topPos + ChestMenu.SLOT_Y + 24, HINT_COLOR);
 	}
 }

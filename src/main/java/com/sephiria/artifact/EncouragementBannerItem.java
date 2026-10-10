@@ -34,7 +34,7 @@ public class EncouragementBannerItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.encouragement_banner.flavor";
+		return "artifact.sephiria_fantasy.encouragement_banner.flavor";
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class EncouragementBannerItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria.affix.banner_skill",
+				Component.translatable("artifact.sephiria_fantasy.affix.banner_skill",
 						Component.literal(Numbers.format(bannerAttackSpeed(level))).withColor(COLOUR_BONUS),
 						Component.literal(Numbers.format(bannerRange(level))).withColor(COLOUR_BONUS)));
 	}

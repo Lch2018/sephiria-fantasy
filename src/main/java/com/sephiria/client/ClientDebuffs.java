@@ -67,7 +67,7 @@ public final class ClientDebuffs {
 			Integer stacks = entry.getValue().get(entityId);
 
 			if (stacks != null) {
-				labels.add(Component.translatable("ui.sephiria.debuff." + entry.getKey().getPath(), stacks));
+				labels.add(Component.translatable("ui.sephiria_fantasy.debuff." + entry.getKey().getPath(), stacks));
 			}
 		}
 

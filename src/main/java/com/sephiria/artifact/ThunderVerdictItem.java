@@ -37,7 +37,7 @@ public class ThunderVerdictItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.thunder_verdict.flavor";
+		return "artifact.sephiria_fantasy.thunder_verdict.flavor";
 	}
 
 	@Override
@@ -67,7 +67,7 @@ public class ThunderVerdictItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.thunder_verdict_skill",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.thunder_verdict_skill",
 				Component.literal(Numbers.format(damagePercent(level))).withColor(COLOUR_BONUS),
 				Component.literal(Numbers.format(thunderMpCost(level))).withColor(COLOUR_BONUS)));
 	}

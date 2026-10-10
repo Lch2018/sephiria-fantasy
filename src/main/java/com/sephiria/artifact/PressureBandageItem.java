@@ -24,7 +24,7 @@ public class PressureBandageItem extends ArtifactItem {
 
 	@Override
 	public String flavorKey() {
-		return "artifact.sephiria.pressure_bandage.flavor";
+		return "artifact.sephiria_fantasy.pressure_bandage.flavor";
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class PressureBandageItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		return java.util.List.of(Component.translatable("artifact.sephiria.affix.dash_regen",
+		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.dash_regen",
 				Component.literal(Numbers.format(this.dashRegenPercentBonus(level))).withColor(COLOUR_BONUS)));
 	}
 }
