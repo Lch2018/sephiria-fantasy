@@ -36,9 +36,10 @@ public class DamageReductionMixin {
 			return SephiriaDamage.applyGoldenHands(source, SephiriaDamage.applyCrit(self, source, amount));
 		}
 
-		// 电属性伤害与灼伤（减益伤害）同样不吃减伤与黄金之手，但照掷暴击：
-		// 电属性那边是「通用 + 电属性攻击的暴击几率（麒麟的角）」，灼伤只用通用那一项
-		if (kind == SephiriaDamage.Kind.ELECTRIC || kind == SephiriaDamage.Kind.FIRE) {
+		// 电属性伤害、火/冰减益伤害（灼伤、冰冻、蓝色灼伤）同样不吃减伤与黄金之手，但照掷暴击：
+		// 电属性那边是「通用 + 电属性攻击的暴击几率（麒麟的角）」，减益只用通用那一项
+		if (kind == SephiriaDamage.Kind.ELECTRIC || kind == SephiriaDamage.Kind.FIRE
+				|| kind == SephiriaDamage.Kind.ICE) {
 			return SephiriaDamage.applyCrit(self, source, amount);
 		}
 

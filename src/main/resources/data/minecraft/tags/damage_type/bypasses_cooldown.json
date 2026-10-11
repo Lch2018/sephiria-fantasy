@@ -6,6 +6,9 @@
     "sephiria_fantasy:electric_shock",
     "sephiria_fantasy:fire_attack",
     "sephiria_fantasy:burn",
+    "sephiria_fantasy:ice_attack",
+    "sephiria_fantasy:freeze",
+    "sephiria_fantasy:blue_burn",
     "sephiria_fantasy:true_damage"
   ]
 }

@@ -77,7 +77,12 @@ public final class ArtifactTooltip {
 				.withStyle(ChatFormatting.GRAY));
 		lines.add(Component.translatable("artifact.sephiria_fantasy.level_line", Numbers.format(level))
 				.withStyle(ChatFormatting.DARK_GRAY));
-		lines.add(Component.translatable(artifact.flavorKey()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+		// 风味文本可以为空（用户还没给文案的神器）：空字符串就不写这一行，免得留一条空白斜体行
+		MutableComponent flavor = Component.translatable(artifact.flavorKey());
+
+		if (!flavor.getString().isEmpty()) {
+			lines.add(flavor.withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+		}
 
 		return lines;
 	}

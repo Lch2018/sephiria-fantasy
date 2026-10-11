@@ -158,7 +158,7 @@ try {
     $projectPayload = @{
         title         = '赛菲莉亚幻想 (Sephiria Fantasy)'
         # 摘要中英双语（Modrinth 上限 256 字符，这段 250）
-        description   = '赛菲莉亚幻想：把《SEPHIRIA》的武器系统带进 Minecraft 的同人模组——六把武器、十套连击、55 件神器、减益与神器技能。大量使用 AI 生成代码，仅供学习交流，禁止商业行为。 Sephiria Fantasy: unofficial SEPHIRIA fan mod for Minecraft — 6 weapons, 10 combos, 55 artifacts, debuffs. Heavy use of AI-generated code; non-commercial.'
+        description   = '赛菲莉亚幻想：把《SEPHIRIA》的武器系统带进 Minecraft——六把武器、十一套连击、66 件神器、减益与神器技能。大量使用 AI 生成代码，仅供学习交流，禁止商业行为。 Sephiria Fantasy: unofficial SEPHIRIA fan mod for Minecraft — 6 weapons, 11 combos, 66 artifacts, debuffs. Heavy use of AI-generated code; non-commercial.'
         body          = (Get-Content -Path $description -Raw -Encoding UTF8)
         # 分类上限就是 3 个：给 4 个 API 会回 `field categories failed validation with error: length`
         categories    = @('adventure', 'equipment', 'game-mechanics')

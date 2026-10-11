@@ -21,14 +21,32 @@ public final class ArtifactLoot {
 	/** 一批里最多能出几件（受现有物品数量限制）。 */
 	public static final int MAX_ROLL = 5;
 
-	/** 品质权重：默认（商店 / 神器宝箱）与升级宝箱各一套。 */
-	public record Weights(int common, int advanced, int rare, int legendary, int bond) {
-		/** 商店与神器 / 石板宝箱：白/蓝/黄/红/彩 = 30/40/10/2/1。 */
-		public static final Weights DEFAULT = new Weights(30, 40, 10, 2, 1);
+	/**
+	 * 品质权重：默认（神器 / 石板宝箱）、商店、升级宝箱、药水各一套。
+	 *
+	 * <p>权重是<b>按件</b>算的，所以某一档的实际概率 = 该档件数 × 它的权重。羁绊只有两件
+	 * （乐谱《台风》与封印的特加斯），却要落在「稀有」与「传说」之间，于是它的权重不能照
+	 * 「比传说大一点」来填：商店那套要按件数重新配（见 {@link #SHOP}）。
+	 *
+	 * @param bond     羁绊（神器最高品质）
+	 * @param eternal  永恒（石板最高品质）——与羁绊分开，免得调商店的羁绊概率时把石板也带上
+	 */
+	public record Weights(int common, int advanced, int rare, int legendary, int bond, int eternal) {
+		/** 神器 / 石板宝箱：白/蓝/黄/红/彩 = 30/40/10/2/1。 */
+		public static final Weights DEFAULT = new Weights(30, 40, 10, 2, 1, 1);
+		/**
+		 * 商店：白/蓝/黄/红 = 30/40/10/2 与宝箱相同，只有<b>羁绊</b>提到 30
+		 * （2026-10 用户要求「羁绊的出现概率调为稀有与传说之间」）。
+		 *
+		 * <p>算一下就很直观：稀有 17 件 × 10 = 170，传说 10 件 × 2 = 20，羁绊 2 件 × 30 = 60——
+		 * 60 落在 20 与 170 之间，也就是每格约 3.1%（稀有 8.9%、传说 1.0%）。
+		 * 想再调只动这一个数字：羁绊档的总权重 = 2 × 这个值，要留在 (20, 170) 里。
+		 */
+		public static final Weights SHOP = new Weights(30, 40, 10, 2, 30, 1);
 		/** 升级宝箱：80/100/10/2/1（好东西更少）。 */
-		public static final Weights UPGRADE = new Weights(80, 100, 10, 2, 1);
+		public static final Weights UPGRADE = new Weights(80, 100, 10, 2, 1, 1);
 		/** 药水（商店的两个药水格）：1000/10/5/1，白药水满地都是、红的极稀有。 */
-		public static final Weights POTION = new Weights(1000, 10, 5, 1, 1);
+		public static final Weights POTION = new Weights(1000, 10, 5, 1, 1, 1);
 
 		int weightOf(ArtifactRarity rarity) {
 			return switch (rarity) {
@@ -36,8 +54,8 @@ public final class ArtifactLoot {
 				case ADVANCED -> this.advanced;
 				case RARE -> this.rare;
 				case LEGENDARY -> this.legendary;
-				// 石板最高是永恒，抽到「羁绊」那一档时按永恒算
-				case BOND, ETERNAL -> this.bond;
+				case BOND -> this.bond;
+				case ETERNAL -> this.eternal;
 			};
 		}
 	}
@@ -64,7 +82,9 @@ public final class ArtifactLoot {
 				ModItems.METEORIC_EARRING, ModItems.SOLIS_DEKURI, ModItems.NOON_WHETSTONE,
 				ModItems.METEORIC_MIRROR,
 				ModItems.RED_SNAKE_EYE, ModItems.AMBERGRIS, ModItems.RED_YARN_BALL,
-				ModItems.OAK_CHARCOAL, ModItems.FIRE_BUG, ModItems.LAVA_BEAD);
+				ModItems.OAK_CHARCOAL, ModItems.FIRE_BUG, ModItems.LAVA_BEAD,
+				ModItems.WISDOM_AMULET, ModItems.BLUE_CLAW, ModItems.PROSHIUM_RING,
+				ModItems.SEALED_TEGAS);
 	}
 
 	private static List<Item> slates() {

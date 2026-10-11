@@ -571,9 +571,10 @@ public final class PlayerStats {
 			case FIRE -> (of(player).fire + flat
 					+ ArtifactEffects.fireElementBonus(player)
 					+ ArtifactEffects.comboFireElement(player)) * multiplier;
-			// 冰元素强度会吃麒麟的角那种负加成：固定值段扣完夹在 0 以上
-			case ICE -> Math.max(0.0D, of(player).ice + flat + ArtifactEffects.iceElementBonus(player))
-					* multiplier;
+			// 冰元素强度有两类固定值来源：神器（睿智护符 / 蓝爪的「冰属性伤害」；麒麟的角是负的）
+			// 与连击（冰川 4/8 档）；扣完夹在 0 以上
+			case ICE -> Math.max(0.0D, of(player).ice + flat + ArtifactEffects.iceElementBonus(player)
+					+ ArtifactEffects.comboIceElement(player)) * multiplier;
 			// 电元素强度有两类固定值来源：连击（魔法科技 4/8 档）与神器（护符 / 耳环 / 指南针 / 萤火虫）
 			case LIGHTNING -> (of(player).lightning + flat
 					+ ArtifactEffects.comboLightningElement(player)

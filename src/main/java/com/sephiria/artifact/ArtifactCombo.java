@@ -138,6 +138,20 @@ public enum ArtifactCombo {
 			new Tier(6, "artifact.sephiria_fantasy.combo.sun_sword.t6", 8.0D, 1),
 			new Tier(8, "artifact.sephiria_fantasy.combo.sun_sword.t8", 10.0D, 2),
 			new Tier(10, "artifact.sephiria_fantasy.combo.sun_sword.t10", 12.0D, 6)
+	}),
+
+	/**
+	 * 冰川：2 档激活「霜之触」，冰元素强度驱动冰冻的结算伤害。
+	 *
+	 * <p>与魔法科技 / 余烬同型（一条「之触」把减益挂到目标身上）：霜之触挂的是<b>冻伤</b>，
+	 * 冻伤叠到阈值就变成<b>冰冻</b>（一次大伤害 + 眩晕），10 档把那个阈值 -1。
+	 */
+	GLACIER("glacier", "artifact.sephiria_fantasy.combo.glacier.intro", new Tier[] {
+			Tier.glacier(2, "artifact.sephiria_fantasy.combo.glacier.t2", 0.0D, 0.0D, 0.0D),
+			Tier.glacier(4, "artifact.sephiria_fantasy.combo.glacier.t4", 6.0D, 0.0D, 0.0D),
+			Tier.glacier(6, "artifact.sephiria_fantasy.combo.glacier.t6", 0.0D, 150.0D, 0.0D),
+			Tier.glacier(8, "artifact.sephiria_fantasy.combo.glacier.t8", 8.0D, 0.0D, 0.0D),
+			Tier.glacier(10, "artifact.sephiria_fantasy.combo.glacier.t10", 0.0D, 0.0D, -1.0D)
 	});
 
 	/**
@@ -167,6 +181,8 @@ public enum ArtifactCombo {
 	 * @param sunDamagePercent 「太阳剑伤害」加成（%）：放大投掷太阳剑那一下的伤害（只有太阳剑用）
 	 * @param sunCapacity   太阳剑数量上限加成（支）：加在基础 5 支上（只有太阳剑用）
 	 * @param burnBasePercent 「灼伤的基础伤害倍率」（%）：10 档把它从默认的 8 换成 18（只有余烬用）
+	 * @param iceElement    冰元素强度（点）：并进触发者的冰元素强度面板值，冰冻那一下按它结算（只有冰川用）
+	 * @param freezeThresholdDelta 「冰冻所需的冻伤层数」调整（层，负数降低阈值）：10 档填 -1（只有冰川用）
 	 */
 	public record Tier(int level, String textKey, double physical, double physicalAmp, double attackSpeed,
 			double weaponDamage, int dashCharges, double critChance, double critDamage, double dodge,
@@ -174,7 +190,8 @@ public enum ArtifactCombo {
 			double lightningElement, double touchHaste, double shockDurationDelta,
 			boolean electricTouch, boolean goldenHands,
 			int cloudCapacity, boolean cloudActive, boolean cloudDoubleShot,
-			double sunDamagePercent, int sunCapacity, double fireElement, double burnBasePercent) {
+			double sunDamagePercent, int sunCapacity, double fireElement, double burnBasePercent,
+			double iceElement, double freezeThresholdDelta) {
 		/**
 		 * 不带乌云 / 太阳剑 / 余烬字段的紧凑构造：这三套的专属字段只有它们自己用，其它连击照旧传 19 个参数。
 		 *
@@ -188,10 +205,10 @@ public enum ArtifactCombo {
 			this(level, textKey, physical, physicalAmp, attackSpeed, weaponDamage, dashCharges, critChance,
 					critDamage, dodge, negotiation, leafGainPercent, highestElement, allElementPercent,
 					lightningElement, touchHaste, shockDurationDelta, electricTouch, goldenHands,
-					0, false, false, 0.0D, 0, 0.0D, 0.0D);
+					0, false, false, 0.0D, 0, 0.0D, 0.0D, 0.0D, 0.0D);
 		}
 
-		/** 只带乌云字段的构造（太阳剑 / 余烬字段留空）：乌云那五档用。 */
+		/** 只带乌云字段的构造（太阳剑 / 余烬 / 冰川字段留空）：乌云那五档用。 */
 		public Tier(int level, String textKey, double physical, double physicalAmp, double attackSpeed,
 				double weaponDamage, int dashCharges, double critChance, double critDamage, double dodge,
 				double negotiation, double leafGainPercent, double highestElement, double allElementPercent,
@@ -201,21 +218,34 @@ public enum ArtifactCombo {
 			this(level, textKey, physical, physicalAmp, attackSpeed, weaponDamage, dashCharges, critChance,
 					critDamage, dodge, negotiation, leafGainPercent, highestElement, allElementPercent,
 					lightningElement, touchHaste, shockDurationDelta, electricTouch, goldenHands,
-					cloudCapacity, cloudActive, cloudDoubleShot, 0.0D, 0, 0.0D, 0.0D);
+					cloudCapacity, cloudActive, cloudDoubleShot, 0.0D, 0, 0.0D, 0.0D, 0.0D, 0.0D);
 		}
 
 		/** 只带余烬字段的构造（火元素强度 / 之触冷却加速 / 灼伤倍率）：余烬那五档用。 */
 		public Tier(int level, String textKey, double fireElement, double touchHaste, double burnBasePercent) {
 			this(level, textKey, 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, touchHaste, 0.0D, false, false,
-					0, false, false, 0.0D, 0, fireElement, burnBasePercent);
+					0, false, false, 0.0D, 0, fireElement, burnBasePercent, 0.0D, 0.0D);
 		}
 
-		/** 只带太阳剑字段的构造（余烬字段留空）：太阳剑那五档用。 */
+		/** 只带太阳剑字段的构造（余烬 / 冰川字段留空）：太阳剑那五档用。 */
 		public Tier(int level, String textKey, double sunDamagePercent, int sunCapacity) {
 			this(level, textKey, 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false,
-					0, false, false, sunDamagePercent, sunCapacity, 0.0D, 0.0D);
+					0, false, false, sunDamagePercent, sunCapacity, 0.0D, 0.0D, 0.0D, 0.0D);
+		}
+
+		/**
+		 * 只带冰川字段的一档（冰元素强度 / 之触冷却加速 / 冰冻阈值调整）。
+		 *
+		 * <p>写成静态工厂而不是紧凑构造，是因为它的参数表（int, String, double, double, double）
+		 * 与余烬那个紧凑构造<b>完全同形</b>，再多一个构造会「已在记录 Tier 中定义了构造器」。
+		 */
+		public static Tier glacier(int level, String textKey, double iceElement, double touchHaste,
+				double freezeThresholdDelta) {
+			return new Tier(level, textKey, 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, touchHaste, 0.0D, false, false,
+					0, false, false, 0.0D, 0, 0.0D, 0.0D, iceElement, freezeThresholdDelta);
 		}
 
 		/** 这一档给的说明行。 */
@@ -345,6 +375,24 @@ public enum ArtifactCombo {
 	/** 「火焰之触」激活档：到档即开（余烬的第一档就是 2 档），不累加。 */
 	public boolean flameTouch(int comboLevel) {
 		return comboLevel >= this.tiers[0].level();
+	}
+
+	/** 「霜之触」激活档：到档即开（冰川的第一档就是 2 档），不累加。 */
+	public boolean frostTouch(int comboLevel) {
+		return comboLevel >= this.tiers[0].level();
+	}
+
+	/** 冰元素强度加成（点）：各档累加，并进触发者的冰元素强度面板值，冰冻那一下按它结算。 */
+	public double iceElement(int comboLevel) {
+		return sum(comboLevel, Tier::iceElement);
+	}
+
+	/**
+	 * 「冰冻所需的冻伤层数」调整（层）：各档累加（目前只有 10 档填 -1）。
+	 * 实际阈值 = {@code Debuffs.FROSTBITE_MAX_STACKS} + 它，见 {@code Debuffs.freezeThreshold}。
+	 */
+	public double freezeThresholdDelta(int comboLevel) {
+		return sum(comboLevel, Tier::freezeThresholdDelta);
 	}
 
 	/**

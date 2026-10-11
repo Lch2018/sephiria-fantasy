@@ -6,7 +6,9 @@
 	"mixins": [
 		"DamageReductionMixin",
 		"DebuffTickMixin",
+		"FrozenMotionMixin",
 		"LeafExperienceMixin",
+		"MobStunMixin",
 		"SephiriaDamageFramesMixin"
 	],
 	"injectors": {

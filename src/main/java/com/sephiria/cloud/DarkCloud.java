@@ -293,7 +293,7 @@ public final class DarkCloud {
 		// 那里拦下的只有触电自己的结算）
 		DamageSource source = SephiriaDamage.electricAttack(level, player);
 		// 每记雷击都要落地：清掉无敌帧（与触电结算同一套手法）
-		target.setInvulnerableTime(0);
+		SephiriaDamage.clearDamageCooldown(target);
 		target.hurtServer(level, source, (float) damage);
 
 		Vec3 to = target.position().add(0.0D, target.getBbHeight() / 2.0D, 0.0D);

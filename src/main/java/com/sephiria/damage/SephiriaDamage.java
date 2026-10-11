@@ -67,6 +67,15 @@ public final class SephiriaDamage {
 	 * 与 sun_sword 分开，因为它照 Electric Attack 的口径算「攻击打出的火属性伤害」——
 	 * 事件守门按它触发火焰之触。 */
 	public static final ResourceKey<DamageType> FIRE_ATTACK = typeKey("fire_attack");
+	/** 攻击打出的冰属性伤害（数据包里 sephiria:ice_attack：普罗修姆戒指的附加冰伤）：
+	 * 与 {@link #FIRE_ATTACK} 对称——事件守门按它触发霜之触。 */
+	public static final ResourceKey<DamageType> ICE_ATTACK = typeKey("ice_attack");
+	/** 冰冻减益自己结算的冰属性伤害（数据包里 sephiria:freeze）：与触电 / 灼伤一样是「减益伤害」，
+	 * 不再触发霜之触（防链式自触），只由 {@code Debuffs#applyFreeze} 使用。 */
+	public static final ResourceKey<DamageType> FREEZE = typeKey("freeze");
+	/** 蓝色灼伤那几跳里的冰属性那一路（封印的特加斯把灼伤改成蓝色灼伤后，
+	 * 冰元素强度高于火元素强度时用它结算；反过来的那几跳仍走 {@link #BURN}）。 */
+	public static final ResourceKey<DamageType> BLUE_BURN = typeKey("blue_burn");
 	/** 红色露水那类暴击溅射的范围（格）：以被暴击的目标为原点。 */
 	private static final double SPLASH_RANGE = 3.0D;
 	/** 黄金之手：每持有这么多叶子升一档。 */
@@ -113,7 +122,20 @@ public final class SephiriaDamage {
 		 * <p>与电的 {@link #ELECTRIC} 对称：吃通用暴击、减伤与黄金之手（数值口径与太阳剑那一档相同），
 		 * 但既不算武器也不算神器伤害——只用来触发火焰之触，不牵动树枝 / 台风 / 太阳剑那些口径。
 		 */
-		FIRE_ATTACK
+		FIRE_ATTACK,
+		/**
+		 * 冰属性减益伤害（sephiria:freeze 冰冻那一下、sephiria:blue_burn 蓝色灼伤的冰那几跳）：
+		 * 与 {@link #FIRE} 同型——数值定死、不吃减伤与黄金之手、也不触发任何「造成伤害时」的效果，
+		 * 但吃通用暴击。霜之触的守门按它排除减益伤害（防链式自触）。
+		 */
+		ICE,
+		/**
+		 * 攻击打出的冰属性伤害（sephiria:ice_attack：普罗修姆戒指的附加冰伤）。
+		 *
+		 * <p>与 {@link #FIRE_ATTACK} 对称：吃通用暴击、减伤与黄金之手，但既不算武器也不算神器伤害
+		 * ——只用来触发霜之触。
+		 */
+		ICE_ATTACK
 	}
 
 	public static boolean fromSephiria(DamageSource source) {
@@ -147,6 +169,15 @@ public final class SephiriaDamage {
 
 		if (source.is(FIRE_ATTACK)) {
 			return Kind.FIRE_ATTACK;
+		}
+
+		if (source.is(ICE_ATTACK)) {
+			return Kind.ICE_ATTACK;
+		}
+
+		// 冰冻与蓝色灼伤的冰那几跳：都是减益伤害，与灼伤 / 触电并列
+		if (source.is(FREEZE) || source.is(BLUE_BURN)) {
+			return Kind.ICE;
 		}
 
 		if (source.getDirectEntity() instanceof Source) {
@@ -189,6 +220,21 @@ public final class SephiriaDamage {
 		}
 
 		return target instanceof Mob mob && mob.getTarget() instanceof Player;
+	}
+
+	/**
+	 * 清掉目标身上的「伤害冷却」（原版受伤后那段 20 刻、前 10 刻只认更重伤害的窗口）。
+	 *
+	 * <p><b>别写成 {@code Entity#setInvulnerableTime}。</b>26.3 里这是两个不同的字段：
+	 * {@code Entity.invulnerableTime}（私有，投掷物 / 掉落物那一套）才是 setInvulnerableTime 写的，
+	 * 而 {@code LivingEntity#hurtServer} 判定用的是 <b>{@code LivingEntity.damageCooldownTime}</b>
+	 * （public 字段、没有访问器）。2026-10 踩过：本模组所有「先清无敌帧」的地方都写着
+	 * {@code setInvulnerableTime(0)}，全是空操作——于是减益每跳把冷却刷成 20 刻之后没人清，
+	 * 玩家紧接着的攻击就被原版按「差额」吞掉一半（用户报的「打有减益的敌人丢伤害」）。
+	 * 本模组所有「让这一下落地 / 不留无敌窗」的地方都走这里。
+	 */
+	public static void clearDamageCooldown(LivingEntity target) {
+		target.damageCooldownTime = 0;
 	}
 
 	// ------------------------------------------------------------------ 暴击
@@ -290,7 +336,8 @@ public final class SephiriaDamage {
 	public static float applyGoldenHands(DamageSource source, float amount) {
 		Kind kind = kindOf(source);
 
-		if (kind == Kind.OTHER || kind == Kind.ELECTRIC || kind == Kind.FIRE
+		// 减益伤害（触电 / 灼伤 / 冰冻）不吃黄金之手：它们是「数值定死」的那一类
+		if (kind == Kind.OTHER || kind == Kind.ELECTRIC || kind == Kind.FIRE || kind == Kind.ICE
 				|| !(source.getEntity() instanceof ServerPlayer player)) {
 			return amount;
 		}
@@ -335,7 +382,7 @@ public final class SephiriaDamage {
 		float extra = (float) (flat * multiplier);
 
 		// 真实伤害不吃无敌帧，否则高速武器下它会经常被上一次的帧吞掉
-		target.setInvulnerableTime(0);
+		clearDamageCooldown(target);
 		target.hurtServer(level, trueDamage(level, player), extra);
 	}
 
@@ -444,6 +491,35 @@ public final class SephiriaDamage {
 	 */
 	public static DamageSource fireAttack(ServerLevel level, ServerPlayer player) {
 		return new DamageSource(lookup(level, FIRE_ATTACK), player, player);
+	}
+
+	/**
+	 * 造一个「攻击打出的冰属性伤害」来源（数据包里的 sephiria:ice_attack）。
+	 *
+	 * <p>普罗修姆戒指的附加冰伤用它：与 {@link #fireAttack} 对称，照常触发霜之触。
+	 */
+	public static DamageSource iceAttack(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, ICE_ATTACK), player, player);
+	}
+
+	/**
+	 * 造一个冰冻结算的冰属性伤害来源（数据包里的 sephiria:freeze）。
+	 *
+	 * <p>只给冰冻减益那一下用：它是减益伤害（{@link Kind#ICE}），吃通用暴击但不吃减伤与黄金之手，
+	 * 也不会再触发霜之触（防链式自触）。
+	 */
+	public static DamageSource freeze(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, FREEZE), player, player);
+	}
+
+	/**
+	 * 造一个「蓝色灼伤」那几跳的冰属性伤害来源（数据包里的 sephiria:blue_burn）。
+	 *
+	 * <p>封印的特加斯把灼伤改成蓝色灼伤后，冰元素强度高于火元素强度的那些跳走它
+	 * （反过来的那些跳仍走 {@link #burn}）；两者都是减益伤害，只是元素类型不同。
+	 */
+	public static DamageSource blueBurn(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, BLUE_BURN), player, player);
 	}
 
 	private static Holder<DamageType> lookup(ServerLevel level, ResourceKey<DamageType> key) {

@@ -160,7 +160,7 @@ public class SandeEarringsItem extends ArtifactItem {
 
 		for (LivingEntity victim : victims) {
 			// 同一次打多个目标、且要能稳定打中：先清无敌帧（真实伤害同款手法）
-			victim.setInvulnerableTime(0);
+			SephiriaDamage.clearDamageCooldown(victim);
 			victim.hurtServer(level, source, (float) damage);
 			level.sendParticles(ParticleTypes.ELECTRIC_SPARK, victim.getX(), victim.getY(0.5D), victim.getZ(),
 					10, 0.35D, 0.5D, 0.35D, 0.05D);

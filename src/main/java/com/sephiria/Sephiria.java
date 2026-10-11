@@ -130,6 +130,8 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.sun.SunSword.registerTicker();
 		// 「余烬」连击的红蛇之眼：每 5 秒掉落的陨石（下落推进在它自己的推进器里）
 		com.sephiria.artifact.RedSnakeEyeItem.registerTicker();
+		// 「冰川」连击的普罗修姆戒指：武器/魔法书命中附加冰属性伤害（冷却随等级）
+		com.sephiria.artifact.ProshiumRingItem.register();
 
 		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
@@ -245,7 +247,8 @@ public class Sephiria implements ModInitializer {
 			com.sephiria.artifact.LightningStruckBranchItem.forget(handler.player);
 			com.sephiria.artifact.FireflyItem.forget(handler.player);
 			com.sephiria.artifact.SandeEarringsItem.forget(handler.player);
-		com.sephiria.artifact.RedSnakeEyeItem.forget(handler.player);
+			com.sephiria.artifact.RedSnakeEyeItem.forget(handler.player);
+			com.sephiria.artifact.ProshiumRingItem.forget(handler.player);
 			CombatState.forget(handler.player);
 			com.sephiria.cloud.DarkCloud.forget(handler.player);
 			com.sephiria.sun.SunSword.forget(handler.player);

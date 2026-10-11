@@ -1,49 +1,65 @@
-本次更新带来 **7 件太阳剑神器**，并改了两处战斗规则。
+本版新增第十一套连击 **冰川**（霜之触 / 冻伤 / 冰冻）与 4 件冰系神器，重做了太阳剑的剑痕特效，并真正修好了「打不出伤害」的老问题。
 
-## 新增神器（都挂太阳剑连击、【唯一】）
+## 新连击：冰川（第十一套）
 
-- **火红的夕阳**（稀有）：投掷的太阳剑有 20/40/60/80/100% 概率「增大」——那一发伤害 +33%、划痕也更长；
-- **永恒熔炉**（普通）：每 10/8/5 秒生成 1 支太阳剑（只在太阳剑激活时）；暴击几率 +1/2.5/5%；
-- **索利斯·德库萨**（高级）：太阳剑伤害 +5/10/15/20%、暴击伤害 +4/8/12/16%；
-- **陨铁耳环**（稀有）：投掷的太阳剑落在你附近；火焰属性伤害 +2/4/7；
-- **索利斯·德克里**（传说）：太阳剑无视目标防御力 +2..14%、太阳剑暴击几率 +5..50%；
-- **正午磨刀石**（传说）：造成武器伤害时太阳剑额外触发 0/1/1/1/2 次、攻击速度 +3..15%、无视防御伤害 +1/1/2/2/2；
-- **陨铁镜**（高级）：回收太阳剑时额外回收 1 个、太阳剑伤害 +3/6/9/12%。
+- **霜之触**：造成伤害时给目标附加**冻伤**，冷却 2 秒（6 档加速后 0.8 秒）；触发口径与电击之触 / 火焰之触一致（武器 / 魔法书伤害，以及攻击打出的冰属性伤害），冰冻自己的结算算减益伤害、不再触发它。
+- **冻伤**：移动速度 −25%、持续 10 秒、最多 5 层（叠加刷新时间），特效是原版雪片粒子；叠到 5 层就**变成冰冻**。
+- **冰冻**：一次相当于冰元素强度 200% 的冰属性伤害，并让目标**完全冻住** 2 秒 —— AI 停摆（不攻击、不寻路、不转头）、**被打也不会动**（击退 / 重力 / 水流全拦）、四肢停在冻住那一刻的姿势，同时整体**染成冰蓝**、脚下显示「冰冻」标签。
+- 档位：(2) 激活霜之触 / (4)(6) 冰属性伤害 +6/+8 / (8) 霜之触冷却加速 150% / (10) 冰冻所需的冻伤层数 −1。
 
-## 规则调整
+## 新神器（冰川 3 件 + 余烬×冰川 1 件）
 
-- **自动攻击类效果现在只在战斗状态下触发**：红蛇之眼的陨石、桑德耳环的闪电都要求先进入战斗（乌云雷击本来就是这样）——脱战时不出手，也不吃冷却。
-- **修「高攻击频率打不出伤害」**：原版受击后有 0.5 秒的伤害冷却，窗口内的攻击会被整下吞掉、或只结算差额。本模组的伤害现在不受这段判定影响，每一击都满额落地。
-- **修「攻击挂着减益的敌人打不出伤害」**：灼伤 / 触电的周期伤害原本会把目标的伤害冷却一直刷满，后续攻击因此被吞；现在本模组的伤害不再给目标留下无敌窗口，减益只在自己那一跳生效。
+- **睿智护符**（普通）：冰属性伤害 +3/4/6/8；
+- **蓝爪**（传说）：冻伤赋予时 30/40/50/60% 概率额外附加一次；冰属性伤害 +2/4/6/9；最大 MP +5/10/15/20；
+- **普罗修姆戒指**（普通）：武器 / 魔法书命中附加 5/10/15 冰属性伤害（冷却 2/1.5/1 秒）；
+- **封印的特加斯**（羁绊，双连击：余烬 + 冰川）：**灼伤变更为蓝色灼伤** —— 每跳强度改成「火元素强度 + 冰元素强度」，伤害元素类型取两者中更高的一方（蓝火特效）；灼伤异常状态额外伤害 +3/6/9/12%。
+
+## 太阳剑剑痕重做
+
+敌人身上那道划痕从「尘埃粒子拼的线」换成**一张贴图粒子**：一道**笔直的发光划痕**（观感照原版横扫之刃的剑痕，但直形），更细、带柔光，**三个方向每发随机**（3→9 点 / 3→7 点 / 5→11 点）。
+
+## 修复
+
+- **「打有减益的敌人 / 高攻速时丢伤害」真正修好了**：26.3 里清受击无敌帧要写 `LivingEntity.damageCooldownTime`，而之前写的是 `Entity#setInvulnerableTime` —— **是两个不同字段**，所以那几处「清帧」一直是空操作。现在全仓库统一走一个入口，减益每跳不再给目标留无敌窗口。
+- **商店的羁绊概率**：调到稀有与传说之间（每格约 3.1%，稀有 8.9%、传说 1.0%）。
+- 修掉一处文案格式化 bug（「+33%」里的裸 `%` 会让整行退回未替换的原文，火红的夕阳提示框因此显示成 `%s%%`）；资源检查脚本加了守卫，以后写错直接构建失败。
 
 ## 说明
 
-- 7 件新神器已进掉落池（神器共 62 件）、创造模式页签与商店 / 宝箱抽取；数据表与文档同步更新（另订正两处旧说法：弩的伤害来自武器自身的固定值、与弹药无关；六把武器全部不可破坏）。
-- 从 `0.1.0-a` 或更早版本升级的存档请注意：模组 id 已在 `0.1.10.9-a` 改为 `sephiria_fantasy`，旧存档里的旧物品会变成未知物品、背包附件会重置。
+- 神器共 66 件（11 套连击）；冰系 4 件已进掉落池、创造模式页签与商店 / 宝箱抽取。
+- 冰川目前 4 件神器 → 连击最高 4 级，6/8/10 档要等以后的神器（余烬 / 魔法科技同理）。
 
 ---
 
 ## English
 
-This update adds **seven Sun Sword artifacts** and changes two combat rules.
+This version adds the eleventh combo **Glacier** (Frost Touch / Frostbite / Freeze) with 4 ice artifacts, reworks the Sun Sword's slash mark, and actually fixes the long-standing "attacks deal no damage" problem.
 
-### New artifacts (all on the Sun Sword combo, all 【Unique】)
+### New combo: Glacier (11th)
 
-- **Crimson Sunset** (Rare): a thrown Sun Sword has a 20/40/60/80/100% chance to grow — that hit deals +33% damage and draws a longer slash;
-- **Eternal Furnace** (Common): generates 1 Sun Sword every 10/8/5 s (only while the Sun Sword effect is active); crit chance +1/2.5/5%;
-- **Solis Decusa** (Advanced): Sun Sword damage +5/10/15/20%, crit damage +4/8/12/16%;
-- **Meteoric Earring** (Rare): thrown Sun Swords land near you; Fire element damage +2/4/7;
-- **Solis Dekuri** (Legendary): the Sun Sword ignores +2..14% of the target's defense, Sun Sword crit chance +5..50%;
-- **Noon Whetstone** (Legendary): the Sun Sword triggers 0/1/1/1/2 extra time(s) on weapon damage, attack speed +3..15%, defense-ignoring damage +1/1/2/2/2;
-- **Meteoric Mirror** (Advanced): recovers 1 extra Sun Sword on pickup, Sun Sword damage +3/6/9/12%.
+- **Frost Touch**: damaging a mob applies **Frostbite**, cooldown 2 s (0.8 s at tier 6); the trigger rules match Electric / Flame Touch (weapon / grimoire damage plus attack-dealt ice damage), while Freeze's own hit counts as debuff damage and does not trigger it.
+- **Frostbite**: −25% movement speed, 10 s, up to 5 stacks (stacking refreshes the timer), vanilla snowflake particles; at 5 stacks it turns into **Freeze**.
+- **Freeze**: one ice hit equal to 200% of your Ice element strength and the target is **completely frozen** for 2 s — no AI (no attacks, no pathfinding, no head turning), **no movement even when hit** (knockback, gravity and water are all blocked), limbs held in the pose they had at that instant, plus an ice-blue tint and a "Frozen" label under its feet.
+- Tiers: (2) activate Frost Touch / (4)(6) ice damage +6/+8 / (8) Frost Touch cooldown accelerated by 150% / (10) Frostbite stacks needed to Freeze −1.
 
-### Rule changes
+### New artifacts (3 Glacier + 1 Embers×Glacier)
 
-- **Auto-attack effects now require combat**: the Red Snake Eye meteor and the Sande Earring lightning only fire while you are in combat (Dark Cloud lightning already worked this way) — out of combat they hold fire and do not consume their cooldown.
-- **Fixed "high attack speed deals no damage"**: vanilla applies a 0.5 s damage cooldown after a hit, during which a weaker hit is swallowed or only its difference is applied. Damage from this mod no longer goes through that check and always lands in full.
-- **Fixed "attacking a debuffed enemy deals no damage"**: Burn / Shock periodic damage used to keep refreshing the target's damage cooldown, so follow-up attacks were swallowed. Damage from this mod no longer leaves an invulnerability window on the target; a debuff tick only counts for itself.
+- **Amulet of Wisdom** (Common): Ice element damage +3/4/6/8;
+- **Blue Claw** (Legendary): 30/40/50/60% chance to apply one extra Frostbite stack; Ice element damage +2/4/6/9; max MP +5/10/15/20;
+- **Proshium Ring** (Common): weapon / grimoire hits deal an extra 5/10/15 Ice damage (cooldown 2/1.5/1 s);
+- **Sealed Tegas** (Bond, dual combo: Embers + Glacier): **Burn becomes Blue Burn** — each tick uses Fire + Ice element strength and takes its damage type from whichever is higher (blue flame visuals); Burn extra damage +3/6/9/12%.
+
+### Sun Sword slash rework
+
+The scratch on the enemy is no longer a line of dust particles but a **textured particle**: one **straight glowing cut** (the look of the vanilla Sweeping Edge mark, but straight), thinner, softly glowing, and **randomly one of three directions** per throw (3→9 o'clock / 3→7 / 5→11).
+
+### Fixes
+
+- **"Attacking a debuffed enemy / high attack speed loses damage" is actually fixed now**: in 26.3 the hurt cooldown lives in `LivingEntity.damageCooldownTime`, while the old code wrote `Entity#setInvulnerableTime` — **two different fields**, so those "clear the frames" calls were silent no-ops. All of them now go through one entry point, so a debuff tick no longer leaves an invulnerability window on the target.
+- **Shop Bond odds**: moved to sit between Rare and Legendary (about 3.1% per shelf slot; Rare 8.9%, Legendary 1.0%).
+- Fixed a text-formatting bug (a bare `%` in "+33%" made the whole line fall back to its unformatted source — Crimson Sunset's tooltip showed `%s%%`); the resource checker now guards against it.
 
 ### Notes
 
-- The seven artifacts are in the loot pool (62 artifacts total), the creative tab and shop / chest rolls; the data sheet and docs are updated (two stale claims were corrected too: the crossbow's damage comes from the weapon's own fixed value, not from the ammo; all six weapons are unbreakable).
-- Upgrading from `0.1.0-a` or earlier: the mod id changed to `sephiria_fantasy` in `0.1.10.9-a`, so items from older worlds become unknown items and the backpack attachments reset.
+- 66 artifacts across 11 combos; the four ice artifacts are in the loot pool, creative tab and shop / chest rolls.
+- Glacier has only 4 artifacts, so the combo caps at level 4 for now — tiers 6/8/10 need future artifacts (same for Embers / Magitech).

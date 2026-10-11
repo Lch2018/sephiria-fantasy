@@ -25,7 +25,8 @@ import java.util.UUID;
 /**
  * 一名玩家当前的商店货架：{@value #GOOD_SLOTS} 个商品格 + 两个宝箱格 + 两个药水格。
  *
- * <p>商品按品质加权随机刷出（权重见 {@link ArtifactLoot.Weights#DEFAULT}），同一批<b>不重复</b>；
+ * <p>商品按品质加权随机刷出（权重见 {@link ArtifactLoot.Weights#SHOP}——它把羁绊的概率抬到
+ * 稀有与传说之间），同一批<b>不重复</b>；
  * 刷新方式是往骰子栏放一颗骰子（{@link ShopMenu} 那边接）。
  *
  * <p>限购：宝箱每次刷新<b>共</b>能买 {@value #CHEST_LIMIT} 次（两个宝箱格共用这个额度），
@@ -161,7 +162,7 @@ public final class ShopStock extends SimpleContainer {
 	public void refresh(RandomSource random) {
 		clearContent();
 
-		List<ItemStack> goods = ArtifactLoot.roll(random, GOOD_SLOTS, ArtifactLoot.Pool.BOTH, ArtifactLoot.Weights.DEFAULT);
+		List<ItemStack> goods = ArtifactLoot.roll(random, GOOD_SLOTS, ArtifactLoot.Pool.BOTH, ArtifactLoot.Weights.SHOP);
 
 		for (int index = 0; index < goods.size(); index++) {
 			setItem(index, goods.get(index));

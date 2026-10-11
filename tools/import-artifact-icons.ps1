@@ -59,6 +59,10 @@ $wechat2 = 'C:\Users\28237\Documents\xwechat_files\wxid_v1oblkxkkuq222_3365\temp
 $cache4 = 'C:\Users\28237\.zcode\cli\image-cache\sess_da3fb70d-3f37-4d0d-9565-6509fd39e4d0'
 # the sun-sword batch (seven artifacts) arrived in this session's image cache; same lifecycle as cache4.
 $cache5 = 'C:\Users\28237\.zcode\cli\image-cache\sess_891ddd3d-4c82-4d37-b9da-bf35030e89b5'
+# the glacier batch (combo icon + four artifacts): this time the references were COPIED into the
+# repository (tools/artifact-ref/glacier) instead of pointing at a session cache, so the job table
+# cannot rot when the chat client recycles that folder.
+$glacierRef = Join-Path $root 'tools\artifact-ref\glacier'
 
 foreach ($dir in @($texDir, $guiDir, $previewDir)) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -669,6 +673,22 @@ $jobs = @(
     @{ name = 'noon_whetstone'; root = 'cache5'; source = 'image-57e4e91f2332b614abca6f202a81d49d.png';
        target = 16; dir = 'item' },
     @{ name = 'meteoric_mirror'; root = 'cache5'; source = 'image-9412ae5d59453704447a234e1103ba95.png';
+       target = 16; dir = 'item' },
+
+    # batch 20: the glacier combo icon (60x60 on the #16151F plate, same as batches 13/16/17) plus
+    # the four glacier artifacts (75x75 mock-ups). References live in tools/artifact-ref/glacier.
+    @{ name = 'combo_glacier'; root = 'glacier'; source = 'combo_glacier.png';
+       target = 16; dir = 'gui' },
+    # the amulet's body is painted in the SAME dark tone as the plate frame (#222034), so the
+    # importer's flood fill reaches it and would leave only the bright beads; the -inked copy has
+    # just that enclosed body nudged a few steps darker (tools/ink-dark-body.ps1) so it survives.
+    @{ name = 'wisdom_amulet'; root = 'glacier'; source = 'wisdom_amulet-inked.png';
+       target = 16; dir = 'item' },
+    @{ name = 'blue_claw'; root = 'glacier'; source = 'blue_claw.png';
+       target = 16; dir = 'item' },
+    @{ name = 'proshium_ring'; root = 'glacier'; source = 'proshium_ring.png';
+       target = 16; dir = 'item' },
+    @{ name = 'sealed_tegas'; root = 'glacier'; source = 'sealed_tegas.png';
        target = 16; dir = 'item' }
 )
 
@@ -684,7 +704,7 @@ foreach ($job in $jobs) {
     $outDir = if ($job.dir -eq 'gui') { $guiDir } else { $texDir }
     $outFile = Join-Path $outDir ($name + '.png')
 
-    $sourceRoot = if ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
+    $sourceRoot = if ($job.root -eq 'glacier') { $glacierRef } elseif ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
 
     if (-not (Test-Path $sourceRoot)) {
         # the wechat temp folder is recycled by the chat client: once a whole batch's reference

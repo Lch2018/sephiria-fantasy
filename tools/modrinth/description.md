@@ -10,15 +10,15 @@
 
 Blade / Steel Greatsword / Dagger / Default Sword and Shield / Quarterstaff / Colossal Crossbow — each with its own normal-attack feel and weapon skills (sweeping, whirlwind, dash, area lunge, …). The blade-type weapons are animated with GeckoLib.
 
-### Ten combo sets and 55 artifacts
+### Eleven combo sets and 66 artifacts
 
-Sturdy / Wind Song / Precision / Shadow / Negotiation / Element / Magitech / Dark Cloud / Sun Sword / Embers.
+Sturdy / Wind Song / Precision / Shadow / Negotiation / Element / Magitech / Dark Cloud / Sun Sword / Embers / Glacier.
 
 Equipping artifacts of the same set in the Sephiria Backpack raises that combo's tier, and higher tiers give stronger effects. Hover a combo icon to see its full tier table. Artifacts come in five rarities (Common / Advanced / Rare / Legendary / Bond), and a 【Unique】 artifact only counts once no matter how many copies you carry.
 
 ### Debuffs and artifact skills
 
-- **Shock** (Magitech) and **Burn** (Embers): periodic damage that scales with stacks; affected mobs show a stack label under their feet. Debuff damage and true damage can crit as well.
+- **Shock** (Magitech), **Burn** (Embers) and **Frostbite / Freeze** (Glacier): periodic damage that scales with stacks, plus a freeze that locks a mob completely in place (no AI, no knockback, animation held on the spot) and turns it ice blue; affected mobs show a stack label under their feet. Debuff damage and true damage can crit as well.
 - **Artifact skills**: 6 skill slots with rebindable keys — Encouragement Banner, Haste, Keen Eye, Thunder Verdict.
 
 ### Attributes and progression
@@ -31,7 +31,7 @@ The shop's shelves are rerolled with **Dice**: put dice into the shop's dice slo
 
 ### Effects
 
-Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); plus Sun Sword slash marks, the Thunder Verdict beam, Dark Cloud lightning, custom particles and procedurally generated sound effects.
+Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); plus Sun Sword slash marks (a straight, glowing cut in one of three random directions), the Thunder Verdict beam, Dark Cloud lightning, custom particles and procedurally generated sound effects.
 
 ## Requirements
 
@@ -74,15 +74,15 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 刀 / 钢铁巨剑 / 匕首 / 标准剑盾 / 长棍 / 重型弩，各自有独立的普通攻击手感与武器技能（横扫、旋风、突刺、范围突进等）；刀类武器由 GeckoLib 驱动骨骼动画。
 
-### 十套「连击」与 55 件神器
+### 十一套「连击」与 66 件神器
 
-坚固 / 风之歌 / 精密 / 影子 / 谈判 / 元素 / 魔法科技 / 乌云 / 太阳剑 / 余烬。
+坚固 / 风之歌 / 精密 / 影子 / 谈判 / 元素 / 魔法科技 / 乌云 / 太阳剑 / 余烬 / 冰川。
 
 背包里凑齐同一套的神器会提升该连击的档位，档位越高效果越强；悬停连击图标可以查看完整档位表。神器分白 / 蓝 / 黄 / 红 / 彩五个品质，带【唯一】的同种神器只算一份。
 
 ### 减益与神器技能
 
-- **触电**（魔法科技）与**灼伤**（余烬）：挂在敌人身上的周期伤害，按层数乘算，敌人脚下会显示层数标签；减益伤害与真实伤害同样可以暴击。
+- **触电**（魔法科技）、**灼伤**（余烬）与**冻伤 / 冰冻**（冰川）：挂在敌人身上的周期伤害，按层数乘算；冻伤叠满会把敌人**完全冻住**（AI 停摆、被打也不动、动画定格、染成冰蓝）。敌人脚下会显示层数标签；减益伤害与真实伤害同样可以暴击。
 - **神器技能**：6 个技能栏 + 可自由绑定的按键 —— 鼓励旗帜 / 急速 / 锐利之眼 / 雷之裁决。
 
 ### 属性与成长
@@ -95,7 +95,7 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 ### 特效
 
-红蛇之眼的陨石有四段演出（出现 / 下落 / 撞击 / 消失），另有太阳剑划痕、雷之裁决光束、乌云雷击，以及自定义粒子与程序生成的音效。
+红蛇之眼的陨石有四段演出（出现 / 下落 / 撞击 / 消失），另有太阳剑剑痕（一道笔直的发光划痕，三个方向随机）、雷之裁决光束、乌云雷击，以及自定义粒子与程序生成的音效。
 
 ## 运行环境
 

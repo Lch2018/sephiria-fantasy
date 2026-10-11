@@ -454,6 +454,45 @@ public interface SephiriaArtifact extends Quality {
 	}
 
 	/**
+	 * 该等级「冻伤赋予时额外附加一次」的概率（%）。
+	 *
+	 * <p>霜之触给目标挂冻伤的那一刻掷一次：命中就多叠一层（可能因此正好凑满阈值、直接变成冰冻）。
+	 * 0 表示没有这个词条（蓝爪是唯一有它的）。
+	 */
+	default double frostbiteExtraChance(int level) {
+		return 0.0D;
+	}
+
+	/**
+	 * 该等级「使用武器攻击或魔法书造成伤害时附加的冰属性伤害」（点，固定值）。
+	 *
+	 * <p>与「被雷击中的树枝」的附加闪电同型：走 {@code sephiria:ice_attack}（{@code Kind.ICE_ATTACK}），
+	 * 吃减伤与黄金之手、也照常触发霜之触。0 表示没有这个词条（普罗修姆戒指是唯一有它的）。
+	 */
+	default double onHitIceDamage(int level) {
+		return 0.0D;
+	}
+
+	/**
+	 * 这件神器的附加冰伤多长间隔才能触发一次（秒；0 = 没有该词条）。
+	 *
+	 * <p>与 {@link #onHitIceDamage} 分开是因为冷却随等级走（普罗修姆戒指 2 / 1.5 / 1 秒）。
+	 */
+	default double onHitIceCooldownSeconds(int level) {
+		return 0.0D;
+	}
+
+	/**
+	 * 该等级是不是「灼伤变更为蓝色灼伤」（0 = 不是，大于 0 = 是）。
+	 *
+	 * <p>蓝色灼伤：每跳的强度改成「火元素强度 + 冰元素强度」，并按两者里更高的那个决定
+	 * 这一跳的伤害元素类型（火 ≥ 冰走火，否则走冰）。封印的特加斯是唯一有它的。
+	 */
+	default double blueBurn(int level) {
+		return 0.0D;
+	}
+
+	/**
 	 * 这件神器给的<b>神器技能</b>（没有就返回 null）。
 	 *
 	 * <p>对应「发动型神器」与「获得技能」两种词条。技能本身无状态，数值按等级现算，

@@ -327,6 +327,59 @@ public final class ArtifactEffects {
 		return sumAffix(player, SephiriaArtifact::iceElementBonus);
 	}
 
+	/** 连击给的「冰元素强度」加成总和（点）：并进触发者的冰元素强度面板值，冰冻那一下按它结算。 */
+	public static double comboIceElement(ServerPlayer player) {
+		double total = 0.0D;
+
+		for (Map.Entry<ArtifactCombo, Integer> entry : comboLevels(player).entrySet()) {
+			total += entry.getKey().iceElement(entry.getValue());
+		}
+
+		return total;
+	}
+
+	/** 神器给的「冻伤额外附加一次」概率总和（%）：霜之触挂冻伤时多叠一层（蓝爪）。 */
+	public static double frostbiteExtraChance(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::frostbiteExtraChance);
+	}
+
+	/** 神器给的「附加冰属性伤害」总和（点）：武器 / 魔法书命中时补一下（普罗修姆戒指）。 */
+	public static double onHitIceDamage(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::onHitIceDamage);
+	}
+
+	/**
+	 * 附加冰伤的冷却（tick）：按【唯一】规则取等级最高那份的「冷却秒数」。
+	 *
+	 * <p>冷却与伤害分开取是有意的：伤害走 {@link #sumAffix}（多份叠加），而冷却只有一个值
+	 * ——多带几枚戒指不该让冷却越叠越短，取当前生效的那一档即可。
+	 */
+	public static int onHitIceCooldownTicks(ServerPlayer player) {
+		ArtifactBackpack backpack = ArtifactBackpack.of(player);
+		double seconds = 0.0D;
+
+		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
+			Slot slotData = read(backpack, slot);
+
+			if (slotData.artifact() == null || slotData.inactive()) {
+				continue;
+			}
+
+			double here = slotData.artifact().onHitIceCooldownSeconds(slotData.level());
+
+			if (here > 0.0D) {
+				seconds = Math.max(seconds, here);
+			}
+		}
+
+		return (int) Math.ceil(seconds * 20.0D);
+	}
+
+	/** 有没有「灼伤变更为蓝色灼伤」（封印的特加斯）。 */
+	public static boolean blueBurn(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::blueBurn) > 0.0D;
+	}
+
 	/** 神器给的「火元素强度」加成总和（点）：索利斯那两枚徽章，太阳剑按它换算伤害。 */
 	public static double fireElementBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::fireElementBonus);

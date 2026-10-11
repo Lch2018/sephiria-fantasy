@@ -20,6 +20,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -86,6 +89,34 @@ public final class Debuffs {
 	/** 浓度 100% 对应的层数：基准数量按这一层数写；再往上按同一斜率继续变浓。 */
 	private static final int BURN_PARTICLE_REFERENCE_STACKS = 6;
 
+	/** 冻伤持续时间（tick）：10 秒；每次叠加都刷回满（与灼伤同一套）。 */
+	private static final int FROSTBITE_DURATION_TICKS = 200;
+	/** 冻伤叠层上限，也就是「冰冻所需的冻伤层数」的基准（冰川 10 档的 -1 加在它上面）。 */
+	private static final int FROSTBITE_MAX_STACKS = 5;
+	/** 冻伤的减速（%）：固定值——层数只用来倒数冰冻，不把减速越叠越深。 */
+	private static final double FROSTBITE_SLOW_PERCENT = 25.0D;
+	/** 霜之触的冷却（tick）：2 秒（6 档「冷却加速 150%」把它压到 0.8 秒）。 */
+	private static final int FROST_TOUCH_COOLDOWN_TICKS = 40;
+	/** 冻伤特效：存续中每刻撒几颗雪。 */
+	private static final int FROSTBITE_AURA_PARTICLES = 2;
+	/** 挂上冻伤那一下的雪量。 */
+	private static final int FROSTBITE_APPLY_PARTICLES = 6;
+	/** 冰冻的持续时间（tick）：2 秒——用户没给时长，取这个；改这一处即可。 */
+	private static final int FREEZE_DURATION_TICKS = 40;
+	/** 冰冻那一下的伤害倍率（%）：触发者冰元素强度 × 它。 */
+	private static final double FREEZE_DAMAGE_PERCENT = 200.0D;
+	/** 冰冻期间每刻的雪量（比冻伤浓）。 */
+	private static final int FROZEN_AURA_PARTICLES = 5;
+	/** 冻住的爆点雪量。 */
+	private static final int FROZEN_BURST_PARTICLES = 18;
+
+	/** 冻伤减速挂在移动速度上的修饰符名（要能在解除时按名字摘掉）。 */
+	private static final Identifier FROSTBITE_SLOW_ID =
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frostbite_slow");
+	/** 冰冻的「定身」修饰符名：移动速度乘 0，等于定在原地。 */
+	private static final Identifier FROZEN_STUN_ID =
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frozen_stun");
+
 	/**
 	 * 目标身上的触电：一段共享的持续时间 + 一个周期计时器，层数是伤害乘数。
 	 *
@@ -114,7 +145,26 @@ public final class Debuffs {
 	 * @param attackerId           触发者（最近一次附加的人）：结算时按他当前的火元素强度与档位取数
 	 */
 	private record Burn(int remainingTicks, int intervalTicks, int ticksUntilActivation,
-			int stacks, UUID attackerId) {
+			int stacks, UUID attackerId, boolean blue) {
+	}
+
+	/**
+	 * 目标身上的冻伤：持续时间 + 层数（层数只用来倒数冰冻，见类注释）。
+	 *
+	 * @param remainingTicks 距持续时间结束的倒计时（每次叠加都刷回 10 秒）
+	 * @param stacks         当前层数（1..阈值），够了就变成冰冻
+	 * @param attackerId     触发者（最近一次附加的人）：变成冰冻时按他的冰元素强度结算
+	 */
+	private record Frostbite(int remainingTicks, int stacks, UUID attackerId) {
+	}
+
+	/**
+	 * 目标身上的冰冻（眩晕）：持续时间走完自动解冻。
+	 *
+	 * @param remainingTicks 距解冻的倒计时
+	 * @param attackerId     触发者：解冻时不需要再算什么，留着是为了以后可能的收尾效果
+	 */
+	private record Frozen(int remainingTicks, UUID attackerId) {
 	}
 
 	/** 触电的减益 id：附件名与脚下层数标签的同步 id 共用（客户端按它找标签文案）。 */
@@ -122,6 +172,12 @@ public final class Debuffs {
 
 	/** 灼伤的减益 id：与触电同一套用法（标签文案见 {@code ui.sephiria.debuff.burns}）。 */
 	public static final Identifier BURN_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "burns");
+
+	/** 冻伤的减益 id：标签文案见 {@code ui.sephiria_fantasy.debuff.frostbites}。 */
+	public static final Identifier FROSTBITE_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frostbites");
+
+	/** 冰冻（眩晕）的减益 id：客户端按它把被冻住的敌人染成冰蓝（见 FrozenTintMixin）。 */
+	public static final Identifier FROZEN_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frozen");
 
 	/** 触电挂在目标实体上的运行时附件（一份记账：整段共享时间轴与层数）。 */
 	private static final AttachmentType<Shock> SHOCKS = AttachmentRegistry.<Shock>builder()
@@ -131,11 +187,22 @@ public final class Debuffs {
 	private static final AttachmentType<Burn> BURNS = AttachmentRegistry.<Burn>builder()
 			.buildAndRegister(BURN_ID);
 
+	/** 冻伤（冰川）：独立一份，与触电 / 灼伤并行。 */
+	private static final AttachmentType<Frostbite> FROSTBITES = AttachmentRegistry.<Frostbite>builder()
+			.buildAndRegister(FROSTBITE_ID);
+
+	/** 冰冻（眩晕）：冻伤叠满后换成它，走完自动解冻。 */
+	private static final AttachmentType<Frozen> FROZEN = AttachmentRegistry.<Frozen>builder()
+			.buildAndRegister(FROZEN_ID);
+
 	/** 电击之触的冷却按攻击者记：多久能给下一个目标附加新一层。 */
 	private static final Map<UUID, Long> LAST_TOUCH = new HashMap<>();
 
 	/** 火焰之触的冷却，同样按攻击者记（与电击之触各算各的）。 */
 	private static final Map<UUID, Long> LAST_FLAME_TOUCH = new HashMap<>();
+
+	/** 霜之触的冷却，同样按攻击者记。 */
+	private static final Map<UUID, Long> LAST_FROST_TOUCH = new HashMap<>();
 
 	/** 脚下层数标签的广播距离（格）：与客户端那边的显示距离配套，远处就不发了。 */
 	private static final double LABEL_RANGE = 64.0D;
@@ -164,6 +231,9 @@ public final class Debuffs {
 					&& !source.is(SephiriaDamage.ELECTRIC_SHOCK);
 			boolean fireAttack = kind == SephiriaDamage.Kind.SUN
 					|| kind == SephiriaDamage.Kind.FIRE_ATTACK;
+			// 冰的那条：攻击打出的冰属性伤害（ice_attack）；冰冻自己的结算也是冰伤害，
+			// 但它是减益伤害（Kind.ICE），进不来这里
+			boolean iceAttack = kind == SephiriaDamage.Kind.ICE_ATTACK;
 
 			if (weaponOrArtifact || electricAttack) {
 				tryApplyShock(entity, player);
@@ -172,15 +242,63 @@ public final class Debuffs {
 			if (weaponOrArtifact || fireAttack) {
 				tryApplyBurn(entity, player);
 			}
+
+			if (weaponOrArtifact || iceAttack) {
+				tryApplyFrostbite(entity, player);
+			}
 		});
 
-		// 死亡即结算完毕：两份减益都不再跟着尸体跳（也就不会再出声、出粒子），脚下的层数标签同时收掉
+		// 死亡即结算完毕：三份减益都不再跟着尸体跳（也就不会再出声、出粒子），脚下的层数标签同时收掉
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			entity.removeAttached(SHOCKS);
 			entity.removeAttached(BURNS);
+			entity.removeAttached(FROSTBITES);
+			entity.removeAttached(FROZEN);
+			clearSlows(entity);
 			syncStacks(SHOCK_ID, entity, 0);
 			syncStacks(BURN_ID, entity, 0);
+			syncStacks(FROSTBITE_ID, entity, 0);
+			syncStacks(FROZEN_ID, entity, 0);
 		});
+	}
+
+	/**
+	 * 摘掉冻伤 / 冰冻挂在移动速度上的修饰符。
+	 *
+	 * <p>属性修饰符是实体的一部分（不像附件那样随实体消失），所以每一处「减益没了」的出口
+	 * （到期、变成冰冻、死亡、实体不再存活）都必须调它，否则怪会一直带着那个减速跑。
+	 */
+	private static void clearSlows(LivingEntity entity) {
+		AttributeInstance instance = entity.getAttribute(Attributes.MOVEMENT_SPEED);
+
+		if (instance != null) {
+			instance.removeModifier(FROSTBITE_SLOW_ID);
+			instance.removeModifier(FROZEN_STUN_ID);
+		}
+	}
+
+	/**
+	 * 给目标挂一条临时的移动速度修饰符（同名的会覆盖，不会叠）。
+	 *
+	 * <p>先查一遍同名的：{@code addOrUpdateTransientModifier} 是按<b>对象引用</b>判「是不是同一个」
+	 * 的（原版源码里是 {@code if_acmpne}），每刻都塞一个新对象进去会把属性标脏、
+	 * 每刻同步一次属性包；查过再决定要不要写，就只在真的变了那一次同步。
+	 */
+	private static void applySlow(LivingEntity entity, Identifier id, double amount) {
+		AttributeInstance instance = entity.getAttribute(Attributes.MOVEMENT_SPEED);
+
+		if (instance == null) {
+			return;
+		}
+
+		AttributeModifier existing = instance.getModifier(id);
+
+		if (existing != null && existing.amount() == amount) {
+			return;
+		}
+
+		instance.addOrUpdateTransientModifier(
+				new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
 	}
 
 	/**
@@ -228,9 +346,10 @@ public final class Debuffs {
 	public static void forget(ServerPlayer player) {
 		LAST_TOUCH.remove(player.getUUID());
 		LAST_FLAME_TOUCH.remove(player.getUUID());
+		LAST_FROST_TOUCH.remove(player.getUUID());
 	}
 
-	/** 实体每刻把身上的减益往前推一格（mixin 从 LivingEntity.tick 调进来）；两套各推各的。 */
+	/** 实体每刻把身上的减益往前推一格（mixin 从 LivingEntity.tick 调进来）；几套各推各的。 */
 	public static void tick(LivingEntity entity, ServerLevel level) {
 		// 目标一死就整段作废。死在结算那一跳里时，附件已经在 AFTER_DEATH 里被清掉，但那一跳
 		// 会带着「重新挂回去」的写法继续往下走——于是尸体上又长出减益，接着按秒冒粒子、响音效。
@@ -238,13 +357,109 @@ public final class Debuffs {
 		if (!entity.isAlive()) {
 			entity.removeAttached(SHOCKS);
 			entity.removeAttached(BURNS);
+			entity.removeAttached(FROSTBITES);
+			entity.removeAttached(FROZEN);
+			clearSlows(entity);
 			syncStacks(SHOCK_ID, entity, 0);
 			syncStacks(BURN_ID, entity, 0);
+			syncStacks(FROSTBITE_ID, entity, 0);
+			syncStacks(FROZEN_ID, entity, 0);
 			return;
 		}
 
 		tickShock(entity, level);
 		tickBurn(entity, level);
+		tickFrostbite(entity, level);
+		tickFrozen(entity, level);
+	}
+
+	/** 目标是不是正被冻住（眩晕）——MobStunMixin 用它挡掉被冻住时的攻击。 */
+	public static boolean isFrozen(LivingEntity entity) {
+		return entity.getAttached(FROZEN) != null;
+	}
+
+	/** 冻伤：每刻冒雪，时间走完就恢复（减速与标签一起收掉）。 */
+	private static void tickFrostbite(LivingEntity entity, ServerLevel level) {
+		Frostbite frostbite = entity.getAttached(FROSTBITES);
+
+		if (frostbite == null) {
+			// 没冻伤（或刚被换成冰冻）：兜底把减速与层数标签收掉
+			clearSlow(entity, FROSTBITE_SLOW_ID);
+			syncStacks(FROSTBITE_ID, entity, 0);
+			return;
+		}
+
+		int lifetime = frostbite.remainingTicks() - 1;
+
+		if (lifetime <= 0) {
+			entity.removeAttached(FROSTBITES);
+			clearSlow(entity, FROSTBITE_SLOW_ID);
+			syncStacks(FROSTBITE_ID, entity, 0);
+			return;
+		}
+
+		entity.setAttached(FROSTBITES, new Frostbite(lifetime, frostbite.stacks(), frostbite.attackerId()));
+		syncStacks(FROSTBITE_ID, entity, frostbite.stacks());
+		applySlow(entity, FROSTBITE_SLOW_ID, -FROSTBITE_SLOW_PERCENT / 100.0D);
+
+		// 冰霜特效：贴着目标撒雪（原版雪片粒子），浓度随层数
+		level.sendParticles(ParticleTypes.SNOWFLAKE, entity.getX(), entity.getY(0.5D), entity.getZ(),
+				burnParticleCount(FROSTBITE_AURA_PARTICLES, frostbiteParticleFactor(frostbite.stacks()),
+						level.getRandom()),
+				0.35D, 0.55D, 0.35D, 0.01D);
+	}
+
+	/**
+	 * 冰冻（眩晕）：<b>完全静止</b>——不攻击、不寻路（{@code MobStunMixin} 取消 {@code Mob#serverAiStep}），
+	 * 连被打飞都不动（{@code FrozenMotionMixin} 拦掉 {@code Entity#move}），四肢停在冰冻那一刻的姿势；
+	 * 这里负责计时、层数标签、每刻按住动画与速度、以及冒雪特效，时间走完解冻。
+	 */
+	private static void tickFrozen(LivingEntity entity, ServerLevel level) {
+		Frozen frozen = entity.getAttached(FROZEN);
+
+		if (frozen == null) {
+			clearSlow(entity, FROZEN_STUN_ID);
+			syncStacks(FROZEN_ID, entity, 0);
+			return;
+		}
+
+		int lifetime = frozen.remainingTicks() - 1;
+
+		if (lifetime <= 0) {
+			entity.removeAttached(FROZEN);
+			clearSlow(entity, FROZEN_STUN_ID);
+			syncStacks(FROZEN_ID, entity, 0);
+			return;
+		}
+
+		entity.setAttached(FROZEN, new Frozen(lifetime, frozen.attackerId()));
+		syncStacks(FROZEN_ID, entity, 1);
+		// 定身：移动速度乘 0（原版属性下限也是 0）——只是保险，真正拦住位移的是 FrozenMotionMixin
+		applySlow(entity, FROZEN_STUN_ID, -1.0D);
+		// 「把那一刻的动画定格」：走路动画的速度按住不放，四肢就停在冰冻那一刻的姿势上
+		// （不按住的话它会自己收回到站姿——那也是「动」）
+		entity.walkAnimation.setSpeed(0.0F);
+		// 速度每刻清零：位置本来就被 move 拦截挡住了，这里是别让速度攒起来（解冻那一刻不会窜出去）
+		entity.setDeltaMovement(0.0D, 0.0D, 0.0D);
+
+		level.sendParticles(ParticleTypes.SNOWFLAKE, entity.getX(), entity.getY(0.5D), entity.getZ(),
+				FROZEN_AURA_PARTICLES, 0.4D, 0.6D, 0.4D, 0.02D);
+	}
+
+	/** 摘掉某一条减速修饰符（不碰另一条）。 */
+	private static void clearSlow(LivingEntity entity, Identifier id) {
+		AttributeInstance instance = entity.getAttribute(Attributes.MOVEMENT_SPEED);
+
+		if (instance != null) {
+			instance.removeModifier(id);
+		}
+	}
+
+	/** 冻伤粒子的层数浓度倍率：与灼伤同一套（1 层 40% → 5 层 100%）。 */
+	private static double frostbiteParticleFactor(int stacks) {
+		int level = Math.max(1, stacks);
+		return BURN_PARTICLE_LOW_FACTOR + (1.0D - BURN_PARTICLE_LOW_FACTOR)
+				* (level - 1) / (FROSTBITE_MAX_STACKS - 1);
 	}
 
 	/** 触电：周期到点结算、时间走完补终结跳。 */
@@ -321,7 +536,7 @@ public final class Debuffs {
 		int until = burn.ticksUntilActivation() - 1;
 
 		if (until <= 0) {
-			activateBurn(level, entity, burn.attackerId(), burn.stacks());
+			activateBurn(level, entity, burn.attackerId(), burn.stacks(), burn.blue());
 			until = burn.intervalTicks();
 		}
 
@@ -332,12 +547,13 @@ public final class Debuffs {
 		}
 
 		entity.setAttached(BURNS, new Burn(lifetime, burn.intervalTicks(), until, burn.stacks(),
-				burn.attackerId()));
+				burn.attackerId(), burn.blue()));
 		syncStacks(BURN_ID, entity, burn.stacks());
 
-		// 燃烧特效：火苗贴着目标往上冒，浓度随层数（1 层 40% → 6 层 100%）；
+		// 燃烧特效：火苗贴着目标往上冒（蓝色灼伤用蓝色的魂火），浓度随层数（1 层 40% → 6 层 100%）；
 		// 音效只在结算那一下放，避免一直响
-		level.sendParticles(ParticleTypes.FLAME, entity.getX(), entity.getY(0.5D), entity.getZ(),
+		level.sendParticles(burn.blue() ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME,
+				entity.getX(), entity.getY(0.5D), entity.getZ(),
 				burnParticleCount(BURN_AURA_PARTICLES, burnParticleFactor(burn.stacks()), level.getRandom()),
 				0.35D, 0.55D, 0.35D, 0.01D);
 	}
@@ -474,17 +690,150 @@ public final class Debuffs {
 		int added = 1 + ArtifactEffects.burnExtraApplications(player);
 		int stacks = Math.min(cap, (burn == null ? 0 : burn.stacks()) + added);
 		int interval = burn == null ? burnIntervalTicks(player) : burn.intervalTicks();
+		// 蓝色灼伤（封印的特加斯）在每一次赋予时重新判定：中途换装摘掉它，下一次赋予就变回普通灼伤
+		boolean blue = ArtifactEffects.blueBurn(player);
 		Burn updated = new Burn(BURN_DURATION_TICKS, interval,
-				burn == null ? interval : burn.ticksUntilActivation(), stacks, player.getUUID());
+				burn == null ? interval : burn.ticksUntilActivation(), stacks, player.getUUID(), blue);
 		target.setAttached(BURNS, updated);
 		syncStacks(BURN_ID, target, updated.stacks());
 
 		if (target.level() instanceof ServerLevel level) {
-			level.sendParticles(ParticleTypes.FLAME, target.getX(), target.getY(0.5D), target.getZ(),
-					6, 0.3D, 0.4D, 0.3D, 0.02D);
+			level.sendParticles(blue ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME,
+					target.getX(), target.getY(0.5D), target.getZ(), 6, 0.3D, 0.4D, 0.3D, 0.02D);
 		}
 
 		return true;
+	}
+
+	/**
+	 * 霜之触的公共入口：与 {@link #tryApplyShock} / {@link #tryApplyBurn} 同型——冰川 2 档才有、
+	 * 冷却 2 秒按攻击者记（6 档的「冷却加速 150%」把间隔压到 0.8 秒），冻伤满了就不加、
+	 * 也不吃掉这次冷却。
+	 */
+	public static void tryApplyFrostbite(LivingEntity target, ServerPlayer player) {
+		int comboLevel = ArtifactEffects.comboLevels(player).getOrDefault(ArtifactCombo.GLACIER, 0);
+
+		if (!ArtifactCombo.GLACIER.frostTouch(comboLevel)) {
+			return;
+		}
+
+		long interval = (long) Math.ceil(FROST_TOUCH_COOLDOWN_TICKS
+				/ (1.0D + ArtifactCombo.GLACIER.touchHastePercent(comboLevel) / 100.0D));
+		long now = player.level().getGameTime();
+		Long last = LAST_FROST_TOUCH.get(player.getUUID());
+
+		if (last != null && now - last < interval) {
+			return;
+		}
+
+		if (!applyFrostbite(target, player)) {
+			return;
+		}
+
+		LAST_FROST_TOUCH.put(player.getUUID(), now);
+	}
+
+	/**
+	 * 给目标附加一层冻伤（霜之触）；冻伤满了不加、返回是否加上了。
+	 *
+	 * <p>规矩与灼伤同型：叠加把持续时间刷回满 10 秒。层数不放大任何伤害——它只是冰冻的倒计时，
+	 * 叠到「冰冻所需的冻伤层数」（基础 5 层，冰川 10 档 -1，见 {@link #freezeThreshold}）就<b>整段换成冰冻</b>：
+	 * 冻伤连同它的减速一起收掉，换成一次 200% 冰属性伤害 + 眩晕。
+	 *
+	 * <p>蓝爪的「冻伤赋予时额外附加一次」在这里掷：命中就再叠一层（可能正好把阈值凑满、当场冻住）。
+	 */
+	public static boolean applyFrostbite(LivingEntity target, ServerPlayer player) {
+		if (target instanceof net.minecraft.world.entity.player.Player) {
+			return false;
+		}
+
+		// 已经被冻住（眩晕）时不再挂冻伤：不然解冻那一刻手里攒的层数会立刻再冻一次，
+		// 变成「一冻到底」的连环控，200% 的伤害也就跟着连环结算了
+		if (target.getAttached(FROZEN) != null) {
+			return false;
+		}
+
+		if (!(target.level() instanceof ServerLevel level)) {
+			return false;
+		}
+
+		int threshold = freezeThreshold(player);
+		Frostbite frostbite = target.getAttached(FROSTBITES);
+		int stacks = frostbite == null ? 0 : frostbite.stacks();
+
+		// 层数已经够（阈值被中途换上 10 档的冰川降下来时会这样）：这一下直接冻住，不再往上叠
+		if (stacks >= threshold) {
+			applyFreeze(level, target, player);
+			return true;
+		}
+
+		stacks++;
+
+		// 蓝爪：概率额外附加一次（多一层）
+		double extraChance = ArtifactEffects.frostbiteExtraChance(player);
+
+		if (extraChance > 0.0D && target.level().getRandom().nextDouble() * 100.0D < extraChance) {
+			stacks = Math.min(threshold, stacks + 1);
+		}
+
+		level.sendParticles(ParticleTypes.SNOWFLAKE, target.getX(), target.getY(0.5D), target.getZ(),
+				FROSTBITE_APPLY_PARTICLES, 0.3D, 0.4D, 0.3D, 0.02D);
+
+		// 满层：这一下不再挂冻伤，直接换成冰冻
+		if (stacks >= threshold) {
+			applyFreeze(level, target, player);
+			return true;
+		}
+
+		target.setAttached(FROSTBITES, new Frostbite(FROSTBITE_DURATION_TICKS, stacks, player.getUUID()));
+		// 层数刚变：立刻推给附近玩家，脚下的层数标签当场跟着变
+		syncStacks(FROSTBITE_ID, target, stacks);
+		applySlow(target, FROSTBITE_SLOW_ID, -FROSTBITE_SLOW_PERCENT / 100.0D);
+		return true;
+	}
+
+	/**
+	 * 冻伤叠满 → 冰冻：一次冰属性伤害（触发者冰元素强度 × 200%）＋ 眩晕 {@link #FREEZE_DURATION_TICKS} 刻。
+	 *
+	 * <p>冻伤连同它的减速一起收掉（换成冰冻的定身）。伤害是「减益伤害」（{@code sephiria:freeze}），
+	 * 不吃减伤与黄金之手、也不会再触发霜之触。触发者掉线时只有归属没了，伤害照打。
+	 */
+	private static void applyFreeze(ServerLevel level, LivingEntity target, ServerPlayer player) {
+		target.removeAttached(FROSTBITES);
+		clearSlow(target, FROSTBITE_SLOW_ID);
+		syncStacks(FROSTBITE_ID, target, 0);
+
+		target.setAttached(FROZEN, new Frozen(FREEZE_DURATION_TICKS, player.getUUID()));
+		syncStacks(FROZEN_ID, target, 1);
+
+		// 冻住的一瞬清掉全部速度：要的是「一动不动」——连竖直也停，悬空被冻住的怪就定格在半空
+		// （解冻后继续掉；要改成照常下落就放行竖直分量，见 FrozenMotionMixin 的注释）
+		target.setDeltaMovement(0.0D, 0.0D, 0.0D);
+
+		double element = PlayerStats.elementTotal(player, PlayerStats.Element.ICE);
+		double damage = element * FREEZE_DAMAGE_PERCENT / 100.0D;
+
+		if (damage > 0.0D) {
+			// 与其它额外结算同理：先清无敌帧，免得这一下被目标上一刻吃到的伤害顶掉
+			SephiriaDamage.clearDamageCooldown(target);
+			target.hurtServer(level, SephiriaDamage.freeze(level, player), (float) damage);
+		}
+
+		level.sendParticles(ParticleTypes.SNOWFLAKE, target.getX(), target.getY(0.5D), target.getZ(),
+				FROZEN_BURST_PARTICLES, 0.5D, 0.7D, 0.5D, 0.08D);
+		// 结冰的一瞬：粉雪的碎裂声 + 一记冰裂（音量都压着，别盖过战斗音效）
+		level.playSound(null, target.getX(), target.getY(), target.getZ(),
+				SoundEvents.POWDER_SNOW_BREAK, SoundSource.PLAYERS, 0.8F, 0.9F);
+		level.playSound(null, target.getX(), target.getY(), target.getZ(),
+				SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 0.35F, 1.4F);
+	}
+
+	/** 冰冻所需的冻伤层数：基础 {@link #FROSTBITE_MAX_STACKS} 层 + 冰川 10 档的 -1（不低于 1）。 */
+	private static int freezeThreshold(ServerPlayer player) {
+		int comboLevel = ArtifactEffects.comboLevels(player).getOrDefault(ArtifactCombo.GLACIER, 0);
+		int delta = (int) ArtifactCombo.GLACIER.freezeThresholdDelta(comboLevel);
+
+		return Math.max(1, FROSTBITE_MAX_STACKS + delta);
 	}
 
 	/** 灼伤每跳的间隔（tick）：基础 10 刻（0.5 秒），橡木炭的「灼伤的攻击速度」把它压短。 */
@@ -519,7 +868,7 @@ public final class Debuffs {
 		}
 
 		// 与真实伤害同理：额外的那一下不清无敌帧，就会被目标上一刻吃到的伤害顶掉
-		target.setInvulnerableTime(0);
+		SephiriaDamage.clearDamageCooldown(target);
 		target.hurtServer(level, SephiriaDamage.electricShock(level, player), (float) damage);
 		level.sendParticles(ModParticleTypes.BLUE_SPARK, target.getX(), target.getY(0.5D), target.getZ(),
 				SHOCK_BURST_PARTICLES, 0.4D, 0.6D, 0.4D, 0.08D);
@@ -533,25 +882,36 @@ public final class Debuffs {
 	 * 灼伤的一跳：触发者当前火元素强度 × 倍率（默认 8%，10 档 18%）× 层数 × (1 + 红色线球的额外伤害)。
 	 *
 	 * <p>倍率与强度都在结算那一刻现查，与触电同口径（换装、连击等级变了就跟着走）。
+	 *
+	 * <p><b>蓝色灼伤</b>（封印的特加斯）在这一跳上多两件事：强度换成「火元素强度 + 冰元素强度」，
+	 * 伤害的元素类型按两者里更高的那个定——火 ≥ 冰走火（{@code sephiria:burn}，{@code Kind.FIRE}），
+	 * 冰更高走冰（{@code sephiria:blue_burn}，{@code Kind.ICE}）。两者都是减益伤害，
+	 * 所以减伤 / 黄金之手 / 「造成伤害时」那几套口径完全一样，只有元素类型不同。
 	 */
-	private static void activateBurn(ServerLevel level, LivingEntity target, UUID attackerId, int stacks) {
+	private static void activateBurn(ServerLevel level, LivingEntity target, UUID attackerId, int stacks,
+			boolean blue) {
 		ServerPlayer player = level.getServer().getPlayerList().getPlayer(attackerId);
-		double element = player == null ? 0.0D
+		double fire = player == null ? 0.0D
 				: PlayerStats.elementTotal(player, PlayerStats.Element.FIRE);
+		double ice = blue && player != null
+				? PlayerStats.elementTotal(player, PlayerStats.Element.ICE)
+				: 0.0D;
 		double bonus = player == null ? 1.0D
 				: 1.0D + ArtifactEffects.burnDamagePercent(player) / 100.0D;
-		double damage = element * burnPercent(player) / 100.0D * stacks * bonus;
+		double damage = (fire + ice) * burnPercent(player) / 100.0D * stacks * bonus;
 
 		if (damage <= 0.0D) {
 			return;
 		}
 
-		target.setInvulnerableTime(0);
-		target.hurtServer(level, SephiriaDamage.burn(level, player), (float) damage);
+		SephiriaDamage.clearDamageCooldown(target);
+		target.hurtServer(level, ice > fire ? SephiriaDamage.blueBurn(level, player)
+				: SephiriaDamage.burn(level, player), (float) damage);
 		// 这一跳的爆点浓度与身上那圈火苗同一个倍率，层数越高烧得越旺
 		double factor = burnParticleFactor(stacks);
 		RandomSource random = level.getRandom();
-		level.sendParticles(ParticleTypes.FLAME, target.getX(), target.getY(0.5D), target.getZ(),
+		level.sendParticles(blue ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME,
+				target.getX(), target.getY(0.5D), target.getZ(),
 				burnParticleCount(BURN_BURST_PARTICLES, factor, random), 0.4D, 0.6D, 0.4D, 0.05D);
 		level.sendParticles(ParticleTypes.SMOKE, target.getX(), target.getY(0.6D), target.getZ(),
 				burnParticleCount(BURN_SMOKE_PARTICLES, factor, random), 0.35D, 0.5D, 0.35D, 0.03D);

@@ -1,6 +1,7 @@
 package com.sephiria.mixin.client;
 
 import com.sephiria.client.particle.BlueSparkParticle;
+import com.sephiria.client.particle.SunSlashParticle;
 import com.sephiria.registry.ModParticleTypes;
 import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.particle.ParticleResources;
@@ -16,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Map;
 
 /**
- * 把 sephiria:blue_spark 的粒子工厂挂进原版粒子渲染器。
+ * 把 sephiria_fantasy 的自定义粒子工厂挂进原版粒子渲染器。
  *
  * <p>26.3 的 Fabric API 删掉了旧的 ParticleFactoryRegistry，原版改成在
  * {@code ParticleResources#registerProviders()}（构造器末尾调用）里把渲染器写死进
@@ -27,7 +28,7 @@ import java.util.Map;
  *       {@code particles/<id>.json} 填充贴图）；</li>
  *   <li>工厂放进按注册表数字 id 索引的 {@code providers}。</li>
  * </ol>
- * 这两步要动的私有字段与包私有贴图组类已用访问拓宽打开（见 sephiria.accesswidener）。
+ * 这两步要动的私有字段与包私有贴图组类已用访问拓宽打开（见 sephiria_fantasy.accesswidener）。
  */
 @Mixin(ParticleResources.class)
 public abstract class ParticleResourcesMixin {
@@ -38,10 +39,15 @@ public abstract class ParticleResourcesMixin {
 	private Int2ObjectMap<ParticleProvider<?>> providers;
 
 	@Inject(method = "registerProviders", at = @At("TAIL"))
-	private void sephiria$registerBlueSpark(CallbackInfo ci) {
-		MutableSpriteSet sprites = new MutableSpriteSet();
-		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.BLUE_SPARK), sprites);
+	private void sephiria$registerParticles(CallbackInfo ci) {
+		MutableSpriteSet spark = new MutableSpriteSet();
+		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.BLUE_SPARK), spark);
 		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.BLUE_SPARK),
-				new BlueSparkParticle.Provider(sprites));
+				new BlueSparkParticle.Provider(spark));
+
+		MutableSpriteSet slash = new MutableSpriteSet();
+		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.SUN_SLASH), slash);
+		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.SUN_SLASH),
+				new SunSlashParticle.Provider(slash));
 	}
 }

@@ -100,7 +100,7 @@ public class LightningStruckBranchItem extends ArtifactItem {
 
 			LAST_HIT.put(player.getUUID(), now);
 			// 与触电结算同理：额外那一下先清无敌帧，免得被目标上一刻吃到的伤害顶掉
-			entity.setInvulnerableTime(0);
+			SephiriaDamage.clearDamageCooldown(entity);
 			entity.hurtServer(level, SephiriaDamage.electricAttack(level, player), (float) flat);
 			level.sendParticles(ParticleTypes.ELECTRIC_SPARK, entity.getX(), entity.getY(0.5D), entity.getZ(),
 					8, 0.3D, 0.4D, 0.3D, 0.05D);

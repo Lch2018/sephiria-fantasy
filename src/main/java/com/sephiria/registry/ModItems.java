@@ -67,6 +67,10 @@ import com.sephiria.artifact.NoonWhetstoneItem;
 import com.sephiria.artifact.SolisDecusaItem;
 import com.sephiria.artifact.SolisDekuriItem;
 import com.sephiria.artifact.ArtifactRarity;
+import com.sephiria.artifact.BlueClawItem;
+import com.sephiria.artifact.ProshiumRingItem;
+import com.sephiria.artifact.SealedTegasItem;
+import com.sephiria.artifact.WisdomAmuletItem;
 import com.sephiria.potion.PotionEffect;
 import com.sephiria.potion.Potions;
 import com.sephiria.potion.SephiriaPotionItem;
@@ -544,6 +548,26 @@ public final class ModItems {
 	/** 熔岩珠（余烬，传说）：【唯一】赋予灼伤时额外给予 0/1/1/2 次、灼伤层 +1/1/1/2。 */
 	public static final Item LAVA_BEAD = register(key("lava_bead"),
 			p -> new LavaBeadItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 睿智护符（冰川，普通）：【唯一】冰属性伤害 +3/4/6/8。 */
+	public static final Item WISDOM_AMULET = register(key("wisdom_amulet"),
+			p -> new WisdomAmuletItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 蓝爪（冰川，传说）：【唯一】冻伤额外附加一次 30..60%、冰属性伤害 +2/4/6/9、最大 MP +5..20。 */
+	public static final Item BLUE_CLAW = register(key("blue_claw"),
+			p -> new BlueClawItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 普罗修姆戒指（冰川，普通）：【唯一】武器 / 魔法书命中附加 5/10/15 冰属性伤害（冷却 2/1.5/1 秒）。 */
+	public static final Item PROSHIUM_RING = register(key("proshium_ring"),
+			p -> new ProshiumRingItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 封印的特加斯（余烬 + 冰川，羁绊）：【唯一】灼伤变更为蓝色灼伤、灼伤额外伤害 +3/6/9/12%。 */
+	public static final Item SEALED_TEGAS = register(key("sealed_tegas"),
+			p -> new SealedTegasItem(p),
 			new Item.Properties().stacksTo(1));
 
 	/**

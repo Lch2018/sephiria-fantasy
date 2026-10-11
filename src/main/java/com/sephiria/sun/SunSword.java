@@ -7,6 +7,7 @@ import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.network.SunSwordSyncPayload;
 import com.sephiria.registry.ModItems;
+import com.sephiria.registry.ModParticleTypes;
 import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -14,7 +15,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.Identifier;
@@ -33,7 +33,8 @@ import java.util.UUID;
 
 /**
  * 「太阳剑」连击：用武器攻击或魔法书造成伤害时投掷一支太阳剑——不是从玩家身上飞出去的实体，
- * 而是直接在被命中的敌人身上划一道<b>笔直的划痕</b>并结算一次火属性伤害
+ * 而是直接在被命中的敌人身上划一道<b>笔直的发光剑痕</b>（贴图粒子，见 {@link #slash}）
+ * 并结算一次火属性伤害
  * （火元素强度面板值 × 10%，再乘连击档位的「太阳剑伤害」加成）。没有攻击间隔，
  * 每一发符合条件的伤害都会投一支（有剑可投时）。
  *
@@ -58,13 +59,21 @@ public final class SunSword {
 	private static final double PICKUP_RADIUS = 1.5D;
 	/** 掉落物落地高度（格，相对被命中者脚下）：稍微抬一点，让它自己落下去。 */
 	private static final double DROP_HEIGHT = 0.5D;
-	/** 划痕的长度（格，以被命中者为中心）与采样间距。 */
+	/** 剑痕的长度（格）：这就是那道划痕贴图的方片边长，颜色画在贴图里（橙边 → 黄 → 白芯）。 */
 	private static final double SLASH_LENGTH = 1.7D;
-	private static final double SLASH_STEP = 0.09D;
-	/** 划痕三色（用户定）：边缘橙、近中黄、正中白。 */
-	private static final DustParticleOptions SLASH_EDGE = new DustParticleOptions(0xFDA542, 0.8F);
-	private static final DustParticleOptions SLASH_MIDDLE = new DustParticleOptions(0xFDFD64, 0.8F);
-	private static final DustParticleOptions SLASH_CENTER = new DustParticleOptions(0xFDFDFB, 0.8F);
+	/** 剑痕往攻击者那一侧至少推出目标身体这么多格（够不到时按目标体宽算，见 {@link #slash}）。 */
+	private static final double SLASH_FORWARD_OFFSET = 0.5D;
+	/**
+	 * 剑痕的三个方向（弧度，屏幕面内的倾角；剑痕那张方片是朝摄像机的，所以方向只能这么给）：
+	 * 0 = 3 点 → 9 点（横的一道）、+30° = 3 点 → 7 点（右端抬起、缓一些）、
+	 * −60° = 5 点 → 11 点（右端压低、陡一些）。正数 = 屏幕上的逆时针。
+	 * 每一发随机挑一个，打出来的刀口就不会总是同一条横线。
+	 */
+	private static final float[] SLASH_ROLLS = {
+			0.0F,
+			(float) Math.toRadians(30.0D),
+			(float) Math.toRadians(-60.0D),
+	};
 	/** 火红的夕阳「增大」那一发：伤害 ×1.33、划痕长度 ×1.6。 */
 	private static final double ENLARGE_DAMAGE_MULTIPLIER = 1.33D;
 	private static final double ENLARGE_SLASH_SCALE = 1.6D;
@@ -282,7 +291,7 @@ public final class SunSword {
 		state.current -= 1.0D;
 
 		// 直接打在敌人身上（不是从玩家那儿飞过去的实体），所以先清无敌帧，保证这一下落地
-		target.setInvulnerableTime(0);
+		SephiriaDamage.clearDamageCooldown(target);
 		target.hurtServer(level, SephiriaDamage.sunSword(level, player), (float) damage);
 		slash(level, target, player, enlarged);
 		drop(level, player, ArtifactEffects.sunSwordDropNearPlayer(player) ? player.position() : target.position());
@@ -313,26 +322,29 @@ public final class SunSword {
 		return damage * effective / reduction;
 	}
 
-	/** 笔直的划痕：一条横贯被命中者身体的直线，边缘橙 → 近中黄 → 正中白；增大那一发更长。 */
+	/**
+	 * 剑痕：一道笔直的发光划痕——自定义粒子 {@code sephiria_fantasy:sun_slash}（贴图
+	 * textures/particle/sun_slash_0.png，行为照原版「横扫之刃」的剑痕写，见 SunSlashParticle），
+	 * 长度与方向都在这里定好、随粒子包发给客户端：长度在「增大」（火红的夕阳）那一发 ×1.6，
+	 * 方向从 {@link #SLASH_ROLLS} 里随机挑一个（3→9 点 / 3→7 点 / 5→11 点）。
+	 *
+	 * <p>落点要往<b>攻击者那一侧</b>推出目标身体一点：剑痕是朝向摄像机的一张方片，
+	 * 正好切在目标身体正中的话，半个方片埋在模型里、会被目标自己挡住，看起来像一根断掉的虚线。
+	 * 推出多少按目标体宽算（窄的僵尸半宽 0.3 格、宽的劫掠兽近 1 格），保证整道划痕都在身体外面。
+	 */
 	private static void slash(ServerLevel level, LivingEntity target, ServerPlayer player, boolean enlarged) {
 		Vec3 center = target.position().add(0.0D, target.getBbHeight() / 2.0D, 0.0D);
-		Vec3 look = target.position().subtract(player.position());
 		double length = SLASH_LENGTH * (enlarged ? ENLARGE_SLASH_SCALE : 1.0D);
+		float roll = SLASH_ROLLS[level.getRandom().nextInt(SLASH_ROLLS.length)];
+		Vec3 toPlayer = player.position().subtract(center).multiply(1.0D, 0.0D, 1.0D);
 
-		// 划痕与「玩家 → 目标」的水平方向垂直，看起来就是横着划过去的一刀
-		double angle = Math.atan2(look.z, look.x) + Math.PI / 2.0D;
-		double stepX = Math.cos(angle) * SLASH_STEP;
-		double stepZ = Math.sin(angle) * SLASH_STEP;
-		int steps = (int) Math.round(length / SLASH_STEP / 2.0D);
-
-		for (int index = -steps; index <= steps; index++) {
-			double offset = index * SLASH_STEP;
-			// 中间那两三颗是白的，往外是黄，最外圈是橙
-			double edge = Math.abs(offset) / (length / 2.0D);
-			DustParticleOptions colour = edge < 0.15D ? SLASH_CENTER : edge < 0.6D ? SLASH_MIDDLE : SLASH_EDGE;
-			level.sendParticles(colour, center.x + stepX * index, center.y, center.z + stepZ * index,
-					1, 0.0D, 0.0D, 0.0D, 0.0D);
+		if (toPlayer.lengthSqr() > 1.0E-4D) {
+			double offset = Math.max(SLASH_FORWARD_OFFSET, target.getBbWidth() / 2.0D + 0.15D);
+			center = center.add(toPlayer.normalize().scale(offset));
 		}
+
+		level.sendParticles(new ModParticleTypes.SunSlashOptions((float) length, roll),
+				center.x, center.y, center.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
 	}
 
 	/** 把那支太阳剑掉在被命中者脚下：普通物品实体（无重力关掉），但原版拾取与消失都关掉。 */

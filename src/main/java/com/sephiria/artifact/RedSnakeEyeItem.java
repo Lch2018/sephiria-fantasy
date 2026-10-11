@@ -442,7 +442,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 
 		for (LivingEntity victim : victims) {
 			// 同一次落点多目标、且要能稳定打中：先清无敌帧（真实伤害同款手法）
-			victim.setInvulnerableTime(0);
+			SephiriaDamage.clearDamageCooldown(victim);
 			victim.hurtServer(level, SephiriaDamage.fireAttack(level, owner), meteor.damage());
 
 			// 被陨石击中的敌人附加灼伤：直接调用附加入口，不经过火焰之触的冷却

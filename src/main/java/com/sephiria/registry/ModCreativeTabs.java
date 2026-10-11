@@ -103,6 +103,10 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.OAK_CHARCOAL);
 						output.accept(ModItems.FIRE_BUG);
 						output.accept(ModItems.LAVA_BEAD);
+						output.accept(ModItems.WISDOM_AMULET);
+						output.accept(ModItems.BLUE_CLAW);
+						output.accept(ModItems.PROSHIUM_RING);
+						output.accept(ModItems.SEALED_TEGAS);
 					})
 					.build());
 

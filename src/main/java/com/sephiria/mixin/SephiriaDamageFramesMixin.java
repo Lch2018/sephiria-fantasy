@@ -30,12 +30,12 @@ public class SephiriaDamageFramesMixin {
 		// 本模组的投掷物（重型弩的弩矢）完全不吃受击无敌帧：任何目标都一样，
 		// 穿透连射时每一发都满额结算（原版箭矢不受影响——它们不是 SephiriaDamage.Source）
 		if (source.getDirectEntity() instanceof SephiriaDamage.Source) {
-			self.setInvulnerableTime(0);
+			SephiriaDamage.clearDamageCooldown(self);
 			return;
 		}
 
 		if (SephiriaDamage.ignoresInvulnerableFrames(self) && SephiriaDamage.fromSephiria(source)) {
-			self.setInvulnerableTime(0);
+			SephiriaDamage.clearDamageCooldown(self);
 		}
 	}
 
@@ -52,7 +52,7 @@ public class SephiriaDamageFramesMixin {
 		LivingEntity self = (LivingEntity) (Object) this;
 
 		if (SephiriaDamage.fromSephiria(source)) {
-			self.setInvulnerableTime(0);
+			SephiriaDamage.clearDamageCooldown(self);
 		}
 	}
 }

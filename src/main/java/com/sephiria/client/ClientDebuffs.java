@@ -74,6 +74,18 @@ public final class ClientDebuffs {
 		return labels;
 	}
 
+	/**
+	 * 这个实体身上有没有某个减益（层数 > 0）。
+	 *
+	 * <p>冰蓝色那层染色（{@code FrozenTintMixin}）按它判断——被冰冻眩晕的敌人要染成冰蓝，
+	 * 与「受伤时闪红」同一个思路，只是颜色从减益状态来。
+	 */
+	public static boolean has(Identifier debuff, int entityId) {
+		Map<Integer, Integer> perEntity = STACKS.get(debuff);
+
+		return perEntity != null && perEntity.containsKey(entityId);
+	}
+
 	/** 每客户端刻清一次：实体已经不在客户端世界里（死亡/卸载/换维度）就删掉它的条目。 */
 	public static void prune(ClientLevel level) {
 		if (level == null) {

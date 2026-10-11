@@ -17,7 +17,9 @@ $items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_c
     'qilin_horn', 'electric_amulet', 'sande_earrings', 'thunder_verdict', 'storm_compass',
     'firefly', 'typhoon_score', 'stone_flower', 'sapote_fruit', 'lightning_rod',
     'pointy_acorn', 'thunder_stone', 'cloudseed_arrow', 'mast_model', 'raven_tablet',
-    'solis_fracto', 'solis_parvo', 'sun_sword')
+    'solis_fracto', 'solis_parvo', 'sun_sword',
+    # batch 20 (glacier): the amulet / claw / ring / sealed tegas
+    'wisdom_amulet', 'blue_claw', 'proshium_ring', 'sealed_tegas')
 $branches = @('sword_and_shield', 'greatsword', 'dagger', 'crossbow', 'katana', 'staff')
 
 $errors = 0
@@ -143,6 +145,29 @@ foreach ($lang in @('en_us', 'zh_cn')) {
             Fail "lang/$lang.json $key needs $($placeholders[$key]) placeholders"
         }
     }
+    # 每一条文案里的 % 都必须是原版认识的三形式之一：%%（字面百分号）、%s、%N$s。
+    # 裸一个 %（比如「+33%」「× 10%」）会让 TranslatableContents 抛 TranslatableFormatException，
+    # **整行退回没格式化的原文**——连该替换的 %s 也一起原样显示（火红的夕阳当初就是这么坏的：
+    # 「太阳剑投掷时有 %s%% 概率增大，那一发伤害 +33%」）。
+    $barePercent = 0
+    foreach ($prop in $json.PSObject.Properties) {
+        $value = [string]$prop.Value
+        $cursor = 0
+        while ($cursor -lt $value.Length) {
+            $at = $value.IndexOf('%', $cursor)
+            if ($at -lt 0) { break }
+            $rest = $value.Substring($at)
+            $m = [regex]::Match($rest, '^%(?:\d+\$)?(?:[A-Za-z]|%)')
+            if (-not $m.Success) {
+                Fail "lang/$lang.json $($prop.Name) has a bare % - write it as %% (literal percent)"
+                $barePercent++
+                break
+            }
+            $cursor = $at + $m.Length
+        }
+    }
+    if ($barePercent -gt 0) { Write-Output ("      affected keys: " + $barePercent) }
+
     Ok "lang/$lang.json checked ($($keys.Count) keys)"
 }
 
