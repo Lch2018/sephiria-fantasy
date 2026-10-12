@@ -7,6 +7,8 @@
 ------------
 1. 本项目是《SEPHIRIA（赛菲莉娅）》的**非官方同人作品**，与游戏原作者 TEAM HORAY、
    与 Mojang Studios / Microsoft 均无任何隶属、授权或合作关系。
+   **商标**：Minecraft 是 Mojang Synergies AB 的商标；《SEPHIRIA（赛菲莉娅）》的名称、设定与
+   美术归 TEAM HORAY 所有。本项目对上述名称与素材的使用均为同人引用，不主张任何权利。
 2. 本项目**大量使用 AI 生成代码**（模型、贴图处理脚本与文档同样如此），
    仅作为技术学习与交流之用，请自行判断是否使用。
 3. 本项目按「现状」提供，不附带任何形式的担保，作者不对使用本模组造成的任何后果负责。
@@ -16,7 +18,8 @@
 在保留本声明、不修改署名、不用于商业目的的前提下，允许：
 - 个人游玩与自用修改；
 - 在免费的整合包 / 服务器中分发（需注明出处与本声明）；
-- 制作视频、直播、图文介绍等二次创作（需注明出处）。
+- 制作视频、直播、图文介绍等二次创作（需注明出处）；
+- 公开分享自己改动过的版本（同样的三个前提：保留本声明、注明出处、不得商用）。
 
 三、禁止的用途
 --------------
@@ -45,12 +48,16 @@ Copyright (c) 2026 Lch2018. All rights reserved.
 
 - This is an **unofficial fan-made** project for the game SEPHIRIA. It is not affiliated with,
   endorsed by, or licensed by TEAM HORAY, Mojang Studios or Microsoft.
+- **Trademarks**: Minecraft is a trademark of Mojang Synergies AB; SEPHIRIA and its setting and
+  artwork belong to TEAM HORAY. This project uses those names and assets as fan references only
+  and claims no rights over them.
 - This project makes **heavy use of AI-generated code** (models, texture tooling and docs included).
   It is provided **for learning and non-commercial exchange only**.
 - **Commercial use of any kind is prohibited**: selling the mod or its derivatives, paid
   downloads, paid servers, paid modpacks, or any monetization built on these assets.
-- Personal play, free redistribution (with credit and this notice), and videos/streams
-  (with credit) are allowed.
+- Personal play, free redistribution (with credit and this notice), videos/streams (with credit),
+  and publicly sharing your own modified version are allowed — all of them provided this notice is
+  kept, credit is given, and the use stays non-commercial.
 - Provided "as is", without warranty of any kind.
 - Weapon artwork under `src/main/resources/assets/sephiria_fantasy/textures/` and `tools/weapon-ref/`
   originates from the game SEPHIRIA and belongs to TEAM HORAY; this notice does not cover it.

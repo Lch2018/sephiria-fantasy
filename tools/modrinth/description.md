@@ -56,8 +56,11 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 ## Disclaimer
 
-- Not affiliated with Mojang Studios or Microsoft. *SEPHIRIA* and its settings belong to their original author, TEAM HORAY.
-- This project makes **heavy use of AI-generated code**. It is for learning and personal use only, and **commercial use is prohibited** — see the LICENSE file in the repository for the full terms.
+- **License**: the mod's binaries and source code are released under the fan-made license notice in the repository ([LICENSE](https://github.com/Lch2018/sephiria-fantasy/blob/main/LICENSE); listed on Modrinth as CC BY-NC 4.0). Personal play, private modifications, and redistribution inside free modpacks / servers are allowed **provided this notice is kept and credit is given**; **any commercial use is prohibited — for the original and for modified versions alike**.
+- **Fan project**: Sephiria Fantasy is an **unofficial fan work** based on *SEPHIRIA*. It is not affiliated with, endorsed by, or licensed by TEAM HORAY, Mojang Studios or Microsoft.
+- **AI-generated code**: this project makes **heavy use of AI-generated code** (models, texture-processing scripts and docs included). It is for learning and technical exchange only — use it at your own judgment; it is provided "as is", without warranty of any kind.
+- **Assets**: the weapon artwork under `assets/sephiria_fantasy/textures/` and `tools/weapon-ref/` comes from the original game and belongs to TEAM HORAY. It is **not covered** by the license above (fan reference only) — if the rights holders object, it will be removed.
+- **Trademarks**: Minecraft is a trademark of Mojang Synergies AB ｜ *SEPHIRIA* and its setting and artwork belong to TEAM HORAY.
 - Source code and issue tracker: <https://github.com/Lch2018/sephiria-fantasy>
 
 ---
@@ -120,6 +123,15 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 ## 声明
 
-- 与 Mojang Studios / Microsoft 无任何关系；《SEPHIRIA（赛菲莉娅）》相关设定归原作者 TEAM HORAY 所有。
-- 本项目**大量使用 AI 生成代码**，仅供学习交流，**禁止任何商业行为**；完整条款见仓库里的 LICENSE。
+- **授权**：本模组的二进制与源码按仓库里的《同人模组许可声明》发布（[LICENSE](https://github.com/Lch2018/sephiria-fantasy/blob/main/LICENSE)；
+  Modrinth 上标注为 CC BY-NC 4.0，条款以仓库那份为准）。
+  允许个人游玩、自用修改，以及在**免费**的整合包 / 服务器中携带分发（**须保留本声明并注明出处**）；
+  **原版与修改版一律禁止任何形式的商业行为**。
+- **同人性质**：赛菲莉亚幻想是《SEPHIRIA（赛菲莉娅）》的**非官方同人作品**，与原作者 TEAM HORAY、
+  与 Mojang Studios / Microsoft 均无任何隶属、授权或合作关系。
+- **AI 生成代码**：本项目**大量使用 AI 生成代码**（模型、贴图处理脚本与文档同样如此），
+  仅供学习与技术交流，请自行判断是否使用；按「现状」提供，不附带任何形式的担保。
+- **素材**：`assets/sephiria_fantasy/textures/` 与 `tools/weapon-ref/` 下的武器美术来自原作，
+  知识产权归 TEAM HORAY 所有，**不在上述许可范围内**（仅作同人引用）；相关权利方如有异议，请联系删除。
+- **商标**：Minecraft 是 Mojang Synergies AB 的商标 ｜《SEPHIRIA（赛菲莉娅）》的名称、设定与美术归 TEAM HORAY 所有。
 - 源码与问题反馈：<https://github.com/Lch2018/sephiria-fantasy>
