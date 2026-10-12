@@ -59,7 +59,7 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 - **License**: the mod's binaries and source code are released under the fan-made license notice in the repository ([LICENSE](https://github.com/Lch2018/sephiria-fantasy/blob/main/LICENSE); listed on Modrinth as CC BY-NC 4.0). Personal play, private modifications, and redistribution inside free modpacks / servers are allowed **provided this notice is kept and credit is given**; **any commercial use is prohibited — for the original and for modified versions alike**.
 - **Fan project**: Sephiria Fantasy is an **unofficial fan work** based on *SEPHIRIA*. It is not affiliated with, endorsed by, or licensed by TEAM HORAY, Mojang Studios or Microsoft.
 - **AI-generated code**: this project makes **heavy use of AI-generated code** (models, texture-processing scripts and docs included). It is for learning and technical exchange only — use it at your own judgment; it is provided "as is", without warranty of any kind.
-- **Assets**: the weapon artwork under `assets/sephiria_fantasy/textures/` and `tools/weapon-ref/` comes from the original game and belongs to TEAM HORAY. It is **not covered** by the license above (fan reference only) — if the rights holders object, it will be removed.
+- **Assets**: the weapon artwork under `assets/sephiria_fantasy/textures/` and `tools/weapon-ref/` is taken from the original game *SEPHIRIA* and is the property of **TEAM HORAY**. It is **not covered** by the license above (which covers only the code, data, scripts and docs written for this project), is included as non-commercial fan reference only, and **may not be extracted, redistributed separately, or used commercially**. Rights holders may request its removal.
 - **Trademarks**: Minecraft is a trademark of Mojang Synergies AB ｜ *SEPHIRIA* and its setting and artwork belong to TEAM HORAY.
 - Source code and issue tracker: <https://github.com/Lch2018/sephiria-fantasy>
 
@@ -131,7 +131,9 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
   与 Mojang Studios / Microsoft 均无任何隶属、授权或合作关系。
 - **AI 生成代码**：本项目**大量使用 AI 生成代码**（模型、贴图处理脚本与文档同样如此），
   仅供学习与技术交流，请自行判断是否使用；按「现状」提供，不附带任何形式的担保。
-- **素材**：`assets/sephiria_fantasy/textures/` 与 `tools/weapon-ref/` 下的武器美术来自原作，
-  知识产权归 TEAM HORAY 所有，**不在上述许可范围内**（仅作同人引用）；相关权利方如有异议，请联系删除。
+- **素材例外**：`assets/sephiria_fantasy/textures/` 与 `tools/weapon-ref/` 下的武器美术来自原作
+  《SEPHIRIA（赛菲莉娅）》，版权归 **TEAM HORAY** 所有，**不在上面的授权范围内**
+  （上面的许可只覆盖本项目自己编写的代码、数据、脚本与文档）。这部分美术仅随模组本体在同人范围内
+  引用，**不得单独提取、二次分发或用于任何商业用途**；相关权利方如有异议，请联系删除。
 - **商标**：Minecraft 是 Mojang Synergies AB 的商标 ｜《SEPHIRIA（赛菲莉娅）》的名称、设定与美术归 TEAM HORAY 所有。
 - 源码与问题反馈：<https://github.com/Lch2018/sephiria-fantasy>
