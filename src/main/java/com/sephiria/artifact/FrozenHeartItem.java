@@ -7,8 +7,9 @@ import net.minecraft.network.chat.Component;
  * 冰封的心脏（冰霜武具，稀有品质）：冰霜武具充能速度 +10/18/26/40/55/70/85/100%（0..7 级，共 8 档）。
  *
  * <p>没有【唯一】：背包里放几颗就叠几份。这一项与连击档位的「充能速度」相加，
- * 一起缩短冰霜武具四件充能效果的等待时间（见 {@code frost.FrostArmament} 顶部：
+ * 一起缩短三件充能表（剑鞘 / 锤子 / 长矛）的等待时间（见 {@code frost.FrostArmament} 顶部：
  * 实际刻数 = 基础刻数 ÷ (1 + 加成)，100% 就是快一倍）。
+ * <b>冰弓的装填不吃这一项</b>——它是固定的 {@code BOW_RELOAD_TICKS} 16 刻。
  */
 public class FrozenHeartItem extends ArtifactItem {
 	/** 各等级的「冰霜武具充能速度」加成（%）。 */
