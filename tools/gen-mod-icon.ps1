@@ -1,33 +1,24 @@
 # Build the SEPHIRIA FANTASY mod icon from the artwork in tools/artifact-ref/mod-icon/.
 #
-# 2026-10-13 (final round): the user drew the icon themselves - an orange rabbit asleep on a grass
-# block, with "z Z" floating above it - and said "use this as the new icon", then asked to keep only
-# the rabbit and the block, i.e. to cut the cream background out. The source is
-# tools/artifact-ref/mod-icon/rabbit_grass_block.png (1280x1280, a fine pixel painting whose
-# smallest block is 2 source pixels).
-#
-# Two processing steps:
+# 2026-10-13 (final): the user drew the icon themselves - an orange rabbit asleep on a grass block
+# with "z Z" above it. The newest artwork (sefa_transparent.png) IS the finished icon: a square PNG
+# with its own alpha, so by DEFAULT this script copies it verbatim ("直接替换") - no cutout, no
+# resample. -Process brings back the earlier pipeline for artwork that still needs work:
 #   1. BACKGROUND CUTOUT - flood fill from the four borders through pixels close to the artwork's
-#      cream plate; everything reached becomes transparent. Same rule as
-#      tools/import-artifact-icons.ps1: only the plate *connected to the border* disappears, so the
-#      dark outlines seal off the things they enclose (the white "Z" glyph, the rabbit's body) and
-#      they survive. Pass -NoCutout to keep the plate (the artwork as drawn).
-#   2. RESAMPLE - a smooth HighQualityBicubic instead of nearest-neighbour: the 2px grid cannot
-#      survive a 5x reduction to 256 anyway (a nearest-neighbour pass was rendered for comparison
-#      and showed uneven pixels and stair-step aliasing on the block's edges), and the smooth one
-#      reads cleaner at the ~32px a mod list actually displays.
+#      plate colour (detected from the corners); only the plate *connected to the border* disappears,
+#      so anything the artwork seals off (outlines, the white "Z", the rabbit's body) survives.
+#      -NoCutout skips this step.
+#   2. CROP - to the subject's bounding box with a 6% margin, padded back to a centred square, so the
+#      subject fills the frame whatever the source's own margins are.
+#   3. BACKGROUND FILL - `-Background '#7092BE'` (default) or 'transparent'; cutting the plate and
+#      filling a colour back in keeps the anti-aliased edge pixels blending into the background.
+#   4. RESAMPLE - HighQualityBicubic to $Small/$Large (256 for the mod list, 512 for Modrinth).
+#      Not nearest-neighbour: at a 5x reduction the source's 2px grid cannot survive and nearest
+#      gives uneven blocks and stair-step aliasing on the block's edges.
 #
-# The non-square case is handled too: whatever comes out of the cutout is cropped to the subject's
-# bounding box (with a small margin), so the artwork always ends up framed the same way whatever the
-# source's own margins are.
-#
-# The background is a parameter: `-Background '#7092BE'` (the default, the plate colour the user's
-# artwork uses) or `-Background transparent`. Cutting the plate out and filling this colour back in
-# is deliberate - the anti-aliased pixels along the artwork's edge stay and blend into the fill.
-#
-# Output : src/main/resources/assets/sephiria_fantasy/icon.png   (256x256, the mod-list icon)
-#          tools/modrinth/icon.png                              (512x512, for the project page)
-# Preview: .preview/mod_icon_preview.png                         (the 512 one, for eyeballing)
+# Artwork history (all in tools/artifact-ref/mod-icon/): rabbit_grass_block.png = the current
+# transparent artwork; _v2.png = the same art with the #7092BE plate; _v1.png = the earlier 1280
+# orange rabbit on cream.
 #
 # The earlier procedural designs (gold badge, yellow ring, vector rabbit) are in
 # tools/gen-mod-icon-procedural.ps1; they only write previews now.
@@ -35,6 +26,8 @@
 # Keep this ASCII (Windows PowerShell 5.1 reads non-ASCII .ps1 as GBK and mis-parses it).
 
 param(
+    # run the cutout / crop / fill / resample pipeline above; without it the artwork is copied as-is
+    [switch]$Process,
     [int]$Small = 256,
     [int]$Large = 512,
     # how far a pixel may sit from the plate colour and still count as plate (sum of |dR|+|dG|+|dB|)
@@ -66,7 +59,19 @@ New-Item -ItemType Directory -Force -Path $previewDir, (Split-Path -Parent $modr
 $art = [System.Drawing.Bitmap]::FromFile($source)
 Write-Output ("artwork " + $art.Width + "x" + $art.Height)
 
-if (-not $NoCutout) {
+if (-not $Process) {
+    # direct mode: the artwork is already the finished icon (square, its own alpha); copy it as-is
+    if ($art.Width -ne $art.Height) {
+        throw "direct mode needs a square artwork; got $($art.Width)x$($art.Height) (use -Process to fit it)"
+    }
+
+    $Small = $art.Width
+    $Large = $art.Width
+    $Background = 'transparent'
+    Write-Output ("direct copy at " + $art.Width + "x" + $art.Width + " (no cutout, no resample)")
+}
+
+if ($Process -and -not $NoCutout) {
     # the plate colour is whatever fills the four corners
     $corners = @(
         $art.GetPixel(0, 0), $art.GetPixel(($art.Width - 1), 0),
@@ -124,6 +129,7 @@ if (-not $NoCutout) {
 }
 
 # crop to what is left (the artwork's own silhouette), then pad back to a centred square
+if ($Process) {
 $minX = $art.Width; $maxX = -1; $minY = $art.Height; $maxY = -1
 for ($y = 0; $y -lt $art.Height; $y++) {
     for ($x = 0; $x -lt $art.Width; $x++) {
@@ -142,6 +148,9 @@ $margin = [int]($content * 0.06)
 $side = $content + 2 * $margin
 $srcRect = New-Object System.Drawing.RectangleF (($minX - $margin), ($minY - $margin), $side, $side)
 Write-Output ("silhouette {0}x{1} at {2},{3} -> square {4}" -f ($maxX - $minX + 1), ($maxY - $minY + 1), $minX, $minY, $side)
+} else {
+    $srcRect = New-Object System.Drawing.RectangleF 0, 0, $art.Width, $art.Height
+}
 
 function Save-Icon([int]$size, [string]$path) {
     $bmp = New-Object System.Drawing.Bitmap $size, $size, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
