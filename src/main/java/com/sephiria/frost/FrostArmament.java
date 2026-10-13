@@ -346,6 +346,10 @@ public final class FrostArmament {
 	 * 7 发就是约 7 刻打完。每发的方向按<b>当时</b>的准星取，所以连发期间可以扫射。
 	 *
 	 * <p>没有弹药就什么都不做（技能那边会照常进 0.5 秒冷却，无所谓——反正也没得打）。
+	 *
+	 * <p><b>额外触发（连击 10 档 / 冰之翼）在冰弓上 = 整轮弹幕再打一遍</b>（2026-10-13 用户口径：
+	 * 「额外触发 1 次也包括冰弓」）：队列里放的是 {@code 弹药 × (1 + 额外触发)}，多出来的那几轮
+	 * <b>不再扣弹药</b>——与剑鞘多一道、锤子多一把同样是一次白送的触发，不然弹药当场清零就无从多打。
 	 */
 	public static void castIceBow(ServerPlayer player, int level) {
 		State state = STATES.get(player.getUUID());
@@ -358,7 +362,7 @@ public final class FrostArmament {
 			return;
 		}
 
-		state.bowBurst = state.bowAmmo;
+		state.bowBurst = state.bowAmmo * (1 + extraTriggers(player));
 		state.bowAmmo = 0;
 		state.bowReloadTimer = 0;
 		serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.CROSSBOW_LOADING_END,
