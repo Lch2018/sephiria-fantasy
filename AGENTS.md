@@ -10,6 +10,8 @@
 
 - 改动完成后**直接实装**：运行 `tools/deploy.ps1`。它做三件事——Gradle 构建、清掉 mods 里
   其它名字的旧 jar（同 mod id 有两个 jar 会报重复 mod）、把新 jar 复制到 PCL 实例的 mods 目录。
+  **部署前确认游戏已关**：脚本会自己拦（检测到在跑的游戏进程就拒绝，除非加 `-Force`），
+  因为覆盖正在运行的 jar 会让游戏随后报 `ZipFile invalid LOC header` 崩掉（见记忆手册 §三）。
 - jar 名字跟 `gradle.properties` 里的 `version` 走（当前 `0.1.10.9-a`），
   所以是 `build/libs/sephiria-fantasy-<version>.jar` → `mods\sephiria-fantasy-<version>.jar`；改版本号只要改那一处。
 - **版本号用日期**：`0.1.<月>.<日>-a`（10 月 9 日 → `0.1.10.9-a`；`-a` = A 测）。

@@ -8,10 +8,35 @@
 # The jar name follows gradle.properties' version (date-based, e.g. 0.1.10.9-a, the alpha build),
 # so it is read from there instead of being written out twice.
 
+param(
+    [switch]$Force
+)
+
 $root = Split-Path -Parent $PSScriptRoot
-$mods = 'D:\PCL\.minecraft\versions\26.3-Fabric 0.19.5\mods'
+$instance = '26.3-Fabric 0.19.5'
+$mods = 'D:\PCL\.minecraft\versions\' + $instance + '\mods'
 
 if (-not (Test-Path $mods)) { throw "mods folder not found: $mods" }
+
+# Do not deploy while the game is running. Copy-Item -Force overwrites the jar in place, and the
+# loader reads classes lazily, so a game that is already up reads its next class out of the
+# replaced file and dies with "ZipFile invalid LOC header (bad signature)" /
+# "Failed to load class file for ...". (2026-10-13: that is exactly what crashed the user's
+# session - launched 20:58, deployed 21:01, crash 21:02.)
+# A file-lock test is not enough: the game keeps no handle open between class loads, so the copy
+# would succeed and the corruption would only show up later. Look for the game process instead.
+$game = @(Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe' OR Name = 'java.exe'" `
+        -ErrorAction SilentlyContinue |
+    Where-Object {
+        $_.CommandLine -and ($_.CommandLine -like ('*' + $instance + '*') -or
+            $_.CommandLine -like '*-Dminecraft.launcher.brand=PCL*')
+    })
+
+if ($game.Count -gt 0 -and -not $Force) {
+    throw ("Minecraft is still running (" + $game.Count + " java process(es) for '" + $instance +
+        "') - close the game first: replacing the jar underneath it makes the running game die " +
+        "with 'ZipFile invalid LOC header'. Pass -Force only if that instance truly is not in use.")
+}
 
 # jar name = <project name>-<version>.jar, same as gradle builds it
 $version = (Select-String -Path (Join-Path $root 'gradle.properties') -Pattern '^version=' |
@@ -41,5 +66,12 @@ Get-ChildItem $mods -Filter 'sephiria*.jar' | Where-Object { $_.Name -ne $name }
 $target = Join-Path $mods $name
 Copy-Item $jar $target -Force
 
-$info = Get-Item $target
-Write-Output ("deployed " + $info.Length + " B  " + $info.LastWriteTime.ToString('HH:mm:ss') + "  -> " + $target)
+# A truncated copy would look "deployed" but crash the game at class-load time (same symptom as
+# above), so check the byte count landed.
+$copied = Get-Item $target
+if ($copied.Length -ne (Get-Item $jar).Length) {
+    throw ("copy is incomplete: " + $copied.Length + " B at " + $target + " vs " +
+        (Get-Item $jar).Length + " B built - deploy again")
+}
+
+Write-Output ("deployed " + $copied.Length + " B  " + $copied.LastWriteTime.ToString('HH:mm:ss') + "  -> " + $target)
