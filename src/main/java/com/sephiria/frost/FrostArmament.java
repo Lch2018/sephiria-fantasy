@@ -73,8 +73,9 @@ import java.util.UUID;
  * <p>锤子在冲刺时朝最近的敌人扔一把（额外触发再多一把给下一个最近的），
  * 落地时周围 {@link #SMASH_RADIUS} 格一圈都吃伤害。
  *
- * <p><b>充能只在带上那件神器时走表</b>（【唯一】，取等级最高的那一份，与红蛇之眼同一套）；
- * 锤子与长矛的充能还额外要求<b>战斗中</b>（{@code CombatState}）——文案里的「战斗中每隔 N 秒充能」。
+ * <p><b>充能只在带上那件神器时走表</b>（【唯一】，取等级最高的那一份，与红蛇之眼同一套），
+ * 并且<b>不受战斗 / 脱战状态影响</b>：三件的表一直在走（2026-10-13 用户口径，原先那条
+ * 「脱战立即满充能」的机制已删掉）。唯一还看战斗状态的是<b>长矛的自动开打</b>——脱战不会自动攻击敌人。
  * 攒满时给一次雪片 + 一声轻响，HUD 那一行同时亮成冰蓝（见 {@link #sync}）。
  *
  * <p>伤害类型复用 {@code sephiria:ice_attack}（冰属性攻击伤害）：吃通用暴击、减伤与黄金之手，
@@ -502,15 +503,8 @@ public final class FrostArmament {
 		ServerPlayNetworking.send(player, payload);
 	}
 
-	/**
-	 * 剑鞘：<b>脱战直接满充能</b>（2026-10-13 用户口径：脱战时立即满），战斗中才走 6 秒的表。
-	 */
+	/** 剑鞘：6 秒的表一直走（2026-10-13 用户口径：充能不受战斗 / 脱战状态影响）。 */
 	private static void tickScabbard(ServerPlayer player, State state, int comboLevel) {
-		if (!CombatState.isInCombat(player)) {
-			chargeOutOfCombat(player, state, true);
-			return;
-		}
-
 		if (state.scabbardReady) {
 			return;
 		}
@@ -522,20 +516,14 @@ public final class FrostArmament {
 	}
 
 	/**
-	 * 沃尔斯帕：战斗中攒，攒满后<b>周围有敌人就自动飞长矛</b>——没有敌人在附近就不飞、
-	 * 也不清充能（与红蛇之眼「附近没人就不落石」同一套口径）。
+	 * 沃尔斯帕：充能表一直走（与其他两件一样，不看战斗状态），攒满后<b>周围有敌人就自动飞长矛</b>
+	 * ——没有敌人在附近就不飞、也不清充能（与红蛇之眼「附近没人就不落石」同一套口径）。
 	 *
-	 * <p><b>脱战两件事</b>（2026-10-13 用户口径）：充能直接满（{@link #chargeOutOfCombat}），
-	 * 但<b>不会自动攻击</b>——「进入战斗状态才会自动触发」，所以脱战时就算满充能也不飞，
-	 * 一进战斗立刻飞（那一下会很快，是设计）。
+	 * <p><b>但「开打」仍要求战斗状态</b>（2026-10-13 用户口径：进入战斗状态才会自动触发，
+	 * 脱战不会自动攻击敌人）——脱战时它静静攒满等着，一进战斗立刻飞那一下（是设计）。
 	 */
 	private static void tickSpear(ServerPlayer player, State state, int comboLevel) {
 		if (!(player.level() instanceof ServerLevel level)) {
-			return;
-		}
-
-		if (!CombatState.isInCombat(player)) {
-			chargeOutOfCombat(player, state, false);
 			return;
 		}
 
@@ -545,6 +533,11 @@ public final class FrostArmament {
 				ready(player, 1.4F);
 			}
 
+			return;
+		}
+
+		// 攒满了也要在战斗中才会自动开打（用户口径：脱战不自动攻击敌人）
+		if (!CombatState.isInCombat(player)) {
 			return;
 		}
 
@@ -581,15 +574,8 @@ public final class FrostArmament {
 		}
 	}
 
-	/**
-	 * 锤子：战斗中每 7 秒攒一次；<b>脱战直接满充能</b>（2026-10-13 用户口径：脱战时立即满）。
-	 */
+	/** 锤子：7 秒的表一直走（2026-10-13 用户口径：充能不受战斗 / 脱战状态影响）。 */
 	private static void tickHammer(ServerPlayer player, State state, int comboLevel) {
-		if (!CombatState.isInCombat(player)) {
-			chargeOutOfCombat(player, state, true);
-			return;
-		}
-
 		if (state.hammerReady) {
 			return;
 		}
@@ -597,30 +583,6 @@ public final class FrostArmament {
 		if (++state.hammerCharge >= chargeTicks(HAMMER_CHARGE_TICKS, comboLevel, player)) {
 			state.hammerReady = true;
 			ready(player, 1.2F);
-		}
-	}
-
-	/**
-	 * 脱战时的处理：把充能直接拉满。
-	 *
-	 * <p>三件充能类（剑鞘 / 锤子 / 长矛）共用；只有真的从「没满」变成「满」的那一瞬才给
-	 * 雪片 + 轻响（否则每刻都会响）。{@code announce} 为 false 的是长矛——它脱战虽然满充能，
-	 * 但按用户口径「脱战不会自动攻击」，提示留给进战斗后真正飞出去的那一下就好。
-	 */
-	private static void chargeOutOfCombat(ServerPlayer player, State state, boolean announce) {
-		if (state.scabbardReady && state.hammerReady && state.spearReady) {
-			return;
-		}
-
-		state.scabbardReady = true;
-		state.scabbardCharge = 0;
-		state.hammerReady = true;
-		state.hammerCharge = 0;
-		state.spearReady = true;
-		state.spearCharge = 0;
-
-		if (announce) {
-			ready(player, 1.5F);
 		}
 	}
 
