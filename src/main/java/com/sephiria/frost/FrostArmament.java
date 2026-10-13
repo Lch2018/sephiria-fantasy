@@ -53,7 +53,7 @@ import java.util.UUID;
  *
  * <p>前三件各自攒一份充能，攒满后等一个触发口：剑鞘等<b>左键挥击</b>（{@link #onSwing}，
  * 打中敌人与挥空都算，由客户端的 {@code MinecraftAttackMixin} 发 {@code FrostQiPayload} 通知），
- * 锤子等<b>冲刺</b>（{@link #onDash}），长矛是<b>自动</b>的（战斗中攒满、周围有敌人就飞）。
+ * 锤子等<b>冲刺</b>（{@link #onDash}），长矛是<b>自动</b>的（攒满后、战斗中周围有敌人就飞）。
  * 冰弓的资源是<b>弹药</b>：每 0.8 秒自动装填 1 发（最多 7），发动技能时一次打空
  * （{@link #castIceBow}，技能本体在 {@code artifact.skill.IceBowSkill}）。
  *
@@ -85,9 +85,9 @@ import java.util.UUID;
 public final class FrostArmament {
 	/** 驱邪剑鞘的充能时间（tick）：6 秒。 */
 	public static final int SCABBARD_CHARGE_TICKS = 120;
-	/** 暴风雪之锤的充能时间（tick）：7 秒（只在战斗中攒）。 */
+	/** 暴风雪之锤的充能时间（tick）：7 秒（一直走，不看战斗状态）。 */
 	public static final int HAMMER_CHARGE_TICKS = 140;
-	/** 沃尔斯帕的充能时间（tick）：6 秒（只在战斗中攒）。 */
+	/** 沃尔斯帕的充能时间（tick）：6 秒（一直走，不看战斗状态；自动开打才要战斗）。 */
 	public static final int SPEAR_CHARGE_TICKS = 120;
 
 	/** 冰弓的弹药上限（发）：与神器等级无关。 */
@@ -197,10 +197,10 @@ public final class FrostArmament {
 		/** 剑鞘已攒的刻数；{@link #scabbardReady} 为真时不再往前走。 */
 		private int scabbardCharge;
 		private boolean scabbardReady;
-		/** 锤子已攒的刻数（只在战斗中推进）。 */
+		/** 锤子已攒的刻数（每刻都推进）。 */
 		private int hammerCharge;
 		private boolean hammerReady;
-		/** 长矛已攒的刻数（只在战斗中推进）。 */
+		/** 长矛已攒的刻数（每刻都推进；攒满后要战斗中才会飞）。 */
 		private int spearCharge;
 		private boolean spearReady;
 		/** 冰弓的弹药（发）与装填计时。 */
