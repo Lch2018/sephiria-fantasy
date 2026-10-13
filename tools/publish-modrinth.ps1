@@ -219,8 +219,14 @@ try {
     # PATCH /project/{id}/icon 收 multipart，字段名固定 file；204 = 成功（204 无正文）。
     if (Test-Path $iconPath) {
         Write-Output '上传项目图标 …'
-        $icon = Invoke-Api -Method 'PATCH' -Path "/project/$($project.id)/icon" `
-            -ExtraArgs @('-F', "file=@$iconPath")
+        # 这个接口**不是 multipart**：图片要当「原始 body」发过去，扩展名走查询参数 ?ext=。
+        # 两条实测过的错法：① 只发 multipart 的 file 字段 -> "Query deserialize error:
+        # missing field `ext`"（它把 ext 当查询参数反序列化）；② 带上 ?ext= 但仍然 multipart ->
+        # "uploading image / loading image from memory / The image format could not be determined"
+        # （它把 multipart 的外壳直接喂给了图片解码器）。所以照下面这样发才对（204 = 成功）。
+        $iconExt = [System.IO.Path]::GetExtension($iconPath).TrimStart('.')
+        $icon = Invoke-Api -Method 'PATCH' -Path "/project/$($project.id)/icon?ext=$iconExt" `
+            -BodyFile $iconPath -ExtraArgs @('-H', 'Content-Type: image/png')
 
         if ($icon.status -ne 204 -and $icon.status -ne 200) {
             Write-Output ("  ⚠ 图标上传失败：HTTP $($icon.status) $($icon.body)（不影响版本发布）")
