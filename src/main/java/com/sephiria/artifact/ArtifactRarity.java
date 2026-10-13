@@ -10,8 +10,11 @@ public enum ArtifactRarity {
 	ADVANCED("advanced", 0xFF5B8CFF),
 	/** 黄。 */
 	RARE("rare", 0xFFFFD24A),
-	/** 红。 */
-	LEGENDARY("legendary", 0xFFFF5555),
+	/**
+	 * 红：名字用 <b>#FF008E</b>（2026-10-13 用户定的——原来的 #FF5555 跟原版「负面效果」的红太像，
+	 * 换成这个偏洋红的红更好看）。神器 / 石板 / 药水的名字与「X 神器」那一行都跟着这一个常量走。
+	 */
+	LEGENDARY("legendary", 0xFFFF008E),
 	/** 彩色（逐字变色）：神器的最高品质。 */
 	BOND("bond", 0xFFB060FF),
 	/** 粉：石板的最高品质。 */

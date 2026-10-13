@@ -40,6 +40,9 @@ public final class ModParticleTypes {
 	/** 太阳剑的剑痕：一道笔直的发光划痕（贴图 textures/particle/sun_slash_0.png）。 */
 	public static final ParticleType<SunSlashOptions> SUN_SLASH = registerSunSlash();
 
+	/** 冰霜武具的剑气：一道冰蓝色的<b>弧</b>（贴图 textures/particle/frost_qi_0.png）。 */
+	public static final ParticleType<FrostQiOptions> FROST_QI = registerFrostQi();
+
 	private ModParticleTypes() {
 	}
 
@@ -52,6 +55,12 @@ public final class ModParticleTypes {
 		Identifier id = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_slash");
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
 				FabricParticleTypes.complex(SunSlashOptions.CODEC, SunSlashOptions.STREAM_CODEC));
+	}
+
+	private static ParticleType<FrostQiOptions> registerFrostQi() {
+		Identifier id = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frost_qi");
+		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
+				FabricParticleTypes.complex(FrostQiOptions.CODEC, FrostQiOptions.STREAM_CODEC));
 	}
 
 	/** 由 {@code Sephiria#onInitialize()} 调用：引用一次本类即触发静态字段的注册。 */
@@ -83,6 +92,38 @@ public final class ModParticleTypes {
 		@Override
 		public ParticleType<?> getType() {
 			return SUN_SLASH;
+		}
+	}
+
+	/**
+	 * 冰霜武具那道弧状剑气的粒子参数：边长（格）、面内倾角（弧度）与<b>飞行方向</b>。
+	 *
+	 * <p>方向是 2026-10-13 加的（用户要求「弧面朝飞行方向，而不是朝上」）：方片不再整张朝摄像机，
+	 * 而是摆成一面<b>垂直于飞行方向</b>的刀墙（法线 = 飞行方向），贴图的「上」取世界竖直方向在面内的投影
+	 * ——见 {@code client.particle.FrostQiParticle}。倾角仍是那张面内的旋转（多道之间错开）。
+	 */
+	public record FrostQiOptions(float size, float roll, float dirX, float dirY, float dirZ)
+			implements ParticleOptions {
+		public static final MapCodec<FrostQiOptions> CODEC = RecordCodecBuilder.mapCodec(
+				instance -> instance.group(
+						Codec.FLOAT.fieldOf("size").forGetter(FrostQiOptions::size),
+						Codec.FLOAT.optionalFieldOf("roll", 0.0F).forGetter(FrostQiOptions::roll),
+						Codec.FLOAT.fieldOf("dir_x").forGetter(FrostQiOptions::dirX),
+						Codec.FLOAT.fieldOf("dir_y").forGetter(FrostQiOptions::dirY),
+						Codec.FLOAT.fieldOf("dir_z").forGetter(FrostQiOptions::dirZ)
+				).apply(instance, FrostQiOptions::new));
+
+		public static final StreamCodec<ByteBuf, FrostQiOptions> STREAM_CODEC = StreamCodec.composite(
+				ByteBufCodecs.FLOAT, FrostQiOptions::size,
+				ByteBufCodecs.FLOAT, FrostQiOptions::roll,
+				ByteBufCodecs.FLOAT, FrostQiOptions::dirX,
+				ByteBufCodecs.FLOAT, FrostQiOptions::dirY,
+				ByteBufCodecs.FLOAT, FrostQiOptions::dirZ,
+				FrostQiOptions::new);
+
+		@Override
+		public ParticleType<?> getType() {
+			return FROST_QI;
 		}
 	}
 }

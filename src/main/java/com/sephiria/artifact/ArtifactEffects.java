@@ -348,6 +348,21 @@ public final class ArtifactEffects {
 		return sumAffix(player, SephiriaArtifact::onHitIceDamage);
 	}
 
+	/** 神器给的「冰霜武具的伤害」加成总和（%）：与连击档位的同一项相加（小魔法海螺）。 */
+	public static double frostArmamentDamagePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::frostArmamentDamagePercent);
+	}
+
+	/** 神器给的「冰霜武具充能速度」加成总和（%）：与连击档位的同一项相加（冰封的心脏）。 */
+	public static double frostChargeSpeedBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::frostChargeSpeedBonus);
+	}
+
+	/** 神器给的「冰霜武具额外触发次数」总和（次）：与连击 10 档的同一项相加（冰之翼）。 */
+	public static int frostExtraTriggersBonus(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::frostExtraTriggersBonus);
+	}
+
 	/**
 	 * 附加冰伤的冷却（tick）：按【唯一】规则取等级最高那份的「冷却秒数」。
 	 *

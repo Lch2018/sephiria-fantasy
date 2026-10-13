@@ -132,8 +132,12 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.artifact.RedSnakeEyeItem.registerTicker();
 		// 「冰川」连击的普罗修姆戒指：武器/魔法书命中附加冰属性伤害（冷却随等级）
 		com.sephiria.artifact.ProshiumRingItem.register();
+		// 「冰霜武具」连击的两件充能神器：驱邪剑鞘（挥击发剑气）与暴风雪之锤（冲刺甩锤子）
+		com.sephiria.frost.FrostArmament.registerTicker();
 
 		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.FrostQiPayload.TYPE,
+				com.sephiria.network.FrostQiPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ShieldSweepPayload.TYPE, ShieldSweepPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC);
@@ -150,11 +154,16 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.clientboundPlay().register(CloudSyncPayload.TYPE, CloudSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(DebuffSyncPayload.TYPE, DebuffSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(SunSwordSyncPayload.TYPE, SunSwordSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(com.sephiria.network.FrostSyncPayload.TYPE,
+				com.sephiria.network.FrostSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(DashPayload.TYPE,
 				(payload, context) -> DashSkill.perform(context.player()));
+		// 左键挥击（打中或挥空都算）：驱邪剑鞘充能满了就在这里放剑气
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.FrostQiPayload.TYPE,
+				(payload, context) -> com.sephiria.frost.FrostArmament.onSwing(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(ReloadPayload.TYPE,
 				(payload, context) -> SephiriaCrossbowItem.tryReload(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(ShieldSweepPayload.TYPE,
@@ -249,6 +258,7 @@ public class Sephiria implements ModInitializer {
 			com.sephiria.artifact.SandeEarringsItem.forget(handler.player);
 			com.sephiria.artifact.RedSnakeEyeItem.forget(handler.player);
 			com.sephiria.artifact.ProshiumRingItem.forget(handler.player);
+			com.sephiria.frost.FrostArmament.forget(handler.player);
 			CombatState.forget(handler.player);
 			com.sephiria.cloud.DarkCloud.forget(handler.player);
 			com.sephiria.sun.SunSword.forget(handler.player);

@@ -19,7 +19,13 @@ $items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_c
     'pointy_acorn', 'thunder_stone', 'cloudseed_arrow', 'mast_model', 'raven_tablet',
     'solis_fracto', 'solis_parvo', 'sun_sword',
     # batch 20 (glacier): the amulet / claw / ring / sealed tegas
-    'wisdom_amulet', 'blue_claw', 'proshium_ring', 'sealed_tegas')
+    'wisdom_amulet', 'blue_claw', 'proshium_ring', 'sealed_tegas',
+    # batch 21 (frost armament): the scabbard / hammer / conch
+    'exorcism_scabbard', 'blizzard_hammer', 'magic_conch',
+    # batch 22 (frost armament, second wave): wings / heart / volspa / bow
+    'ice_wings', 'frozen_heart', 'volspa', 'ice_bow',
+    # the three hidden carriers the frost projectiles are drawn with (ice-blue recolours)
+    'ice_hammer', 'ice_spear', 'ice_arrow')
 $branches = @('sword_and_shield', 'greatsword', 'dagger', 'crossbow', 'katana', 'staff')
 
 $errors = 0
@@ -46,6 +52,18 @@ function Get-Refs($text) {
     $refs = New-Object System.Collections.Generic.List[string]
     foreach ($m in [regex]::Matches($text, 'sephiria_fantasy:item/([A-Za-z0-9_]+)')) { $refs.Add($m.Groups[1].Value) }
     return $refs
+}
+
+# 0) the mod icon fabric.mod.json points at must exist and be square
+$iconPath = Join-Path $assets 'icon.png'
+if (-not (Test-Path $iconPath)) { Fail 'missing assets/sephiria_fantasy/icon.png (the mod-list icon)' }
+else {
+    Add-Type -AssemblyName System.Drawing
+    $icon = [System.Drawing.Bitmap]::FromFile($iconPath)
+    if ($icon.Width -ne $icon.Height) { Fail "icon.png is not square ($($icon.Width)x$($icon.Height))" }
+    elseif ($icon.Width -lt 64) { Fail "icon.png is smaller than 64x64 ($($icon.Width)x$($icon.Height))" }
+    else { Ok "icon.png $($icon.Width)x$($icon.Height)" }
+    $icon.Dispose()
 }
 
 # 1) item definitions: every referenced model exists

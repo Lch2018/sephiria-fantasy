@@ -483,6 +483,36 @@ public interface SephiriaArtifact extends Quality {
 	}
 
 	/**
+	 * 该等级「冰霜武具的伤害」加成（%）。
+	 *
+	 * <p>与连击档位的同一项相加，一起放大冰霜武具那两下（剑气 / 锤击）的伤害；
+	 * 0 表示没有这个词条（小魔法海螺是唯一有它的）。
+	 */
+	default double frostArmamentDamagePercent(int level) {
+		return 0.0D;
+	}
+
+	/**
+	 * 该等级「冰霜武具充能速度」加成（%）。
+	 *
+	 * <p>与连击档位的同一项相加，一起缩短冰霜武具各件的充能时间
+	 * （实际刻数 = 基础刻数 ÷ (1 + 加成)，见 {@code frost.FrostArmament} 顶部）。
+	 */
+	default double frostChargeSpeedBonus(int level) {
+		return 0.0D;
+	}
+
+	/**
+	 * 该等级「冰霜武具额外触发次数」（次）。
+	 *
+	 * <p>与连击 10 档的同一项相加：剑鞘多放一道剑气、锤子多扔一把、长矛多来一根。
+	 * 冰之翼是唯一有它的（0/0/0/1/1/1/2）。
+	 */
+	default int frostExtraTriggersBonus(int level) {
+		return 0;
+	}
+
+	/**
 	 * 该等级是不是「灼伤变更为蓝色灼伤」（0 = 不是，大于 0 = 是）。
 	 *
 	 * <p>蓝色灼伤：每跳的强度改成「火元素强度 + 冰元素强度」，并按两者里更高的那个决定

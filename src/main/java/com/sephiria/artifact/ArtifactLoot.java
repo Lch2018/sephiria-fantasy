@@ -38,9 +38,10 @@ public final class ArtifactLoot {
 		 * 商店：白/蓝/黄/红 = 30/40/10/2 与宝箱相同，只有<b>羁绊</b>提到 30
 		 * （2026-10 用户要求「羁绊的出现概率调为稀有与传说之间」）。
 		 *
-		 * <p>算一下就很直观：稀有 17 件 × 10 = 170，传说 10 件 × 2 = 20，羁绊 2 件 × 30 = 60——
-		 * 60 落在 20 与 170 之间，也就是每格约 3.1%（稀有 8.9%、传说 1.0%）。
-		 * 想再调只动这一个数字：羁绊档的总权重 = 2 × 这个值，要留在 (20, 170) 里。
+		 * <p>算法按<b>件</b>展开就很直观：某一档的总权重 = 件数 × 它的权重。羁绊只有 2 件，
+		 * 要落在传说（9 件 × 2 = 18）与稀有（16 件 × 10 = 160）之间，2 × 30 = 60 正好；
+		 * 想再调只动这一个数字（2 × 权重 要留在 18 与 160 之间）。
+		 * ——件数会随后续批次变（这几行里的数字是 2026-10-13 那批的数），改档次时重新数一遍。
 		 */
 		public static final Weights SHOP = new Weights(30, 40, 10, 2, 30, 1);
 		/** 升级宝箱：80/100/10/2/1（好东西更少）。 */
@@ -84,7 +85,9 @@ public final class ArtifactLoot {
 				ModItems.RED_SNAKE_EYE, ModItems.AMBERGRIS, ModItems.RED_YARN_BALL,
 				ModItems.OAK_CHARCOAL, ModItems.FIRE_BUG, ModItems.LAVA_BEAD,
 				ModItems.WISDOM_AMULET, ModItems.BLUE_CLAW, ModItems.PROSHIUM_RING,
-				ModItems.SEALED_TEGAS);
+				ModItems.SEALED_TEGAS,
+				ModItems.EXORCISM_SCABBARD, ModItems.BLIZZARD_HAMMER, ModItems.MAGIC_CONCH,
+				ModItems.ICE_WINGS, ModItems.FROZEN_HEART, ModItems.VOLSPA, ModItems.ICE_BOW);
 	}
 
 	private static List<Item> slates() {

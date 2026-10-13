@@ -48,6 +48,9 @@ if (-not (Test-Path $jar)) {
 
 $description = Join-Path $PSScriptRoot 'modrinth\description.md'
 $changelogPath = Join-Path $PSScriptRoot 'modrinth\changelog.md'
+# 项目图标（由 tools/gen-mod-icon.ps1 生成，256x256）：发布时顺手上传，项目页图标就跟着仓库走。
+# 没有这个文件也不会拦发布——图标是锦上添花，缺了只跳过并提示。
+$iconPath = Join-Path $PSScriptRoot 'modrinth\icon.png'
 
 foreach ($file in @($description, $changelogPath)) {
     if (-not (Test-Path $file)) { throw "缺文件：$file" }
@@ -210,6 +213,22 @@ try {
         }
 
         Write-Output '项目资料已刷新'
+    }
+
+    # ---- 项目图标 ----
+    # PATCH /project/{id}/icon 收 multipart，字段名固定 file；204 = 成功（204 无正文）。
+    if (Test-Path $iconPath) {
+        Write-Output '上传项目图标 …'
+        $icon = Invoke-Api -Method 'PATCH' -Path "/project/$($project.id)/icon" `
+            -ExtraArgs @('-F', "file=@$iconPath")
+
+        if ($icon.status -ne 204 -and $icon.status -ne 200) {
+            Write-Output ("  ⚠ 图标上传失败：HTTP $($icon.status) $($icon.body)（不影响版本发布）")
+        } else {
+            Write-Output '项目图标已更新'
+        }
+    } else {
+        Write-Output ("跳过项目图标：没有 $iconPath（跑 tools\gen-mod-icon.ps1 生成）")
     }
 
     # 同一个版本号已经传过就跳过：Modrinth **不拦**重复的 version_number，重复上传会在项目页多出

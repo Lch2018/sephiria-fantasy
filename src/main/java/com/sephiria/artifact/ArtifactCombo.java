@@ -152,6 +152,20 @@ public enum ArtifactCombo {
 			Tier.glacier(6, "artifact.sephiria_fantasy.combo.glacier.t6", 0.0D, 150.0D, 0.0D),
 			Tier.glacier(8, "artifact.sephiria_fantasy.combo.glacier.t8", 8.0D, 0.0D, 0.0D),
 			Tier.glacier(10, "artifact.sephiria_fantasy.combo.glacier.t10", 0.0D, 0.0D, -1.0D)
+	}),
+
+	/**
+	 * 冰霜武具：围绕两件「充能」神器（驱邪剑鞘 / 暴风雪之锤）的连击。
+	 *
+	 * <p>两件神器各自攒充能，攒满才打得出效果：档位缩短充能时间、放大那两下的伤害，
+	 * 10 档让每次触发多打一轮（见 {@code frost.FrostArmament}）。
+	 */
+	FROST_ARMAMENT("frost_armament", new Tier[] {
+			Tier.frostArmament(2, "artifact.sephiria_fantasy.combo.frost_armament.t2", 6.0D, 0.0D, 0),
+			Tier.frostArmament(4, "artifact.sephiria_fantasy.combo.frost_armament.t4", 8.0D, 0.0D, 0),
+			Tier.frostArmament(6, "artifact.sephiria_fantasy.combo.frost_armament.t6", 0.0D, 6.0D, 0),
+			Tier.frostArmament(8, "artifact.sephiria_fantasy.combo.frost_armament.t8", 0.0D, 8.0D, 0),
+			Tier.frostArmament(10, "artifact.sephiria_fantasy.combo.frost_armament.t10", 0.0D, 0.0D, 1)
 	});
 
 	/**
@@ -183,6 +197,9 @@ public enum ArtifactCombo {
 	 * @param burnBasePercent 「灼伤的基础伤害倍率」（%）：10 档把它从默认的 8 换成 18（只有余烬用）
 	 * @param iceElement    冰元素强度（点）：并进触发者的冰元素强度面板值，冰冻那一下按它结算（只有冰川用）
 	 * @param freezeThresholdDelta 「冰冻所需的冻伤层数」调整（层，负数降低阈值）：10 档填 -1（只有冰川用）
+	 * @param frostChargeSpeed 「冰霜武具充能速度」加成（%）：缩短两件充能神器的充能时间（只有冰霜武具用）
+	 * @param frostDamagePercent 「冰霜武具的伤害」加成（%）：放大剑气 / 锤击那两下的伤害（只有冰霜武具用）
+	 * @param frostExtraTriggers 「冰霜武具额外触发次数」（次）：10 档填 1（只有冰霜武具用）
 	 */
 	public record Tier(int level, String textKey, double physical, double physicalAmp, double attackSpeed,
 			double weaponDamage, int dashCharges, double critChance, double critDamage, double dodge,
@@ -191,11 +208,13 @@ public enum ArtifactCombo {
 			boolean electricTouch, boolean goldenHands,
 			int cloudCapacity, boolean cloudActive, boolean cloudDoubleShot,
 			double sunDamagePercent, int sunCapacity, double fireElement, double burnBasePercent,
-			double iceElement, double freezeThresholdDelta) {
+			double iceElement, double freezeThresholdDelta,
+			double frostChargeSpeed, double frostDamagePercent, int frostExtraTriggers) {
 		/**
-		 * 不带乌云 / 太阳剑 / 余烬字段的紧凑构造：这三套的专属字段只有它们自己用，其它连击照旧传 19 个参数。
+		 * 不带乌云 / 太阳剑 / 余烬 / 冰川 / 冰霜武具字段的紧凑构造：这几套的专属字段只有它们自己用，
+		 * 其它连击照旧传 19 个参数。
 		 *
-		 * <p>加了这几套之后档位构造有 26 个参数，容易数错；除非写乌云 / 太阳剑 / 余烬档位，否则都用这个。
+		 * <p>加了这几套之后档位构造有 31 个参数，容易数错；除非写这些连击自己的档位，否则都用这个。
 		 */
 		public Tier(int level, String textKey, double physical, double physicalAmp, double attackSpeed,
 				double weaponDamage, int dashCharges, double critChance, double critDamage, double dodge,
@@ -205,10 +224,10 @@ public enum ArtifactCombo {
 			this(level, textKey, physical, physicalAmp, attackSpeed, weaponDamage, dashCharges, critChance,
 					critDamage, dodge, negotiation, leafGainPercent, highestElement, allElementPercent,
 					lightningElement, touchHaste, shockDurationDelta, electricTouch, goldenHands,
-					0, false, false, 0.0D, 0, 0.0D, 0.0D, 0.0D, 0.0D);
+					0, false, false, 0.0D, 0, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0);
 		}
 
-		/** 只带乌云字段的构造（太阳剑 / 余烬 / 冰川字段留空）：乌云那五档用。 */
+		/** 只带乌云字段的构造（太阳剑 / 余烬 / 冰川 / 冰霜武具字段留空）：乌云那五档用。 */
 		public Tier(int level, String textKey, double physical, double physicalAmp, double attackSpeed,
 				double weaponDamage, int dashCharges, double critChance, double critDamage, double dodge,
 				double negotiation, double leafGainPercent, double highestElement, double allElementPercent,
@@ -218,21 +237,21 @@ public enum ArtifactCombo {
 			this(level, textKey, physical, physicalAmp, attackSpeed, weaponDamage, dashCharges, critChance,
 					critDamage, dodge, negotiation, leafGainPercent, highestElement, allElementPercent,
 					lightningElement, touchHaste, shockDurationDelta, electricTouch, goldenHands,
-					cloudCapacity, cloudActive, cloudDoubleShot, 0.0D, 0, 0.0D, 0.0D, 0.0D, 0.0D);
+					cloudCapacity, cloudActive, cloudDoubleShot, 0.0D, 0, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0);
 		}
 
 		/** 只带余烬字段的构造（火元素强度 / 之触冷却加速 / 灼伤倍率）：余烬那五档用。 */
 		public Tier(int level, String textKey, double fireElement, double touchHaste, double burnBasePercent) {
 			this(level, textKey, 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, touchHaste, 0.0D, false, false,
-					0, false, false, 0.0D, 0, fireElement, burnBasePercent, 0.0D, 0.0D);
+					0, false, false, 0.0D, 0, fireElement, burnBasePercent, 0.0D, 0.0D, 0.0D, 0.0D, 0);
 		}
 
-		/** 只带太阳剑字段的构造（余烬 / 冰川字段留空）：太阳剑那五档用。 */
+		/** 只带太阳剑字段的构造（余烬 / 冰川 / 冰霜武具字段留空）：太阳剑那五档用。 */
 		public Tier(int level, String textKey, double sunDamagePercent, int sunCapacity) {
 			this(level, textKey, 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false,
-					0, false, false, sunDamagePercent, sunCapacity, 0.0D, 0.0D, 0.0D, 0.0D);
+					0, false, false, sunDamagePercent, sunCapacity, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0);
 		}
 
 		/**
@@ -245,7 +264,20 @@ public enum ArtifactCombo {
 				double freezeThresholdDelta) {
 			return new Tier(level, textKey, 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, touchHaste, 0.0D, false, false,
-					0, false, false, 0.0D, 0, 0.0D, 0.0D, iceElement, freezeThresholdDelta);
+					0, false, false, 0.0D, 0, 0.0D, 0.0D, iceElement, freezeThresholdDelta, 0.0D, 0.0D, 0);
+		}
+
+		/**
+		 * 只带冰霜武具字段的一档（充能速度 / 伤害 / 额外触发次数）。
+		 *
+		 * <p>同样写成静态工厂：参数表（int, String, double, double, int）与太阳剑那个紧凑构造只差
+		 * 一个 double，肉眼容易看混，工厂名把口径写死。
+		 */
+		public static Tier frostArmament(int level, String textKey, double chargeSpeed, double damagePercent,
+				int extraTriggers) {
+			return new Tier(level, textKey, 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false,
+					0, false, false, 0.0D, 0, 0.0D, 0.0D, 0.0D, 0.0D, chargeSpeed, damagePercent, extraTriggers);
 		}
 
 		/** 这一档给的说明行。 */
@@ -396,6 +428,28 @@ public enum ArtifactCombo {
 	}
 
 	/**
+	 * 「冰霜武具充能速度」加成（%）：各档累加，缩短两件充能神器的充能时间。
+	 *
+	 * <p>实际充能刻数 = 基础刻数 ÷ (1 + 加成)，见 {@code frost.FrostArmament#chargeTicks}。
+	 */
+	public double frostChargeSpeedPercent(int comboLevel) {
+		return sum(comboLevel, Tier::frostChargeSpeed);
+	}
+
+	/** 「冰霜武具的伤害」加成（%）：各档累加，与神器的同一词条相加后放大剑气 / 锤击那两下。 */
+	public double frostDamagePercent(int comboLevel) {
+		return sum(comboLevel, Tier::frostDamagePercent);
+	}
+
+	/**
+	 * 「冰霜武具额外触发次数」（次）：各档累加，每次触发多打一轮
+	 * （剑鞘多发一道剑气、锤子每只敌人多挨一锤）。
+	 */
+	public int frostExtraTriggers(int comboLevel) {
+		return (int) sum(comboLevel, Tier::frostExtraTriggers);
+	}
+
+	/**
 	 * 「灼伤的基础伤害倍率」（%）：没到 10 档返回 0，表示「沿用默认值」（见 {@code Debuffs.BURN_BASE_PERCENT}）；
 	 * 10 档返回 18，把默认的 8 换掉（换、不是加，所以这里只取档位给的数值）。
 	 */
@@ -497,8 +551,8 @@ public enum ArtifactCombo {
 
 	/** 名字的颜色按已到达的档位变化：没到第一档灰、之后白/绿/蓝/橙/红。 */
 	public int nameColour(int comboLevel) {
-		// 阈值 2/4/6/8/10 分别对应白/绿/蓝/橙/红
-		int[] colours = { 0xFF808080, 0xFFFFFFFF, 0xFF55FF55, 0xFF5B8CFF, 0xFFFF9A3C, 0xFFFF5555 };
+		// 阈值 2/4/6/8/10 分别对应白/绿/蓝/橙/红；最后的红与传说品质同一个 #FF008E（2026-10-13 用户要求）
+		int[] colours = { 0xFF808080, 0xFFFFFFFF, 0xFF55FF55, 0xFF5B8CFF, 0xFFFF9A3C, 0xFFFF008E };
 		int reached = 0;
 
 		for (Tier tier : this.tiers) {

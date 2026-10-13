@@ -76,5 +76,7 @@ public final class DashSkill {
 		}
 
 		Dash.start(player, direction, DISTANCE, DURATION_TICKS, Dash.DEFAULT_DECAY);
+		// 冰霜武具的暴风雪之锤：充能满了就趁这一冲甩出去（没带锤子 / 没充能时它什么都不做）
+		com.sephiria.frost.FrostArmament.onDash(player);
 	}
 }

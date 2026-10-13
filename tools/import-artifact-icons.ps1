@@ -63,6 +63,8 @@ $cache5 = 'C:\Users\28237\.zcode\cli\image-cache\sess_891ddd3d-4c82-4d37-b9da-bf
 # repository (tools/artifact-ref/glacier) instead of pointing at a session cache, so the job table
 # cannot rot when the chat client recycles that folder.
 $glacierRef = Join-Path $root 'tools\artifact-ref\glacier'
+# the frost-armament batch (combo icon + three artifacts) uses the same copied-reference layout.
+$frostRef = Join-Path $root 'tools\artifact-ref\frost_armament'
 
 foreach ($dir in @($texDir, $guiDir, $previewDir)) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -689,6 +691,28 @@ $jobs = @(
     @{ name = 'proshium_ring'; root = 'glacier'; source = 'proshium_ring.png';
        target = 16; dir = 'item' },
     @{ name = 'sealed_tegas'; root = 'glacier'; source = 'sealed_tegas.png';
+       target = 16; dir = 'item' },
+
+    # batch 21: the frost-armament combo icon (60x60 on the #16151F plate, same as 13/16/17/20) plus
+    # the three frost-armament artifacts (75x75 mock-ups). References live in
+    # tools/artifact-ref/frost_armament.
+    @{ name = 'combo_frost_armament'; root = 'frost'; source = 'combo_frost_armament.png';
+       target = 16; dir = 'gui' },
+    @{ name = 'exorcism_scabbard'; root = 'frost'; source = 'exorcism_scabbard.png';
+       target = 16; dir = 'item' },
+    @{ name = 'blizzard_hammer'; root = 'frost'; source = 'blizzard_hammer.png';
+       target = 16; dir = 'item' },
+    @{ name = 'magic_conch'; root = 'frost'; source = 'magic_conch.png';
+       target = 16; dir = 'item' },
+
+    # batch 22: the second frost-armament wave (wings / heart / volspa / bow), same reference folder.
+    @{ name = 'ice_wings'; root = 'frost'; source = 'ice_wings.png';
+       target = 16; dir = 'item' },
+    @{ name = 'frozen_heart'; root = 'frost'; source = 'frozen_heart.png';
+       target = 16; dir = 'item' },
+    @{ name = 'volspa'; root = 'frost'; source = 'volspa.png';
+       target = 16; dir = 'item' },
+    @{ name = 'ice_bow'; root = 'frost'; source = 'ice_bow.png';
        target = 16; dir = 'item' }
 )
 
@@ -704,7 +728,7 @@ foreach ($job in $jobs) {
     $outDir = if ($job.dir -eq 'gui') { $guiDir } else { $texDir }
     $outFile = Join-Path $outDir ($name + '.png')
 
-    $sourceRoot = if ($job.root -eq 'glacier') { $glacierRef } elseif ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
+    $sourceRoot = if ($job.root -eq 'frost') { $frostRef } elseif ($job.root -eq 'glacier') { $glacierRef } elseif ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
 
     if (-not (Test-Path $sourceRoot)) {
         # the wechat temp folder is recycled by the chat client: once a whole batch's reference

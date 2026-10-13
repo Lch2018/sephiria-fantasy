@@ -3,6 +3,7 @@ package com.sephiria.client.hud;
 import com.sephiria.Sephiria;
 import com.sephiria.client.ClientStats;
 import com.sephiria.client.CloudClientData;
+import com.sephiria.client.FrostClientData;
 import com.sephiria.client.SunSwordClientData;
 import com.sephiria.ability.DashSkill;
 import com.sephiria.client.InvulnClientData;
@@ -21,6 +22,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix3x2fStack;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * SEPHIRIA 的 HUD：右下角武器面板 + 左下角冲刺面板。
@@ -56,6 +60,11 @@ public final class SephiriaHud implements HudElement {
 	private static final int CLOUD_BAR_COLOR = 0xFF7EFAFF;
 	/** 太阳剑数量条的填充色：#FDF74C（用户定的太阳色）。 */
 	private static final int SUN_SWORD_BAR_COLOR = 0xFFFDF74C;
+	/** 冰霜武具充能的两种字色：攒满了冰蓝 #8FDCFF（与冰冻染色同色）、冷却中灰。 */
+	private static final int FROST_READY_COLOR = 0xFF8FDCFF;
+	private static final int FROST_COOLING_COLOR = 0xFF808080;
+	/** 冰霜武具那一行里两个字号之间的间距（像素）。 */
+	private static final int FROST_GAP = 3;
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, DeltaTracker delta) {
@@ -71,7 +80,82 @@ public final class SephiriaHud implements HudElement {
 		renderMp(extractor, client);
 		renderCloud(extractor, client);
 		renderSunSword(extractor, client);
+		renderFrost(extractor, client);
 		renderInvuln(extractor, client);
+	}
+
+	/**
+	 * 冰霜武具的状态行：{@code 冰霜武具：剑 锤 矛 弓x/7}——「剑」= 驱邪剑鞘、「锤」= 暴风雪之锤、
+	 * 「矛」= 沃尔斯帕、「弓」= 冰弓（后者带上剩几发 / 上限）。可用了用冰蓝
+	 * {@link #FROST_READY_COLOR}（前三个是攒满、弓是有弹药）、否则用灰 {@link #FROST_COOLING_COLOR}
+	 * （四件各自独立；只带其中几件就只画那几个字，一件都没带整行不画）。
+	 *
+	 * <p>状态只在服务端（充能表与弹药在 {@code frost.FrostArmament}），变化时服务端推
+	 * {@code FrostSyncPayload}，这里读 {@link FrostClientData} 的镜像——与乌云 / 太阳剑同一套。
+	 */
+	private void renderFrost(GuiGraphicsExtractor extractor, Minecraft client) {
+		if (!FrostClientData.visible()) {
+			return;
+		}
+
+		Font font = client.font;
+		Component label = Component.translatable("ui.sephiria_fantasy.frost_armament");
+		List<Component> parts = new ArrayList<>();
+
+		if (FrostClientData.hasScabbard()) {
+			parts.add(frostGlyph("ui.sephiria_fantasy.frost_armament.sword", FrostClientData.scabbardReady()));
+		}
+
+		if (FrostClientData.hasHammer()) {
+			parts.add(frostGlyph("ui.sephiria_fantasy.frost_armament.hammer", FrostClientData.hammerReady()));
+		}
+
+		if (FrostClientData.hasSpear()) {
+			parts.add(frostGlyph("ui.sephiria_fantasy.frost_armament.spear", FrostClientData.spearReady()));
+		}
+
+		if (FrostClientData.hasBow()) {
+			// 弓那一格是「弓x/7」：有弹药就冰蓝（发动得出来），打空了变灰
+			parts.add(frostGlyph(Component.translatable("ui.sephiria_fantasy.frost_armament.bow",
+					FrostClientData.bowAmmo(), FrostClientData.bowMax()), FrostClientData.bowAmmo() > 0));
+		}
+
+		int textWidth = font.width(label);
+
+		for (Component part : parts) {
+			textWidth += FROST_GAP + font.width(part);
+		}
+
+		int width = textWidth + PAD * 2;
+		int height = LINE + PAD * 2;
+		HudConfig.Element config = HudConfig.element(HudConfig.FROST);
+		Matrix3x2fStack pose = extractor.pose();
+		pose.pushMatrix();
+		pose.translate((float) config.x, (float) config.y);
+		pose.scale((float) config.scale, (float) config.scale);
+
+		extractor.fill(0, 0, width, height, PANEL_COLOR);
+		int x = PAD;
+		extractor.text(font, label, x, PAD, NAME_COLOR, true);
+		x += font.width(label);
+
+		for (Component part : parts) {
+			x += FROST_GAP;
+			extractor.text(font, part, x, PAD, NAME_COLOR, true);
+			x += font.width(part);
+		}
+
+		pose.popMatrix();
+	}
+
+	/** 冰霜武具那一行里的一个字：攒满 / 有弹药 = 冰蓝，否则灰。 */
+	private static Component frostGlyph(String key, boolean ready) {
+		return frostGlyph(Component.translatable(key), ready);
+	}
+
+	/** 同上，但整段文字自己带参数（冰弓那格是「弓x/7」）。 */
+	private static Component frostGlyph(Component text, boolean ready) {
+		return text.copy().withColor(ready ? FROST_READY_COLOR : FROST_COOLING_COLOR);
 	}
 
 	/**

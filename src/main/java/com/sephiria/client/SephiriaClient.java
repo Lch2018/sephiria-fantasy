@@ -14,6 +14,7 @@ import com.sephiria.network.ArtifactSkillsPayload;
 import com.sephiria.network.CastArtifactSkillPayload;
 import com.sephiria.network.CloudSyncPayload;
 import com.sephiria.network.DebuffSyncPayload;
+import com.sephiria.network.FrostSyncPayload;
 import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.client.tabs.SephiriaTabs;
 import com.sephiria.network.DashPayload;
@@ -161,11 +162,16 @@ public class SephiriaClient implements ClientModInitializer {
 		// 太阳剑数量：HUD 的太阳剑 UI 读它（上限 > 0 才显示）
 		ClientPlayNetworking.registerGlobalReceiver(SunSwordSyncPayload.TYPE,
 				(payload, context) -> SunSwordClientData.accept(payload));
-		// 换世界 / 重连时清掉镜像：云、减益与太阳剑状态都不跨世界，免得新世界里 UI 还挂着上个世界的残值
+		// 冰霜武具两件神器的充能状态：HUD 那一行「冰霜武具：剑 锤」读它
+		ClientPlayNetworking.registerGlobalReceiver(FrostSyncPayload.TYPE,
+				(payload, context) -> FrostClientData.accept(payload));
+		// 换世界 / 重连时清掉镜像：云、减益、太阳剑与冰霜武具状态都不跨世界，
+		// 免得新世界里 UI 还挂着上个世界的残值
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
 			CloudClientData.reset();
 			ClientDebuffs.reset();
 			SunSwordClientData.reset();
+			FrostClientData.reset();
 		});
 		// 神器技能页的可用技能与 6 个栏位
 		ClientPlayNetworking.registerGlobalReceiver(ArtifactSkillsPayload.TYPE, (payload, context) -> {

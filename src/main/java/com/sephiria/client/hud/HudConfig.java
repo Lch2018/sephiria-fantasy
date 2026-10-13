@@ -37,11 +37,14 @@ public final class HudConfig {
 	/** 太阳剑数量条（左下角，默认在乌云上方；只在太阳剑激活时显示）。 */
 	public static final String SUN_SWORD = "sun_sword";
 
+	/** 冰霜武具充能行（左下角，默认在太阳剑上方；带上那两件神器时才显示）。 */
+	public static final String FROST = "frost";
+
 	/** 无敌条（准星下方居中）。 */
 	public static final String INVULN = "invuln";
 
 	/** 全部可调的 HUD 模块，顺序即设置界面里的顺序；新增模块在这里登记。 */
-	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, CLOUD, SUN_SWORD, INVULN);
+	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, CLOUD, SUN_SWORD, FROST, INVULN);
 
 	/** 一个界面元素的位置与缩放。 */
 	public static final class Element {
@@ -62,8 +65,9 @@ public final class HudConfig {
 			}
 		else {
 			this.x = "bottom_right".equals(corner) ? guiWidth - 150.0D : 8.0D;
-			// 左下角一列从下往上依次是：冲刺、MP、乌云、太阳剑，各差一行高
-			this.y = guiHeight - ("bottom_left_highest".equals(corner) ? 112.0D
+			// 左下角一列从下往上依次是：冲刺、MP、乌云、太阳剑、冰霜武具，各差一行高
+			this.y = guiHeight - ("bottom_left_highest2".equals(corner) ? 136.0D
+					: "bottom_left_highest".equals(corner) ? 112.0D
 					: "bottom_left_higher".equals(corner) ? 88.0D
 					: "bottom_left_high".equals(corner) ? 64.0D : 40.0D);
 		}
@@ -79,6 +83,7 @@ public final class HudConfig {
 			DASH, "bottom_left",
 			CLOUD, "bottom_left_higher",
 			SUN_SWORD, "bottom_left_highest",
+			FROST, "bottom_left_highest2",
 			INVULN, "center");
 	private static final Map<String, Element> ELEMENTS = new LinkedHashMap<>();
 

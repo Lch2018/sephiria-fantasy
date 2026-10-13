@@ -47,6 +47,7 @@ public final class ArtifactSkills {
 		register(EncouragementBannerSkill.INSTANCE);
 		register(HasteSkill.INSTANCE);
 		register(ThunderVerdictSkill.INSTANCE);
+		register(IceBowSkill.INSTANCE);
 	}
 
 	public static ArtifactSkill byId(String id) {

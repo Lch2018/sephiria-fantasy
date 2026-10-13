@@ -9,7 +9,8 @@
 		"ParticleResourcesMixin",
 		"FrozenTintMixin",
 		"EntityRendererMixin",
-		"EntityRenderStateMixin"
+		"EntityRenderStateMixin",
+		"MinecraftAttackMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

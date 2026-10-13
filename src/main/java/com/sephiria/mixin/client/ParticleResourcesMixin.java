@@ -1,6 +1,7 @@
 package com.sephiria.mixin.client;
 
 import com.sephiria.client.particle.BlueSparkParticle;
+import com.sephiria.client.particle.FrostQiParticle;
 import com.sephiria.client.particle.SunSlashParticle;
 import com.sephiria.registry.ModParticleTypes;
 import net.minecraft.client.particle.ParticleProvider;
@@ -49,5 +50,11 @@ public abstract class ParticleResourcesMixin {
 		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.SUN_SLASH), slash);
 		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.SUN_SLASH),
 				new SunSlashParticle.Provider(slash));
+
+		// 冰霜武具那道弧状剑气：与剑痕同一套渲染，只是贴图是弧、工厂是自己的
+		MutableSpriteSet qi = new MutableSpriteSet();
+		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.FROST_QI), qi);
+		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.FROST_QI),
+				new FrostQiParticle.Provider(qi));
 	}
 }

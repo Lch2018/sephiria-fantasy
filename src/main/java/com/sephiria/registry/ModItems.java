@@ -70,6 +70,13 @@ import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.artifact.BlueClawItem;
 import com.sephiria.artifact.ProshiumRingItem;
 import com.sephiria.artifact.SealedTegasItem;
+import com.sephiria.artifact.ExorcismScabbardItem;
+import com.sephiria.artifact.BlizzardHammerItem;
+import com.sephiria.artifact.MagicConchItem;
+import com.sephiria.artifact.IceWingsItem;
+import com.sephiria.artifact.FrozenHeartItem;
+import com.sephiria.artifact.VolspaItem;
+import com.sephiria.artifact.IceBowItem;
 import com.sephiria.artifact.WisdomAmuletItem;
 import com.sephiria.potion.PotionEffect;
 import com.sephiria.potion.Potions;
@@ -570,6 +577,41 @@ public final class ModItems {
 			p -> new SealedTegasItem(p),
 			new Item.Properties().stacksTo(1));
 
+	/** 驱邪剑鞘（冰霜武具，高级）：【唯一】每 6 秒充能，普攻时发射冰属性剑气（固定值 + 冰元素强度 30..100%）。 */
+	public static final Item EXORCISM_SCABBARD = register(key("exorcism_scabbard"),
+			p -> new ExorcismScabbardItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 暴风雪之锤（冰霜武具，高级）：【唯一】战斗中每 7 秒充能，冲刺时朝周围敌人投掷锤子（AOE 冰伤）。 */
+	public static final Item BLIZZARD_HAMMER = register(key("blizzard_hammer"),
+			p -> new BlizzardHammerItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 小魔法海螺（冰霜武具，高级）：冰霜武具的伤害 +3/6/10%、暴击伤害 +5/8/12%，没有【唯一】。 */
+	public static final Item MAGIC_CONCH = register(key("magic_conch"),
+			p -> new MagicConchItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 冰之翼（冰霜武具，传说）：【唯一】冰霜武具额外触发 0/0/0/1/1/1/2 次、暴击伤害 +2..20%。 */
+	public static final Item ICE_WINGS = register(key("ice_wings"),
+			p -> new IceWingsItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 冰封的心脏（冰霜武具，稀有）：冰霜武具充能速度 +10..100%，没有【唯一】。 */
+	public static final Item FROZEN_HEART = register(key("frozen_heart"),
+			p -> new FrozenHeartItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 沃尔斯帕（冰霜武具，稀有）：【唯一】战斗中每 6 秒充能，周围有敌人就飞来冰长矛（1..2 根）。 */
+	public static final Item VOLSPA = register(key("volspa"),
+			p -> new VolspaItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 冰弓（冰霜武具，传说）：【唯一】发动型神器：0.8 秒装填 1 发（最多 7），发动时一次打空。 */
+	public static final Item ICE_BOW = register(key("ice_bow"),
+			p -> new IceBowItem(p),
+			new Item.Properties().stacksTo(1));
+
 	/**
 	 * 太阳剑的贴图载体（隐藏物品）：不是给玩家用的东西，只给「掉在地上的太阳剑」当外观。
 	 *
@@ -577,6 +619,24 @@ public final class ModItems {
 	 * 物品栏里拿不到它；这一件只是为了那个实体有贴图可画，别加进创造模式页签。
 	 */
 	public static final Item SUN_SWORD = register(key("sun_sword"),
+			p -> new Item(p),
+			new Item.Properties().stacksTo(1));
+
+	/**
+	 * 冰霜武具飞行体的贴图载体（隐藏物品，三个）：铁斧 / 铁长矛 / 箭的冰蓝重上色版
+	 * （由 {@code tools/gen-ice-tool-textures.ps1} 从原版贴图重映射到冰蓝渐变）。
+	 *
+	 * <p>锤子 / 冰长矛 / 冰弓箭矢都是物品展示实体，用户要求「发射的东西全部染成冰蓝色」——
+	 * Display 的物品没法直接染色，所以照太阳剑 / 乌云那套做个隐藏载体：注册、有图标与模型定义，
+	 * 但<b>不进创造页、不给玩家</b>，只被展示实体引用。等以后有真正的锤子模型再换掉。
+	 */
+	public static final Item ICE_HAMMER = register(key("ice_hammer"),
+			p -> new Item(p),
+			new Item.Properties().stacksTo(1));
+	public static final Item ICE_SPEAR = register(key("ice_spear"),
+			p -> new Item(p),
+			new Item.Properties().stacksTo(1));
+	public static final Item ICE_ARROW = register(key("ice_arrow"),
 			p -> new Item(p),
 			new Item.Properties().stacksTo(1));
 
