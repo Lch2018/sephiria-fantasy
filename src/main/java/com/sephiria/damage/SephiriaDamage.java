@@ -60,6 +60,10 @@ public final class SephiriaDamage {
 	/** 太阳剑投掷那一下的火属性伤害（数据包里 sephiria:sun_sword）：连击效果自己的伤害，
 	 * 既不是武器攻击也不是魔法书，所以不触发别的「造成武器/神器伤害时」效果，也不会自我链式。 */
 	public static final ResourceKey<DamageType> SUN_SWORD = typeKey("sun_sword");
+	/** 太阳剑投掷那一下的<b>冰属性</b>版（数据包里 sephiria:ice_sun_sword）：永恒蚀在背包右半边时
+	 * 太阳剑按冰元素强度结算，走它——口径与 {@link #SUN_SWORD} 完全一样（{@link Kind#SUN}），
+	 * 只有元素不同：它触发的是霜之触（火的那版触发火焰之触，守门见 {@code Debuffs#register}）。 */
+	public static final ResourceKey<DamageType> ICE_SUN_SWORD = typeKey("ice_sun_sword");
 	/** 灼伤减益自己结算的火属性伤害（数据包里 sephiria:burn）：它是「减益伤害」，
 	 * 不再触发火焰之触（防链式自触），只由 {@code Debuffs#activateBurn} 使用。 */
 	public static final ResourceKey<DamageType> BURN = typeKey("burn");
@@ -108,6 +112,10 @@ public final class SephiriaDamage {
 		/**
 		 * 连击效果自己的伤害（太阳剑）：吃通用暴击与黄金之手，但既不算武器也不算神器攻击——
 		 * 不触发电击之触 / 树枝 / 台风那类「造成武器或神器伤害时」的效果，也就不会链式自触。
+		 *
+		 * <p>火的那版（{@code sun_sword}）与冰的那版（{@code ice_sun_sword}，永恒蚀在右半边时用）
+		 * 都是它：两者的暴击 / 减伤 / 黄金之手口径一模一样，只有元素与触发的减益不同
+		 * （守门按伤害类型分，见 {@code Debuffs#register}）。
 		 */
 		SUN,
 		/**
@@ -159,7 +167,7 @@ public final class SephiriaDamage {
 			return Kind.ELECTRIC;
 		}
 
-		if (source.is(SUN_SWORD)) {
+		if (source.is(SUN_SWORD) || source.is(ICE_SUN_SWORD)) {
 			return Kind.SUN;
 		}
 
@@ -469,6 +477,16 @@ public final class SephiriaDamage {
 	 */
 	public static DamageSource sunSword(ServerLevel level, ServerPlayer player) {
 		return new DamageSource(lookup(level, SUN_SWORD), player, player);
+	}
+
+	/**
+	 * 造一个太阳剑的<b>冰属性</b>伤害来源（数据包里的 sephiria:ice_sun_sword）。
+	 *
+	 * <p>永恒蚀在背包右半边时太阳剑走它：口径与 {@link #sunSword} 完全一致（{@link Kind#SUN}，
+	 * 包括索利斯·德克里的「太阳剑暴击几率」），只有元素与触发的减益不同（霜之触而不是火焰之触）。
+	 */
+	public static DamageSource iceSunSword(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, ICE_SUN_SWORD), player, player);
 	}
 
 	/**

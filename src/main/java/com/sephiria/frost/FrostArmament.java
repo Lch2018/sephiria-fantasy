@@ -4,6 +4,7 @@ import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.artifact.BlizzardHammerItem;
+import com.sephiria.artifact.EternalEclipseItem;
 import com.sephiria.artifact.ExorcismScabbardItem;
 import com.sephiria.artifact.IceBowItem;
 import com.sephiria.artifact.VolspaItem;
@@ -13,17 +14,24 @@ import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModParticleTypes;
 import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
+import com.sephiria.sun.SunSword;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.Unit;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
@@ -31,9 +39,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -78,9 +84,20 @@ import java.util.UUID;
  * 「脱战立即满充能」的机制已删掉）。唯一还看战斗状态的是<b>长矛的自动开打</b>——脱战不会自动攻击敌人。
  * 攒满时给一次雪片 + 一声轻响，HUD 那一行同时亮成冰蓝（见 {@link #sync}）。
  *
+ * <p><b>永恒蚀在背包左半边时整套换成火焰属性</b>（见 {@link #flameMode}）：伤害按<b>火元素强度</b>
+ * 结算、伤害类型换成 {@code sephiria:fire_attack}（于是触发的是火焰之触而不是霜之触），
+ * 特效从冰蓝换成焰黄——剑气弧换成 {@code sephiria_fantasy:flame_qi} 粒子、尾迹的雪片换成火苗、
+ * 锤子落地的雪环换成火环，三个飞行本体（铁斧 / 铁长矛 / 箭）也换成焰黄贴图那版
+ * （载体还是同样三个隐藏物品，只是多挂一个 {@link #FLAME_TOOL} 标记，物品模型按它换贴图）。
+ * 音效不换（用户只要求颜色）。
+ *
  * <p>伤害类型复用 {@code sephiria:ice_attack}（冰属性攻击伤害）：吃通用暴击、减伤与黄金之手，
- * 也照常触发冰川的霜之触（与普罗修姆戒指的附加冰伤同一条路）。
+ * 也照常触发冰川的霜之触（与普罗修姆戒指的附加冰伤同一条路）；火焰模式换成
+ * {@code sephiria:fire_attack}，照常触发余烬的火焰之触。
  * 伤害都只打「有威胁的生物」（{@code SephiriaDamage.strikeable}，不打玩家、不误伤和平生物）。
+ *
+ * <p><b>冰霜武具的攻击也会触发太阳剑</b>（永恒蚀的词条）：四处结算各补一句
+ * {@link SunSword#onFrostArmamentHit}——太阳剑那套系统的触发口径本来只认武器 / 魔法书伤害。
  */
 public final class FrostArmament {
 	/** 驱邪剑鞘的充能时间（tick）：6 秒。 */
@@ -212,6 +229,21 @@ public final class FrostArmament {
 		private FrostSyncPayload synced;
 	}
 
+	/**
+	 * 「这件飞行本体是焰黄那版」的标记组件（永恒蚀在左半边时挂上）。
+	 *
+	 * <p>三个载体（{@code ice_hammer} / {@code ice_spear} / {@code ice_arrow}）的贴图没法染色
+	 * ——Display 的物品展示实体只能换物品，所以照永恒蚀图标那套做：模型定义按这个组件挑贴图
+	 * （{@code items/ice_hammer.json} 那三个是 {@code minecraft:condition} + {@code has_component}）。
+	 */
+	public static final DataComponentType<Unit> FLAME_TOOL = Registry.register(
+			BuiltInRegistries.DATA_COMPONENT_TYPE,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "flame_tool"),
+			DataComponentType.<Unit>builder()
+					.persistent(Unit.CODEC)
+					.networkSynchronized(Unit.STREAM_CODEC)
+					.build());
+
 	private static final Map<UUID, State> STATES = new HashMap<>();
 	/** 飞行中的锤子：先拷一份再 clear 的推进方式与陨石同一套。 */
 	private static final List<Hammer> HAMMERS = new ArrayList<>();
@@ -228,11 +260,12 @@ public final class FrostArmament {
 	 * @param direction 飞行方向（释放那一刻的准星方向，三维、之后不再改）
 	 * @param damage    在挥出那一刻算好的伤害
 	 * @param roll      弧状贴图的面内倾角（同一发的多道各不相同）
+	 * @param flame     这一道是焰黄版还是冰蓝版（永恒蚀在左半边 = 焰黄，出手那一刻定下）
 	 * @param tick      已经飞了几刻
 	 * @param hit       已经挨过这一道的实体 id：同一条剑气对同一个目标只结算一次
 	 */
 	private record Qi(ServerLevel level, UUID ownerId, Vec3 from, Vec3 direction, float damage, float roll,
-			int tick, Set<Integer> hit) {
+			boolean flame, int tick, Set<Integer> hit) {
 	}
 
 	/**
@@ -242,10 +275,11 @@ public final class FrostArmament {
 	 * @param target   被打的那只敌人；飞到一半它没了就继续飞向 {@code fallback}
 	 * @param fallback 出发时记下的落点（目标没了时的替补）
 	 * @param damage   在出手那一刻算好的伤害
+	 * @param flame    焰黄版还是冰蓝版（见 {@link Qi#flame()}）
 	 * @param tick     已经飞了几刻
 	 */
 	private record Hammer(ServerLevel level, UUID ownerId, LivingEntity target, Vec3 from, Vec3 fallback,
-			float damage, int tick, Display.ItemDisplay body) {
+			float damage, boolean flame, int tick, Display.ItemDisplay body) {
 	}
 
 	/**
@@ -254,11 +288,12 @@ public final class FrostArmament {
 	 * @param from      出现点（玩家 12 格内的随机位置）
 	 * @param direction 飞行方向（冲向目标那一刻定下）
 	 * @param damage    出现那一刻算好的伤害
+	 * @param flame     焰黄版还是冰蓝版（见 {@link Qi#flame()}）
 	 * @param traveled  已经飞了多少格（到 {@link #SPEAR_DISTANCE} 就散）
 	 * @param hit       已经挨过这一根的实体 id：贯穿但同一个目标只打一次
 	 */
 	private record Spear(ServerLevel level, UUID ownerId, Vec3 from, Vec3 direction, float damage,
-			double traveled, Set<Integer> hit, Display.ItemDisplay body) {
+			boolean flame, double traveled, Set<Integer> hit, Display.ItemDisplay body) {
 	}
 
 	/**
@@ -267,10 +302,11 @@ public final class FrostArmament {
 	 * @param from      出手点（玩家眼睛前方，带一点随机错开）
 	 * @param direction 飞行方向（准星方向 + 一点随机偏角）
 	 * @param damage    放出去那一刻算好的伤害
+	 * @param flame     焰黄版还是冰蓝版（见 {@link Qi#flame()}）
 	 * @param traveled  已经飞了多少格
 	 */
 	private record IceArrow(ServerLevel level, UUID ownerId, Vec3 from, Vec3 direction, float damage,
-			double traveled, Display.ItemDisplay body) {
+			boolean flame, double traveled, Display.ItemDisplay body) {
 	}
 
 	private FrostArmament() {
@@ -321,9 +357,10 @@ public final class FrostArmament {
 		int times = 1 + extraTriggers(player);
 		Vec3 direction = player.getLookAngle();
 		Vec3 origin = player.getEyePosition();
+		boolean flame = flameMode(player);
 
 		for (int index = 0; index < times; index++) {
-			launchQi(player, level, origin, direction, damage, index, times);
+			launchQi(player, level, origin, direction, damage, flame, index, times);
 		}
 	}
 
@@ -602,14 +639,17 @@ public final class FrostArmament {
 		return Math.max(1, (int) Math.round(base / (1.0D + percent / 100.0D)));
 	}
 
-	/** 攒满时的小提示：脚下一捧雪片 + 一声轻响（这一套没有 HUD 条，靠它提醒「可以打了」）。 */
+	/**
+	 * 攒满时的小提示：脚下一捧粒子 + 一声轻响（这一套没有 HUD 条，靠它提醒「可以打了」）。
+	 *
+	 * <p>粒子跟着这一套的属性走：冰蓝那套是雪片、火焰模式是火苗；音效不换（用户只要求颜色）。
+	 */
 	private static void ready(ServerPlayer player, float pitch) {
 		if (!(player.level() instanceof ServerLevel level)) {
 			return;
 		}
 
-		level.sendParticles(ParticleTypes.SNOWFLAKE, player.getX(), player.getY() + 1.0D, player.getZ(),
-				14, 0.35D, 0.5D, 0.35D, 0.04D);
+		trail(level, flameMode(player), player.getX(), player.getY() + 1.0D, player.getZ(), 14, 0.35D, 0.04D);
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.POWDER_SNOW_BREAK,
 				SoundSource.PLAYERS, 0.5F, pitch);
 	}
@@ -620,36 +660,70 @@ public final class FrostArmament {
 
 	// ------------------------------------------------------------------ 剑气
 
-	/** 剑气的伤害：固定值 + 冰元素强度 × 倍率，再乘「冰霜武具的伤害」。 */
+	/**
+	 * 剑气的伤害：固定值 + 元素强度 × 倍率，再乘「冰霜武具的伤害」。
+	 *
+	 * <p>元素由 {@link #damageElement} 决定：平时是冰，永恒蚀在背包左半边时是火。
+	 */
 	private static double qiDamage(ServerPlayer player, int level0) {
 		double flat = ExorcismScabbardItem.flatDamageAt(level0);
-		double ice = PlayerStats.elementTotal(player, PlayerStats.Element.ICE)
+		double element = PlayerStats.elementTotal(player, damageElement(player))
 				* ExorcismScabbardItem.icePercentAt(level0) / 100.0D;
-		return (flat + ice) * frostDamageMultiplier(player);
+		return (flat + element) * frostDamageMultiplier(player);
 	}
 
-	/** 锤子的伤害：固定值 + 冰元素强度 × 倍率，再乘「冰霜武具的伤害」。 */
+	/** 锤子的伤害：固定值 + 元素强度 × 倍率，再乘「冰霜武具的伤害」。 */
 	private static double hammerDamage(ServerPlayer player, int level0) {
 		double flat = BlizzardHammerItem.flatDamageAt(level0);
-		double ice = PlayerStats.elementTotal(player, PlayerStats.Element.ICE)
+		double element = PlayerStats.elementTotal(player, damageElement(player))
 				* BlizzardHammerItem.icePercentAt(level0) / 100.0D;
-		return (flat + ice) * frostDamageMultiplier(player);
+		return (flat + element) * frostDamageMultiplier(player);
 	}
 
-	/** 冰长矛的伤害：固定值 + 冰元素强度 × 倍率，再乘「冰霜武具的伤害」。 */
+	/** 冰长矛的伤害：固定值 + 元素强度 × 倍率，再乘「冰霜武具的伤害」。 */
 	private static double spearDamage(ServerPlayer player, int level0) {
 		double flat = VolspaItem.flatDamageAt(level0);
-		double ice = PlayerStats.elementTotal(player, PlayerStats.Element.ICE)
+		double element = PlayerStats.elementTotal(player, damageElement(player))
 				* VolspaItem.icePercentAt(level0) / 100.0D;
-		return (flat + ice) * frostDamageMultiplier(player);
+		return (flat + element) * frostDamageMultiplier(player);
 	}
 
-	/** 冰弓箭矢的伤害（每发）：固定值 + 冰元素强度 × 倍率，再乘「冰霜武具的伤害」。 */
+	/** 冰弓箭矢的伤害（每发）：固定值 + 元素强度 × 倍率，再乘「冰霜武具的伤害」。 */
 	private static double bowDamage(ServerPlayer player, int level0) {
 		double flat = IceBowItem.flatDamageAt(level0);
-		double ice = PlayerStats.elementTotal(player, PlayerStats.Element.ICE)
+		double element = PlayerStats.elementTotal(player, damageElement(player))
 				* IceBowItem.icePercentAt(level0) / 100.0D;
-		return (flat + ice) * frostDamageMultiplier(player);
+		return (flat + element) * frostDamageMultiplier(player);
+	}
+
+	/**
+	 * 冰霜武具这一套现在按哪个元素结算：永恒蚀在背包左半边时是<b>火</b>，否则是冰。
+	 *
+	 * <p>只在「出手那一刻」查一次（伤害与这一发的颜色都在那时定下），飞行途中不重查——
+	 * 与陨石「伤害在发出那一刻算好」同一套口径。
+	 */
+	private static PlayerStats.Element damageElement(ServerPlayer player) {
+		return flameMode(player) ? PlayerStats.Element.FIRE : PlayerStats.Element.ICE;
+	}
+
+	/**
+	 * 永恒蚀是不是在赛菲利亚背包的<b>左半边</b>（在 = 冰霜武具整套改成火焰属性）。
+	 *
+	 * <p>现查背包（{@link EternalEclipseItem#sideOf}）而不是看物品组件：组件只管图标颜色。
+	 */
+	private static boolean flameMode(ServerPlayer player) {
+		return EternalEclipseItem.sideOf(player) == EternalEclipseItem.Side.LEFT;
+	}
+
+	/**
+	 * 这一发的伤害类型：火焰模式走 {@code sephiria:fire_attack}（触发火焰之触），
+	 * 否则走 {@code sephiria:ice_attack}（触发霜之触）。
+	 *
+	 * <p>两者的暴击 / 减伤 / 黄金之手口径完全一样，只有元素与触发的减益不同。
+	 * 触发者掉线时 {@code owner} 可以是 null（伤害照打，只是没有归属）。
+	 */
+	private static DamageSource damageSource(ServerLevel level, ServerPlayer owner, boolean flame) {
+		return flame ? SephiriaDamage.fireAttack(level, owner) : SephiriaDamage.iceAttack(level, owner);
 	}
 
 	/** 「冰霜武具的伤害」：连击档位与神器的同一项相加。 */
@@ -665,13 +739,14 @@ public final class FrostArmament {
 	 *
 	 * @param index 第几道（0 起）
 	 * @param total 这一发一共几道
+	 * @param flame 这一发是焰黄版还是冰蓝版（永恒蚀在左半边 = 焰黄）
 	 */
 	private static void launchQi(ServerPlayer player, ServerLevel level, Vec3 eye, Vec3 direction,
-			double damage, int index, int total) {
+			double damage, boolean flame, int index, int total) {
 		Vec3 from = eye.add(direction.scale(QI_START_OFFSET)).add(sideOffset(direction, index, total));
 
 		QIS.add(new Qi(level, player.getUUID(), from, direction.normalize(), (float) damage,
-				QI_ROLLS[index % QI_ROLLS.length], 0, new HashSet<>()));
+				QI_ROLLS[index % QI_ROLLS.length], flame, 0, new HashSet<>()));
 
 		level.playSound(null, from.x, from.y, from.z, SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 0.5F, 1.6F);
 	}
@@ -725,9 +800,9 @@ public final class FrostArmament {
 	/**
 	 * 把一道剑气往前推一刻；返回 null 表示它已经飞完（或撞墙 / 主人掉线）可以收工。
 	 *
-	 * <p>每刻走 {@link #QI_SPEED} 格：路上先做一次方块射线检测（撞到实心方块就停在墙上），
-	 * 再对轨迹周围 {@link #QI_DAMAGE_RADIUS} 格内的有威胁生物各结算一次（同一条剑气对同一个目标
-	 * 只打一次），最后按 {@link #QI_TRAIL_INTERVAL} 补一张弧状贴图 + 每刻一串雪片。
+	 * <p>每刻走 {@link #QI_SPEED} 格：不做方块检测（穿墙），对轨迹周围 {@link #QI_DAMAGE_RADIUS}
+	 * 格内的有威胁生物各结算一次（同一条剑气对同一个目标只打一次），
+	 * 最后按 {@link #QI_TRAIL_INTERVAL} 补一张弧状贴图 + 每刻一串尾迹粒子。
 	 */
 	private static Qi advanceQi(Qi qi) {
 		ServerPlayer owner = qi.level().getServer().getPlayerList().getPlayer(qi.ownerId());
@@ -746,13 +821,10 @@ public final class FrostArmament {
 		double visualY = stop.y - QI_VISUAL_DROP;
 
 		if (qi.tick() % QI_TRAIL_INTERVAL == 0) {
-			Vec3 dir = qi.direction();
-			qi.level().sendParticles(new ModParticleTypes.FrostQiOptions((float) QI_LENGTH, qi.roll(),
-							(float) dir.x, (float) dir.y, (float) dir.z),
-					stop.x, visualY, stop.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+			sendQi(qi.level(), qi.flame(), stop.x, visualY, stop.z, (float) QI_LENGTH, qi.roll(), qi.direction());
 		}
 
-		qi.level().sendParticles(ParticleTypes.SNOWFLAKE, stop.x, visualY, stop.z, 2, 0.25D, 0.25D, 0.25D, 0.02D);
+		trail(qi.level(), qi.flame(), stop.x, visualY, stop.z, 2, 0.25D, 0.02D);
 
 		int tick = qi.tick() + 1;
 
@@ -760,10 +832,41 @@ public final class FrostArmament {
 			return null;
 		}
 
-		return new Qi(qi.level(), qi.ownerId(), qi.from(), qi.direction(), qi.damage(), qi.roll(), tick, qi.hit());
+		return new Qi(qi.level(), qi.ownerId(), qi.from(), qi.direction(), qi.damage(), qi.roll(), qi.flame(),
+				tick, qi.hit());
 	}
 
-	/** 剑气在 {@code at} 这一小段周围结算一次伤害：有威胁、且这一道还没打过的目标各挨一下。 */
+	/**
+	 * 发一张剑气弧：冰蓝（{@code frost_qi}）或焰黄（{@code flame_qi}）。
+	 *
+	 * <p>两版的参数形状一样、渲染也是同一个类（{@code client.particle.FrostQiParticle}），
+	 * 颜色画在各自的贴图里，所以这里只有「用哪个粒子类型」这一个区别。
+	 */
+	private static void sendQi(ServerLevel level, boolean flame, double x, double y, double z,
+			float size, float roll, Vec3 direction) {
+		if (flame) {
+			level.sendParticles(new ModParticleTypes.FlameQiOptions(size, roll,
+							(float) direction.x, (float) direction.y, (float) direction.z),
+					x, y, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+		} else {
+			level.sendParticles(new ModParticleTypes.FrostQiOptions(size, roll,
+							(float) direction.x, (float) direction.y, (float) direction.z),
+					x, y, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+		}
+	}
+
+	/** 飞行尾迹的小粒子：冰蓝那套是雪片，火焰模式换成火苗（用户要求特效整组换色）。 */
+	private static void trail(ServerLevel level, boolean flame, double x, double y, double z,
+			int count, double spread, double speed) {
+		level.sendParticles(flame ? ParticleTypes.FLAME : ParticleTypes.SNOWFLAKE,
+				x, y, z, count, spread, spread, spread, speed);
+	}
+
+	/**
+	 * 剑气在 {@code at} 这一小段周围结算一次伤害：有威胁、且这一道还没打过的目标各挨一下。
+	 *
+	 * <p>每挨一下都顺手问一次太阳剑（永恒蚀的「冰霜武具的攻击也会触发太阳剑」）。
+	 */
 	private static void strikeAlong(Qi qi, ServerPlayer owner, Vec3 at) {
 		AABB area = new AABB(at, at).inflate(QI_DAMAGE_RADIUS);
 
@@ -774,7 +877,8 @@ public final class FrostArmament {
 
 			// 沿途要稳定打中每个目标：先清无敌帧（与陨石 / 露水同一套）
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(qi.level(), SephiriaDamage.iceAttack(qi.level(), owner), qi.damage());
+			victim.hurtServer(qi.level(), damageSource(qi.level(), owner, qi.flame()), qi.damage());
+			SunSword.onFrostArmamentHit(owner, victim);
 		}
 	}
 
@@ -801,6 +905,7 @@ public final class FrostArmament {
 	private static void throwSpears(ServerPlayer player, ServerLevel level, List<LivingEntity> victims,
 			double damage, int count) {
 		RandomSource random = level.getRandom();
+		boolean flame = flameMode(player);
 
 		for (int index = 0; index < count; index++) {
 			LivingEntity target = victims.get(random.nextInt(victims.size()));
@@ -812,9 +917,9 @@ public final class FrostArmament {
 				continue;
 			}
 
-			Display.ItemDisplay body = spawnBody(level, from, ModItems.ICE_SPEAR, BODY_SCALE);
+			Display.ItemDisplay body = spawnBody(level, from, ModItems.ICE_SPEAR, BODY_SCALE, flame);
 			SPEARS.add(new Spear(level, player.getUUID(), from, direction.normalize(), (float) damage,
-					0.0D, new HashSet<>(), body));
+					flame, 0.0D, new HashSet<>(), body));
 			orientFlyer(body, from, aim, SPEAR_IN_PLANE_DEGREES, 0.0F);
 		}
 
@@ -872,11 +977,12 @@ public final class FrostArmament {
 			}
 
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(spear.level(), SephiriaDamage.iceAttack(spear.level(), owner), spear.damage());
+			victim.hurtServer(spear.level(), damageSource(spear.level(), owner, spear.flame()), spear.damage());
+			SunSword.onFrostArmamentHit(owner, victim);
 		}
 
 		if ((int) (traveled / SPEAR_SPEED) % SPEAR_TRAIL_INTERVAL == 0) {
-			spear.level().sendParticles(ParticleTypes.SNOWFLAKE, at.x, at.y, at.z, 3, 0.2D, 0.2D, 0.2D, 0.03D);
+			trail(spear.level(), spear.flame(), at.x, at.y, at.z, 3, 0.2D, 0.03D);
 		}
 
 		if (traveled >= SPEAR_DISTANCE) {
@@ -885,7 +991,7 @@ public final class FrostArmament {
 		}
 
 		return new Spear(spear.level(), spear.ownerId(), spear.from(), spear.direction(), spear.damage(),
-				traveled, spear.hit(), spear.body());
+				spear.flame(), traveled, spear.hit(), spear.body());
 	}
 
 	// ------------------------------------------------------------------ 冰弓箭矢（冰弓）
@@ -904,9 +1010,11 @@ public final class FrostArmament {
 			direction = look.yRot((float) yawJitter).xRot((float) pitchJitter);
 		}
 
+		boolean flame = flameMode(player);
 		Vec3 from = randomNearSpawn(level, player);
-		Display.ItemDisplay body = spawnBody(level, from, ModItems.ICE_ARROW, ARROW_BODY_SCALE);
-		ARROWS.add(new IceArrow(level, player.getUUID(), from, direction.normalize(), (float) damage, 0.0D, body));
+		Display.ItemDisplay body = spawnBody(level, from, ModItems.ICE_ARROW, ARROW_BODY_SCALE, flame);
+		ARROWS.add(new IceArrow(level, player.getUUID(), from, direction.normalize(), (float) damage,
+				flame, 0.0D, body));
 		orientFlyer(body, from, from.add(direction.scale(ARROW_DISTANCE)), ARROW_IN_PLANE_DEGREES, 0.0F);
 	}
 
@@ -958,13 +1066,14 @@ public final class FrostArmament {
 			}
 
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(arrow.level(), SephiriaDamage.iceAttack(arrow.level(), owner), arrow.damage());
-			arrow.level().sendParticles(ParticleTypes.SNOWFLAKE, at.x, at.y, at.z, 10, 0.25D, 0.25D, 0.25D, 0.06D);
+			victim.hurtServer(arrow.level(), damageSource(arrow.level(), owner, arrow.flame()), arrow.damage());
+			SunSword.onFrostArmamentHit(owner, victim);
+			trail(arrow.level(), arrow.flame(), at.x, at.y, at.z, 10, 0.25D, 0.06D);
 			stop = true;
 			break;
 		}
 
-		arrow.level().sendParticles(ParticleTypes.SNOWFLAKE, at.x, at.y, at.z, 1, 0.1D, 0.1D, 0.1D, 0.01D);
+		trail(arrow.level(), arrow.flame(), at.x, at.y, at.z, 1, 0.1D, 0.01D);
 
 		if (stop) {
 			removeBody(arrow.body());
@@ -976,7 +1085,7 @@ public final class FrostArmament {
 		}
 
 		return new IceArrow(arrow.level(), arrow.ownerId(), arrow.from(), arrow.direction(), arrow.damage(),
-				traveled, arrow.body());
+				arrow.flame(), traveled, arrow.body());
 	}
 
 	// ------------------------------------------------------------------ 锤子
@@ -998,12 +1107,14 @@ public final class FrostArmament {
 	 */
 	private static void throwHammers(ServerPlayer player, ServerLevel level, List<LivingEntity> victims,
 			double damage, int count) {
+		boolean flame = flameMode(player);
+
 		for (int index = 0; index < count; index++) {
 			LivingEntity victim = victims.get(index % victims.size());
 			Vec3 from = randomNearSpawn(level, player);
 			Vec3 landing = victim.position().add(0.0D, victim.getBbHeight() * 0.4D, 0.0D);
-			HAMMERS.add(new Hammer(level, player.getUUID(), victim, from, landing, (float) damage, 0,
-					spawnBody(level, from, ModItems.ICE_HAMMER, BODY_SCALE)));
+			HAMMERS.add(new Hammer(level, player.getUUID(), victim, from, landing, (float) damage, flame, 0,
+					spawnBody(level, from, ModItems.ICE_HAMMER, BODY_SCALE, flame)));
 		}
 
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SNOWBALL_THROW,
@@ -1013,17 +1124,27 @@ public final class FrostArmament {
 	/**
 	 * 造一个飞行本体的物品展示实体：锤子是铁斧、冰长矛是铁长矛、冰弓的箭是箭
 	 * （都还没有自己的建模，先用原版物品顶着——用户说的）。满亮、无重力、带清理标签。
+	 *
+	 * <p>{@code flame} 为真时给物品栈挂一个 {@link #FLAME_TOOL} 标记：模型定义按它换成焰黄贴图
+	 * （Display 的物品没法染色，所以只能靠「同一个隐藏物品 + 组件选贴图」这一手，与永恒蚀图标同一套）。
 	 */
-	private static Display.ItemDisplay spawnBody(ServerLevel level, Vec3 at, Item item, float scale) {
+	private static Display.ItemDisplay spawnBody(ServerLevel level, Vec3 at, Item item, float scale,
+			boolean flame) {
 		Display.ItemDisplay body = EntityTypes.ITEM_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
 
 		if (body == null) {
 			return null;
 		}
 
+		ItemStack stack = new ItemStack(item);
+
+		if (flame) {
+			stack.set(FLAME_TOOL, Unit.INSTANCE);
+		}
+
 		SynchedEntityData data = body.getEntityData();
 		// 物品展示的配置与方块展示一样只在私有同步数据里：直接写（访问拓宽已打开这几个字段）
-		data.set(Display.ItemDisplay.DATA_ITEM_STACK_ID, new ItemStack(item));
+		data.set(Display.ItemDisplay.DATA_ITEM_STACK_ID, stack);
 		data.set(Display.ItemDisplay.DATA_ITEM_DISPLAY_ID, (byte) ItemDisplayContext.FIXED.getId());
 		data.set(Display.DATA_SCALE_ID, new Vector3f(scale));
 		data.set(Display.DATA_BRIGHTNESS_OVERRIDE_ID, BRIGHTNESS_OVERRIDE);
@@ -1073,11 +1194,11 @@ public final class FrostArmament {
 
 		orientFlyer(hammer.body(), hammer.from(), to, HAMMER_IN_PLANE_DEGREES,
 				(float) (hammer.tick() / (double) (duration - 1) * FLIGHT_SPIN));
-		snowTrail(hammer.level(), at, travel);
+		snowTrail(hammer.level(), hammer.flame(), at, travel);
 
 		if (hammer.tick() + 1 < duration) {
 			return new Hammer(hammer.level(), hammer.ownerId(), hammer.target(), hammer.from(), hammer.fallback(),
-					hammer.damage(), hammer.tick() + 1, hammer.body());
+					hammer.damage(), hammer.flame(), hammer.tick() + 1, hammer.body());
 		}
 
 		smash(hammer, to);
@@ -1136,15 +1257,14 @@ public final class FrostArmament {
 		body.getEntityData().set(Display.DATA_LEFT_ROTATION_ID, spin.mul(base));
 	}
 
-	/** 飞行尾迹：越接近落点雪片越多。 */
-	private static void snowTrail(ServerLevel level, Vec3 at, double travel) {
-		level.sendParticles(ParticleTypes.SNOWFLAKE, at.x, at.y, at.z, 2 + (int) (5 * travel),
-				0.25D, 0.25D, 0.25D, 0.02D);
-		level.sendParticles(ParticleTypes.CLOUD, at.x, at.y, at.z, 1 + (int) (3 * travel),
-				0.2D, 0.2D, 0.2D, 0.01D);
+	/** 飞行尾迹：越接近落点粒子越多（冰蓝那套是雪片 + 云，火焰模式换成火苗 + 烟）。 */
+	private static void snowTrail(ServerLevel level, boolean flame, Vec3 at, double travel) {
+		trail(level, flame, at.x, at.y, at.z, 2 + (int) (5 * travel), 0.25D, 0.02D);
+		level.sendParticles(flame ? ParticleTypes.SMOKE : ParticleTypes.CLOUD, at.x, at.y, at.z,
+				1 + (int) (3 * travel), 0.2D, 0.2D, 0.2D, 0.01D);
 	}
 
-	/** 落地：周围一圈的有威胁生物吃一次冰属性伤害 + 一捧雪与碎冰的特效。 */
+	/** 落地：周围一圈的有威胁生物吃一次属性伤害 + 一捧冰屑（火焰模式是火苗）与冲击闪光。 */
 	private static void smash(Hammer hammer, Vec3 at) {
 		ServerLevel level = hammer.level();
 		ServerPlayer owner = level.getServer().getPlayerList().getPlayer(hammer.ownerId());
@@ -1157,25 +1277,32 @@ public final class FrostArmament {
 			}
 
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(level, SephiriaDamage.iceAttack(level, owner), hammer.damage());
+			victim.hurtServer(level, damageSource(level, owner, hammer.flame()), hammer.damage());
+
+			if (owner != null) {
+				SunSword.onFrostArmamentHit(owner, victim);
+			}
 		}
 
-		level.sendParticles(ParticleTypes.SNOWFLAKE, at.x, at.y + 0.2D, at.z, 22, 0.5D, 0.35D, 0.5D, 0.08D);
-		level.sendParticles(ParticleTypes.CLOUD, at.x, at.y + 0.3D, at.z, 10, 0.4D, 0.3D, 0.4D, 0.05D);
-		level.sendParticles(ColorParticleOption.create(ParticleTypes.FLASH, 0.72F, 0.92F, 1.0F),
+		trail(level, hammer.flame(), at.x, at.y + 0.2D, at.z, 22, 0.5D, 0.08D);
+		level.sendParticles(hammer.flame() ? ParticleTypes.SMOKE : ParticleTypes.CLOUD,
+				at.x, at.y + 0.3D, at.z, 10, 0.4D, 0.3D, 0.4D, 0.05D);
+		// 闪光：冰蓝那一发是冷白，火焰那一发是暖白
+		level.sendParticles(hammer.flame()
+						? ColorParticleOption.create(ParticleTypes.FLASH, 1.0F, 0.78F, 0.4F)
+						: ColorParticleOption.create(ParticleTypes.FLASH, 0.72F, 0.92F, 1.0F),
 				at.x, at.y + 0.4D, at.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
-		ring(level, at);
+		ring(level, hammer.flame(), at);
 		level.playSound(null, at.x, at.y, at.z, SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 0.8F, 0.9F);
 		level.playSound(null, at.x, at.y, at.z, SoundEvents.POWDER_SNOW_BREAK, SoundSource.PLAYERS, 0.9F, 0.9F);
 	}
 
-	/** 贴地的雪圈：一圈往外推的雪片，落地那一下才看得见的「震荡」。 */
-	private static void ring(ServerLevel level, Vec3 at) {
+	/** 贴地的冲击环：一圈往外推的粒子（冰蓝是雪片、火焰是火苗），落地那一下才看得见的「震荡」。 */
+	private static void ring(ServerLevel level, boolean flame, Vec3 at) {
 		for (int index = 0; index < 14; index++) {
 			double angle = Math.PI * 2.0D * index / 14;
-			level.sendParticles(ParticleTypes.SNOWFLAKE,
-					at.x + Math.cos(angle) * 2.0D, at.y + 0.15D, at.z + Math.sin(angle) * 2.0D,
-					1, 0.1D, 0.05D, 0.1D, 0.05D);
+			trail(level, flame, at.x + Math.cos(angle) * 2.0D, at.y + 0.15D, at.z + Math.sin(angle) * 2.0D,
+					1, 0.1D, 0.05D);
 		}
 	}
 

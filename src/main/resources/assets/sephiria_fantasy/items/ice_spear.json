@@ -1,6 +1,15 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "sephiria_fantasy:item/ice_spear"
+    "type": "minecraft:condition",
+    "property": "minecraft:has_component",
+    "component": "sephiria_fantasy:flame_tool",
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "sephiria_fantasy:item/flame_spear"
+    },
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "sephiria_fantasy:item/ice_spear"
+    }
   }
 }

@@ -107,6 +107,7 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.BLUE_CLAW);
 						output.accept(ModItems.PROSHIUM_RING);
 						output.accept(ModItems.SEALED_TEGAS);
+						output.accept(ModItems.ETERNAL_ECLIPSE);
 						output.accept(ModItems.EXORCISM_SCABBARD);
 						output.accept(ModItems.BLIZZARD_HAMMER);
 						output.accept(ModItems.MAGIC_CONCH);

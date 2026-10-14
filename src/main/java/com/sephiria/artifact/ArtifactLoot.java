@@ -24,8 +24,8 @@ public final class ArtifactLoot {
 	/**
 	 * 品质权重：默认（神器 / 石板宝箱）、商店、升级宝箱、药水各一套。
 	 *
-	 * <p>权重是<b>按件</b>算的，所以某一档的实际概率 = 该档件数 × 它的权重。羁绊只有两件
-	 * （乐谱《台风》与封印的特加斯），却要落在「稀有」与「传说」之间，于是它的权重不能照
+	 * <p>权重是<b>按件</b>算的，所以某一档的实际概率 = 该档件数 × 它的权重。羁绊只有几件
+	 * （乐谱《台风》/ 封印的特加斯 / 永恒蚀），却要落在「稀有」与「传说」之间，于是它的权重不能照
 	 * 「比传说大一点」来填：商店那套要按件数重新配（见 {@link #SHOP}）。
 	 *
 	 * @param bond     羁绊（神器最高品质）
@@ -38,10 +38,10 @@ public final class ArtifactLoot {
 		 * 商店：白/蓝/黄/红 = 30/40/10/2 与宝箱相同，只有<b>羁绊</b>提到 30
 		 * （2026-10 用户要求「羁绊的出现概率调为稀有与传说之间」）。
 		 *
-		 * <p>算法按<b>件</b>展开就很直观：某一档的总权重 = 件数 × 它的权重。羁绊只有 2 件，
-		 * 要落在传说（9 件 × 2 = 18）与稀有（16 件 × 10 = 160）之间，2 × 30 = 60 正好；
-		 * 想再调只动这一个数字（2 × 权重 要留在 18 与 160 之间）。
-		 * ——件数会随后续批次变（这几行里的数字是 2026-10-13 那批的数），改档次时重新数一遍。
+		 * <p>算法按<b>件</b>展开就很直观：某一档的总权重 = 件数 × 它的权重。羁绊现在 3 件
+		 * （乐谱《台风》/ 封印的特加斯 / 永恒蚀），要落在传说（11 件 × 2 = 22）与稀有（18 件 × 10 = 180）
+		 * 之间，3 × 30 = 90 正好；想再调只动这一个数字（3 × 权重 要留在 22 与 180 之间）。
+		 * ——件数会随后续批次变（这几行里的数字是 2026-10-14 那批的数），改档次时重新数一遍。
 		 */
 		public static final Weights SHOP = new Weights(30, 40, 10, 2, 30, 1);
 		/** 升级宝箱：80/100/10/2/1（好东西更少）。 */
@@ -86,6 +86,7 @@ public final class ArtifactLoot {
 				ModItems.OAK_CHARCOAL, ModItems.FIRE_BUG, ModItems.LAVA_BEAD,
 				ModItems.WISDOM_AMULET, ModItems.BLUE_CLAW, ModItems.PROSHIUM_RING,
 				ModItems.SEALED_TEGAS,
+				ModItems.ETERNAL_ECLIPSE,
 				ModItems.EXORCISM_SCABBARD, ModItems.BLIZZARD_HAMMER, ModItems.MAGIC_CONCH,
 				ModItems.ICE_WINGS, ModItems.FROZEN_HEART, ModItems.VOLSPA, ModItems.ICE_BOW);
 	}

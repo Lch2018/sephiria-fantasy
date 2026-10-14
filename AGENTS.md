@@ -12,7 +12,7 @@
   其它名字的旧 jar（同 mod id 有两个 jar 会报重复 mod）、把新 jar 复制到 PCL 实例的 mods 目录。
   **部署前确认游戏已关**：脚本会自己拦（检测到在跑的游戏进程就拒绝，除非加 `-Force`），
   因为覆盖正在运行的 jar 会让游戏随后报 `ZipFile invalid LOC header` 崩掉（见记忆手册 §三）。
-- jar 名字跟 `gradle.properties` 里的 `version` 走（当前 `0.1.10.9-a`），
+- jar 名字跟 `gradle.properties` 里的 `version` 走（当前 `0.1.10.13-a`），
   所以是 `build/libs/sephiria-fantasy-<version>.jar` → `mods\sephiria-fantasy-<version>.jar`；改版本号只要改那一处。
 - **版本号用日期**：`0.1.<月>.<日>-a`（10 月 9 日 → `0.1.10.9-a`；`-a` = A 测）。
   **每次「发布」前先把 `gradle.properties` 的 `version` 改成当天的日期**再构建实装——
@@ -21,6 +21,11 @@
   以 `tools/deploy.ps1` 里写死的路径为准，别照旧路径找 jar）。
 - **不要自动启动游戏。** 用户自己从 PCL2 打开实例测试。开发客户端 `gradlew.bat runClient`
   只在用户明确要求时使用（例如需要看 `run/logs/latest.log` 排查渲染问题）。
+- 改完资源跑 `tools/check-resources.ps1`（合成表图案、标签引用、进度条目、原版 id 白名单、
+  物品模型引用、中英语言键等）。**动过 `assets/…/items/*.json`（物品模型定义）再跑一次
+  `gradlew.bat modelDecodeCheck`**：物品模型只在客户端资源加载时解析，字段名写错要开游戏才发现，
+  这个任务用原版真编解码器把本模组的定义解一遍（`src/test/java/ModelDecodeCheck.java`，
+  只在开发时用、不进 jar）。
 - 实装后可以扫一遍 PCL 实例的 `logs\latest.log`（用户跑过就有）确认没有异常，但不要为此启动游戏。
 
 ## 版本管理
@@ -67,7 +72,11 @@
     必须合并进主文件（见 `tools/merge-katana-animations.ps1`）。
 - 导入流程：`tools/import-katana.ps1`（工程导出 → 资源包，并归一化 `format_version`）。
 - 改完资源跑 `tools/check-resources.ps1` 校验，其中包含「UV 必须落在 0~16」的守卫
-  （Blockbench 像素空间 UV 曾导致贴图错乱）。
+  （Blockbench 像素空间 UV 曾导致贴图错乱），以及物品模型定义引用到的每个模型 / 贴图是否都在。
+- **同一个物品按状态换贴图**（永恒蚀的三种颜色、掉落的太阳剑、冰霜武具的三个飞行体）不用写客户端代码：
+  状态写进物品组件，模型定义里用 `minecraft:select` + `minecraft:component`（按值挑模型）或
+  `minecraft:condition` + `minecraft:has_component`（只判断有没有）——样板看原版
+  `assets/minecraft/items/compass.json` / `clock.json`，细节与坑见记忆手册 §三。
 
 ## 代码风格
 

@@ -9,17 +9,23 @@
 # it glows instead of glaring) plus one continuous falloff out to the faint aura - drawn on the
 # translucent particle layer and faded out over its lifetime by client/particle/FrostQiParticle.
 #
-# Output : src/main/resources/assets/sephiria_fantasy/textures/particle/frost_qi_0.png (64x64)
-# Preview: .preview/frost_qi_preview.png  (alpha over a mid grey, enlarged, for eyeballing)
+# Two palettes (the shape is identical, only the ramp changes):
+#   ice   (default) -> frost_qi_0.png   the Frost Armament arc as it always was
+#   flame           -> flame_qi_0.png   the same arc in flame yellow, used while the Eternal
+#                                       Eclipse artifact sits in the LEFT half of the backpack
+#                                       (the frost armament turns fire-based; see EternalEclipseItem)
+#
+# Output : src/main/resources/assets/sephiria_fantasy/textures/particle/<name>_0.png (64x64)
+# Preview: .preview/<name>_preview.png  (alpha over a mid grey, enlarged, for eyeballing)
 # ASCII-only on purpose: Windows PowerShell 5.1 reads non-ASCII .ps1 as GBK.
+
+param([string]$Palette = 'ice')
 
 Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path -Parent $PSScriptRoot
 $outDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\particle'
-$out = Join-Path $outDir 'frost_qi_0.png'
 $previewDir = Join-Path $root '.preview'
-$preview = Join-Path $previewDir 'frost_qi_preview.png'
 
 # ---- shape and colour knobs (all lengths are texture pixels; the canvas is SIZE x SIZE) ----
 $SIZE = 64
@@ -35,14 +41,28 @@ $CORE_ALPHA = 0.9        # peak alpha: a little see-through, so it glows instead
 $AURA_SCALE = 2.6        # aura half thickness = core * AURA_SCALE + AURA_MIN (the faint glow)
 $AURA_MIN = 0.4
 $AURA_FALLOFF = 1.5      # exponent of the alpha falloff across the aura (lower = softer bleed)
-$TIP_SHIFT = 0.5         # fraction of the sweep after which the line turns from white to pale blue
-$FRINGE_EXP = 0.6        # how early the aura turns from pale blue to deep blue (1.0 = late)
+$TIP_SHIFT = 0.5         # fraction of the sweep after which the line turns from white to the pale stop
+$FRINGE_EXP = 0.6        # how early the aura turns from the pale stop to the deep stop (1.0 = late)
 
 # ice palette: white core -> pale ice blue -> deeper blue at the fringe (the mod's ice tint family,
 # #8FDCFF for the frozen overlay / #7EFAFF for the electric spark are the neighbours)
-$WHITE = @(0xF2, 0xFE, 0xFF)
-$PALE = @(0xA8, 0xE4, 0xFF)
-$DEEP = @(0x4E, 0x9F, 0xE8)
+# flame palette: the Sun Sword's own three colours (gen-sun-slash-texture.ps1), so the fire version
+# of the arc sits in the same warm family as the sun-sword mark
+$PALETTES = @{
+    'ice'   = @{ name = 'frost_qi'; white = @(0xF2, 0xFE, 0xFF); pale = @(0xA8, 0xE4, 0xFF); deep = @(0x4E, 0x9F, 0xE8) }
+    'flame' = @{ name = 'flame_qi'; white = @(0xFD, 0xFD, 0xFB); pale = @(0xFD, 0xFD, 0x64); deep = @(0xFD, 0xA5, 0x42) }
+}
+
+if (-not $PALETTES.ContainsKey($Palette)) {
+    throw ("unknown palette '" + $Palette + "' (use ice or flame)")
+}
+
+$chosen = $PALETTES[$Palette]
+$out = Join-Path $outDir ($chosen.name + '_0.png')
+$preview = Join-Path $previewDir ($chosen.name + '_preview.png')
+$WHITE = $chosen.white
+$PALE = $chosen.pale
+$DEEP = $chosen.deep
 
 function Mix([int[]]$a, [int[]]$b, [double]$t) {
     $t = [Math]::Max(0.0, [Math]::Min(1.0, $t))
@@ -86,7 +106,7 @@ for ($x = 0; $x -lt $SIZE; $x++) {
         $alpha = [int][Math]::Round(255 * $CORE_ALPHA * [Math]::Pow(1.0 - $k, $AURA_FALLOFF))
         if ($alpha -le 0) { continue }
 
-        # the core turns from white to pale blue in the outer part of the sweep
+        # the core turns from white to the pale stop in the outer part of the sweep
         $tipShift = ($sweep - $TIP_SHIFT) / (1.0 - $TIP_SHIFT)
         $coreColour = Mix $WHITE $PALE $tipShift
         $colour = Mix $coreColour $DEEP ([Math]::Pow($k, $FRINGE_EXP))

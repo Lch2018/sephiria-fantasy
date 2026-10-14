@@ -24,8 +24,17 @@ $items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_c
     'exorcism_scabbard', 'blizzard_hammer', 'magic_conch',
     # batch 22 (frost armament, second wave): wings / heart / volspa / bow
     'ice_wings', 'frozen_heart', 'volspa', 'ice_bow',
+    # batch 23 (eternal eclipse): the sun-sword + frost-armament bond artifact
+    'eternal_eclipse',
     # the three hidden carriers the frost projectiles are drawn with (ice-blue recolours)
     'ice_hammer', 'ice_spear', 'ice_arrow')
+
+# Extra MODELS that no item definition is named after: the eternal-eclipse batch recolours existing
+# art instead of adding items (the carriers' definitions switch to them by component, the eclipse's
+# definition selects between them by component), so they are checked as models, not as items - see
+# section 1b. Their textures are what the in-game look depends on, so both files must be there.
+$extraModels = @('flame_hammer', 'flame_spear', 'flame_arrow',
+    'eternal_eclipse_flame', 'eternal_eclipse_frost', 'sun_sword_ice')
 $branches = @('sword_and_shield', 'greatsword', 'dagger', 'crossbow', 'katana', 'staff')
 
 $errors = 0
@@ -78,6 +87,19 @@ foreach ($id in $items) {
         if (-not (Test-Path (Join-Path $modelsDir ($r + '.json')))) { Fail "items/$id.json -> models/item/$r.json is missing" }
     }
     Ok ("items/$id.json -> " + (($refs | Select-Object -Unique) -join ', '))
+}
+
+# 1b) extra models (no item definition of their own): the file and its palette texture must exist
+foreach ($name in $extraModels) {
+    $modelPath = Join-Path $modelsDir ($name + '.json')
+    if (-not (Test-Path $modelPath)) { Fail "missing models/item/$name.json"; continue }
+    $json = ReadJson $modelPath
+    $layer = $json.textures.layer0
+    if (-not $layer) { Fail "models/item/$name.json has no textures.layer0"; continue }
+    if ($layer -notlike 'sephiria_fantasy:item/*') { Fail "models/item/$name.json layer0 '$layer' is not a sephiria_fantasy:item texture"; continue }
+    $sprite = Join-Path $texDir (((($layer -split '/')[-1]) -replace '\.png$', '') + '.png')
+    if (-not (Test-Path $sprite)) { Fail "models/item/$name.json layer0 $layer is missing"; continue }
+    Ok "models/item/$name.json -> $layer"
 }
 
 # 2) every model file: valid geometry, existing palette, resolvable parent

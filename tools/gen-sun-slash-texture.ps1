@@ -8,17 +8,23 @@
 # The three colours are the ones the previous dust-particle line used, so the mark keeps the
 # Sun Sword palette: hot white core, yellow flanks, orange fringe (and the ends turn yellow).
 #
-# Output : src/main/resources/assets/sephiria_fantasy/textures/particle/sun_slash_0.png (64x64)
-# Preview: .preview/sun_slash_preview.png  (alpha over a mid grey, enlarged, for eyeballing)
+# Two palettes (the shape is identical, only the ramp changes):
+#   sun (default) -> sun_slash_0.png   the Sun Sword mark as it always was
+#   ice           -> ice_slash_0.png   the same mark in ice blue, used while the Eternal Eclipse
+#                                      artifact sits in the RIGHT half of the backpack (the sun
+#                                      sword turns ice-based; see EternalEclipseItem)
+#
+# Output : src/main/resources/assets/sephiria_fantasy/textures/particle/<name>_0.png (64x64)
+# Preview: .preview/<name>_preview.png  (alpha over a mid grey, enlarged, for eyeballing)
 # ASCII-only on purpose: Windows PowerShell 5.1 reads non-ASCII .ps1 as GBK.
+
+param([string]$Palette = 'sun')
 
 Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path -Parent $PSScriptRoot
 $outDir = Join-Path $root 'src\main\resources\assets\sephiria_fantasy\textures\particle'
-$out = Join-Path $outDir 'sun_slash_0.png'
 $previewDir = Join-Path $root '.preview'
-$preview = Join-Path $previewDir 'sun_slash_preview.png'
 
 # ---- shape and colour knobs (lengths are texture pixels; the canvas is SIZE x SIZE) ----
 # The mark is a THIN bright line inside a soft aura (2026-10-11: the user asked for 70% of the
@@ -36,12 +42,27 @@ $CORE_ALPHA = 0.88       # peak alpha: a little see-through, so it glows instead
 $AURA_SCALE = 2.5        # aura half thickness = core * AURA_SCALE + AURA_MIN (the faint glow)
 $AURA_MIN = 0.35
 $AURA_FALLOFF = 1.6      # exponent of the alpha falloff across the aura (lower = softer bleed)
-$TIP_SHIFT = 0.45        # fraction of the half length after which the core turns yellow
-$FRINGE_EXP = 0.6        # how early the aura turns from yellow to orange (1.0 = late)
+$TIP_SHIFT = 0.45        # fraction of the half length after which the core turns to the pale stop
+$FRINGE_EXP = 0.6        # how early the aura turns from the pale stop to the deep stop (1.0 = late)
 
-$WHITE = @(0xFD, 0xFD, 0xFB)
-$YELLOW = @(0xFD, 0xFD, 0x64)
-$ORANGE = @(0xFD, 0xA5, 0x42)
+# sun palette: hot white core -> yellow flanks -> orange fringe (the Sun Sword's own colours)
+# ice palette: the frost-qi ramp (white -> pale ice blue -> deep blue), so the ice version of the
+# mark matches the Frost Armament's arc and the frozen-overlay tint family
+$PALETTES = @{
+    'sun' = @{ name = 'sun_slash'; white = @(0xFD, 0xFD, 0xFB); pale = @(0xFD, 0xFD, 0x64); deep = @(0xFD, 0xA5, 0x42) }
+    'ice' = @{ name = 'ice_slash'; white = @(0xF2, 0xFE, 0xFF); pale = @(0xA8, 0xE4, 0xFF); deep = @(0x4E, 0x9F, 0xE8) }
+}
+
+if (-not $PALETTES.ContainsKey($Palette)) {
+    throw ("unknown palette '" + $Palette + "' (use sun or ice)")
+}
+
+$chosen = $PALETTES[$Palette]
+$out = Join-Path $outDir ($chosen.name + '_0.png')
+$preview = Join-Path $previewDir ($chosen.name + '_preview.png')
+$WHITE = $chosen.white
+$PALE = $chosen.pale
+$DEEP = $chosen.deep
 
 function Mix([int[]]$a, [int[]]$b, [double]$t) {
     $t = [Math]::Max(0.0, [Math]::Min(1.0, $t))
@@ -68,9 +89,9 @@ for ($x = 0; $x -lt $SIZE; $x++) {
     $aura = $core * $AURA_SCALE + $AURA_MIN
     $band = $aura - $plateau
 
-    # the core turns from white to yellow in the outer part of the cut
+    # the core turns from white to the pale stop in the outer part of the cut
     $tipShift = ($t - $TIP_SHIFT) / (1.0 - $TIP_SHIFT)
-    $coreColour = Mix $WHITE $YELLOW $tipShift
+    $coreColour = Mix $WHITE $PALE $tipShift
 
     for ($y = 0; $y -lt $SIZE; $y++) {
         $dy = [Math]::Abs($y - $cx)
@@ -80,7 +101,7 @@ for ($x = 0; $x -lt $SIZE; $x++) {
         $k = [Math]::Max(0.0, ($dy - $plateau) / $band)
         $alpha = [int][Math]::Round(255 * $CORE_ALPHA * [Math]::Pow(1.0 - $k, $AURA_FALLOFF))
         if ($alpha -le 0) { continue }
-        $colour = Mix $coreColour $ORANGE ([Math]::Pow($k, $FRINGE_EXP))
+        $colour = Mix $coreColour $DEEP ([Math]::Pow($k, $FRINGE_EXP))
         $bmp.SetPixel($x, $y, [System.Drawing.Color]::FromArgb($alpha, $colour[0], $colour[1], $colour[2]))
     }
 }

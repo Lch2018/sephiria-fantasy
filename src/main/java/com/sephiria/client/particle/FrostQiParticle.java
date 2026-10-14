@@ -95,10 +95,14 @@ public class FrostQiParticle extends SunSlashParticle {
 		this.extractRotatedQuad(state, camera, quaternion, partialTick);
 	}
 
-	/** 粒子工厂：由 {@code ParticleResourcesMixin} 在注册时挂到 sephiria_fantasy:frost_qi 上。 */
-	public record Provider(SpriteSet sprites) implements ParticleProvider<ModParticleTypes.FrostQiOptions> {
+	/**
+	 * 粒子工厂：由 {@code ParticleResourcesMixin} 在注册时挂到 sephiria_fantasy:frost_qi 与
+	 * sephiria_fantasy:flame_qi 上（冰蓝与焰黄两版的参数形状一样，见
+	 * {@link ModParticleTypes.QiOptions}，所以共用这一个工厂——颜色画在各自的贴图里）。
+	 */
+	public record Provider(SpriteSet sprites) implements ParticleProvider<ModParticleTypes.QiOptions> {
 		@Override
-		public Particle createParticle(ModParticleTypes.FrostQiOptions options, ClientLevel level,
+		public Particle createParticle(ModParticleTypes.QiOptions options, ClientLevel level,
 				double x, double y, double z, double xd, double yd, double zd, RandomSource random) {
 			return new FrostQiParticle(level, x, y, z, options.size(), options.roll(),
 					new Vec3(options.dirX(), options.dirY(), options.dirZ()), this.sprites);

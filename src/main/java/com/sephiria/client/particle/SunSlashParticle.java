@@ -72,10 +72,14 @@ public class SunSlashParticle extends SingleQuadParticle {
 		this.setAlpha(1.0F - Mth.clamp(progress, 0.0F, 1.0F));
 	}
 
-	/** 粒子工厂：由 {@code ParticleResourcesMixin} 在注册时挂到 sephiria_fantasy:sun_slash 上。 */
-	public record Provider(SpriteSet sprites) implements ParticleProvider<ModParticleTypes.SunSlashOptions> {
+	/**
+	 * 粒子工厂：由 {@code ParticleResourcesMixin} 在注册时挂到 sephiria_fantasy:sun_slash 与
+	 * sephiria_fantasy:ice_slash 上（两版的参数形状一样，见 {@link ModParticleTypes.SlashOptions}，
+	 * 所以共用这一个工厂——贴图由各自的粒子类型决定，颜色就画在贴图里）。
+	 */
+	public record Provider(SpriteSet sprites) implements ParticleProvider<ModParticleTypes.SlashOptions> {
 		@Override
-		public Particle createParticle(ModParticleTypes.SunSlashOptions options, ClientLevel level,
+		public Particle createParticle(ModParticleTypes.SlashOptions options, ClientLevel level,
 				double x, double y, double z, double xd, double yd, double zd, RandomSource random) {
 			return new SunSlashParticle(level, x, y, z, options.size(), options.roll(), this.sprites);
 		}

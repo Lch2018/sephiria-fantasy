@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
+import com.sephiria.artifact.EternalEclipseItem;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.network.SunSwordSyncPayload;
 import com.sephiria.registry.ModItems;
@@ -21,6 +22,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Unit;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -46,6 +48,15 @@ import java.util.UUID;
  * {@code setNeverPickUp()} + {@code setUnlimitedLifetime()}，原版拾取与自然消失都关掉了，
  * 由这里的邻近判定收进数量里；主人记在物品栈的 {@link #OWNER} 组件上，
  * 所以重登、跨维度回来照样能捡（组件跟着存档走）。
+ *
+ * <p><b>永恒蚀在背包右半边时整套换成冰属性</b>（见 {@link #iceMode}）：伤害按<b>冰元素强度</b>
+ * 结算、伤害类型换成 {@code sephiria:ice_sun_sword}（于是触发的是霜之触而不是火焰之触），
+ * 剑痕换成冰蓝贴图的 {@code sephiria_fantasy:ice_slash} 粒子，<b>掉落的太阳剑</b>也换成冰蓝贴图
+ * ——掉落物还是同一个隐藏物品 {@code sun_sword}，只是多挂一个 {@link #ICE_DROP} 标记，
+ * 物品模型定义按它挑贴图（Display 与物品图标都没法染色，只能走组件选模型这一手）。
+ *
+ * <p>冰蓝版的暴击 / 减伤 / 黄金之手口径与火的那版完全一样（{@code SephiriaDamage.Kind.SUN}），
+ * 包括索利斯·德克里的「太阳剑暴击几率」。
  */
 public final class SunSword {
 	/** 基础数量上限（2 档激活时就有）。 */
@@ -85,6 +96,20 @@ public final class SunSword {
 			DataComponentType.<UUID>builder()
 					.persistent(Codec.STRING.xmap(UUID::fromString, UUID::toString))
 					.networkSynchronized(ByteBufCodecs.STRING_UTF8.map(UUID::fromString, UUID::toString))
+					.build());
+
+	/**
+	 * 「这一支掉落物是冰蓝版」的标记组件（永恒蚀在背包右半边时挂上）。
+	 *
+	 * <p>拾取判定只看物品是不是 {@code sun_sword}（不看这个标记），所以两种颜色都能收进数量里；
+	 * 模型定义按这个标记换贴图（见 {@code items/sun_sword.json}）。
+	 */
+	public static final DataComponentType<Unit> ICE_DROP = Registry.register(
+			BuiltInRegistries.DATA_COMPONENT_TYPE,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_sword_ice"),
+			DataComponentType.<Unit>builder()
+					.persistent(Unit.CODEC)
+					.networkSynchronized(Unit.STREAM_CODEC)
 					.build());
 
 	/** 一名玩家的太阳剑状态。 */
@@ -132,6 +157,23 @@ public final class SunSword {
 				}
 			}
 		});
+	}
+
+	/**
+	 * <b>冰霜武具的攻击也触发太阳剑</b>（永恒蚀的词条）：{@code frost.FrostArmament} 的四处结算
+	 * （剑气 / 锤击 / 冰长矛 / 冰弓箭矢）每打中一个目标都调一次这里。
+	 *
+	 * <p>与武器攻击那条路同一个投掷逻辑（有剑可投就投一支、没激活 / 没剑就什么都不做），
+	 * 区别只在次数固定为 1——正午磨刀石的「造成武器伤害时额外触发」讲的是武器伤害，
+	 * 冰霜武具这四件不算武器伤害。
+	 */
+	public static void onFrostArmamentHit(ServerPlayer player, LivingEntity target) {
+		// 这一下已经把人打死了就别再投了：剑痕与掉落物照样会出现、剑也照扣，纯浪费一支
+		if (target instanceof Player || !target.isAlive()) {
+			return;
+		}
+
+		throwSword(player, target);
 	}
 
 	/** 注册推进器：数量回复、地面拾取、HUD 同步（由 {@link Sephiria#onInitialize()} 调用）。 */
@@ -249,8 +291,11 @@ public final class SunSword {
 	}
 
 	/**
-	 * 投一支太阳剑：直接在被命中者身上结算一次火属性伤害 + 一道笔直的划痕，然后把那支剑
-	 * 掉在他脚下（带陨铁耳环时掉在自己附近）。没有剑、或者火元素强度为 0（打不出伤害）时这一发不投。
+	 * 投一支太阳剑：直接在被命中者身上结算一次属性伤害 + 一道笔直的划痕，然后把那支剑
+	 * 掉在他脚下（带陨铁耳环时掉在自己附近）。没有剑、或者元素强度为 0（打不出伤害）时这一发不投。
+	 *
+	 * <p>元素与颜色看 {@link #iceMode}：冰属性那版按冰元素强度结算、走 {@code ice_sun_sword}
+	 * 伤害类型、剑痕与掉落物都是冰蓝的。
 	 *
 	 * @return 这一发有没有真的投出去（正午磨刀石的连投靠它决定要不要继续）
 	 */
@@ -269,7 +314,9 @@ public final class SunSword {
 			return false;
 		}
 
-		double damage = PlayerStats.elementTotal(player, PlayerStats.Element.FIRE) * DAMAGE_PERCENT / 100.0D
+		boolean ice = iceMode(player);
+		double damage = PlayerStats.elementTotal(player, ice ? PlayerStats.Element.ICE : PlayerStats.Element.FIRE)
+				* DAMAGE_PERCENT / 100.0D
 				* (1.0D + ArtifactCombo.SUN_SWORD.sunSwordDamagePercent(comboLevel) / 100.0D)
 				* (1.0D + ArtifactEffects.sunSwordDamagePercentBonus(player) / 100.0D);
 
@@ -292,11 +339,22 @@ public final class SunSword {
 
 		// 直接打在敌人身上（不是从玩家那儿飞过去的实体），所以先清无敌帧，保证这一下落地
 		SephiriaDamage.clearDamageCooldown(target);
-		target.hurtServer(level, SephiriaDamage.sunSword(level, player), (float) damage);
-		slash(level, target, player, enlarged);
-		drop(level, player, ArtifactEffects.sunSwordDropNearPlayer(player) ? player.position() : target.position());
+		target.hurtServer(level, ice ? SephiriaDamage.iceSunSword(level, player) : SephiriaDamage.sunSword(level, player),
+				(float) damage);
+		slash(level, target, player, enlarged, ice);
+		drop(level, player, ArtifactEffects.sunSwordDropNearPlayer(player) ? player.position() : target.position(),
+				ice);
 		sync(player, state, max);
 		return true;
+	}
+
+	/**
+	 * 永恒蚀是不是在赛菲利亚背包的<b>右半边</b>（在 = 太阳剑整套改成冰属性）。
+	 *
+	 * <p>现查背包（{@link EternalEclipseItem#sideOf}）而不是看物品组件：组件只管图标颜色。
+	 */
+	private static boolean iceMode(ServerPlayer player) {
+		return EternalEclipseItem.sideOf(player) == EternalEclipseItem.Side.RIGHT;
 	}
 
 	/**
@@ -328,11 +386,15 @@ public final class SunSword {
 	 * 长度与方向都在这里定好、随粒子包发给客户端：长度在「增大」（火红的夕阳）那一发 ×1.6，
 	 * 方向从 {@link #SLASH_ROLLS} 里随机挑一个（3→9 点 / 3→7 点 / 5→11 点）。
 	 *
+	 * <p>永恒蚀在右半边时换成冰蓝的那一版（{@code sephiria_fantasy:ice_slash}）：形状一样、
+	 * 参数一样，只是贴图的配色不同。
+	 *
 	 * <p>落点要往<b>攻击者那一侧</b>推出目标身体一点：剑痕是朝向摄像机的一张方片，
 	 * 正好切在目标身体正中的话，半个方片埋在模型里、会被目标自己挡住，看起来像一根断掉的虚线。
 	 * 推出多少按目标体宽算（窄的僵尸半宽 0.3 格、宽的劫掠兽近 1 格），保证整道划痕都在身体外面。
 	 */
-	private static void slash(ServerLevel level, LivingEntity target, ServerPlayer player, boolean enlarged) {
+	private static void slash(ServerLevel level, LivingEntity target, ServerPlayer player, boolean enlarged,
+			boolean ice) {
 		Vec3 center = target.position().add(0.0D, target.getBbHeight() / 2.0D, 0.0D);
 		double length = SLASH_LENGTH * (enlarged ? ENLARGE_SLASH_SCALE : 1.0D);
 		float roll = SLASH_ROLLS[level.getRandom().nextInt(SLASH_ROLLS.length)];
@@ -343,14 +405,29 @@ public final class SunSword {
 			center = center.add(toPlayer.normalize().scale(offset));
 		}
 
-		level.sendParticles(new ModParticleTypes.SunSlashOptions((float) length, roll),
-				center.x, center.y, center.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+		if (ice) {
+			level.sendParticles(new ModParticleTypes.IceSlashOptions((float) length, roll),
+					center.x, center.y, center.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+		} else {
+			level.sendParticles(new ModParticleTypes.SunSlashOptions((float) length, roll),
+					center.x, center.y, center.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+		}
 	}
 
-	/** 把那支太阳剑掉在被命中者脚下：普通物品实体（无重力关掉），但原版拾取与消失都关掉。 */
-	private static void drop(ServerLevel level, ServerPlayer player, Vec3 pos) {
+	/**
+	 * 把那支太阳剑掉在被命中者脚下：普通物品实体（无重力关掉），但原版拾取与消失都关掉。
+	 *
+	 * <p>冰属性那版挂一个 {@link #ICE_DROP} 标记：掉落物还是同一个隐藏物品，模型定义按标记换贴图。
+	 * 拾取只看物品与主人，两种颜色都能收（见 {@link #isOurDrop}）。
+	 */
+	private static void drop(ServerLevel level, ServerPlayer player, Vec3 pos, boolean ice) {
 		ItemStack stack = new ItemStack(ModItems.SUN_SWORD);
 		stack.set(OWNER, player.getUUID());
+
+		if (ice) {
+			stack.set(ICE_DROP, Unit.INSTANCE);
+		}
+
 		ItemEntity drop = new ItemEntity(level, pos.x, pos.y + DROP_HEIGHT, pos.z, stack);
 		drop.setNeverPickUp();
 		drop.setUnlimitedLifetime();

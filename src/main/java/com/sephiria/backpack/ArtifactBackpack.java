@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.SkillStorage;
 import com.sephiria.artifact.BackpackStorable;
+import com.sephiria.artifact.EternalEclipseItem;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -100,7 +101,13 @@ public final class ArtifactBackpack extends SimpleContainer {
 
 	/** 取某个玩家的背包（首次访问时从附件里读出来）。 */
 	public static ArtifactBackpack of(ServerPlayer player) {
-		return CACHE.computeIfAbsent(player.getUUID(), uuid -> new ArtifactBackpack(player, player.getAttached(SAVED)));
+		return CACHE.computeIfAbsent(player.getUUID(), uuid -> {
+			ArtifactBackpack backpack = new ArtifactBackpack(player, player.getAttached(SAVED));
+			// 装载完对账一次永恒蚀的图标颜色：存档里没写过这个组件（老存档、或指令塞进来的副本）
+			// 的那一份也能立刻拿到正确的那张图。这里只改物品组件、不调 setChanged，不会递归。
+			EternalEclipseItem.stamp(backpack);
+			return backpack;
+		});
 	}
 
 	/**
@@ -220,6 +227,26 @@ public final class ArtifactBackpack extends SimpleContainer {
 		return 1;
 	}
 
+	/**
+	 * 放进格子（或换下来）时先给<b>被换掉的那一份</b>清掉「在哪半边」组件。
+	 *
+	 * <p>永恒蚀的图标颜色跟着它待在哪半边走（见 {@link EternalEclipseItem#SIDE}），
+	 * 而搬走之后那一份已经不在这个容器里、{@link #setChanged()} 再也看不到它，
+	 * 所以必须在交接的这一瞬间清掉，否则它会带着背包里的颜色跑到别处去。
+	 */
+	@Override
+	public void setItem(int slot, ItemStack stack) {
+		EternalEclipseItem.clear(this.getItem(slot));
+		super.setItem(slot, stack);
+	}
+
+	/** 取走（同样是离开背包的那一瞬间，理由见 {@link #setItem}）。 */
+	@Override
+	public ItemStack removeItem(int slot, int amount) {
+		EternalEclipseItem.clear(this.getItem(slot));
+		return super.removeItem(slot, amount);
+	}
+
 	@Override
 	public void setChanged() {
 		super.setChanged();
@@ -230,6 +257,8 @@ public final class ArtifactBackpack extends SimpleContainer {
 			return;
 		}
 
+		// 永恒蚀的图标颜色按「在第几列」对账（与属性一样是现查状态，不是记上次的值）
+		EternalEclipseItem.stamp(this);
 		this.owner.setAttached(SAVED, snapshot());
 		// 神器会影响物理强度与冲刺上限，属性面板和 HUD 各刷新一次
 		PlayerStats.sync(this.owner);

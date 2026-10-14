@@ -229,11 +229,14 @@ public final class Debuffs {
 			boolean weaponOrArtifact = kind == SephiriaDamage.Kind.WEAPON || kind == SephiriaDamage.Kind.ARTIFACT;
 			boolean electricAttack = kind == SephiriaDamage.Kind.ELECTRIC
 					&& !source.is(SephiriaDamage.ELECTRIC_SHOCK);
-			boolean fireAttack = kind == SephiriaDamage.Kind.SUN
+			// 太阳剑分火 / 冰两版（永恒蚀在背包右半边时走冰的那版），两版的 Kind 都是 SUN，
+			// 所以这一条按**伤害类型**认而不是按 Kind：元素不同，该触发的减益也不同
+			boolean fireAttack = source.is(SephiriaDamage.SUN_SWORD)
 					|| kind == SephiriaDamage.Kind.FIRE_ATTACK;
-			// 冰的那条：攻击打出的冰属性伤害（ice_attack）；冰冻自己的结算也是冰伤害，
-			// 但它是减益伤害（Kind.ICE），进不来这里
-			boolean iceAttack = kind == SephiriaDamage.Kind.ICE_ATTACK;
+			// 冰的那条：攻击打出的冰属性伤害（ice_attack，以及太阳剑的冰版 ice_sun_sword）；
+			// 冰冻自己的结算也是冰伤害，但它是减益伤害（Kind.ICE），进不来这里
+			boolean iceAttack = kind == SephiriaDamage.Kind.ICE_ATTACK
+					|| source.is(SephiriaDamage.ICE_SUN_SWORD);
 
 			if (weaponOrArtifact || electricAttack) {
 				tryApplyShock(entity, player);

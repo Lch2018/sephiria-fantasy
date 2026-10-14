@@ -65,6 +65,9 @@ $cache5 = 'C:\Users\28237\.zcode\cli\image-cache\sess_891ddd3d-4c82-4d37-b9da-bf
 $glacierRef = Join-Path $root 'tools\artifact-ref\glacier'
 # the frost-armament batch (combo icon + three artifacts) uses the same copied-reference layout.
 $frostRef = Join-Path $root 'tools\artifact-ref\frost_armament'
+# the eternal-eclipse batch (one artifact) uses the same copied-reference layout. Its two recoloured
+# variants (flame / ice) are derived from the cut 16x16 icon by tools/gen-eclipse-textures.ps1.
+$eclipseRef = Join-Path $root 'tools\artifact-ref\eclipse'
 
 foreach ($dir in @($texDir, $guiDir, $previewDir)) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -713,6 +716,14 @@ $jobs = @(
     @{ name = 'volspa'; root = 'frost'; source = 'volspa.png';
        target = 16; dir = 'item' },
     @{ name = 'ice_bow'; root = 'frost'; source = 'ice_bow.png';
+       target = 16; dir = 'item' },
+
+    # batch 23: the eternal-eclipse artifact (a 75x75 mock-up with the sun + blue moon carving).
+    # The carving's own body is painted in the plate frame's #222034, so the raw reference gets
+    # flooded away (only the bright sun / moon pixels survive); the -inked copy has just the
+    # enclosed body nudged darker (tools/ink-dark-body.ps1), same as wisdom_amulet in batch 20.
+    # Its flame / ice variants are NOT cut here - tools/gen-eclipse-textures.ps1 recolours this one.
+    @{ name = 'eternal_eclipse'; root = 'eclipse'; source = 'eternal_eclipse-inked.png';
        target = 16; dir = 'item' }
 )
 
@@ -728,7 +739,7 @@ foreach ($job in $jobs) {
     $outDir = if ($job.dir -eq 'gui') { $guiDir } else { $texDir }
     $outFile = Join-Path $outDir ($name + '.png')
 
-    $sourceRoot = if ($job.root -eq 'frost') { $frostRef } elseif ($job.root -eq 'glacier') { $glacierRef } elseif ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
+    $sourceRoot = if ($job.root -eq 'eclipse') { $eclipseRef } elseif ($job.root -eq 'frost') { $frostRef } elseif ($job.root -eq 'glacier') { $glacierRef } elseif ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
 
     if (-not (Test-Path $sourceRoot)) {
         # the wechat temp folder is recycled by the chat client: once a whole batch's reference

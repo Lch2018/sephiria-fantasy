@@ -451,6 +451,11 @@ HUD 布局设置             H
                              （冷却 2/1.5/1 秒）                                （3 档）
 封印的特加斯    余烬   羁绊   【唯一】灼伤变更为蓝色灼伤；灼伤额外伤害 +3/6/9/12%
                              （双连击：余烬与冰川各 +1 级）                     （4 档）
+永恒蚀          太阳剑+冰霜武具 羁绊 【唯一】<b>双连击</b>（太阳剑与冰霜武具各 +1 级）：看它待在赛菲利亚
+                             背包的哪半边——左半边把冰霜武具整套改成<b>火焰属性</b>、右半边把太阳剑
+                             整套改成<b>冰属性</b>（伤害元素、伤害类型与特效颜色一起换）；
+                             冰霜武具与太阳剑的伤害各 +6/13/21/30%；
+                             冰霜武具的攻击也会触发太阳剑                          （4 档）
 驱邪剑鞘        冰霜武具 高级 【唯一】每 6 秒充能，充能后挥击武器时沿准星方向发射冰属性剑气
                              （4/6/8/10/12/14/16 + 冰属性伤害 30/40/50/60/70/80/100%）（7 档）
 暴风雪之锤      冰霜武具 高级 【唯一】每 7 秒充能，充能后冲刺时向最近的敌人投掷一把锤子
@@ -465,6 +470,14 @@ HUD 布局设置             H
 
   双连击：风车同时给<b>风之歌与影子各 +1 级</b>（{@code combos()} 返回两个连击）。设计上「羁绊」品质
   的神器都是双连击，但双连击不限于羁绊品质。
+  永恒蚀（太阳剑 + 冰霜武具，羁绊·【唯一】）也是双连击，机制最特殊：它看自己待在赛菲利亚背包的
+  <b>哪半边</b>（背包 6 格宽，前三列 = 左半边）决定把哪一套改成对侧元素——
+  <b>左半边</b>：冰霜武具整套改成<b>火焰属性</b>（按火元素强度结算 + fire_attack 类型 + 焰黄特效）；
+  <b>右半边</b>：太阳剑整套改成<b>冰属性</b>（按冰元素强度结算 + ice_sun_sword 类型 + 冰蓝特效）。
+  玩法判定每次出手现查背包格子（<b>不看物品组件</b>——组件只负责图标，免得用指令塞一份带组件的
+  副本就能骗到效果）；图标颜色靠物品组件 sephiria_fantasy:eternal_eclipse_side
+  （0 不在背包 / 1 左 / 2 右）：背包内容一变就按格子对账、离开背包时清掉，
+  物品模型定义用 minecraft:select 读它挑三张贴图之一（默认 / 焰黄 / 冰蓝）。
 
 最高元素伤害     在「物理强度 / 火元素强度 / 冰元素强度 / 电元素强度」四项里挑<b>数值最高</b>的一项加上去。
                  比较时用<b>不含该加成</b>的数值（否则加成自己会改变谁最高）；并列按 物理 → 火 → 冰 → 电 取前者。
@@ -583,6 +596,11 @@ HUD 布局设置             H
   的伤害都投一支，有剑可投时）。
   伤害类型是 sephiria_fantasy:sun_sword（Kind.SUN）：吃通用暴击与黄金之手、正常吃减伤，但既不算武器
   也不算神器攻击——不触发电击之触 / 树枝 / 台风那类「造成武器或神器伤害时」的效果（防链式自投）。
+  <b>永恒蚀在背包右半边时整条换成冰属性</b>（2026-10-14）：伤害按<b>冰元素强度</b>结算、
+  伤害类型换成 sephiria_fantasy:ice_sun_sword（Kind 仍是 SUN，所以暴击 / 减伤 / 黄金之手
+  与索利斯·德克里的「太阳剑暴击几率」全都不变），剑痕换成冰蓝贴图的 sephiria_fantasy:ice_slash
+  粒子、<b>掉落的太阳剑</b>也换成冰蓝贴图（同一个隐藏物品 + 一个组件标记，模型定义按它挑图）。
+  元素不同、触发的减益也不同：火那版触发火焰之触，冰那版触发霜之触。
   特效是敌人身上一道<b>笔直的剑痕</b>：一张贴图粒子（自定义粒子 sephiria_fantasy:sun_slash，
   贴图 textures/particle/sun_slash_0.png），观感照原版<b>横扫之刃</b>的剑痕——同一张朝向摄像机的方片、
   同样全程满亮、同样短促，区别只在贴图是<b>直形</b>而不是弧形。方片边长就是剑痕长度（1.7 格，
@@ -615,7 +633,8 @@ HUD 布局设置             H
   <b>火焰之触</b>：造成伤害时给目标附加「灼伤」减益，冷却 2 秒按攻击者记
   （8 档加速后 = 间隔 ÷ 2.5 → 0.8 秒，口径同电击之触）。
   触发口径与电击之触同一套：玩家的<b>武器 / 神器伤害</b>，以及**攻击打出的火属性伤害**
-  （太阳剑的 sephiria_fantasy:sun_sword、红蛇之眼陨石的 sephiria_fantasy:fire_attack）都算；灼伤自己的结算
+  （太阳剑的火那版 sephiria_fantasy:sun_sword、红蛇之眼陨石的 sephiria_fantasy:fire_attack、
+  永恒蚀在左半边时冰霜武具那一套打出的伤害）都算；灼伤自己的结算
   （sephiria_fantasy:burn 类型）是减益伤害，不进触发口径——即文案里的「不包括减益伤害」，防链式自触。
   （原版火焰附魔 / 岩浆那类环境火不触发：它们的伤害来源不是武器也不是神器。）
   层数满了不加、也不吃掉这次冷却（与电击之触同）。
@@ -630,7 +649,8 @@ HUD 布局设置             H
   <b>霜之触</b>：造成伤害时给目标附加「冻伤」减益，冷却 2 秒按攻击者记
   （6 档加速后 = 间隔 ÷ 2.5 → 0.8 秒，口径与电击之触 / 火焰之触完全一致）。
   触发口径与另两条「之触」同一套：玩家的<b>武器 / 神器伤害</b>，以及**攻击打出的冰属性伤害**
-  （sephiria_fantasy:ice_attack：普罗修姆戒指的附加冰伤）都算；冰冻自己的结算
+  （sephiria_fantasy:ice_attack：普罗修姆戒指的附加冰伤、冰霜武具那一套；
+  太阳剑的冰那版 sephiria_fantasy:ice_sun_sword）都算；冰冻自己的结算
   （sephiria_fantasy:freeze）与蓝色灼伤的冰那几跳（sephiria_fantasy:blue_burn）都是减益伤害，
   不进触发口径——即文案里的「不包括减益伤害」，防链式自触。
   冰元素强度有两类来源：连击的 4/8 档（+6/+8）与神器（睿智护符、蓝爪的「冰属性伤害」，
@@ -689,6 +709,15 @@ HUD 布局设置             H
     + 神器的同一项)。锤子落地那一下是半径 2.5 格的 AOE；两者都只打有威胁的生物
     （不打玩家、不误伤和平生物）。伤害类型复用 sephiria_fantasy:ice_attack（Kind.ICE_ATTACK）：
     吃通用暴击、减伤与黄金之手，并且照常触发冰川的霜之触——与普罗修姆戒指的附加冰伤同一条路。
+  · <b>永恒蚀在背包左半边时这一套整条换成火焰属性</b>（2026-10-14）：伤害按<b>火元素强度</b>结算、
+    伤害类型换成 sephiria_fantasy:fire_attack（Kind.FIRE_ATTACK，于是触发的是火焰之触而不是霜之触），
+    特效从冰蓝换成焰黄——剑气弧换粒子（sephiria_fantasy:flame_qi）、尾迹的雪片换火苗、
+    锤子落地的雪环换火环、三个飞行本体（铁斧 / 铁长矛 / 箭）换成焰黄贴图那一版
+    （载体还是同样三个隐藏物品，多挂一个 sephiria_fantasy:flame_tool 组件、模型定义按它挑图）。
+    音效不换（用户只要求颜色）。
+  · <b>冰霜武具的攻击也会触发太阳剑</b>（永恒蚀的词条）：剑气 / 锤击 / 冰长矛 / 冰弓箭矢
+    每打中一个目标都照太阳剑那一套投一支（有剑可投时；正午磨刀石的「额外触发」只管武器伤害，
+    不在这条路上加次数）。
   · <b>额外触发 1 次</b>（10 档）：剑鞘多发一道剑气（横向错开一点、倾角换一个），
     锤子多扔一把（打下一个最近的敌人；敌人不够就重复打同一个）、长矛多飞一根、
     <b>冰弓的整轮弹幕再打一遍</b>（2026-10-13 用户要求把冰弓也算进来：多出来的那几轮不额外扣弹药，
@@ -1100,8 +1129,8 @@ HUD 布局设置             H
   <b>重型弩的弩矢</b>更彻底：实现了 SephiriaDamage.Source 标记，入场无条件清帧（任何目标），
   所以穿透连射每一发都满额；原版箭矢 / 原版弩 / 环境伤害都不受影响。
   <b>模组的伤害类型</b>另外登记在 data/minecraft/tags/damage_type/bypasses_cooldown.json
-  （artifact_damage / sun_sword / electric_attack / electric_shock / fire_attack / burn /
-  ice_attack / freeze / blue_burn / true_damage），声明式地跳过入场判定——
+  （artifact_damage / sun_sword / ice_sun_sword / electric_attack / electric_shock / fire_attack /
+  burn / ice_attack / freeze / blue_burn / true_damage），声明式地跳过入场判定——
   <b>新加伤害类型时记得往这个表里补一行</b>（漏了不会报错，只是那一类伤害会重新受无敌帧约束）。
   注意：**覆盖 data/minecraft 下的标签是整份替换、不是合并**——bypasses_armor / bypasses_enchantments
   这两张表 2026-10 补回了原版条目（之前只写了本模组的 true_damage，把原版自带的 19 条冲掉了）。
@@ -1279,8 +1308,8 @@ HP 偷取          新属性（俗称吸血），默认 0：造成的<b>所有</
                          权重按件算：白/蓝/黄/红 = 30/40/10/2，<b>羁绊单独一档提权到 30</b>
                          （2026-10-11 用户要求「羁绊的概率调到稀有与传说之间」）：
                          判据是羁绊档总权重（2 × 权重）落在传说档与稀有档的总权重之间——
-                         2026-10-13 那批是传说 9 件 × 2 = 18、稀有 16 件 × 10 = 160，羁绊 2 × 30 = 60
-                         正好在中间（约每格 3.2%，稀有 8.4%、传说 0.95%）。
+                         2026-10-14 那批是传说 11 件 × 2 = 22、稀有 18 件 × 10 = 180，羁绊 3 × 30 = 90
+                         正好在中间。
                          件数会随后续批次变，要调就按「重新数件数」来。
                          神器 / 石板宝箱仍走老权重（羁绊 1），要一起调就改 ArtifactLoot 里那两张表
 宝箱格                   固定卖「神器宝箱」与「石板宝箱」，价格相同
@@ -1371,7 +1400,7 @@ HP 偷取                  src/main/java/com/sephiria/stats/Lifesteal.java
 经验→叶子结算            src/main/java/com/sephiria/mixin/LeafExperienceMixin.java
 伪随机（暴击 / 闪避）     src/main/java/com/sephiria/stats/PseudoRandom.java
 数据包：伤害类型           src/main/resources/data/sephiria_fantasy/damage_type/（true_damage / artifact_damage /
-                         electric_shock / electric_attack / sun_sword / burn / fire_attack）
+                         electric_shock / electric_attack / sun_sword / ice_sun_sword / burn / fire_attack）
 神器技能系统             src/main/java/com/sephiria/artifact/skill/（ArtifactSkill / ArtifactSkills / 两个技能 / SkillSlots）
                           src/main/java/com/sephiria/client/skill/（技能页与客户端镜像）
 限时增益（急速 / 旗帜）   src/main/java/com/sephiria/stats/TimedAttributes.java

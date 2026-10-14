@@ -56,5 +56,17 @@ public abstract class ParticleResourcesMixin {
 		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.FROST_QI), qi);
 		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.FROST_QI),
 				new FrostQiParticle.Provider(qi));
+
+		// 永恒蚀那两版换色特效：形状与上面的剑气 / 剑痕完全一样，只是贴图换成了焰黄 / 冰蓝
+		// （工厂也是同一个——参数形状一样，见 ModParticleTypes.QiOptions / SlashOptions）
+		MutableSpriteSet flameQi = new MutableSpriteSet();
+		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.FLAME_QI), flameQi);
+		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.FLAME_QI),
+				new FrostQiParticle.Provider(flameQi));
+
+		MutableSpriteSet iceSlash = new MutableSpriteSet();
+		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.ICE_SLASH), iceSlash);
+		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.ICE_SLASH),
+				new SunSlashParticle.Provider(iceSlash));
 	}
 }

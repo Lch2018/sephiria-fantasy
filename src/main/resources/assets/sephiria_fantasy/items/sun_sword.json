@@ -1,6 +1,15 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "sephiria_fantasy:item/sun_sword"
+    "type": "minecraft:condition",
+    "property": "minecraft:has_component",
+    "component": "sephiria_fantasy:sun_sword_ice",
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "sephiria_fantasy:item/sun_sword_ice"
+    },
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "sephiria_fantasy:item/sun_sword"
+    }
   }
 }

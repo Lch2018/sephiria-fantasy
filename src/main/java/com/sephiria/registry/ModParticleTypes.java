@@ -43,6 +43,21 @@ public final class ModParticleTypes {
 	/** 冰霜武具的剑气：一道冰蓝色的<b>弧</b>（贴图 textures/particle/frost_qi_0.png）。 */
 	public static final ParticleType<FrostQiOptions> FROST_QI = registerFrostQi();
 
+	/**
+	 * 永恒蚀在左半边时的剑气：同一道弧，颜色换成焰黄（贴图 textures/particle/flame_qi_0.png）。
+	 *
+	 * <p>颜色画在贴图里，所以「换色」= 换一个粒子类型（渲染那一套完全共用，见
+	 * {@code client.particle.FrostQiParticle}）；参数形状与冰蓝那份一样（{@link QiOptions}）。
+	 */
+	public static final ParticleType<FlameQiOptions> FLAME_QI = registerFlameQi();
+
+	/**
+	 * 永恒蚀在右半边时的剑痕：太阳剑那道直痕的冰蓝版（贴图 textures/particle/ice_slash_0.png）。
+	 *
+	 * <p>同上：形状与太阳剑剑痕一模一样，只有贴图的配色不同。
+	 */
+	public static final ParticleType<IceSlashOptions> ICE_SLASH = registerIceSlash();
+
 	private ModParticleTypes() {
 	}
 
@@ -63,8 +78,47 @@ public final class ModParticleTypes {
 				FabricParticleTypes.complex(FrostQiOptions.CODEC, FrostQiOptions.STREAM_CODEC));
 	}
 
+	private static ParticleType<FlameQiOptions> registerFlameQi() {
+		Identifier id = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "flame_qi");
+		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
+				FabricParticleTypes.complex(FlameQiOptions.CODEC, FlameQiOptions.STREAM_CODEC));
+	}
+
+	private static ParticleType<IceSlashOptions> registerIceSlash() {
+		Identifier id = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "ice_slash");
+		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
+				FabricParticleTypes.complex(IceSlashOptions.CODEC, IceSlashOptions.STREAM_CODEC));
+	}
+
 	/** 由 {@code Sephiria#onInitialize()} 调用：引用一次本类即触发静态字段的注册。 */
 	public static void initialize() {
+	}
+
+	/**
+	 * 剑气弧的粒子参数形状（边长、面内倾角、飞行方向）：冰蓝（{@link FrostQiOptions}）与焰黄
+	 * （{@link FlameQiOptions}）两份字段完全一样，只有粒子类型不同——渲染端与工厂因此只写一份
+	 * （{@code client.particle.FrostQiParticle}）。
+	 */
+	public interface QiOptions extends ParticleOptions {
+		float size();
+
+		float roll();
+
+		float dirX();
+
+		float dirY();
+
+		float dirZ();
+	}
+
+	/**
+	 * 剑痕的粒子参数形状（边长、面内倾角）：火红（{@link SunSlashOptions}）与冰蓝
+	 * （{@link IceSlashOptions}）两份同形，共用 {@code client.particle.SunSlashParticle}。
+	 */
+	public interface SlashOptions extends ParticleOptions {
+		float size();
+
+		float roll();
 	}
 
 	/**
@@ -77,7 +131,7 @@ public final class ModParticleTypes {
 	 * 之所以用带参数的粒子类型、而不是原版横扫那种「把尺寸塞进速度字段」的写法：
 	 * 那条路要靠 {@code count = 0} 分支里 {@code 散布 × 速度} 的巧合，读代码的人看不出来是在传尺寸。
 	 */
-	public record SunSlashOptions(float size, float roll) implements ParticleOptions {
+	public record SunSlashOptions(float size, float roll) implements SlashOptions {
 		public static final MapCodec<SunSlashOptions> CODEC = RecordCodecBuilder.mapCodec(
 				instance -> instance.group(
 						Codec.FLOAT.fieldOf("size").forGetter(SunSlashOptions::size),
@@ -95,6 +149,25 @@ public final class ModParticleTypes {
 		}
 	}
 
+	/** 剑痕的冰蓝版（永恒蚀在右半边时太阳剑用它）：字段与 {@link SunSlashOptions} 相同。 */
+	public record IceSlashOptions(float size, float roll) implements SlashOptions {
+		public static final MapCodec<IceSlashOptions> CODEC = RecordCodecBuilder.mapCodec(
+				instance -> instance.group(
+						Codec.FLOAT.fieldOf("size").forGetter(IceSlashOptions::size),
+						Codec.FLOAT.optionalFieldOf("roll", 0.0F).forGetter(IceSlashOptions::roll)
+				).apply(instance, IceSlashOptions::new));
+
+		public static final StreamCodec<ByteBuf, IceSlashOptions> STREAM_CODEC = StreamCodec.composite(
+				ByteBufCodecs.FLOAT, IceSlashOptions::size,
+				ByteBufCodecs.FLOAT, IceSlashOptions::roll,
+				IceSlashOptions::new);
+
+		@Override
+		public ParticleType<?> getType() {
+			return ICE_SLASH;
+		}
+	}
+
 	/**
 	 * 冰霜武具那道弧状剑气的粒子参数：边长（格）、面内倾角（弧度）与<b>飞行方向</b>。
 	 *
@@ -103,7 +176,7 @@ public final class ModParticleTypes {
 	 * ——见 {@code client.particle.FrostQiParticle}。倾角仍是那张面内的旋转（多道之间错开）。
 	 */
 	public record FrostQiOptions(float size, float roll, float dirX, float dirY, float dirZ)
-			implements ParticleOptions {
+			implements QiOptions {
 		public static final MapCodec<FrostQiOptions> CODEC = RecordCodecBuilder.mapCodec(
 				instance -> instance.group(
 						Codec.FLOAT.fieldOf("size").forGetter(FrostQiOptions::size),
@@ -124,6 +197,32 @@ public final class ModParticleTypes {
 		@Override
 		public ParticleType<?> getType() {
 			return FROST_QI;
+		}
+	}
+
+	/** 剑气的焰黄版（永恒蚀在左半边时冰霜武具用它）：字段与 {@link FrostQiOptions} 相同。 */
+	public record FlameQiOptions(float size, float roll, float dirX, float dirY, float dirZ)
+			implements QiOptions {
+		public static final MapCodec<FlameQiOptions> CODEC = RecordCodecBuilder.mapCodec(
+				instance -> instance.group(
+						Codec.FLOAT.fieldOf("size").forGetter(FlameQiOptions::size),
+						Codec.FLOAT.optionalFieldOf("roll", 0.0F).forGetter(FlameQiOptions::roll),
+						Codec.FLOAT.fieldOf("dir_x").forGetter(FlameQiOptions::dirX),
+						Codec.FLOAT.fieldOf("dir_y").forGetter(FlameQiOptions::dirY),
+						Codec.FLOAT.fieldOf("dir_z").forGetter(FlameQiOptions::dirZ)
+				).apply(instance, FlameQiOptions::new));
+
+		public static final StreamCodec<ByteBuf, FlameQiOptions> STREAM_CODEC = StreamCodec.composite(
+				ByteBufCodecs.FLOAT, FlameQiOptions::size,
+				ByteBufCodecs.FLOAT, FlameQiOptions::roll,
+				ByteBufCodecs.FLOAT, FlameQiOptions::dirX,
+				ByteBufCodecs.FLOAT, FlameQiOptions::dirY,
+				ByteBufCodecs.FLOAT, FlameQiOptions::dirZ,
+				FlameQiOptions::new);
+
+		@Override
+		public ParticleType<?> getType() {
+			return FLAME_QI;
 		}
 	}
 }

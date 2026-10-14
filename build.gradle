@@ -58,3 +58,18 @@ jar {
 loom {
 	accessWidenerPath = file("src/main/resources/sephiria_fantasy.accesswidener")
 }
+
+// 临时（开发用）：用原版真编解码器解一遍物品模型定义（见 src/test/java/ModelDecodeCheck.java）。
+// 物品模型只在客户端资源加载时解析，字段名写错要开游戏才发现；这个任务在普通 JVM 里跑同一套 codec。
+tasks.register('modelDecodeCheck', JavaExec) {
+	group = 'verification'
+	description = 'Decode the mod item model definitions with the vanilla item model codecs'
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = 'ModelDecodeCheck'
+}
+
+// 那个检查是 main 类、不是 JUnit 测试：test 源集里没有可发现的测试，
+// Gradle 9 默认会因为「有测试源码却一个测试都没发现」判构建失败，这里关掉那条判据。
+tasks.named('test') {
+	failOnNoDiscoveredTests = false
+}

@@ -70,6 +70,7 @@ import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.artifact.BlueClawItem;
 import com.sephiria.artifact.ProshiumRingItem;
 import com.sephiria.artifact.SealedTegasItem;
+import com.sephiria.artifact.EternalEclipseItem;
 import com.sephiria.artifact.ExorcismScabbardItem;
 import com.sephiria.artifact.BlizzardHammerItem;
 import com.sephiria.artifact.MagicConchItem;
@@ -575,6 +576,14 @@ public final class ModItems {
 	/** 封印的特加斯（余烬 + 冰川，羁绊）：【唯一】灼伤变更为蓝色灼伤、灼伤额外伤害 +3/6/9/12%。 */
 	public static final Item SEALED_TEGAS = register(key("sealed_tegas"),
 			p -> new SealedTegasItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/**
+	 * 永恒蚀（太阳剑 + 冰霜武具，羁绊）：【唯一】看它待在背包哪半边——左半边把冰霜武具整套改成
+	 * 火焰属性、右半边把太阳剑改成冰属性；两套的伤害各 +6/13/21/30%；冰霜武具的攻击也触发太阳剑。
+	 */
+	public static final Item ETERNAL_ECLIPSE = register(key("eternal_eclipse"),
+			p -> new EternalEclipseItem(p),
 			new Item.Properties().stacksTo(1));
 
 	/** 驱邪剑鞘（冰霜武具，高级）：【唯一】每 6 秒充能，普攻时发射冰属性剑气（固定值 + 冰元素强度 30..100%）。 */
