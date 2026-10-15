@@ -209,10 +209,13 @@ try {
             -ExtraArgs @('-H', 'Content-Type: application/json')
 
         if ($patched.status -ne 204 -and $patched.status -ne 200) {
-            throw "刷新项目资料失败：HTTP $($patched.status) $($patched.body)"
+            # 只警告、不中断：这一步刷的是项目正文与资料（改了 description.md 才需要），
+            # 版本本身照样能传。2026-10-15 撞到过 Modrinth 自己的 500
+            # （edit_project_categories 唯一键冲突，重试也一样），那次就是这么绕过去的。
+            Write-Output ("  ⚠ 刷新项目资料失败：HTTP $($patched.status) $($patched.body)（不影响版本发布）")
+        } else {
+            Write-Output '项目资料已刷新'
         }
-
-        Write-Output '项目资料已刷新'
     }
 
     # ---- 项目图标 ----
