@@ -12,9 +12,10 @@
   其它名字的旧 jar（同 mod id 有两个 jar 会报重复 mod）、把新 jar 复制到 PCL 实例的 mods 目录。
   **部署前确认游戏已关**：脚本会自己拦（检测到在跑的游戏进程就拒绝，除非加 `-Force`），
   因为覆盖正在运行的 jar 会让游戏随后报 `ZipFile invalid LOC header` 崩掉（见记忆手册 §三）。
-- jar 名字跟 `gradle.properties` 里的 `version` 走（当前 `0.1.10.13-a`），
+- jar 名字跟 `gradle.properties` 里的 `version` 走（当前 `0.2.10.15-a`），
   所以是 `build/libs/sephiria-fantasy-<version>.jar` → `mods\sephiria-fantasy-<version>.jar`；改版本号只要改那一处。
-- **版本号用日期**：`0.1.<月>.<日>-a`（10 月 9 日 → `0.1.10.9-a`；`-a` = A 测）。
+- **版本号带日期**：`0.<大版本>.<月>.<日>-a`（10 月 9 日 → `0.1.10.9-a`；`-a` = A 测）。
+  大版本号由用户定，2026-10-15 起是 **0.2**（当前 `0.2.10.15-a`）。
   **每次「发布」前先把 `gradle.properties` 的 `version` 改成当天的日期**再构建实装——
   jar 名、release 的 tag（`v<版本>`）与游戏里 mod 列表显示的版本都跟着它。
 - PCL 实例：`D:\PCL\.minecraft\versions\26.3-Fabric 0.19.5\`（已从 26.2 迁到 26.3；
