@@ -10,7 +10,8 @@
 		"FrozenTintMixin",
 		"EntityRendererMixin",
 		"EntityRenderStateMixin",
-		"MinecraftAttackMixin"
+		"MinecraftAttackMixin",
+		"CraftingRecipeBookTabsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

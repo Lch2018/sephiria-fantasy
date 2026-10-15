@@ -64,6 +64,70 @@ public final class ArtifactLoot {
 	private ArtifactLoot() {
 	}
 
+	/** 神器池（公开版：许愿池的卡池、锚定与神铸的清单都要用它）。 */
+	public static List<Item> artifactPool() {
+		return artifacts();
+	}
+
+	/** 石板池（公开版，同上）。 */
+	public static List<Item> slatePool() {
+		return slates();
+	}
+
+	/**
+	 * 池子里某一档品质的物品（许愿池的「锚定 / 神铸」按档列清单用）。
+	 *
+	 * <p>顺序 = 池子本身的顺序，客户端与服务端看到的是同一份（同一个静态清单）。
+	 */
+	public static List<Item> ofRarity(List<Item> pool, ArtifactRarity rarity) {
+		List<Item> tier = new ArrayList<>();
+
+		for (Item item : pool) {
+			if (item instanceof Quality quality && quality.rarity() == rarity) {
+				tier.add(item);
+			}
+		}
+
+		return tier;
+	}
+
+	/**
+	 * 按品质权重掷一档（许愿池要先知道掷到哪一档，才好套「锚定」）。
+	 *
+	 * <p>权重口径与商店完全一致（按<b>件</b>算：某一档的总权重 = 件数 × 该档权重），
+	 * 所以「概率与商店一致」这条就是靠它保证的。
+	 */
+	public static ArtifactRarity rollRarity(RandomSource random, List<Item> pool, Weights weights) {
+		int total = 0;
+
+		for (Item item : pool) {
+			if (item instanceof Quality quality) {
+				total += weights.weightOf(quality.rarity());
+			}
+		}
+
+		if (total <= 0) {
+			return null;
+		}
+
+		int roll = random.nextInt(total);
+		int cursor = 0;
+
+		for (Item item : pool) {
+			if (!(item instanceof Quality quality)) {
+				continue;
+			}
+
+			cursor += weights.weightOf(quality.rarity());
+
+			if (roll < cursor) {
+				return quality.rarity();
+			}
+		}
+
+		return null;
+	}
+
 	/** 神器池（可按需要排除石板）。 */
 	private static List<Item> artifacts() {
 		return List.of(ModItems.CHARM_OF_STRENGTH, ModItems.WARRIORS_PROOF, ModItems.SHIELD_TEXTBOOK,

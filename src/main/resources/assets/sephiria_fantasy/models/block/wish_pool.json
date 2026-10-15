@@ -1,0 +1,76 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "sephiria_fantasy:block/wish_pool_side",
+    "side": "sephiria_fantasy:block/wish_pool_side",
+    "top": "sephiria_fantasy:block/wish_pool_top",
+    "water": "sephiria_fantasy:block/wish_pool_water"
+  },
+  "elements": [
+    {
+      "name": "rim_north",
+      "from": [0, 0, 0],
+      "to": [16, 4, 3],
+      "faces": {
+        "up": { "uv": [0, 0, 16, 3], "texture": "#side" },
+        "down": { "uv": [0, 0, 16, 3], "texture": "#side" },
+        "north": { "uv": [0, 0, 16, 4], "texture": "#side" },
+        "south": { "uv": [0, 0, 16, 4], "texture": "#side" },
+        "west": { "uv": [0, 0, 3, 4], "texture": "#side" },
+        "east": { "uv": [0, 0, 3, 4], "texture": "#side" }
+      }
+    },
+    {
+      "name": "rim_south",
+      "from": [0, 0, 13],
+      "to": [16, 4, 16],
+      "faces": {
+        "up": { "uv": [0, 0, 16, 3], "texture": "#side" },
+        "down": { "uv": [0, 0, 16, 3], "texture": "#side" },
+        "north": { "uv": [0, 0, 16, 4], "texture": "#side" },
+        "south": { "uv": [0, 0, 16, 4], "texture": "#side" },
+        "west": { "uv": [0, 0, 3, 4], "texture": "#side" },
+        "east": { "uv": [0, 0, 3, 4], "texture": "#side" }
+      }
+    },
+    {
+      "name": "rim_west",
+      "from": [0, 0, 3],
+      "to": [3, 4, 13],
+      "faces": {
+        "up": { "uv": [0, 0, 10, 3], "texture": "#side" },
+        "down": { "uv": [0, 0, 10, 3], "texture": "#side" },
+        "north": { "uv": [0, 0, 3, 4], "texture": "#side" },
+        "south": { "uv": [0, 0, 3, 4], "texture": "#side" },
+        "west": { "uv": [0, 0, 10, 4], "texture": "#side" },
+        "east": { "uv": [0, 0, 10, 4], "texture": "#side" }
+      }
+    },
+    {
+      "name": "rim_east",
+      "from": [13, 0, 3],
+      "to": [16, 4, 13],
+      "faces": {
+        "up": { "uv": [0, 0, 10, 3], "texture": "#side" },
+        "down": { "uv": [0, 0, 10, 3], "texture": "#side" },
+        "north": { "uv": [0, 0, 3, 4], "texture": "#side" },
+        "south": { "uv": [0, 0, 3, 4], "texture": "#side" },
+        "west": { "uv": [0, 0, 10, 4], "texture": "#side" },
+        "east": { "uv": [0, 0, 10, 4], "texture": "#side" }
+      }
+    },
+    {
+      "name": "water",
+      "from": [3, 0, 3],
+      "to": [13, 3, 13],
+      "faces": {
+        "up": { "uv": [3, 3, 13, 13], "texture": "#top" },
+        "down": { "uv": [3, 3, 13, 13], "texture": "#water" },
+        "north": { "uv": [3, 3, 13, 6], "texture": "#water" },
+        "south": { "uv": [3, 3, 13, 6], "texture": "#water" },
+        "west": { "uv": [3, 3, 13, 6], "texture": "#water" },
+        "east": { "uv": [3, 3, 13, 6], "texture": "#water" }
+      }
+    }
+  ]
+}

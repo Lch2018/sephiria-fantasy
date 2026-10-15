@@ -39,12 +39,19 @@ import com.sephiria.artifact.skill.SkillSlots;
 import com.sephiria.network.ArtifactSkillsPayload;
 import com.sephiria.network.AssignArtifactSkillPayload;
 import com.sephiria.network.CastArtifactSkillPayload;
+import com.sephiria.difficulty.RootRetreatMenu;
+import com.sephiria.network.RootRetreatClickPayload;
+import com.sephiria.network.WishPoolClickPayload;
+import com.sephiria.network.WishPoolResultPayload;
 import com.sephiria.network.OpenArtifactSkillsPayload;
 import com.sephiria.registry.ModCreativeTabs;
 import com.sephiria.registry.ModParticleTypes;
 import com.sephiria.registry.ModSounds;
 import com.sephiria.stats.TimedAttributes;
 import net.minecraft.server.level.ServerPlayer;
+import com.sephiria.registry.ModBlockEntities;
+import com.sephiria.registry.ModBlocks;
+import com.sephiria.registry.ModRecipeBookCategories;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.weapon.SephiriaCrossbowItem;
@@ -75,11 +82,19 @@ public class Sephiria implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModItems.initialize();
+		ModBlocks.initialize();
+		ModBlockEntities.initialize();
+		// 配方书多一页「赛菲莉亚」：分类登记（配方 JSON 的 category 指向它）
+		ModRecipeBookCategories.initialize();
 		ModCreativeTabs.initialize();
 		ModMenus.initialize();
 		ModSounds.initialize();
 		ModParticleTypes.initialize();
 		ArtifactBackpack.register();
+		// 根之退的难度设置：每玩家一份的数据附件（方块本身不存东西）
+		com.sephiria.difficulty.RootRetreat.register();
+		// 许愿池：能量与锚定也是每玩家一份的数据附件（方块只是入口 + 吸升级宝箱）
+		com.sephiria.wishpool.WishPool.register();
 		// 商店货架的内容与限购次数存在玩家附件里：跨会话保留，重登/重启不会换一批货
 		com.sephiria.shop.ShopStock.register();
 		PlayerStats.register();
@@ -150,6 +165,9 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.serverboundPlay().register(AssignArtifactSkillPayload.TYPE, AssignArtifactSkillPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(ArtifactSkillsPayload.TYPE, ArtifactSkillsPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(RootRetreatClickPayload.TYPE, RootRetreatClickPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(WishPoolClickPayload.TYPE, WishPoolClickPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(WishPoolResultPayload.TYPE, WishPoolResultPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CloudSyncPayload.TYPE, CloudSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(DebuffSyncPayload.TYPE, DebuffSyncPayload.STREAM_CODEC);
@@ -231,6 +249,50 @@ public class Sephiria implements ModInitializer {
 				(payload, context) -> {
 					if (context.player().containerMenu instanceof EnchantMenu menu) {
 						menu.upgrade(payload.levels());
+					}
+				});
+		// 许愿池界面里的按钮：抽卡 / 锚定 / 神铸——够不够四叶草与能量、能不能换都由菜单那边判
+		ServerPlayNetworking.registerGlobalReceiver(WishPoolClickPayload.TYPE,
+				(payload, context) -> {
+					if (!(context.player().containerMenu instanceof com.sephiria.wishpool.WishPoolMenu menu)) {
+						return;
+					}
+
+					net.minecraft.world.item.Item item = payload.itemId() <= 0 ? null
+							: net.minecraft.core.registries.BuiltInRegistries.ITEM.byId(payload.itemId());
+
+					switch (payload.action()) {
+						case WishPoolClickPayload.ACTION_DRAW_SINGLE -> menu.draw(payload.slatePool(), 1);
+						case WishPoolClickPayload.ACTION_DRAW_TEN ->
+								menu.draw(payload.slatePool(), com.sephiria.wishpool.WishPool.TEN_DRAW);
+						case WishPoolClickPayload.ACTION_ANCHOR -> menu.setAnchor(payload.slatePool(), item);
+						case WishPoolClickPayload.ACTION_FORGE -> menu.forge(item);
+						default -> {
+						}
+					}
+				});
+
+		// 根之退界面里的三个动作：加减号 / 清空 / 应用——只认「第几项 + 方向」这种最小信息，
+		// 等级范围与「方块还在不在」都由菜单那边判
+		ServerPlayNetworking.registerGlobalReceiver(RootRetreatClickPayload.TYPE,
+				(payload, context) -> {
+					if (!(context.player().containerMenu instanceof RootRetreatMenu menu)) {
+						return;
+					}
+
+					com.sephiria.difficulty.DifficultyOption[] options =
+							com.sephiria.difficulty.DifficultyOption.values();
+
+					switch (payload.action()) {
+						case RootRetreatClickPayload.ACTION_ADJUST -> {
+							if (payload.option() >= 0 && payload.option() < options.length) {
+								menu.adjust(options[payload.option()], payload.delta() < 0 ? -1 : 1);
+							}
+						}
+						case RootRetreatClickPayload.ACTION_CLEAR -> menu.clear();
+						case RootRetreatClickPayload.ACTION_APPLY -> menu.apply();
+						default -> {
+						}
 					}
 				});
 

@@ -159,6 +159,8 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.ARTIFACT_CHEST);
 						output.accept(ModItems.SLATE_CHEST);
 						output.accept(ModItems.UPGRADE_CHEST);
+						output.accept(ModItems.ROOT_RETREAT);
+						output.accept(ModItems.WISH_POOL);
 					})
 					.build());
 

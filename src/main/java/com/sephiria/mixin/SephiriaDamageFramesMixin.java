@@ -7,6 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
@@ -19,6 +20,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * <p>友好生物（牛羊猪、村民等）不动：{@link SephiriaDamage#ignoresInvulnerableFrames} 只放行
  * 玩家与 {@code Enemy}。唯一的例外是本模组的投掷物（重型弩的弩矢，实现
  * {@link SephiriaDamage.Source} 标记）——按用户要求「完全不吃这一套」，对任何目标都不做帧判定。
+ *
+ * <p><b>但击退不能跟着变成「每一下都推」</b>（2026-10-15 用户报的「高频攻击让敌人被连续击退、
+ * 飞出去很远」）：本模组的伤害既然清掉了无敌帧，原版那套「10 刻内只推一次」的限制也就一起没了。
+ * 所以这里再给本模组伤害的击退单独上一道冷却——间隔与原版受击无敌一致（10 刻）、每个敌人各算各的
+ * （{@link SephiriaDamage#allowKnockback}），非本模组的伤害一律放行。
  */
 @Mixin(LivingEntity.class)
 public class SephiriaDamageFramesMixin {
@@ -36,6 +42,24 @@ public class SephiriaDamageFramesMixin {
 
 		if (SephiriaDamage.ignoresInvulnerableFrames(self) && SephiriaDamage.fromSephiria(source)) {
 			SephiriaDamage.clearDamageCooldown(self);
+		}
+	}
+
+	/**
+	 * 击退冷却：本模组伤害的击退最多每 10 刻一次（与原版受击无敌间隔一致），每个敌人各算各的。
+	 *
+	 * <p>挂的是 6 参的 {@code knockback(DDDLDamageSource;FZ)V}——它是真正的实现，
+	 * 5 参的重载（{@code hurtServer} 用的那个）与 {@code Player#attack} 的冲刺击退都会走到它，
+	 * 所以「一次攻击最多推一下」在这一个点上就管住了。
+	 * 取消掉的只是「推」这个动作（那个方法里只有 {@code setDeltaMovement} 与 {@code needsSync}），
+	 * 受伤的红闪、音效、粒子都在别处，不受影响。
+	 */
+	@Inject(method = "knockback(DDDLnet/minecraft/world/damagesource/DamageSource;FZ)V",
+			at = @At("HEAD"), cancellable = true)
+	private void sephiria$limitKnockback(double strength, double x, double z, DamageSource source, float amount,
+			boolean flag, CallbackInfo callback) {
+		if (!SephiriaDamage.allowKnockback((LivingEntity) (Object) this, source)) {
+			callback.cancel();
 		}
 	}
 

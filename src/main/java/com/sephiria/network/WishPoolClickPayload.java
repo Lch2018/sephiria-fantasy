@@ -1,0 +1,59 @@
+package com.sephiria.network;
+
+import com.sephiria.Sephiria;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
+
+/**
+ * 客户端 → 服务端：许愿池界面里点的按钮。
+ *
+ * <p>四种动作：
+ * <ul>
+ *   <li>{@link #ACTION_DRAW_SINGLE} / {@link #ACTION_DRAW_TEN}：抽卡（1 次 / 10 次，每次 1 片四叶草）；</li>
+ *   <li>{@link #ACTION_ANCHOR}：把某一卡池的锚定设成 {@code itemId}（0 = 取消锚定）；</li>
+ *   <li>{@link #ACTION_FORGE}：神铸——花能量换 {@code itemId}。</li>
+ * </ul>
+ *
+ * <p>{@code slatePool} 表示当前在石板池（抽卡与锚定都分池）。
+ * 物品用注册表数字 id 传（0 = 空 / 取消），实际能不能换、够不够能量都由服务端算。
+ */
+public record WishPoolClickPayload(int action, boolean slatePool, int itemId) implements CustomPacketPayload {
+	public static final int ACTION_DRAW_SINGLE = 0;
+	public static final int ACTION_DRAW_TEN = 1;
+	public static final int ACTION_ANCHOR = 2;
+	public static final int ACTION_FORGE = 3;
+
+	public static final CustomPacketPayload.Type<WishPoolClickPayload> TYPE =
+			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool_click"));
+
+	public static final StreamCodec<FriendlyByteBuf, WishPoolClickPayload> STREAM_CODEC = StreamCodec.of(
+			(FriendlyByteBuf buffer, WishPoolClickPayload payload) -> {
+				buffer.writeVarInt(payload.action());
+				buffer.writeBoolean(payload.slatePool());
+				buffer.writeVarInt(payload.itemId());
+			},
+			(FriendlyByteBuf buffer) -> new WishPoolClickPayload(
+					buffer.readVarInt(), buffer.readBoolean(), buffer.readVarInt()));
+
+	/** 单抽 / 十连。 */
+	public static WishPoolClickPayload draw(boolean slatePool, boolean ten) {
+		return new WishPoolClickPayload(ten ? ACTION_DRAW_TEN : ACTION_DRAW_SINGLE, slatePool, 0);
+	}
+
+	/** 锚定（{@code itemId} = 0 表示取消锚定）。 */
+	public static WishPoolClickPayload anchor(boolean slatePool, int itemId) {
+		return new WishPoolClickPayload(ACTION_ANCHOR, slatePool, itemId);
+	}
+
+	/** 神铸。 */
+	public static WishPoolClickPayload forge(int itemId) {
+		return new WishPoolClickPayload(ACTION_FORGE, false, itemId);
+	}
+
+	@Override
+	public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+		return TYPE;
+	}
+}

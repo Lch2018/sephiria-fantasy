@@ -422,7 +422,10 @@ public final class PlayerStats {
 
 	/** 经验掉落（%）：面板值 + 神器，默认 100；结算见 LeafExperienceMixin（获得经验时先乘它）。 */
 	public static double xpDropPercentTotal(ServerPlayer player) {
-		return of(player).xpDropPercent + ArtifactEffects.xpDropPercent(player);
+		// 根之退的祝福（每层阶段 +10%）也走这里：它和经验掉落是同一个池子，
+		// 所以属性面板那一行会显示加成后的值、实际入账在 LeafExperienceMixin 里
+		return of(player).xpDropPercent + ArtifactEffects.xpDropPercent(player)
+				+ com.sephiria.difficulty.RootRetreat.xpGainPercent(player);
 	}
 
 	/**

@@ -36,7 +36,11 @@ public final class ModelDecodeCheck {
 			new String[] { "sun_sword", "sephiria_fantasy:sun_sword_ice", "minecraft:unbreakable" },
 			new String[] { "ice_hammer", "sephiria_fantasy:flame_tool", "minecraft:unbreakable" },
 			new String[] { "ice_spear", "sephiria_fantasy:flame_tool", "minecraft:unbreakable" },
-			new String[] { "ice_arrow", "sephiria_fantasy:flame_tool", "minecraft:unbreakable" });
+			new String[] { "ice_arrow", "sephiria_fantasy:flame_tool", "minecraft:unbreakable" },
+			// 根之退 / 许愿池（方块物品）与四叶草：没有组件，替换串在文件里不存在，等于原样解一遍
+			new String[] { "root_retreat", "sephiria_fantasy:root_retreat_side", "minecraft:damage" },
+			new String[] { "wish_pool", "sephiria_fantasy:wish_pool_side", "minecraft:damage" },
+			new String[] { "root_retreat", "sephiria_fantasy:root_retreat_side2", "minecraft:damage" });
 
 	public static void main(String[] args) throws Exception {
 		SharedConstants.tryDetectVersion();

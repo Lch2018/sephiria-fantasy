@@ -4,6 +4,8 @@ import com.sephiria.client.artifact.ArtifactTooltip;
 import com.sephiria.client.backpack.ArtifactBackpackScreen;
 import com.sephiria.client.backpack.ChestScreen;
 import com.sephiria.client.shop.ShopScreen;
+import com.sephiria.client.difficulty.RootRetreatScreen;
+import com.sephiria.client.wishpool.WishPoolScreen;
 import com.sephiria.client.backpack.EnchantScreen;
 import com.sephiria.client.hud.HudConfigScreen;
 import com.sephiria.artifact.skill.ArtifactSkills;
@@ -107,6 +109,12 @@ public class SephiriaClient implements ClientModInitializer {
 		MenuScreens.register(ModMenus.ARTIFACT_ENCHANT, EnchantScreen::new);
 		MenuScreens.register(ModMenus.CHEST, ChestScreen::new);
 		MenuScreens.register(ModMenus.SHOP, ShopScreen::new);
+		MenuScreens.register(ModMenus.ROOT_RETREAT, RootRetreatScreen::new);
+		MenuScreens.register(ModMenus.WISH_POOL, WishPoolScreen::new);
+
+		// 许愿池抽卡 / 神铸的结果：交给客户端镜像，界面取走播动画
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.WishPoolResultPayload.TYPE,
+				(payload, context) -> com.sephiria.client.wishpool.ClientWishPool.accept(payload.items()));
 
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
 			if (stack.getItem() instanceof SephiriaWeapon detail) {

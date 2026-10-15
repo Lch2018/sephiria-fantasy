@@ -4,6 +4,8 @@ import com.sephiria.Sephiria;
 import com.sephiria.backpack.ArtifactBackpackMenu;
 import com.sephiria.backpack.ChestMenu;
 import com.sephiria.backpack.EnchantMenu;
+import com.sephiria.difficulty.RootRetreatMenu;
+import com.sephiria.wishpool.WishPoolMenu;
 import com.sephiria.shop.ShopMenu;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
 import net.minecraft.core.Registry;
@@ -43,6 +45,22 @@ public final class ModMenus {
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "chest"),
 			new ExtendedMenuType<ChestMenu, Unit>(
 					(id, inventory, data) -> new ChestMenu(id, inventory),
+					Unit.STREAM_CODEC));
+
+	/** 根之退界面（石碑方块右键打开）。 */
+	public static final MenuType<RootRetreatMenu> ROOT_RETREAT = Registry.register(
+			BuiltInRegistries.MENU,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat"),
+			new ExtendedMenuType<RootRetreatMenu, Unit>(
+					(id, inventory, data) -> new RootRetreatMenu(id, inventory),
+					Unit.STREAM_CODEC));
+
+	/** 许愿池界面（水池方块右键打开）。 */
+	public static final MenuType<WishPoolMenu> WISH_POOL = Registry.register(
+			BuiltInRegistries.MENU,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool"),
+			new ExtendedMenuType<WishPoolMenu, Unit>(
+					(id, inventory, data) -> new WishPoolMenu(id, inventory),
 					Unit.STREAM_CODEC));
 
 	/** 商店页面（原版背包里的「商店」标签页）。 */

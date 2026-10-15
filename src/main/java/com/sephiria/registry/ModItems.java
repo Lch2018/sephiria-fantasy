@@ -105,6 +105,7 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.component.BlocksAttacks;
@@ -663,6 +664,23 @@ public final class ModItems {
 	public static final Item DICE = register(key("dice"),
 			p -> new DiceItem(p),
 			new Item.Properties());
+
+	/**
+	 * 根之退（赛菲利亚道具）：石碑状的功能方块，右键打开调难度的界面。
+	 *
+	 * <p>方块本体注册在 {@link ModBlocks}，这里只是它的方块物品——少了这一件，创造页与背包里
+	 * 都拿不到那个方块。
+	 */
+	/** 许愿池（赛菲莉亚道具）：水池方块，右键打开抽卡界面，并吸走扔进来的升级宝箱。 */
+	public static final Item WISH_POOL = register(key("wish_pool"),
+			p -> new BlockItem(ModBlocks.WISH_POOL, p),
+			new Item.Properties().useBlockDescriptionPrefix());
+
+	public static final Item ROOT_RETREAT = register(key("root_retreat"),
+			p -> new BlockItem(ModBlocks.ROOT_RETREAT, p),
+			// useBlockDescriptionPrefix：名字走方块的名字键（block.sephiria_fantasy.root_retreat），
+			// 不加这一行会去找 item.sephiria_fantasy.root_retreat，界面里显示成一串原始键名
+			new Item.Properties().useBlockDescriptionPrefix());
 
 	/** 神器宝箱（赛菲利亚道具）：右键开出 5 件随机神器，选一件拿走。 */
 	public static final Item ARTIFACT_CHEST = register(key("artifact_chest"),

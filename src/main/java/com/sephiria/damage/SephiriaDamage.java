@@ -1,6 +1,8 @@
 package com.sephiria.damage;
 
 import com.sephiria.Sephiria;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.stats.PseudoRandom;
 import com.sephiria.stats.PlayerStats;
@@ -243,6 +245,60 @@ public final class SephiriaDamage {
 	 */
 	public static void clearDamageCooldown(LivingEntity target) {
 		target.damageCooldownTime = 0;
+	}
+
+	// ------------------------------------------------------------------ 击退冷却
+
+	/**
+	 * 本模组伤害的击退冷却（刻）：<b>与原版受击无敌间隔一致</b>（用户 2026-10-15 的口径）。
+	 *
+	 * <p>原版的最高击退频率就是被这个间隔限住的：10 刻内再来一下（同样重）会被整下吞掉、
+	 * 连击退一起没有，所以原版最多 0.5 秒推一次。
+	 */
+	private static final int KNOCKBACK_INTERVAL_TICKS = 10;
+
+	/**
+	 * 上一次「本模组的伤害把某个目标推出去」时，那个目标自己的 {@code tickCount}。
+	 *
+	 * <p>用<b>实体自己的 tickCount</b> 当表：每个敌人各算各的（用户口径「这个击退 cd 对每个敌人
+	 * 是独立计算的」），也不需要额外的清理——附件跟着实体走，实体没了它就没了。
+	 * 只有 10 刻的计时器，不用进存档，所以是内存附件（不 persistent、不 sync）。
+	 */
+	private static final AttachmentType<Integer> LAST_KNOCKBACK = AttachmentRegistry.create(
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "last_knockback"));
+
+	/**
+	 * 这一下能不能真的把目标推出去——由 {@code mixin/SephiriaDamageFramesMixin} 挂在
+	 * {@code LivingEntity#knockback} 的 HEAD 上（cancel 掉就是「这一下不推」）。
+	 *
+	 * <p>为什么需要它：本模组的伤害<b>两头清无敌帧</b>（见 {@link #clearDamageCooldown}），
+	 * 于是高攻速下每一发都会推一次——敌人被连续击退、飞出去很远（用户报的）。
+	 * 伤害该满额还是要满额，所以不能靠恢复原版帧判定来解决，只能单独给击退上冷却：
+	 * <b>本模组伤害的击退最多每 {@value #KNOCKBACK_INTERVAL_TICKS} 刻一次</b>，
+	 * 与原版的最高击退频率一致。
+	 *
+	 * <p>非本模组的伤害（原版生物攻击、环境伤害）一律放行：它们本来就被原版自己的帧判定管着，
+	 * 这里不去动它们（也不占用本模组的冷却）。
+	 */
+	public static boolean allowKnockback(LivingEntity target, DamageSource source) {
+		if (kindOf(source) == Kind.OTHER) {
+			return true;
+		}
+
+		int now = target.tickCount;
+		Integer last = target.getAttached(LAST_KNOCKBACK);
+
+		if (last != null) {
+			int elapsed = now - last;
+
+			// elapsed < 0：tickCount 溢出绕回，当成「很久以前」，别把目标永久锁死
+			if (elapsed >= 0 && elapsed < KNOCKBACK_INTERVAL_TICKS) {
+				return false;
+			}
+		}
+
+		target.setAttached(LAST_KNOCKBACK, now);
+		return true;
 	}
 
 	// ------------------------------------------------------------------ 暴击

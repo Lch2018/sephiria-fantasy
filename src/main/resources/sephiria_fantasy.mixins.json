@@ -4,6 +4,7 @@
 	"package": "com.sephiria.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
+		"CraftingRecipeCategoryMixin",
 		"DamageReductionMixin",
 		"DebuffTickMixin",
 		"FrozenMotionMixin",

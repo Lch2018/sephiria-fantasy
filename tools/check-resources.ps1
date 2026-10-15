@@ -29,6 +29,10 @@ $items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_c
     # the three hidden carriers the frost projectiles are drawn with (ice-blue recolours)
     'ice_hammer', 'ice_spear', 'ice_arrow')
 
+# 方块：每个都要有 blockstates/<id>.json → models/block/<model>.json、贴图齐全、方块物品的定义文件，
+# 以及中英各一条 block.sephiria_fantasy.<id> 名字键（见 1c 那一段）
+$blocks = @('root_retreat', 'wish_pool')
+
 # Extra MODELS that no item definition is named after: the eternal-eclipse batch recolours existing
 # art instead of adding items (the carriers' definitions switch to them by component, the eclipse's
 # definition selects between them by component), so they are checked as models, not as items - see
@@ -100,6 +104,67 @@ foreach ($name in $extraModels) {
     $sprite = Join-Path $texDir (((($layer -split '/')[-1]) -replace '\.png$', '') + '.png')
     if (-not (Test-Path $sprite)) { Fail "models/item/$name.json layer0 $layer is missing"; continue }
     Ok "models/item/$name.json -> $layer"
+}
+
+# 1c) blocks: the blockstate must resolve, its model's textures must exist, and the block needs its
+#     item definition + a block name key in both languages (a block without items/<id>.json renders
+#     as a missing model in the inventory)
+foreach ($id in $blocks) {
+    $statePath = Join-Path $assets "blockstates\$id.json"
+    if (-not (Test-Path $statePath)) { Fail "missing blockstates/$id.json"; continue }
+
+    # 注意：方块状态文件用**正则**取模型名，不能走 ConvertFrom-Json——没有属性的方块
+    # （只有空气那一种状态）变体键是空字符串 ""，而 PowerShell 5.1 的 ConvertFrom-Json
+    # 遇到空属性名直接报「参数 name 的值无效」（原版方块就是这么写的，游戏读得没问题）
+    $stateText = ReadText $statePath
+    $modelRefs = New-Object System.Collections.Generic.List[string]
+
+    foreach ($m in [regex]::Matches($stateText, '"model"\s*:\s*"([^"]+)"')) {
+        $modelRefs.Add($m.Groups[1].Value)
+    }
+
+    if ($modelRefs.Count -eq 0) { Fail "blockstates/$id.json references no model" }
+    foreach ($ref in ($modelRefs | Select-Object -Unique)) {
+        if ($ref -notlike 'sephiria_fantasy:block/*') { Fail "blockstates/$id.json model '$ref' is not a sephiria_fantasy:block model"; continue }
+        $modelName = $ref.Substring('sephiria_fantasy:block/'.Length)
+        $modelPath = Join-Path $assets "models\block\$modelName.json"
+        if (-not (Test-Path $modelPath)) { Fail "blockstates/$id.json -> models/block/$modelName.json is missing"; continue }
+
+        $model = ReadJson $modelPath
+
+        # every texture the model references (layer/palette keys) must exist as a png
+        foreach ($tex in $model.textures.PSObject.Properties) {
+            $value = $tex.Value
+            if ($value -notlike 'sephiria_fantasy:*') { continue }
+            $rel = $value.Substring('sephiria_fantasy:'.Length) + '.png'
+            $texPath = Join-Path (Join-Path $assets 'textures') ($rel -replace '/', '\')
+            if (-not (Test-Path $texPath)) { Fail "models/block/$modelName.json texture $value is missing" }
+        }
+
+        # same uv guard as the item models: 0..16 only (Blockbench pixel space leaks in easily)
+        if ($null -ne $model.elements) {
+            foreach ($el in @($model.elements)) {
+                foreach ($side in $el.faces.PSObject.Properties.Name) {
+                    $uv = @($el.faces.$side.uv)
+                    if ($uv.Count -ne 4) { Fail "models/block/$modelName.json: $side face without uv"; break }
+                    foreach ($v in $uv) {
+                        if ($v -lt 0 -or $v -gt 16) { Fail "models/block/$modelName.json: $side uv $v outside 0..16"; break }
+                    }
+                }
+            }
+        }
+
+        Ok "blockstates/$id.json -> models/block/$modelName.json"
+    }
+
+    # 方块物品：定义文件 + 名字键（贴图走 textures/block，不在 $items 那套里）
+    $defPath = Join-Path $assets "items\$id.json"
+    if (-not (Test-Path $defPath)) { Fail "missing items/$id.json (the block's item)" }
+
+    foreach ($lang in @('en_us', 'zh_cn')) {
+        $keys = (ReadJson (Join-Path $assets "lang\$lang.json")).PSObject.Properties.Name
+        if ($keys -notcontains "block.sephiria_fantasy.$id") { Fail "lang/$lang.json missing key block.sephiria_fantasy.$id" }
+    }
 }
 
 # 2) every model file: valid geometry, existing palette, resolvable parent
@@ -255,7 +320,7 @@ function Test-Ingredient($value) {
     } elseif ($parts[0] -eq 'sephiria_fantasy') {
         if ($tagged) {
             if (-not (Test-Path (Join-Path $tagDir ($parts[1] + '.json')))) { return "no tags/item/$($parts[1]).json for #$value" }
-        } elseif ($items -notcontains $parts[1]) {
+        } elseif (($items + $blocks) -notcontains $parts[1]) {
             return "unknown mod item $value"
         }
     } else {
@@ -270,13 +335,39 @@ foreach ($file in Get-ChildItem $recipeDir -Filter *.json) {
     $name = $file.BaseName
     $json = ReadJson $file.FullName
 
-    if ($json.type -ne 'minecraft:crafting_shaped') { Fail "recipe/$name.json: unsupported type '$($json.type)'"; continue }
+    if ($json.type -ne 'minecraft:crafting_shaped' -and $json.type -ne 'minecraft:crafting_shapeless') {
+        Fail "recipe/$name.json: unsupported type '$($json.type)'"; continue
+    }
 
+    # 结果可以是本模组的物品，也可以是方块物品（$blocks 那一批）
     $result = $json.result.id
-    if ($result -notlike 'sephiria_fantasy:*' -or $items -notcontains $result.Substring('sephiria_fantasy:'.Length)) {
+    $known = $items + $blocks
+    if ($result -notlike 'sephiria_fantasy:*' -or $known -notcontains $result.Substring('sephiria_fantasy:'.Length)) {
         Fail "recipe/$name.json: result '$result' is not one of this mod's items"
     }
     $crafted.Add($result)
+
+    # 无序配方（crafting_shapeless）：没有图案，ingredients 就是材料表——
+    # 每一项要么是一个 id / #标签，要么是一个「可替换」的数组（数组里每一项都要合法）
+    if ($json.type -eq 'minecraft:crafting_shapeless') {
+        $slots = 0
+        foreach ($ingredient in @($json.ingredients)) {
+            $slots++
+            if ($ingredient -is [string]) {
+                $problem = Test-Ingredient $ingredient
+                if ($problem) { Fail "recipe/$name.json: $problem" }
+            } else {
+                foreach ($option in @($ingredient)) {
+                    $problem = Test-Ingredient $option
+                    if ($problem) { Fail "recipe/$name.json: $problem" }
+                }
+            }
+        }
+        if ($slots -eq 0) { Fail "recipe/$name.json: no ingredients" }
+        if ($slots -gt 9) { Fail "recipe/$name.json: $slots ingredients (max 9)" }
+        Ok ("recipe/$name.json -> $result [shapeless: $slots ingredient(s)]")
+        continue
+    }
 
     $symbols = @($json.key.PSObject.Properties.Name)
     $pattern = @($json.pattern)

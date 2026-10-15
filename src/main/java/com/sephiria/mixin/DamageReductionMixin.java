@@ -1,6 +1,7 @@
 package com.sephiria.mixin;
 
 import com.sephiria.damage.SephiriaDamage;
+import com.sephiria.difficulty.RootRetreat;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,24 +31,31 @@ public class DamageReductionMixin {
 	private float sephiria$adjustDamage(float amount, ServerLevel level, DamageSource source) {
 		LivingEntity self = (LivingEntity) (Object) this;
 		SephiriaDamage.Kind kind = SephiriaDamage.kindOf(source);
+		float result;
 
 		// 真实伤害绕开减伤（这是它存在的意义），但和别的伤害一样吃暴击与黄金之手（2026-10 起）
 		if (kind == SephiriaDamage.Kind.TRUE) {
-			return SephiriaDamage.applyGoldenHands(source, SephiriaDamage.applyCrit(self, source, amount));
-		}
-
-		// 电属性伤害、火/冰减益伤害（灼伤、冰冻、蓝色灼伤）同样不吃减伤与黄金之手，但照掷暴击：
-		// 电属性那边是「通用 + 电属性攻击的暴击几率（麒麟的角）」，减益只用通用那一项
-		if (kind == SephiriaDamage.Kind.ELECTRIC || kind == SephiriaDamage.Kind.FIRE
+			result = SephiriaDamage.applyGoldenHands(source, SephiriaDamage.applyCrit(self, source, amount));
+		} else if (kind == SephiriaDamage.Kind.ELECTRIC || kind == SephiriaDamage.Kind.FIRE
 				|| kind == SephiriaDamage.Kind.ICE) {
-			return SephiriaDamage.applyCrit(self, source, amount);
+			// 电属性伤害、火/冰减益伤害（灼伤、冰冻、蓝色灼伤）同样不吃减伤与黄金之手，但照掷暴击：
+			// 电属性那边是「通用 + 电属性攻击的暴击几率（麒麟的角）」，减益只用通用那一项
+			result = SephiriaDamage.applyCrit(self, source, amount);
+		} else {
+			float critted = SephiriaDamage.applyCrit(self, source, amount);
+			float multiplier = SephiriaDamage.damageMultiplier(self);
+
+			// 黄金之手是攻击方的增益，接在减伤之后统一放大
+			result = SephiriaDamage.applyGoldenHands(source, multiplier >= 1.0F ? critted : critted * multiplier);
 		}
 
-		float result = SephiriaDamage.applyCrit(self, source, amount);
-		float multiplier = SephiriaDamage.damageMultiplier(self);
-
-		// 黄金之手是攻击方的增益，接在减伤之后统一放大
-		return SephiriaDamage.applyGoldenHands(source, multiplier >= 1.0F ? result : result * multiplier);
+		// 根之退（难度选项，见 difficulty.RootRetreat）——两件事都作用在伤害的最后一步：
+		// ① 凶猛的爪子：敌人打到自己身上的伤害放大（只作用于被打的人自己的设置，
+		//    玩家打的与环境伤害都不算，所以绝大多数伤害这里是 ×1）；
+		// ② 顽强之躯 / 防护铠甲：自己打敌人的伤害被削（前者是「最底层的减免」、真实伤害也吃，
+		//    后者是「敌人的防御力」、真实伤害不吃）
+		return result * RootRetreat.incomingDamageMultiplier(self, source)
+				* RootRetreat.outgoingDamageMultiplier(self, source, kind == SephiriaDamage.Kind.TRUE);
 	}
 
 	@Inject(method = "hurtServer", at = @At("TAIL"))

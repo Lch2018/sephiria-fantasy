@@ -43,6 +43,8 @@ import java.util.UUID;
  * <p>数量（支）是这套系统的资源（见 {@link #BASE_CAPACITY}）：投一支扣一支，
  * 投出去的那支<b>会掉在被命中者脚下</b>——走过去就能捡回来（每支 +1，不超过上限），
  * 这是最主要的回剑方式；另一条是<b>脱战</b>时每 0.1 秒回上限的 10%。
+ * <b>数量一到上限，地上剩下的剑就消失</b>（2026-10-14 用户口径）：满容量之后收不进数量，
+ * 留着只会一直躺着（见 {@link #clearFullDrops}）。
  *
  * <p>掉落的太阳剑不是物品：它是一个真正的物品实体（贴图就是太阳剑）但
  * {@code setNeverPickUp()} + {@code setUnlimitedLifetime()}，原版拾取与自然消失都关掉了，
@@ -68,6 +70,13 @@ public final class SunSword {
 	private static final double OUT_OF_COMBAT_REGEN_PERCENT = 10.0D;
 	/** 拾取距离（格）：以玩家包围盒外扩这么多就算走到跟前了。 */
 	private static final double PICKUP_RADIUS = 1.5D;
+	/**
+	 * 容量满了以后清场「自己掉的太阳剑」的半径（格）：见 {@link #clearFullDrops}。
+	 *
+	 * <p>剑都掉在被命中者脚下、而人是玩家自己打的，正常战斗里离玩家不会超过几格；
+	 * 32 格足够覆盖，走远到范围外的那些也没人会再看见。
+	 */
+	private static final double DROP_SWEEP_RADIUS = 32.0D;
 	/** 掉落物落地高度（格，相对被命中者脚下）：稍微抬一点，让它自己落下去。 */
 	private static final double DROP_HEIGHT = 0.5D;
 	/** 剑痕的长度（格）：这就是那道划痕贴图的方片边长，颜色画在贴图里（橙边 → 黄 → 白芯）。 */
@@ -118,6 +127,8 @@ public final class SunSword {
 		private int regenTimer;
 		/** 永恒熔炉的计时器：攒够 sunSwordCapacityEverySeconds × 20 刻就 +1 支。 */
 		private int generatorTimer;
+		/** 上一刻数量是不是已经满了：用它认出「刚满」那一帧，好在那一刻清掉地上剩下的剑。 */
+		private boolean wasFull;
 		/** 上一次推给客户端的数量 / 上限（NaN = 还没推过，首刻必定同步一次给 HUD）。 */
 		private double syncedCurrent = Double.NaN;
 		private double syncedMax = Double.NaN;
@@ -218,6 +229,7 @@ public final class SunSword {
 			regen(player, state, max);
 			generate(player, state, max);
 			pickUp(player, state, level, max);
+			clearFullDrops(player, state, level, max);
 			sync(player, state, max);
 		}
 	}
@@ -236,21 +248,52 @@ public final class SunSword {
 		}
 	}
 
-	/** 走到自己掉的太阳剑跟前就捡起来：每支 +1（陨铁镜再多收），满了就不捡（留在地上等以后）。 */
+	/**
+	 * 走到自己掉的太阳剑跟前就收掉它：数量没满时每支 +1（陨铁镜再多收），
+	 * <b>已经满了就直接清掉这一支</b>——满容量收不进数量，留着也捡不走（见 {@link #clearFullDrops}）。
+	 */
 	private static void pickUp(ServerPlayer player, State state, ServerLevel level, double max) {
 		double perSword = 1.0D + ArtifactEffects.sunSwordPickupBonus(player);
 
 		for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class,
 				player.getBoundingBox().inflate(PICKUP_RADIUS))) {
-			if (state.current >= max) {
-				return;
+			if (!isOurDrop(drop, player)) {
+				continue;
 			}
 
-			if (isOurDrop(drop, player)) {
-				drop.discard();
+			drop.discard();
+
+			if (state.current < max) {
 				state.current = Math.min(max, state.current + perSword);
 			}
 		}
+	}
+
+	/**
+	 * 数量<b>刚到上限</b>那一刻，把附近自己掉的太阳剑全清掉（2026-10-14 用户口径：
+	 * 「掉落的太阳剑在太阳剑容量到达上限时应该消失」）。
+	 *
+	 * <p>为什么要清：满容量之后地上的剑<b>再也收不进数量</b>（走过去只会白扔一支），
+	 * 而它们又刻意关掉了原版拾取与自然消失（见 {@link #drop}）——不清就一直在原地躺着。
+	 *
+	 * <p>为什么只在「刚满」那一帧扫：数量不满时地上的剑还有用（战斗里就靠走过去捡回来），
+	 * 而且这一刻的判据是现算的——脱战回复、永恒熔炉、捡回一支都能把数量顶到上限，都会触发。
+	 * 数量一直满着就不再扫了（{@code wasFull} 记着上一刻）：那时候不可能有新剑落地
+	 * ——投一支必然把数量减到上限以下。
+	 */
+	private static void clearFullDrops(ServerPlayer player, State state, ServerLevel level, double max) {
+		boolean full = state.current >= max;
+
+		if (full && !state.wasFull) {
+			for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class,
+					player.getBoundingBox().inflate(DROP_SWEEP_RADIUS))) {
+				if (isOurDrop(drop, player)) {
+					drop.discard();
+				}
+			}
+		}
+
+		state.wasFull = full;
 	}
 
 	/**
@@ -415,7 +458,8 @@ public final class SunSword {
 	}
 
 	/**
-	 * 把那支太阳剑掉在被命中者脚下：普通物品实体（无重力关掉），但原版拾取与消失都关掉。
+	 * 把那支太阳剑掉在被命中者脚下：普通物品实体（无重力关掉），但原版拾取与消失都关掉
+	 * ——由这里的邻近判定收进数量里（见 {@link #pickUp}），数量满了则由 {@link #clearFullDrops} 清掉。
 	 *
 	 * <p>冰属性那版挂一个 {@link #ICE_DROP} 标记：掉落物还是同一个隐藏物品，模型定义按标记换贴图。
 	 * 拾取只看物品与主人，两种颜色都能收（见 {@link #isOurDrop}）。
