@@ -167,6 +167,23 @@ foreach ($id in $blocks) {
     }
 }
 
+# 1d) loot tables: 26.3 renamed the fields, and the OLD spellings are silently ignored (the table
+#     still loads, the conditions just never apply - that is how "immature carrots always drop
+#     2 carrots and a dice" happened). Legacy spellings must fail here, not in game.
+$lootTables = Get-ChildItem (Join-Path $root 'src/main/resources/data') -Recurse -Filter *.json |
+        Where-Object { $_.FullName -like '*loot_table*' }
+foreach ($file in $lootTables) {
+    $text = ReadText $file.FullName
+    $relative = $file.FullName.Substring($root.Length + 1)
+
+    if ($text -match '"functions"\s*:') { Fail "$relative uses the legacy 'functions' key (26.3 wants 'modifier')" }
+    if ($text -match '"function"\s*:') { Fail "$relative uses the legacy 'function' key (26.3 wants 'type' inside a modifier)" }
+    if ($text -match '"conditions"\s*:') { Fail "$relative uses the legacy 'conditions' key (26.3 wants a single 'condition' - wrap several in minecraft:all_of)" }
+    if ($text -match 'minecraft:block_state_property') { Fail "$relative uses the legacy condition id (26.3 wants minecraft:match_block with blocks + state)" }
+
+    Ok "loot table $relative"
+}
+
 # 2) every model file: valid geometry, existing palette, resolvable parent
 foreach ($file in Get-ChildItem $modelsDir -Filter *.json) {
     $name = $file.BaseName

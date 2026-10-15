@@ -9,11 +9,9 @@
           "name": "sephiria_fantasy:wish_pool"
         }
       ],
-      "conditions": [
-        {
-          "condition": "minecraft:survives_explosion"
-        }
-      ]
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      }
     }
   ],
   "random_sequence": "sephiria_fantasy:blocks/wish_pool"
