@@ -65,8 +65,8 @@ public final class PlayerStats {
 	public static final double DEFAULT_XP_DROP = 100.0D;
 	/** 「村庄英雄」buff 期间给的谈判力：buff 一消失加成就归零，所以不进存档、每次算总值时现查。 */
 	public static final double VILLAGE_HERO_NEGOTIATION = 20.0D;
-	/** 多少点经验换一个升级宝箱。 */
-	public static final double EXPERIENCE_PER_CHEST = 1000.0D;
+	/** 多少点经验换一个升级宝箱（2026-10-16 用户从 1000 降到 500）。 */
+	public static final double EXPERIENCE_PER_CHEST = 500.0D;
 
 	/**
 	 * 后加的那几项战斗属性单独成一组。
@@ -264,7 +264,7 @@ public final class PlayerStats {
 		public double lifesteal = 0.0D;
 		/** 叶子（货币）：获得经验时结算，见 {@link #addLeaves}。 */
 		public double leaves = 0.0D;
-		/** 累计获得的经验：每满 1000 发一个升级宝箱（计数器会扣掉已兑换的部分）。 */
+		/** 累计获得的经验：每满 {@link #EXPERIENCE_PER_CHEST} 发一个升级宝箱（计数器会扣掉已兑换的部分）。 */
 		public double experienceTowardsChest = 0.0D;
 		public double attackSpeed = DEFAULT_ATTACK_SPEED;
 		public double meleeRange = DEFAULT_MELEE_RANGE;
@@ -666,7 +666,7 @@ public final class PlayerStats {
 	/**
 	 * 直接给叶子（商店出售这类非经验来源）。
 	 *
-	 * <p>和 {@link #addLeaves} 的区别：这里不推进「每 1000 经验一个升级宝箱」的计数——
+	 * <p>和 {@link #addLeaves} 的区别：这里不推进「每 {@link #EXPERIENCE_PER_CHEST} 经验一个升级宝箱」的计数——
 	 * 卖东西不是赚经验。
 	 */
 	public static void grantLeaves(ServerPlayer player, double amount) {
@@ -692,7 +692,7 @@ public final class PlayerStats {
 	}
 
 	/**
-	 * 获得经验：折算成叶子加进余额，并按每 1000 点发一个升级宝箱。
+	 * 获得经验：折算成叶子加进余额，并按每 {@link #EXPERIENCE_PER_CHEST} 点发一个升级宝箱。
 	 *
 	 * <p>宝箱由这里直接塞进玩家背包（背包满了就掉在脚下），所以调用方不用管。
 	 *

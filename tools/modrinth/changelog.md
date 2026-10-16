@@ -1,32 +1,55 @@
-补丁版：修掉一个 26.3 战利品表格式变动引起的掉落 bug（胡萝卜），并给校验脚本加了对应的守卫。
+经济调整：升级宝箱来得更快、商店全面降价，铜锭也能卖钱了。
 
-## 修正
+## 升级宝箱所需经验减半：1000 → 500
 
-- **胡萝卜的掉落**：**没长熟的胡萝卜收割时只掉 1 根**（原版口径），**长熟的（age = 7）**才多掉 1 根（吃时运附魔）、并按 1% 概率掉一枚骰子。
-  · 之前的行为是「未长熟也固定掉 2 根胡萝卜 + 1 枚骰子」——26.3 把战利品表的字段名换了一套
-    （`functions` → `modifier`、`conditions` → 单个 `condition`、方块状态条件换成 `match_block`），
-    而**旧写法不会报错**：表照常加载、条件整段失效，于是「只有长熟才生效」的池子永远在掉。
-  · 根之退与许愿池的方块掉落表也用了同一种旧写法（`survives_explosion` 没生效），一并改对了
-    ——现在被爆炸破坏时不会再掉落。
+每获得 **500 点「实得经验」**就发一个升级宝箱（实得经验 = 原始经验 × 经验掉落%，根之退的祝福「每层阶段 +10%」也算在这一项里）。攒箱子的速度大约翻倍。
 
-## 其他
+## 商店全部买价减半
 
-- `tools/check-resources.ps1` 新增一条守卫：所有战利品表里只要还写着 `functions` / `function` /
-  `conditions` / `minecraft:block_state_property` 这些旧写法就直接报错（这类问题在游戏里是静默的，
-  必须在构建期拦下来）。
+- 白 / 蓝 / 黄 / 红 / 彩神器与石板：**250 / 500 / 750 / 1000 / 1500**（原 500 / 1000 / 1500 / 2000 / 3000）
+- 药水（白 / 蓝 / 黄）：**25 / 1500 / 5043**（原 50 / 3000 / 10086）
+- 神器宝箱 · 石板宝箱 · 升级宝箱：**750**（原 1500）
+
+卖价是「买价 × 3 折」算出来的，所以跟着一起减半；谈判力的购买折扣、向下取整这些口径没变。
+
+## 幸运的奖章：买药水生成的叶子减半
+
+在商店每买一瓶药水生成的叶子从 +100/150/200 改为 **+50/75/100**（0..2 级）。
+
+## 铜锭可以卖给商店了
+
+把铜锭放进商店的出售栏、点「出售」按钮，按 **1 叶子/个**换钱（整摞一起卖）。它是「只收不卖」的东西——商店不进货，出售价是固定的 1 叶子，不走「买价 3 折」那一套。
+
+## 未实测
+
+根之退（难度调整方块）、许愿池（抽卡）、配方书的「赛菲莉亚」页、击退冷却、太阳剑掉落物满上限消失，以及这一版的经济调整——都还等着实机过一遍。
 
 ---
 
 ## English
 
-A patch release fixing a drop bug caused by Minecraft 26.3's loot table format change (carrots), plus a guard for it in the check script.
+Economy tuning: upgrade chests come twice as fast, the shop is half price, and copper ingots can be sold.
 
-### Fixes
+### Upgrade chest XP cost halved: 1000 → 500
 
-- **Carrot drops**: harvesting an **immature** carrot now drops **1 carrot** (vanilla behaviour); only a **fully grown** one (age = 7) drops the extra carrot (with Fortune) and rolls the 1% dice.
-  · Previously an immature carrot always dropped 2 carrots plus a dice: 26.3 renamed the loot table fields (`functions` → `modifier`, `conditions` → a single `condition`, block-state conditions became `match_block`) and the **old spellings do not error** — the table still loads and the conditions simply never apply, so pools meant to be gated on a fully grown crop always rolled.
-  · The Root Retreat and Wishing Pool block loot tables used the same legacy spelling (`survives_explosion` never applied); they are fixed too — neither block drops when destroyed by an explosion any more.
+One Upgrade Chest per **500 points of actual experience** (actual experience = raw XP × your XP Drop %, which also includes the Root Retreat blessing's +10% per stage). Chests arrive about twice as often.
 
-### Other
+### All shop prices halved
 
-- `tools/check-resources.ps1` gained a guard: any loot table still using `functions` / `function` / `conditions` / `minecraft:block_state_property` fails the check (in game this class of mistake is silent, so it has to be caught at build time).
+- Common / Advanced / Rare / Legendary / Bond artifacts and slates: **250 / 500 / 750 / 1000 / 1500** (was 500 / 1000 / 1500 / 2000 / 3000)
+- Potions (Common / Advanced / Rare): **25 / 1500 / 5043** (was 50 / 3000 / 10086)
+- Artifact Chest · Slate Chest · Upgrade Chest: **750** (was 1500)
+
+Sell prices are derived as "buy price × 30%", so they halved as well; the Negotiation discount and the rounding rules are unchanged.
+
+### Lucky Medal: leaf payout per potion halved
+
+Buying a potion in the shop now grants **+50/75/100** leaves instead of +100/150/200 (levels 0..2).
+
+### Copper ingots can be sold to the shop
+
+Put copper ingots into the shop's sell slot and press **Sell** to get **1 leaf each** (the whole stack sells at once). It is a sell-only item: the shop does not stock it, so its price is a fixed 1 leaf rather than 30% of a buy price.
+
+### Not yet play-tested
+
+The Root Retreat (difficulty block), the Wishing Pool (gacha), the "Sephiria" recipe book tab, the knockback cooldown, dropped Sun Swords vanishing at the capacity cap, and this economy tuning.

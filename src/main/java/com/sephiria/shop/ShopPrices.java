@@ -8,6 +8,9 @@ import com.sephiria.potion.SephiriaPotionItem;
 import com.sephiria.slate.SlateItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+
+import java.util.Map;
 
 /**
  * 商店的价目表：买价按品质，卖价 = 买价 × {@value #SELL_PERCENT}%。
@@ -19,17 +22,25 @@ import net.minecraft.world.item.ItemStack;
  * （{@link #discounted}），卖价仍按原价的 3 折，免得低买高卖套利。
  *
  * <p><b>收不收</b>（{@link #sellable}）与<b>卖不卖</b>（{@link #buy}）是两件事：商店会卖宝箱，
- * 但不收宝箱——只有神器、石板、药水能卖给商店，骰子 / 附魔币 / 宝箱这些稀有道具不收购。
+ * 但不收宝箱——能卖给商店的只有神器、石板、药水，以及 {@link #SELL_ONLY} 里单独定价的原版材料
+ * （铜锭）；骰子 / 附魔币 / 宝箱这些稀有道具不收购。
  */
 public final class ShopPrices {
 	/** 白 / 蓝 / 黄 / 红 / 彩（石板为粉）五档买价。 */
-	private static final int[] BY_RARITY = { 500, 1000, 1500, 2000, 3000 };
-	/** 药水的五档买价：白 50、蓝 3000、黄 10086、红与彩 0（0 = 商店不出售）。 */
-	private static final int[] POTION_BY_RARITY = { 50, 3000, 10086, 0, 0 };
+	private static final int[] BY_RARITY = { 250, 500, 750, 1000, 1500 };
+	/** 药水的五档买价：白 25、蓝 1500、黄 5043、红与彩 0（0 = 商店不出售）。 */
+	private static final int[] POTION_BY_RARITY = { 25, 1500, 5043, 0, 0 };
 	/** 宝箱（神器 / 石板 / 升级）买价：用户定价，三种箱子同价。 */
-	public static final int CHEST_PRICE = 1500;
+	public static final int CHEST_PRICE = 750;
 	/** 出售折扣：原价的 3 折。 */
 	public static final int SELL_PERCENT = 30;
+	/**
+	 * 商店<b>只收不卖</b>的东西：固定出售价（叶子/个），与买价无关。
+	 *
+	 * <p>铜锭是第一个——原版材料本来卖不出叶子，用户 2026-10-16 给了它 1 叶子的出口。
+	 * 放在这里而不是走「买价 × 3 折」：这些东西商店根本不进货，没有买价可折算。
+	 */
+	private static final Map<Item, Integer> SELL_ONLY = Map.of(Items.COPPER_INGOT, 1);
 
 	private ShopPrices() {
 	}
@@ -57,17 +68,23 @@ public final class ShopPrices {
 		return 0;
 	}
 
-	/** 商店收不收这种东西：只有神器、石板、药水，而且要卖得出价。 */
+	/** 商店收不收这种东西：神器、石板、药水（要卖得出价），外加 {@link #SELL_ONLY} 里的原版材料。 */
 	public static boolean sellable(ItemStack stack) {
 		Item item = stack.getItem();
 		boolean wanted = item instanceof SephiriaArtifact || item instanceof SlateItem
 				|| item instanceof SephiriaPotionItem;
 
-		return wanted && buy(stack) > 0;
+		return (wanted && buy(stack) > 0) || SELL_ONLY.containsKey(item);
 	}
 
-	/** 出售价：原价的 3 折，向下取整。 */
+	/** 出售价：只收不卖的按 {@link #SELL_ONLY} 的定价，其余按原价 3 折向下取整。 */
 	public static int sell(ItemStack stack) {
+		Integer fixed = SELL_ONLY.get(stack.getItem());
+
+		if (fixed != null) {
+			return fixed;
+		}
+
 		return sellable(stack) ? buy(stack) * SELL_PERCENT / 100 : 0;
 	}
 
