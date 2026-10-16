@@ -67,7 +67,13 @@ public final class ShopStock extends SimpleContainer {
 
 	/** 每格已买次数；宝箱那两格共用 {@link #CHEST_LIMIT}。 */
 	private final int[] bought = new int[SLOT_COUNT];
-	private final ServerPlayer owner;
+	/**
+	 * 当前绑定的玩家实体。
+	 *
+	 * <p>不能是 final：死亡复活会让服务端换一个全新的 {@code ServerPlayer} 实例，旧实例被移除、
+	 * 它的附件再也不会被存档——所以要能换绑，见 {@link #of}。
+	 */
+	private ServerPlayer owner;
 	/**
 	 * 正在从存档装载。
 	 *
@@ -111,17 +117,32 @@ public final class ShopStock extends SimpleContainer {
 
 	/** 某个玩家的货架：内存里没有就从附件读回，附件也没有（第一次开店）才刷一批。 */
 	public static ShopStock of(ServerPlayer player) {
-		return STOCKS.computeIfAbsent(player.getUUID(), uuid -> {
-			Saved saved = player.getAttached(SAVED);
+		ShopStock cached = STOCKS.get(player.getUUID());
 
-			if (saved != null) {
-				return new ShopStock(player, saved);
+		if (cached != null) {
+			// 与神器背包同一处坑（ArtifactBackpack#of）：复活换了实体之后缓存还绑在旧实例上，
+			// 旧实例的附件不再被存档。不换绑的话，死亡之后的买 / 刷新都只写在死实体上，
+			// 重登时货架回滚到死亡那一刻（买过的货重新出现、限购清零），而叶子已经扣掉了。
+			if (cached.owner != player && !player.isRemoved()) {
+				cached.owner = player;
+				cached.setChanged();
 			}
 
-			ShopStock stock = new ShopStock(player, null);
-			stock.refresh(player.getRandom());
+			return cached;
+		}
+
+		Saved saved = player.getAttached(SAVED);
+
+		if (saved != null) {
+			ShopStock stock = new ShopStock(player, saved);
+			STOCKS.put(player.getUUID(), stock);
 			return stock;
-		});
+		}
+
+		ShopStock stock = new ShopStock(player, null);
+		stock.refresh(player.getRandom());
+		STOCKS.put(player.getUUID(), stock);
+		return stock;
 	}
 
 	/** 玩家退出时把货架从缓存里放掉（附件里已经是最新状态，重登原样读回）。 */

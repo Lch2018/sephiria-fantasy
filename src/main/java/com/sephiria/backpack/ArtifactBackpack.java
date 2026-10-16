@@ -59,7 +59,13 @@ public final class ArtifactBackpack extends SimpleContainer {
 
 	/** 内部数组按最大高度开；{@link #getContainerSize()} 只暴露当前高度内的格子。 */
 	private final int[] slotLevels = new int[WIDTH * MAX_HEIGHT];
-	private final ServerPlayer owner;
+	/**
+	 * 当前绑定的玩家实体。
+	 *
+	 * <p>不能是 final：死亡复活（以及别的换实体流程）会让服务端换一个全新的 {@code ServerPlayer}
+	 * 实例，旧实例被移除、它的附件再也不会被存档——所以要能换绑，见 {@link #of}。
+	 */
+	private ServerPlayer owner;
 	/**
 	 * 正在从存档里装载。
 	 *
@@ -101,13 +107,29 @@ public final class ArtifactBackpack extends SimpleContainer {
 
 	/** 取某个玩家的背包（首次访问时从附件里读出来）。 */
 	public static ArtifactBackpack of(ServerPlayer player) {
-		return CACHE.computeIfAbsent(player.getUUID(), uuid -> {
-			ArtifactBackpack backpack = new ArtifactBackpack(player, player.getAttached(SAVED));
-			// 装载完对账一次永恒蚀的图标颜色：存档里没写过这个组件（老存档、或指令塞进来的副本）
-			// 的那一份也能立刻拿到正确的那张图。这里只改物品组件、不调 setChanged，不会递归。
-			EternalEclipseItem.stamp(backpack);
-			return backpack;
-		});
+		ArtifactBackpack cached = CACHE.get(player.getUUID());
+
+		if (cached != null) {
+			// 复活会换一个 ServerPlayer 实例：缓存还绑在旧实例上，而旧实例的附件永远不再被存档。
+			// 不换绑的话，从死亡那一刻起的所有改动（放进去/拿出来的神器、格子等级）都只写在
+			// 死实体上，重登就回滚到死亡时的样子——2026-10-16 实测到的「买完商店的东西、大退
+			// 重进买卖被撤销」就是这条。换绑后立刻把手里这份内容写回新实例：内存里这份才是最新的
+			// （新实例上那份是复活时复制的旧快照，比它旧）。
+			// 注意顺序：先把 owner 换掉再 setChanged——它内部会绕回 of()，否则会无限换绑。
+			if (cached.owner != player && !player.isRemoved()) {
+				cached.owner = player;
+				cached.setChanged();
+			}
+
+			return cached;
+		}
+
+		ArtifactBackpack backpack = new ArtifactBackpack(player, player.getAttached(SAVED));
+		// 装载完对账一次永恒蚀的图标颜色：存档里没写过这个组件（老存档、或指令塞进来的副本）
+		// 的那一份也能立刻拿到正确的那张图。这里只改物品组件、不调 setChanged，不会递归。
+		EternalEclipseItem.stamp(backpack);
+		CACHE.put(player.getUUID(), backpack);
+		return backpack;
 	}
 
 	/**

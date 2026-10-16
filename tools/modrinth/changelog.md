@@ -1,37 +1,31 @@
-补丁版：修掉「背包满时获得的物品被吞掉」——现在装不下的会从玩家身上掉出来。
+补丁版：修掉「死亡复活之后，赛菲莉亚背包与商店的改动会在重登时被回滚」——写回存档时用错了玩家实例。
 
-## 修正：背包满时物品不再凭空消失
+## 修正：重生后的改动不再被回滚
 
-受影响的交付点：攒经验发的**升级宝箱**、**商店买的东西**、**开箱奖励**、**药水给的骰子**。
+**症状**：死亡复活之后放进背包的神器、在商店买下的货、刷新过的货架，**大退重进后会退回「本场会话第一次死亡那一刻」的样子**——背包像少了东西、货架上买过的货重新出现、限购清零，而客户端全程看着一切正常。
 
-根因是判断条件本身：这些地方原本写「`背包.add(物品)` 返回 false 才掉落」，但 `add` 的返回值只回答「有没有装进去一点」，不是「全装进去了」。于是有两种丢东西的情况：
+**根因**：背包与商店按玩家 UUID 缓存，缓存对象里存着**构造时那个 `ServerPlayer` 实例**，所有写回都走它（缓存只在断线时清）。死亡复活会让服务端换一个**全新的 `ServerPlayer`**（旧实例被移除），Fabric 只按 `copyOnDeath` 把附件复制一份给新实体——之后模组仍然往那个**已经被移除、永远不会再被存档**的旧实例上写，于是从本场第一次死亡起的改动根本没进存档。
 
-- 背包**真的满**且玩家在**创造模式**时，`add` 会把整份物品直接清空并返回 true（原版认为创造玩家可以自己刷），掉落那一步永远不会执行，物品谁也没拿到；
-- 只装得下**一部分**时（例如药水一次给 5 颗骰子、背包只剩 3 颗的位置），`add` 同样返回 true，调用方以为交付完了，剩下 2 颗被吞掉。
-
-现在统一走原版自带的「逐个格子塞、塞不下就把剩下的整份掉出来」那条路（`Inventory#placeItemBackInInventory`），生存与创造模式行为一致。附带：**整摞物品只装得下一部分时，剩下的也会掉出来**（以前会被静默吞掉）。
+**修法**：取背包 / 货架时先确认缓存绑的还是不是当前玩家，不是（且当前玩家没被移除）就换绑，并立刻把内存里最新的一份写回新实体（新实体上那份只是复活时复制的旧快照）。叶子、许愿池、神器技能栏、根之退不受影响——它们每次都直接写当前玩家。之前那段时间里已经丢掉的进度无法找回（它从未写进过磁盘）。
 
 ## 未实测
 
-根之退（难度调整方块）、许愿池（抽卡）、配方书的「赛菲莉亚」页、击退冷却、太阳剑掉落物满上限消失，以及上一版的经济调整——都还等着实机过一遍。
+背包扩容、石板升级、锻造、同伴系统尚未实现；大部分内容仍待充分实测，数值与手感继续调整。
 
 ---
 
 ## English
 
-A patch release fixing "items obtained with a full inventory get swallowed" — whatever does not fit now drops from the player instead.
+A patch release fixing "Sephiria Backpack and Shop changes made after a respawn are rolled back on the next login" — the data was being written back through the wrong player instance.
 
-### Fix: items no longer vanish when the inventory is full
+### Fix: changes after a respawn are no longer rolled back
 
-Affected delivery points: the **Upgrade Chest** from experience, **shop purchases**, **chest rewards**, and **dice granted by potions**.
+**Symptom**: artifacts put into the backpack, goods bought in the Shop, and refreshed shelves after a death all reverted to **the state at the first death of that session** once you quit and rejoined — the backpack looked short of items, goods already bought reappeared on the shelves with their purchase limits reset, while the client looked perfectly normal the whole time.
 
-The root cause was the check itself: these sites decided whether to drop with "if `inventory.add(stack)` returns false, drop it", but `add`'s return value only answers "did *anything* go in", not "did *everything* go in". Two ways to lose items followed:
+**Root cause**: both containers are cached per player UUID as an object that stores **the `ServerPlayer` instance it was built with**, and every save write goes through it (the cache is only cleared on disconnect). Dying replaces the server-side player with a **brand-new `ServerPlayer`** (the old instance is removed). Fabric only **copies** the attachments to the new entity, honouring the `copyOnDeath` flag they were registered with — but the mod kept writing to that **removed instance, which is never saved again**, so everything since the first death of the session never reached the save at all.
 
-- with a **genuinely full** inventory **in creative mode**, `add` clears the whole stack and returns true (vanilla assumes creative players can spawn anything), so the drop never ran and nobody got the item;
-- when only **part** of the stack fits (e.g. a potion grants 5 dice with room for 3), `add` also returns true, the caller believes it is done, and the remaining dice are swallowed.
-
-All of them now go through vanilla's own "fill slot by slot, drop the whole remainder when nothing fits" path (`Inventory#placeItemBackInInventory`), behaving the same in survival and creative. Bonus: when only part of a **stack** fits, the remainder now drops as well (it used to be silently swallowed).
+**Fix**: when fetching the backpack / shop, check that the cached object is still bound to the current player; if not (and the current player is not removed), rebind it and immediately write the in-memory, newest copy back to the new entity (the copy on the new entity is the stale snapshot taken at respawn). Leaves, the Wishing Pool, artifact skill slots and Root Retreat are unaffected — they always write to the current player directly. Progress already lost in that window cannot be restored (it was never written to disk).
 
 ### Not yet play-tested
 
-The Root Retreat (difficulty block), the Wishing Pool (gacha), the "Sephiria" recipe book tab, the knockback cooldown, dropped Sun Swords vanishing at the capacity cap, and the previous release's economy tuning.
+Backpack expansion, slate upgrades, forging and the companion system are not implemented yet; most content still needs thorough playtesting, and numbers and feel keep being tuned.
