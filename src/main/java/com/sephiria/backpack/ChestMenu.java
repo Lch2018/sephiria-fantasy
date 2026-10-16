@@ -3,12 +3,12 @@ package com.sephiria.backpack;
 import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.artifact.ChestItem;
 import com.sephiria.registry.ModMenus;
+import com.sephiria.util.PlayerItems;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
 import net.minecraft.util.Unit;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
@@ -130,10 +130,8 @@ public class ChestMenu extends AbstractContainerMenu {
 		held.shrink(1);
 		player.getInventory().setChanged();
 
-		if (!player.getInventory().add(reward)) {
-			// 26.3 的 drop 要带 Prediction：这是纯服务端结算，不是客户端预测
-			player.drop(reward, false, Prediction.SERVER_ONLY);
-		}
+		// 交付走 PlayerItems.give：背包满时掉在脚下（别用 Inventory#add 的返回值判断，见它顶部）
+		PlayerItems.give(serverPlayer, reward);
 
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.7F, 1.4F);

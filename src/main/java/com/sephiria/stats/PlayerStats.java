@@ -5,13 +5,13 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.network.StatsSyncPayload;
+import com.sephiria.util.PlayerItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
 
@@ -706,11 +706,8 @@ public final class PlayerStats {
 
 		while (values.experienceTowardsChest >= EXPERIENCE_PER_CHEST) {
 			values.experienceTowardsChest -= EXPERIENCE_PER_CHEST;
-			ItemStack chest = new ItemStack(com.sephiria.registry.ModItems.UPGRADE_CHEST);
-
-			if (!player.getInventory().add(chest)) {
-				player.drop(chest, false, Prediction.SERVER_ONLY);
-			}
+			// 交付走 PlayerItems.give：背包满时掉在脚下（别用 Inventory#add 的返回值判断，见它顶部）
+			PlayerItems.give(player, new ItemStack(com.sephiria.registry.ModItems.UPGRADE_CHEST));
 		}
 
 		sync(player);

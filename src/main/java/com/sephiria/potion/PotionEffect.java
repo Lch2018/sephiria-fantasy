@@ -3,9 +3,9 @@ package com.sephiria.potion;
 import com.sephiria.registry.ModItems;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.util.Numbers;
+import com.sephiria.util.PlayerItems;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -38,13 +38,8 @@ public record PotionEffect(Kind kind, double amount, int seconds) {
 			case HEAL_PER_SECOND -> PotionTimers.healPerSecond(player, (float) this.amount, this.seconds * 20);
 			case PHYSICAL -> PlayerStats.addPotionPhysical(player, this.amount);
 			case LIFESTEAL -> PlayerStats.addPotionLifesteal(player, this.amount);
-			case DICE -> {
-				ItemStack dice = new ItemStack(ModItems.DICE, (int) this.amount);
-
-				if (!player.getInventory().add(dice)) {
-					player.drop(dice, false, Prediction.SERVER_ONLY);
-				}
-			}
+			// 交付走 PlayerItems.give：背包满时掉在脚下（别用 Inventory#add 的返回值判断，见它顶部）
+			case DICE -> PlayerItems.give(player, new ItemStack(ModItems.DICE, (int) this.amount));
 		}
 	}
 

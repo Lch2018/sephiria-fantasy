@@ -6,11 +6,11 @@ import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.potion.SephiriaPotionItem;
 import com.sephiria.registry.ModItems;
+import com.sephiria.util.PlayerItems;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Prediction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.ContainerData;
@@ -238,14 +238,11 @@ public final class ShopStock extends SimpleContainer {
 			setItem(index, ItemStack.EMPTY);
 		}
 
-		ItemStack boughtStack = stack.copy();
-
-		if (!player.getInventory().add(boughtStack)) {
-			player.drop(boughtStack, false, Prediction.SERVER_ONLY);
-		}
+		// 交付走 PlayerItems.give：背包满时掉在脚下（别用 Inventory#add 的返回值判断，见它顶部）
+		PlayerItems.give(player, stack.copy());
 
 		// 幸运的奖章：每次在商店买到药水都生成一笔叶子。走 grantLeaves 而不是 addLeaves——
-		// 生成叶子不是赚经验，不该推进「每 1000 经验一个升级宝箱」的计数，也不吃叶子获得量
+		// 生成叶子不是赚经验，不该推进「每 500 经验一个升级宝箱」的计数，也不吃叶子获得量
 		if (stack.getItem() instanceof SephiriaPotionItem) {
 			com.sephiria.stats.PlayerStats.grantLeaves(player,
 					com.sephiria.artifact.ArtifactEffects.potionBuyLeafBonus(player));
