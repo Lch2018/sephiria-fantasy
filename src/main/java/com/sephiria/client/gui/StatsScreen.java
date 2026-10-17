@@ -44,7 +44,7 @@ public class StatsScreen extends Screen {
 	 * 按「背包键」（默认 E）关掉属性页、回到游戏。
 	 *
 	 * <p>原版背包、箱子这类界面是 {@code AbstractContainerScreen} 自己处理这个键的，属性页是个普通
-	 * {@code Screen}，不补这一手的话按 E 没反应——而另外三页（原版背包 / 赛菲利亚背包 / 商店）都能
+	 * {@code Screen}，不补这一手的话按 E 没反应——而另外三页（原版背包 / 赛菲莉娅背包 / 商店）都能
 	 * 按 E 退出，只有这一页不行会显得很别扭。
 	 */
 	@Override
@@ -63,7 +63,7 @@ public class StatsScreen extends Screen {
 		int rightX = left + 210;
 		int y = 34;
 
-		// 标签栏：与背包界面里那一排位置对应（原版背包 / 赛菲利亚背包 / 属性）
+		// 标签栏：与背包界面里那一排位置对应（原版背包 / 赛菲莉娅背包 / 属性）
 		// 标签栏仍按「单列面板」居中，属性分两列后它不跟着左移
 		SephiriaTabs.add(this, this.width / 2 - 100, 14, SephiriaTab.ATTRIBUTES);
 

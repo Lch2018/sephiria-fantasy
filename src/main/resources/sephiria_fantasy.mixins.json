@@ -10,6 +10,7 @@
 		"FrozenMotionMixin",
 		"LeafExperienceMixin",
 		"MobStunMixin",
+		"PlayerAdvancementsMixin",
 		"SephiriaDamageFramesMixin"
 	],
 	"injectors": {

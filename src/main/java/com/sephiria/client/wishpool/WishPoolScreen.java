@@ -388,14 +388,14 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		extractor.fill(left, top, left + this.imageWidth, top + 1, BORDER_LIGHT);
 
 		switch (this.mode) {
-			case POOL -> renderPool(extractor);
+			case POOL -> renderPool(extractor, mouseX, mouseY);
 			case ANCHOR, FORGE -> renderPicker(extractor, mouseX, mouseY);
 			case DRAWING -> renderDrawing(extractor);
 		}
 	}
 
-	/** 卡池页：锚定物品图标、能量与四叶草。 */
-	private void renderPool(GuiGraphicsExtractor extractor) {
+	/** 卡池页：锚定物品图标、能量与四叶草，以及神铸下面的「溢出转化」开关。 */
+	private void renderPool(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
 		int left = this.leftPos;
 		int top = this.topPos;
 
@@ -430,6 +430,43 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 
 		// 最左上角：方块名字（用户 2026-10-15 要求；这个界面没有物品栏，标题自己画）
 		extractor.text(this.font, this.title, left + WishPoolMenu.TITLE_X, top + WishPoolMenu.TITLE_Y, TEXT_COLOR);
+
+		renderOverflowToggle(extractor, mouseX, mouseY);
+	}
+
+	/**
+	 * 神铸按钮下面那一行：「溢出的升级宝箱自动转化为四叶草：开 / 关」。
+	 *
+	 * <p>整行可点（界面自己画的控件，没有用原版按钮——这句话太长，84 像素的按钮装不下）。
+	 * 「开 / 关」两个字跟着状态换色（开 = 四叶草绿、关 = 灰），鼠标划上去整行描边提亮。
+	 */
+	private void renderOverflowToggle(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
+		int x = this.leftPos + WishPoolMenu.OVERFLOW_TOGGLE_X;
+		int y = this.topPos + WishPoolMenu.OVERFLOW_TOGGLE_Y;
+		int width = WishPoolMenu.OVERFLOW_TOGGLE_WIDTH;
+		int height = WishPoolMenu.OVERFLOW_TOGGLE_HEIGHT;
+		boolean on = this.menu.overflowToClover();
+		boolean hovered = isOverOverflowToggle(mouseX, mouseY);
+
+		extractor.fill(x, y, x + width, y + height, BOX_COLOR);
+		extractor.fill(x, y, x + width, y + 1, hovered ? BORDER_LIGHT : BORDER_DARK);
+
+		Component state = Component.translatable(on
+				? "screen.sephiria_fantasy.wish_pool.overflow_on"
+				: "screen.sephiria_fantasy.wish_pool.overflow_off").withColor(on ? CLOVER_COLOR : DIM_COLOR);
+		Component label = Component.translatable("screen.sephiria_fantasy.wish_pool.overflow_toggle", state);
+
+		extractor.text(this.font, label, x + (width - this.font.width(label)) / 2, y + 5, TEXT_COLOR);
+	}
+
+	/** 鼠标在这一行开关上吗（点击与描边提亮都用它）。 */
+	private boolean isOverOverflowToggle(int mouseX, int mouseY) {
+		int x = this.leftPos + WishPoolMenu.OVERFLOW_TOGGLE_X;
+		int y = this.topPos + WishPoolMenu.OVERFLOW_TOGGLE_Y;
+
+		return this.mode == Mode.POOL
+				&& mouseX >= x && mouseX < x + WishPoolMenu.OVERFLOW_TOGGLE_WIDTH
+				&& mouseY >= y && mouseY < y + WishPoolMenu.OVERFLOW_TOGGLE_HEIGHT;
 	}
 
 	/** 选择页：标题 + 连击筛选图标的底色 + 物品网格。 */
@@ -650,6 +687,12 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 				openMode(Mode.POOL);
 			}
 
+			return true;
+		}
+
+		// 卡池页：点神铸下面那行开关（自己画的控件，见 renderOverflowToggle）
+		if (isOverOverflowToggle((int) event.x(), (int) event.y())) {
+			ClientPlayNetworking.send(WishPoolClickPayload.toggleOverflow());
 			return true;
 		}
 

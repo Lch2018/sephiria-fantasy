@@ -62,6 +62,11 @@ public class WishPoolMenu extends AbstractContainerMenu {
 	public static final int ANCHOR_BUTTON_Y = ANCHOR_ICON_Y + 26;
 	public static final int FORGE_BUTTON_X = ANCHOR_BUTTON_X;
 	public static final int FORGE_BUTTON_Y = ANCHOR_BUTTON_Y + POOL_BUTTON_HEIGHT + 6;
+	/** 神铸按钮下面那行：「溢出的升级宝箱自动转化为四叶草」开关（整行可点，界面自己画）。 */
+	public static final int OVERFLOW_TOGGLE_X = POOL_X + 10;
+	public static final int OVERFLOW_TOGGLE_Y = FORGE_BUTTON_Y + POOL_BUTTON_HEIGHT + 8;
+	public static final int OVERFLOW_TOGGLE_WIDTH = POOL_WIDTH - 20;
+	public static final int OVERFLOW_TOGGLE_HEIGHT = 18;
 	/** 卡池下方：「单抽」「十连」，再下面一行是「四叶草：x   能量：y」（能量跟在四叶草后面）。 */
 	public static final int DRAW_BUTTON_WIDTH = 80;
 	public static final int DRAW_BUTTON_HEIGHT = 18;
@@ -72,11 +77,12 @@ public class WishPoolMenu extends AbstractContainerMenu {
 	public static final int TEN_BUTTON_X = SINGLE_BUTTON_X + DRAW_BUTTON_WIDTH + DRAW_BUTTON_GAP;
 	public static final int STATS_TEXT_Y = DRAW_BUTTON_Y + DRAW_BUTTON_HEIGHT + 8;
 
-	/** 数据槽：能量、四叶草（数值）、神器池锚定件数字 id、石板池锚定件数字 id。 */
+	/** 数据槽：能量、四叶草（数值）、神器池锚定件数字 id、石板池锚定件数字 id、「溢出转化」开关（0/1）。 */
 	public static final int DATA_ENERGY = 0;
 	public static final int DATA_CLOVERS = 1;
 	public static final int DATA_ARTIFACT_ANCHOR = 2;
 	public static final int DATA_SLATE_ANCHOR = 3;
+	public static final int DATA_OVERFLOW = 4;
 
 	/** 服务端用的玩家与方块坐标（客户端壳里都是 null / 0）。 */
 	private final ServerPlayer owner;
@@ -99,7 +105,7 @@ public class WishPoolMenu extends AbstractContainerMenu {
 	}
 
 	public static int dataSize() {
-		return 4;
+		return 5;
 	}
 
 	/** 服务端使用：数据槽接玩家的真实状态。 */
@@ -137,8 +143,9 @@ public class WishPoolMenu extends AbstractContainerMenu {
 					case DATA_ENERGY -> WishPool.energy(player);
 					case DATA_CLOVERS -> WishPool.clovers(player);
 					case DATA_ARTIFACT_ANCHOR -> WishPool.anchorNetworkId(player, false);
-					case DATA_SLATE_ANCHOR -> WishPool.anchorNetworkId(player, true);
-					default -> 0;
+						case DATA_SLATE_ANCHOR -> WishPool.anchorNetworkId(player, true);
+						case DATA_OVERFLOW -> WishPool.overflowToClover(player) ? 1 : 0;
+						default -> 0;
 				};
 			}
 
@@ -167,6 +174,11 @@ public class WishPoolMenu extends AbstractContainerMenu {
 	/** 某个卡池的锚定件数字 id（0 = 没锚定）。 */
 	public int anchorId(boolean slatePool) {
 		return this.data.get(slatePool ? DATA_SLATE_ANCHOR : DATA_ARTIFACT_ANCHOR);
+	}
+
+	/** 「溢出的升级宝箱自动转化为四叶草」开着吗（界面画「开 / 关」用它）。 */
+	public boolean overflowToClover() {
+		return this.data.get(DATA_OVERFLOW) != 0;
 	}
 
 	// ------------------------------------------------------------------ 服务端动作
@@ -213,6 +225,21 @@ public class WishPoolMenu extends AbstractContainerMenu {
 
 		level.playSound(null, center.x, center.y, center.z, net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP,
 				net.minecraft.sounds.SoundSource.BLOCKS, 0.7F, 1.2F);
+	}
+
+	/**
+	 * 翻转「溢出的升级宝箱自动转化为四叶草」开关（服务端动作，界面只发一个点击）。
+	 *
+	 * <p>开了之后，背包满时该掉的升级宝箱会变成一片四叶草——判定在 {@code PlayerStats.addLeaves}
+	 * 发宝箱那一步（见 {@link WishPool#overflowToClover}）。
+	 */
+	public void toggleOverflowToClover() {
+		if (this.owner == null) {
+			return;
+		}
+
+		WishPool.toggleOverflowToClover(this.owner);
+		this.broadcastChanges();
 	}
 
 	/** 锚定 / 取消锚定（{@code anchor} 传 null 就是取消）。 */

@@ -156,6 +156,7 @@ public final class ModCreativeTabs {
 					.displayItems((parameters, output) -> {
 						output.accept(ModItems.ENCHANT_COIN);
 						output.accept(ModItems.DICE);
+						output.accept(ModItems.EXTRA_BACKPACK_ROW);
 						output.accept(ModItems.ARTIFACT_CHEST);
 						output.accept(ModItems.SLATE_CHEST);
 						output.accept(ModItems.UPGRADE_CHEST);

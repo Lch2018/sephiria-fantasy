@@ -2,13 +2,14 @@ package com.sephiria.client.backpack;
 
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
-import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.backpack.ArtifactBackpackMenu;
+import com.sephiria.backpack.BackpackWindow;
 import com.sephiria.client.artifact.ArtifactTooltip;
 import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.client.tabs.SephiriaTabs;
 import com.sephiria.network.RotateSlatePayload;
+import com.sephiria.network.ScrollBackpackPayload;
 import com.sephiria.slate.SlateItem;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -30,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 赛菲利亚背包的界面。
+ * 赛菲莉娅背包的界面。
  *
  * <p>左边是连击栏（连击图标 / 名字 / 等级，鼠标放上去看该连击的效果），右边是背包格子与玩家背包。
  * 面板不贴图，直接用纯色块画，这样扩容到任意高度都不用再切图。
@@ -65,8 +66,8 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 
 	public ArtifactBackpackScreen(ArtifactBackpackMenu menu, Inventory inventory, Component title) {
 		super(menu, inventory, title, ArtifactBackpackMenu.IMAGE_WIDTH,
-				ArtifactBackpackMenu.imageHeight(ArtifactBackpack.DEFAULT_HEIGHT));
-		this.rows = ArtifactBackpack.DEFAULT_HEIGHT;
+				ArtifactBackpackMenu.imageHeight(BackpackWindow.ROWS));
+		this.rows = BackpackWindow.ROWS;
 		this.inventoryLabelY = ArtifactBackpackMenu.playerRowsY(this.rows) - 11;
 	}
 
@@ -119,8 +120,9 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		int divider = left + ArtifactBackpackMenu.COMBO_PANEL_WIDTH;
 		extractor.fill(divider - 2, top + 4, divider - 1, top + this.imageHeight - 4, BORDER_LIGHT);
 
+		// 只有真正存在的格子才画底：格子数是「一次 +1 格」长的，末尾多出来的那几个位置不是格子
 		for (Slot slot : this.menu.slots) {
-			if (!this.menu.isBackpackSlot(slot)) {
+			if (!this.menu.backpackSlotExists(slot)) {
 				continue;
 			}
 
@@ -130,6 +132,7 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 			extractor.fill(x, y, x + 16, y + 16, SLOT_COLOR);
 		}
 
+		renderBackpackScrollbar(extractor);
 		renderComboPanel(extractor);
 	}
 
@@ -157,10 +160,13 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	private List<Map.Entry<ArtifactCombo, Integer>> activeCombos() {
 		List<Map.Entry<ArtifactCombo, Integer>> active = new ArrayList<>();
 
-		for (Map.Entry<ArtifactCombo, Integer> entry
-				: ArtifactEffects.comboLevels(this.menu.container(), this.menu::slotLevel).entrySet()) {
-			if (entry.getValue() > 0) {
-				active.add(entry);
+		// 档位由服务端按**整只背包**算好同步过来（菜单的数据槽）：可视区之外的神器客户端收不到，
+		// 自己拿可视窗口算的话，一滚轮面板上的档位就会少算
+		for (ArtifactCombo combo : ArtifactCombo.values()) {
+			int level = this.menu.comboLevel(combo);
+
+			if (level > 0) {
+				active.add(Map.entry(combo, level));
 			}
 		}
 
@@ -276,8 +282,7 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		ArtifactCombo hovered = hoveredCombo(mouseX, mouseY);
 
 		if (hovered != null) {
-			int level = ArtifactEffects.comboLevels(this.menu.container(), this.menu::slotLevel).getOrDefault(hovered, 0);
-			renderComboTooltip(extractor, hovered, level, mouseX, mouseY);
+			renderComboTooltip(extractor, hovered, this.menu.comboLevel(hovered), mouseX, mouseY);
 		}
 	}
 
@@ -310,7 +315,12 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		return null;
 	}
 
-	/** 鼠标停在连击栏上时，滚轮一次翻一行（内容装得下就不拦，交回原版处理）。 */
+	/**
+	 * 滚轮：连击栏上滚它自己的列表，背包格区上滚背包的页（背包比一屏长时才拦，装得下就交回原版）。
+	 *
+	 * <p>背包的「滚到第几行」在服务端，这里只把方向发过去——服务端裁完会把这一屏整批推回来
+	 * （见 {@link ArtifactBackpackMenu#scrollBackpack}）。
+	 */
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
 		if (scrollY != 0.0D && isOverComboColumn(mouseX, mouseY)) {
@@ -322,7 +332,42 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 			}
 		}
 
+		if (scrollY != 0.0D && this.menu.maxScrollRow() > 0 && isOverBackpackGrid(mouseX, mouseY)) {
+			// 滚轮往上 = 看更前面的行，所以方向取反
+			ClientPlayNetworking.send(new ScrollBackpackPayload(-(int) Math.signum(scrollY)));
+			return true;
+		}
+
 		return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+	}
+
+	/** 鼠标是不是落在背包格区（可视窗口那一块）上。 */
+	private boolean isOverBackpackGrid(double mouseX, double mouseY) {
+		int left = this.leftPos + ArtifactBackpackMenu.SLOT_X - 1;
+		int top = this.topPos + ArtifactBackpackMenu.SLOT_Y - 1;
+		int right = left + ArtifactBackpack.WIDTH * 18 + 2;
+		int bottom = top + BackpackWindow.ROWS * 18 + 2;
+		return mouseX >= left && mouseX < right && mouseY >= top && mouseY < bottom;
+	}
+
+	/** 背包格区右侧的滚动条：只有背包比一屏长时才画，风格与连击栏那条一致。 */
+	private void renderBackpackScrollbar(GuiGraphicsExtractor extractor) {
+		int maxRow = this.menu.maxScrollRow();
+
+		if (maxRow <= 0) {
+			return;
+		}
+
+		int x = this.leftPos + ArtifactBackpackMenu.SLOT_X + ArtifactBackpack.WIDTH * 18 + 3;
+		int top = this.topPos + ArtifactBackpackMenu.SLOT_Y - 1;
+		int bottom = top + BackpackWindow.ROWS * 18 + 2;
+		int track = bottom - top;
+		int totalRows = maxRow + BackpackWindow.ROWS;
+		int thumb = Math.max(COMBO_SCROLLBAR_WIDTH * 4, track * BackpackWindow.ROWS / totalRows);
+		int thumbY = top + (track - thumb) * this.menu.scrollRow() / maxRow;
+
+		extractor.fill(x, top, x + COMBO_SCROLLBAR_WIDTH, bottom, COMBO_SCROLLBAR_COLOR);
+		extractor.fill(x, thumbY, x + COMBO_SCROLLBAR_WIDTH, thumbY + thumb, COMBO_SCROLLBAR_THUMB);
 	}
 
 	/** 不画标题与「物品栏」标签——这两行在背包页上是多余的。 */
@@ -333,6 +378,11 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	/** 格子里的等级显示：有神器就显示「等级/上限」，否则显示格子等级。 */
 	@Override
 	protected void extractSlot(GuiGraphicsExtractor extractor, Slot slot, int mouseX, int mouseY) {
+		// 末尾那些不是格子的位置什么都不画（连悬停高亮都不该有）
+		if (this.menu.isBackpackSlot(slot) && !this.menu.backpackSlotExists(slot)) {
+			return;
+		}
+
 		ItemStack shown = slot.getItem();
 
 		if (shown.getItem() instanceof SlateItem && SlateItem.rotationOf(shown) != 0) {
@@ -350,10 +400,10 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		BackpackCellRenderer.drawLevelText(extractor, this.font, slot, shown, this.menu.slotLevelOf(slot));
 	}
 
-	/** 鼠标下那个背包格子；不在任何背包格子上时返回 null。 */
+	/** 鼠标下那个背包格子；不在任何（真实存在的）背包格子上时返回 null。 */
 	private Slot hoveredBackpackSlot() {
 		for (Slot slot : this.menu.slots) {
-			if (this.hoveredSlot == slot && this.menu.isBackpackSlot(slot)) {
+			if (this.hoveredSlot == slot && this.menu.backpackSlotExists(slot)) {
 				return slot;
 			}
 		}
@@ -363,7 +413,7 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 
 	private int hoveredSlotLevel(int mouseX, int mouseY) {
 		for (Slot slot : this.menu.slots) {
-			if (!this.menu.isBackpackSlot(slot)) {
+			if (!this.menu.backpackSlotExists(slot)) {
 				continue;
 			}
 

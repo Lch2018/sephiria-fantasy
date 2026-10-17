@@ -12,7 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /**
- * 神器附魔币：赛菲利亚道具（既不是武器也不是神器）。
+ * 神器附魔币：赛菲莉娅道具（既不是武器也不是神器）。
  *
  * <p>右键打开附魔面板，在面板里放入想升级的神器，每点一次「升级」消耗一枚附魔币，
  * 让神器的自身等级 +1（达到该神器的最高等级后就不再消耗）。

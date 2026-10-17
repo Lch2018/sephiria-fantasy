@@ -68,6 +68,7 @@ import com.sephiria.artifact.SolisDecusaItem;
 import com.sephiria.artifact.SolisDekuriItem;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.artifact.BlueClawItem;
+import com.sephiria.backpack.ExtraBackpackRowItem;
 import com.sephiria.artifact.ProshiumRingItem;
 import com.sephiria.artifact.SealedTegasItem;
 import com.sephiria.artifact.EternalEclipseItem;
@@ -254,7 +255,7 @@ public final class ModItems {
 				new Item.Properties().stacksTo(1));
 	}
 
-	/** 神器附魔币（赛菲利亚道具）：右键打开附魔面板。 */
+	/** 神器附魔币（赛菲莉娅道具）：右键打开附魔面板。 */
 	public static final Item ENCHANT_COIN = register(key("enchant_coin"),
 			p -> new EnchantCoinItem(p),
 			new Item.Properties());
@@ -660,18 +661,28 @@ public final class ModItems {
 			p -> new Item(p),
 			new Item.Properties().stacksTo(1));
 
-	/** 骰子（赛菲利亚道具）：商店刷新用，可堆叠；自然箱子里 10% 概率开出。 */
+	/** 骰子（赛菲莉娅道具）：商店刷新用，可堆叠；自然箱子里 10% 概率开出。 */
 	public static final Item DICE = register(key("dice"),
 			p -> new DiceItem(p),
 			new Item.Properties());
 
 	/**
-	 * 根之退（赛菲利亚道具）：石碑状的功能方块，右键打开调难度的界面。
+	 * 赛菲莉娅额外背包栏（赛菲莉娅道具）：右键使用，赛菲莉娅背包**永久 +1 格**。
+	 *
+	 * <p>目前的主要来源是赛菲莉娅流浪商人（1 绿宝石一个）。扩到
+	 * {@link com.sephiria.backpack.ArtifactBackpack#MAX_SLOTS} 格到顶，到顶后再用不消耗物品。
+	 */
+	public static final Item EXTRA_BACKPACK_ROW = register(key("extra_backpack_row"),
+			p -> new ExtraBackpackRowItem(p),
+			new Item.Properties());
+
+	/**
+	 * 根之退（赛菲莉娅道具）：石碑状的功能方块，右键打开调难度的界面。
 	 *
 	 * <p>方块本体注册在 {@link ModBlocks}，这里只是它的方块物品——少了这一件，创造页与背包里
 	 * 都拿不到那个方块。
 	 */
-	/** 许愿池（赛菲莉亚道具）：水池方块，右键打开抽卡界面，并吸走扔进来的升级宝箱。 */
+	/** 许愿池（赛菲莉娅道具）：水池方块，右键打开抽卡界面，并吸走扔进来的升级宝箱。 */
 	public static final Item WISH_POOL = register(key("wish_pool"),
 			p -> new BlockItem(ModBlocks.WISH_POOL, p),
 			new Item.Properties().useBlockDescriptionPrefix());
@@ -682,7 +693,7 @@ public final class ModItems {
 			// 不加这一行会去找 item.sephiria_fantasy.root_retreat，界面里显示成一串原始键名
 			new Item.Properties().useBlockDescriptionPrefix());
 
-	/** 神器宝箱（赛菲利亚道具）：右键开出 5 件随机神器，选一件拿走。 */
+	/** 神器宝箱（赛菲莉娅道具）：右键开出 5 件随机神器，选一件拿走。 */
 	public static final Item ARTIFACT_CHEST = register(key("artifact_chest"),
 			p -> new ChestItem(ChestItem.Kind.ARTIFACT, p),
 			new Item.Properties().stacksTo(1));

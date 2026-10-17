@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * 让本模组的合成表归到「赛菲莉亚」那一页配方书里。
+ * 让本模组的合成表归到「赛菲莉娅」那一页配方书里。
  *
  * <p>原版合成表的 {@code "category"} 字段其实是个<b>四值枚举</b>（{@code CraftingBookCategory}：
  * 建筑方块 / 红石 / 装备 / 杂物），配方书分类由 {@code CraftingRecipe#recipeBookCategory()}

@@ -10,7 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /**
- * 赛菲利亚弩的专用弹药：弩矢。
+ * 赛菲莉娅弩的专用弹药：弩矢。
  *
  * <p>它和原版箭矢是两种物品——重型弩不消耗、也不要求背包里有原版箭矢，弹匣里装的始终是弩矢。
  * 发射出去后走的是原版箭矢的飞行/伤害/插地逻辑（{@link Arrow} 实体），但**不能被拾取**：

@@ -9,11 +9,12 @@ import net.minecraft.resources.Identifier;
 /**
  * 客户端 → 服务端：许愿池界面里点的按钮。
  *
- * <p>四种动作：
+ * <p>五种动作：
  * <ul>
  *   <li>{@link #ACTION_DRAW_SINGLE} / {@link #ACTION_DRAW_TEN}：抽卡（1 次 / 10 次，每次 1 片四叶草）；</li>
  *   <li>{@link #ACTION_ANCHOR}：把某一卡池的锚定设成 {@code itemId}（0 = 取消锚定）；</li>
- *   <li>{@link #ACTION_FORGE}：神铸——花能量换 {@code itemId}。</li>
+ *   <li>{@link #ACTION_FORGE}：神铸——花能量换 {@code itemId}；</li>
+ *   <li>{@link #ACTION_TOGGLE_OVERFLOW}：翻转「溢出的升级宝箱自动转化为四叶草」开关。</li>
  * </ul>
  *
  * <p>{@code slatePool} 表示当前在石板池（抽卡与锚定都分池）。
@@ -24,6 +25,7 @@ public record WishPoolClickPayload(int action, boolean slatePool, int itemId) im
 	public static final int ACTION_DRAW_TEN = 1;
 	public static final int ACTION_ANCHOR = 2;
 	public static final int ACTION_FORGE = 3;
+	public static final int ACTION_TOGGLE_OVERFLOW = 4;
 
 	public static final CustomPacketPayload.Type<WishPoolClickPayload> TYPE =
 			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool_click"));
@@ -50,6 +52,11 @@ public record WishPoolClickPayload(int action, boolean slatePool, int itemId) im
 	/** 神铸。 */
 	public static WishPoolClickPayload forge(int itemId) {
 		return new WishPoolClickPayload(ACTION_FORGE, false, itemId);
+	}
+
+	/** 翻转「溢出的升级宝箱自动转化为四叶草」开关（不带别的参数，值与反转都由服务端管）。 */
+	public static WishPoolClickPayload toggleOverflow() {
+		return new WishPoolClickPayload(ACTION_TOGGLE_OVERFLOW, false, 0);
 	}
 
 	@Override

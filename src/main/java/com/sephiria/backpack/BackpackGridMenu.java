@@ -3,11 +3,18 @@ package com.sephiria.backpack;
 import net.minecraft.world.inventory.Slot;
 
 /**
- * 带赛菲利亚背包格区的菜单（背包页与神器附魔页）：把「这格是不是背包格区」统一成
- * 一个判定入口，服务端处理「只带菜单格子编号」的包（比如旋转石板）时不用为每个
+ * 带赛菲莉娅背包格区的菜单（背包页与神器附魔页）：把「这格是不是背包格区」与
+ * 「滚轮翻页」统一成一个入口，服务端处理那些只带菜单格子编号或方向的包时不用为每个
  * 菜单各写一份。
  */
 public interface BackpackGridMenu {
-	/** 这格是不是赛菲利亚背包格区（玩家背包区、功能区都不算）。 */
+	/** 这格是不是赛菲莉娅背包格区（玩家背包区、功能区都不算）。 */
 	boolean isBackpackSlot(Slot slot);
+
+	/**
+	 * 滚轮翻页：{@code deltaRows > 0} 往下。返回是否真的动了（到顶/到底时不动）。
+	 *
+	 * <p>只在服务端调：视窗偏移在服务端，翻页后由服务端把这一屏重新推给客户端。
+	 */
+	boolean scrollBackpack(int deltaRows);
 }

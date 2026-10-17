@@ -45,7 +45,7 @@ import java.util.UUID;
  * 所以一次范围攻击里友好生物照样受无敌帧保护。
  */
 public final class SephiriaDamage {
-	/** 模组投掷物实现的标记：用它就能认出"这是赛菲利亚的伤害"。 */
+	/** 模组投掷物实现的标记：用它就能认出"这是赛菲莉娅的伤害"。 */
 	public interface Source {
 	}
 

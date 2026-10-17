@@ -15,6 +15,7 @@ import com.sephiria.network.InvulnerablePayload;
 import com.sephiria.network.OpenBackpackPayload;
 import com.sephiria.network.OpenShopPayload;
 import com.sephiria.network.RotateSlatePayload;
+import com.sephiria.network.ScrollBackpackPayload;
 import com.sephiria.network.UpgradeArtifactPayload;
 import com.sephiria.network.RefreshShopPayload;
 import com.sephiria.network.ReloadPayload;
@@ -51,6 +52,8 @@ import com.sephiria.stats.TimedAttributes;
 import net.minecraft.server.level.ServerPlayer;
 import com.sephiria.registry.ModBlockEntities;
 import com.sephiria.registry.ModBlocks;
+import com.sephiria.registry.ModEntities;
+import com.sephiria.trader.SephiriaTraderSpawner;
 import com.sephiria.registry.ModRecipeBookCategories;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
@@ -84,12 +87,17 @@ public class Sephiria implements ModInitializer {
 		ModItems.initialize();
 		ModBlocks.initialize();
 		ModBlockEntities.initialize();
-		// 配方书多一页「赛菲莉亚」：分类登记（配方 JSON 的 category 指向它）
+		// 配方书多一页「赛菲莉娅」：分类登记（配方 JSON 的 category 指向它）
 		ModRecipeBookCategories.initialize();
 		ModCreativeTabs.initialize();
 		ModMenus.initialize();
 		ModSounds.initialize();
 		ModParticleTypes.initialize();
+		// 赛菲莉娅流浪商人 + 商队羊驼：实体类型与属性表
+		ModEntities.initialize();
+		// 商人的刷怪器：机制照原版 WanderingTraderSpawner 抄一份但独立运行——原版那个照旧刷
+		// 原版商人，两个都刷（用户 2026-10-17 的口径）
+		SephiriaTraderSpawner.registerTicker();
 		ArtifactBackpack.register();
 		// 根之退的难度设置：每玩家一份的数据附件（方块本身不存东西）
 		com.sephiria.difficulty.RootRetreat.register();
@@ -160,6 +168,7 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.serverboundPlay().register(SellItemPayload.TYPE, SellItemPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RefreshShopPayload.TYPE, RefreshShopPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RotateSlatePayload.TYPE, RotateSlatePayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(ScrollBackpackPayload.TYPE, ScrollBackpackPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(OpenArtifactSkillsPayload.TYPE, OpenArtifactSkillsPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(CastArtifactSkillPayload.TYPE, CastArtifactSkillPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(AssignArtifactSkillPayload.TYPE, AssignArtifactSkillPayload.STREAM_CODEC);
@@ -186,7 +195,7 @@ public class Sephiria implements ModInitializer {
 				(payload, context) -> SephiriaCrossbowItem.tryReload(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(ShieldSweepPayload.TYPE,
 				(payload, context) -> SephiriaShieldItem.tryDefendSweep(context.player()));
-		// 赛菲利亚背包是容器菜单，必须由服务端打开（客户端只负责画那个标签页按钮）
+		// 赛菲莉娅背包是容器菜单，必须由服务端打开（客户端只负责画那个标签页按钮）
 		ServerPlayNetworking.registerGlobalReceiver(OpenBackpackPayload.TYPE,
 				(payload, context) -> context.player().openMenu(ArtifactBackpackMenu.provider(context.player())));
 		// 背包页与附魔页都能按 R 旋转石板：只带菜单格子编号。服务端先确认开着的是带
@@ -207,6 +216,13 @@ public class Sephiria implements ModInitializer {
 				// 朝向变了：让背包重算格子等级（缓存里存着上次的结果），并把新组件同步给客户端
 				slot.setChanged();
 				menu.broadcastChanges();
+			}
+		});
+		// 背包页与附魔页的滚轮翻页：窗口偏移在服务端，翻完由菜单整批重推这一屏（只带方向，
+		// 滚到第几行由服务端按背包真实行数裁）
+		ServerPlayNetworking.registerGlobalReceiver(ScrollBackpackPayload.TYPE, (payload, context) -> {
+			if (context.player().containerMenu instanceof BackpackGridMenu grid) {
+				grid.scrollBackpack(payload.delta());
 			}
 		});
 		// 商店也是容器菜单（货架在服务端），同样只能由服务端打开
@@ -251,7 +267,8 @@ public class Sephiria implements ModInitializer {
 						menu.upgrade(payload.levels());
 					}
 				});
-		// 许愿池界面里的按钮：抽卡 / 锚定 / 神铸——够不够四叶草与能量、能不能换都由菜单那边判
+		// 许愿池界面里的按钮：抽卡 / 锚定 / 神铸 / 溢出转化开关——够不够四叶草与能量、
+		// 能不能换、开关翻到哪一边都由菜单那边判
 		ServerPlayNetworking.registerGlobalReceiver(WishPoolClickPayload.TYPE,
 				(payload, context) -> {
 					if (!(context.player().containerMenu instanceof com.sephiria.wishpool.WishPoolMenu menu)) {
@@ -267,6 +284,7 @@ public class Sephiria implements ModInitializer {
 								menu.draw(payload.slatePool(), com.sephiria.wishpool.WishPool.TEN_DRAW);
 						case WishPoolClickPayload.ACTION_ANCHOR -> menu.setAnchor(payload.slatePool(), item);
 						case WishPoolClickPayload.ACTION_FORGE -> menu.forge(item);
+						case WishPoolClickPayload.ACTION_TOGGLE_OVERFLOW -> menu.toggleOverflowToClover();
 						default -> {
 						}
 					}
@@ -296,7 +314,7 @@ public class Sephiria implements ModInitializer {
 					}
 				});
 
-		// 赛菲利亚货币进自然生成的箱子（骰子 + 神器附魔币）：所有 minecraft:chests/* 的表
+		// 赛菲莉娅货币进自然生成的箱子（骰子 + 神器附魔币）：所有 minecraft:chests/* 的表
 		// 各加一个 10% 概率的池子
 		com.sephiria.shop.ChestLoot.register();
 

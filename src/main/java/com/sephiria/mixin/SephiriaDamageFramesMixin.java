@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * 赛菲利亚的伤害无视无敌帧（对玩家与敌对生物）。
+ * 赛菲莉娅的伤害无视无敌帧（对玩家与敌对生物）。
  *
  * <p>原版 {@code hurtServer} 里，受到伤害后 20 刻内再来一次，只有伤害更高才结算差额——
  * 这就是高攻速武器兑现不了秒伤的原因。这里在伤害入口把 {@code invulnerableTime} 清零，

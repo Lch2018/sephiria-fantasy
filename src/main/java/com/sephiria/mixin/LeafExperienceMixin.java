@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 /**
- * 经验 → 叶子：每获得 1 点实际经验就给 1 点赛菲利亚货币「叶子」。
+ * 经验 → 叶子：每获得 1 点实际经验就给 1 点赛菲莉娅货币「叶子」。
  *
  * <p>挂在 {@code giveExperiencePoints} 上而不是自己累计经验值：原版所有经验来源（打怪、挖矿、
  * 烧炼、经验瓶、指令）最后都会走到这里，一处就够。

@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 配方书多一页「赛菲莉亚」：把本模组的配方书分类插进原版工作台配方书的页签列表里。
+ * 配方书多一页「赛菲莉娅」：把本模组的配方书分类插进原版工作台配方书的页签列表里。
  *
  * <p>原版那几页是 <b>写死在静态字段里</b> 的（{@code CraftingRecipeBookComponent.TABS}，
  * 一个 {@code List.of(...)} 的常量），Fabric 也没有配方书页签的注册 API——所以只能在这里

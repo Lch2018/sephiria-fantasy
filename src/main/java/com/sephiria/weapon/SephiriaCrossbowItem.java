@@ -241,7 +241,7 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 
 	// ------------------------------------------------------------------ 耐久条 = 弹匣条
 	//
-	// 赛菲利亚武器都带 UNBREAKABLE，而 26.2 的 ItemStack#isDamageableItem() 明确排除了
+	// 赛菲莉娅武器都带 UNBREAKABLE，而 26.2 的 ItemStack#isDamageableItem() 明确排除了
 	// 不可破坏的物品，于是 isDamaged() 永远为 false、原版耐久条不会绘制。所以这里直接重写
 	// 耐久条的三个方法，让它读弹匣数而不是 damage 组件。
 

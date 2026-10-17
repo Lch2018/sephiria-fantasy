@@ -1,31 +1,43 @@
-补丁版：修掉「死亡复活之后，赛菲莉亚背包与商店的改动会在重登时被回滚」——写回存档时用错了玩家实例。
+内容版：赛菲莉亚流浪商人（红袍 + 红毯羊驼）、新道具「赛菲莉亚额外背包栏」（背包 +1 格）、背包超出可滚轮翻页、达成成就送四叶草、许愿池的「溢出转化」开关、升级宝箱提示音、HUD 层级修正，中文名统一为**赛菲莉娅**。
 
-## 修正：重生后的改动不再被回滚
+## 新增
 
-**症状**：死亡复活之后放进背包的神器、在商店买下的货、刷新过的货架，**大退重进后会退回「本场会话第一次死亡那一刻」的样子**——背包像少了东西、货架上买过的货重新出现、限购清零，而客户端全程看着一切正常。
+- **赛菲莉亚流浪商人**：红袍商人 + 2 只披红毯的商队羊驼。刷新机制与原版流浪商人完全同一套，但**两者各自独立、都会出现**。9 个交易位全是「卖」：7 格道具（神器附魔币 / 骰子 / 赛菲莉亚额外背包栏，等概率三选一）+ 2 格药水（全部赛菲莉亚药水，含以后新增的）；每格 1 绿宝石、1 件，**卖完不补货**。
+- **新道具「赛菲莉亚额外背包栏」**：右键使用让赛菲莉亚背包**永久 +1 格**（默认 30 → 上限 54 格）；图标与背包标签页同一张，提示框写「赛菲莉娅背包格子+1」。
+- **背包超出可滚轮翻页**：界面固定显示 5 行，多出来的用滚轮翻（背包页与附魔页都有），右侧有滚动条；最后那一屏里**不存在的格子不会被画出来**。
+- **达成成就送四叶草**：每达成一个会弹提示的成就 +1 片四叶草（原版配方解锁与配方书展示条目不计数）。
+- **许愿池新增「溢出的升级宝箱自动转化为四叶草：开 / 关」开关**（神铸按钮下面一行，整行可点）：开着时背包已满获得的升级宝箱不再掉在脚下，而是**直接变 1 片四叶草**；每个玩家各设各的，随存档保留。
+- **升级宝箱提示音**：拿到时响一声，因背包满转化成四叶草时同样响。
 
-**根因**：背包与商店按玩家 UUID 缓存，缓存对象里存着**构造时那个 `ServerPlayer` 实例**，所有写回都走它（缓存只在断线时清）。死亡复活会让服务端换一个**全新的 `ServerPlayer`**（旧实例被移除），Fabric 只按 `copyOnDeath` 把附件复制一份给新实体——之后模组仍然往那个**已经被移除、永远不会再被存档**的旧实例上写，于是从本场第一次死亡起的改动根本没进存档。
+## 修正
 
-**修法**：取背包 / 货架时先确认缓存绑的还是不是当前玩家，不是（且当前玩家没被移除）就换绑，并立刻把内存里最新的一份写回新实体（新实体上那份只是复活时复制的旧快照）。叶子、许愿池、神器技能栏、根之退不受影响——它们每次都直接写当前玩家。之前那段时间里已经丢掉的进度无法找回（它从未写进过磁盘）。
+- **HUD 层级**：从「画在所有 HUD 最后」改成**贴在原版热键栏之后**，不再压住聊天栏 / F3 / 玩家列表。
+- **中文名统一为「赛菲莉娅」**：此前混用「赛菲莉亚」「赛菲利亚」（包括背包界面标题），现在全部统一（英文与所有内部标识符不变）。
 
 ## 未实测
 
-背包扩容、石板升级、锻造、同伴系统尚未实现；大部分内容仍待充分实测，数值与手感继续调整。
+大部分内容尚未充分实测，数值与手感仍会调整；商人的刷新计时不写存档（服务端重启后重新计时）。
 
 ---
 
 ## English
 
-A patch release fixing "Sephiria Backpack and Shop changes made after a respawn are rolled back on the next login" — the data was being written back through the wrong player instance.
+A content release: the Sephiria Wandering Trader (red robe + red-blanketed llamas), the "Extra Backpack Row" item, backpack scrolling, clovers for achievements, an "overflow chests become clovers" switch in the Wishing Pool, an Upgrade Chest pickup sound, HUD layering fixes, and the Chinese name is now consistently 赛菲莉娅.
 
-### Fix: changes after a respawn are no longer rolled back
+### New
 
-**Symptom**: artifacts put into the backpack, goods bought in the Shop, and refreshed shelves after a death all reverted to **the state at the first death of that session** once you quit and rejoined — the backpack looked short of items, goods already bought reappeared on the shelves with their purchase limits reset, while the client looked perfectly normal the whole time.
+- **Sephiria Wandering Trader**: a red-robed trader with 2 red-blanketed trader llamas. Spawns exactly like the vanilla wandering trader, but the two are **completely independent — both appear**. All 9 trade slots sell only: 7 item slots (Artifact Enchant Coin / Dice / Extra Backpack Row, picked uniformly) + 2 potion slots (every Sephiria potion, including future ones); each costs 1 emerald for 1 item and **nothing restocks**.
+- **New item "Extra Backpack Row"**: right-click for **+1 permanent backpack slot** (30 by default, up to 54); its icon is the backpack tab icon and its tooltip reads "Sephiria Backpack slots +1".
+- **Backpack scrolling**: the UI shows 5 rows and the rest is reached with the mouse wheel (backpack and enchant pages), with a scrollbar; cells that **do not exist are not drawn**.
+- **Achievements grant clovers**: each toast-showing achievement grants +1 clover (vanilla recipe unlocks and recipe-book entries do not count).
+- **New Wishing Pool switch "Overflowing Upgrade Chests become clovers: ON / OFF"** (one clickable row below the Forge button): with a full inventory, an earned Upgrade Chest **becomes 1 clover** instead of dropping; per player, saved with the world.
+- **Upgrade Chest pickup sound**: plays when you receive one, and also when it is converted into a clover.
 
-**Root cause**: both containers are cached per player UUID as an object that stores **the `ServerPlayer` instance it was built with**, and every save write goes through it (the cache is only cleared on disconnect). Dying replaces the server-side player with a **brand-new `ServerPlayer`** (the old instance is removed). Fabric only **copies** the attachments to the new entity, honouring the `copyOnDeath` flag they were registered with — but the mod kept writing to that **removed instance, which is never saved again**, so everything since the first death of the session never reached the save at all.
+### Fixes
 
-**Fix**: when fetching the backpack / shop, check that the cached object is still bound to the current player; if not (and the current player is not removed), rebind it and immediately write the in-memory, newest copy back to the new entity (the copy on the new entity is the stale snapshot taken at respawn). Leaves, the Wishing Pool, artifact skill slots and Root Retreat are unaffected — they always write to the current player directly. Progress already lost in that window cannot be restored (it was never written to disk).
+- **HUD layering**: moved from last to **right after the vanilla hotbar**, so it no longer covers chat / F3 / the player list.
+- **The Chinese name is consistently 赛菲莉娅 now** (previously mixed with two misspellings, including the backpack screen's title); English and all internal identifiers are untouched.
 
 ### Not yet play-tested
 
-Backpack expansion, slate upgrades, forging and the companion system are not implemented yet; most content still needs thorough playtesting, and numbers and feel keep being tuned.
+Most content still needs thorough playtesting and numbers keep being tuned; the trader's spawn timer is not saved (it restarts when the server restarts).

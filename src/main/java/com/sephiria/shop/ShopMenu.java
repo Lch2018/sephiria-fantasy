@@ -31,7 +31,7 @@ import net.minecraft.world.item.ItemStack;
  *
  * <p>刷新：骰子栏里放骰子，再点界面上的「刷新」按钮（{@link #refresh}）——不会放上去就自动刷，
  * 免得手滑白白浪费一颗骰子。
- * 出售：把赛菲利亚的东西放进出售栏，再点界面上的「出售」按钮（{@link #sell}）。
+ * 出售：把赛菲莉娅的东西放进出售栏，再点界面上的「出售」按钮（{@link #sell}）。
  */
 public class ShopMenu extends AbstractContainerMenu {
 	public static final int IMAGE_WIDTH = 176;

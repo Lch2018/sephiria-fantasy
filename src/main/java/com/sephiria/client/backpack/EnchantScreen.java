@@ -1,10 +1,13 @@
 package com.sephiria.client.backpack;
 
+import com.sephiria.backpack.ArtifactBackpack;
+import com.sephiria.backpack.BackpackWindow;
 import com.sephiria.backpack.EnchantMenu;
 import com.sephiria.client.artifact.ArtifactTooltip;
 import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.client.tabs.SephiriaTabs;
 import com.sephiria.network.RotateSlatePayload;
+import com.sephiria.network.ScrollBackpackPayload;
 import com.sephiria.network.UpgradeArtifactPayload;
 import com.sephiria.slate.SlateItem;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -23,11 +26,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 神器附魔面板：左边功能区（神器槽、附魔币槽、三个升级选项），右边是赛菲利亚背包格区与
- * 玩家背包——赛菲利亚背包里的神器不用先搬回原版背包，直接拖进神器槽就能升级。
+ * 神器附魔面板：左边功能区（神器槽、附魔币槽、三个升级选项），右边是赛菲莉娅背包格区与
+ * 玩家背包——赛菲莉娅背包里的神器不用先搬回原版背包，直接拖进神器槽就能升级。
  *
  * <p>选项在附魔币不够时置灰（数量够不够是本地先算一遍，服务端还会再判一次）；面板同样用
- * 纯色块画。背包格区的画法（石板朝向、等级文字、悬停提示）与赛菲利亚背包界面共用
+ * 纯色块画。背包格区的画法（石板朝向、等级文字、悬停提示）与赛菲莉娅背包界面共用
  * {@link BackpackCellRenderer}，保证两边看起来一致。
  */
 public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
@@ -39,6 +42,10 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 	private static final int HINT_COLOR = 0xFF9A9AA2;
 	private static final int COIN_COLOR = 0xFFFFD24A;
 	private static final int TAB_HEIGHT = 20;
+	/** 背包格区滚动条（只有背包比一屏长时才画；配色与背包页那条一致）。 */
+	private static final int SCROLLBAR_WIDTH = 2;
+	private static final int SCROLLBAR_COLOR = 0xFF15151A;
+	private static final int SCROLLBAR_THUMB = 0xFF7A7A88;
 
 	private final List<Button> upgradeButtons = new ArrayList<>();
 
@@ -120,11 +127,12 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 		int divider = left + EnchantMenu.FUNCTION_AREA_WIDTH;
 		extractor.fill(divider - 2, top + 4, divider - 1, top + this.imageHeight - 4, BORDER_LIGHT);
 
-		// 神器槽、附魔币槽与赛菲利亚背包格区的底；玩家背包区用原版自己的画法
+		// 神器槽、附魔币槽与赛菲莉娅背包格区的底；玩家背包区用原版自己的画法
 		for (Slot slot : this.menu.slots) {
 			int index = this.menu.slots.indexOf(slot);
 
-			if (index > 1 && !this.menu.isBackpackSlot(slot)) {
+			// 只有真正存在的格子才画底（末尾多出来的那几个位置不是格子）
+			if (index > 1 && !this.menu.backpackSlotExists(slot)) {
 				continue;
 			}
 
@@ -133,6 +141,52 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 			extractor.fill(x - 1, y - 1, x + 17, y + 17, SLOT_EDGE);
 			extractor.fill(x, y, x + 16, y + 16, SLOT_COLOR);
 		}
+
+		renderBackpackScrollbar(extractor);
+	}
+
+	/**
+	 * 滚轮：鼠标在背包格区上时翻背包的页（背包比一屏长时才拦）。滚到第几行在服务端，
+	 * 这里只把方向发过去——服务端裁完会把这一屏整批推回来。
+	 */
+	@Override
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+		if (scrollY != 0.0D && this.menu.maxScrollRow() > 0 && isOverBackpackGrid(mouseX, mouseY)) {
+			// 滚轮往上 = 看更前面的行，所以方向取反
+			ClientPlayNetworking.send(new ScrollBackpackPayload(-(int) Math.signum(scrollY)));
+			return true;
+		}
+
+		return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+	}
+
+	/** 鼠标是不是落在背包格区（可视窗口那一块）上。 */
+	private boolean isOverBackpackGrid(double mouseX, double mouseY) {
+		int left = this.leftPos + EnchantMenu.BACKPACK_SLOT_X - 1;
+		int top = this.topPos + EnchantMenu.BACKPACK_SLOT_Y - 1;
+		int right = left + ArtifactBackpack.WIDTH * 18 + 2;
+		int bottom = top + BackpackWindow.ROWS * 18 + 2;
+		return mouseX >= left && mouseX < right && mouseY >= top && mouseY < bottom;
+	}
+
+	/** 背包格区右侧的滚动条：只有背包比一屏长时才画（与背包页那条同一配色）。 */
+	private void renderBackpackScrollbar(GuiGraphicsExtractor extractor) {
+		int maxRow = this.menu.maxScrollRow();
+
+		if (maxRow <= 0) {
+			return;
+		}
+
+		int x = this.leftPos + EnchantMenu.BACKPACK_SLOT_X + ArtifactBackpack.WIDTH * 18 + 3;
+		int top = this.topPos + EnchantMenu.BACKPACK_SLOT_Y - 1;
+		int bottom = top + BackpackWindow.ROWS * 18 + 2;
+		int track = bottom - top;
+		int totalRows = maxRow + BackpackWindow.ROWS;
+		int thumb = Math.max(SCROLLBAR_WIDTH * 4, track * BackpackWindow.ROWS / totalRows);
+		int thumbY = top + (track - thumb) * this.menu.scrollRow() / maxRow;
+
+		extractor.fill(x, top, x + SCROLLBAR_WIDTH, bottom, SCROLLBAR_COLOR);
+		extractor.fill(x, thumbY, x + SCROLLBAR_WIDTH, thumbY + thumb, SCROLLBAR_THUMB);
 	}
 
 	@Override
@@ -153,9 +207,14 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 				EnchantMenu.BACKPACK_SLOT_X, EnchantMenu.BACKPACK_SLOT_Y - 12, HINT_COLOR);
 	}
 
-	/** 背包格区里的显示与赛菲利亚背包界面一致：石板按朝向转、左上角画等级文字。 */
+	/** 背包格区里的显示与赛菲莉娅背包界面一致：石板按朝向转、左上角画等级文字。 */
 	@Override
 	protected void extractSlot(GuiGraphicsExtractor extractor, Slot slot, int mouseX, int mouseY) {
+		// 末尾那些不是格子的位置什么都不画（连悬停高亮都不该有）
+		if (this.menu.isBackpackSlot(slot) && !this.menu.backpackSlotExists(slot)) {
+			return;
+		}
+
 		ItemStack shown = slot.getItem();
 
 		if (shown.getItem() instanceof SlateItem && SlateItem.rotationOf(shown) != 0) {
@@ -171,10 +230,10 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 		BackpackCellRenderer.drawLevelText(extractor, this.font, slot, shown, this.menu.slotLevelOf(slot));
 	}
 
-	/** 鼠标下那个背包格子；不在任何背包格子上时返回 null。 */
+	/** 鼠标下那个背包格子；不在任何真实存在的背包格子上时返回 null。 */
 	private Slot hoveredBackpackSlot() {
 		for (Slot slot : this.menu.slots) {
-			if (this.hoveredSlot == slot && this.menu.isBackpackSlot(slot)) {
+			if (this.hoveredSlot == slot && this.menu.backpackSlotExists(slot)) {
 				return slot;
 			}
 		}
@@ -185,7 +244,7 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 	/** 鼠标下的背包格子的格子等级；不在背包格子上时返回 -1。 */
 	private int hoveredSlotLevel(int mouseX, int mouseY) {
 		for (Slot slot : this.menu.slots) {
-			if (!this.menu.isBackpackSlot(slot)) {
+			if (!this.menu.backpackSlotExists(slot)) {
 				continue;
 			}
 

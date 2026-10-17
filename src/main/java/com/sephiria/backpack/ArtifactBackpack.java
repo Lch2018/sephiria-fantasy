@@ -12,7 +12,6 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -22,7 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 赛菲利亚背包：只放神器与石板的独立背包，宽度固定 6 格、高度可变（默认 5 格，扩容方式待做）。
+ * 赛菲莉娅背包：只放神器与石板的独立背包，宽度固定 6 格、高度可变（默认 5 格，扩容方式待做）。
  *
  * <p>每个玩家一份，存在 Fabric 的数据附件里（{@code artifact_backpack}），跟着玩家存档走；
  * 内容一变就写回附件，并顺手刷新一次属性同步（神器会影响物理强度，属性面板要跟着变）。
@@ -34,18 +33,48 @@ import java.util.UUID;
 public final class ArtifactBackpack extends SimpleContainer {
 	/** 宽度固定 6 格。 */
 	public static final int WIDTH = 6;
-	/** 默认高度 5 格。 */
+	/** 默认高度 5 格（界面固定显示的行数也是它，见 {@link BackpackWindow#ROWS}）。 */
 	public static final int DEFAULT_HEIGHT = 5;
-	/** 高度上限（扩容方式还没做，先定个上限，避免存档里出现离谱尺寸）。 */
+	/** 高度上限 9 格：超过这个就不给扩了，免得存档里出现离谱尺寸。 */
 	public static final int MAX_HEIGHT = 9;
+	/** 默认格子数（5 行 × 6 格）。 */
+	public static final int DEFAULT_SLOTS = WIDTH * DEFAULT_HEIGHT;
+	/** 格子数上限（9 行 × 6 格）。 */
+	public static final int MAX_SLOTS = WIDTH * MAX_HEIGHT;
 
-	/** 存档用的数据：物品、格子等级、高度。 */
-	public record Saved(List<ItemStack> items, List<Integer> slotLevels, int height) {
+	/**
+	 * 存档用的数据：物品、格子等级、格子数（以及只为读回老存档留的高度）。
+	 *
+	 * <p>格子数以前是按「高度（行数）」存的。2026-10-17 改成按**格数**记（「赛菲莉娅额外背包栏」
+	 * 一次 +1 格，最后一行可能只有几格），所以新增了 {@code slots}：
+	 * <ul>
+	 * <li>老存档没有 {@code slots}（读到 0）→ 用 {@code height × 6} 折算回来，**不会丢数据**；</li>
+	 * <li>新存档只写 {@code slots}，{@code height} 写 0（它是可选字段，0 就是"没这条"）。</li>
+	 * </ul>
+	 * 这一步必须做成兼容读：附件解码一失败就会被 Fabric 静默丢掉（见记忆手册 §三），
+	 * 直接换字段名等于把所有人的背包清空。
+	 */
+	public record Saved(List<ItemStack> items, List<Integer> slotLevels, int slots, int height) {
 		public static final Codec<Saved> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				ItemStack.OPTIONAL_CODEC.listOf().fieldOf("items").forGetter(Saved::items),
 				Codec.INT.listOf().fieldOf("slot_levels").forGetter(Saved::slotLevels),
-				Codec.INT.fieldOf("height").forGetter(Saved::height)
+				Codec.INT.optionalFieldOf("slots", 0).forGetter(Saved::slots),
+				Codec.INT.optionalFieldOf("height", 0).forGetter(Saved::height)
 		).apply(instance, Saved::new));
+
+		/** 写存档用：只带新的格数字段。 */
+		public static Saved of(List<ItemStack> items, List<Integer> slotLevels, int slots) {
+			return new Saved(items, slotLevels, slots, 0);
+		}
+
+		/** 实际格子数：新的 {@code slots} 优先，老存档按「高度 × 宽」折算。 */
+		public int resolvedSlots() {
+			if (this.slots > 0) {
+				return this.slots;
+			}
+
+			return this.height > 0 ? this.height * WIDTH : DEFAULT_SLOTS;
+		}
 	}
 
 	private static final AttachmentType<Saved> SAVED = AttachmentRegistry.<Saved>builder()
@@ -57,8 +86,8 @@ public final class ArtifactBackpack extends SimpleContainer {
 	/** 每个玩家一份：菜单与效果统计必须看到同一个对象，所以缓存起来。 */
 	private static final Map<UUID, ArtifactBackpack> CACHE = new HashMap<>();
 
-	/** 内部数组按最大高度开；{@link #getContainerSize()} 只暴露当前高度内的格子。 */
-	private final int[] slotLevels = new int[WIDTH * MAX_HEIGHT];
+	/** 内部数组按上限开；{@link #getContainerSize()} 只暴露当前格子数以内的部分。 */
+	private final int[] slotLevels = new int[MAX_SLOTS];
 	/**
 	 * 当前绑定的玩家实体。
 	 *
@@ -74,20 +103,21 @@ public final class ArtifactBackpack extends SimpleContainer {
 	 * 先关掉副作用。
 	 */
 	private boolean loading;
-	private int height;
+	/** 当前格子数（默认 {@value #DEFAULT_SLOTS}，每次扩容 +1 格）。 */
+	private int slots;
 	/** 加上石板影响后的格子等级缓存；内容一变就置空重算。 */
 	private int[] levelCache;
 
 	private ArtifactBackpack(ServerPlayer owner, Saved saved) {
-		super(WIDTH * MAX_HEIGHT);
+		super(MAX_SLOTS);
 		this.owner = owner;
 		this.loading = true;
-		this.height = clampHeight(saved == null ? DEFAULT_HEIGHT : saved.height());
+		this.slots = clampSlots(saved == null ? DEFAULT_SLOTS : saved.resolvedSlots());
 
 		if (saved != null) {
 			List<ItemStack> items = saved.items();
 
-			for (int slot = 0; slot < items.size() && slot < WIDTH * MAX_HEIGHT; slot++) {
+			for (int slot = 0; slot < items.size() && slot < MAX_SLOTS; slot++) {
 				ItemStack stack = items.get(slot);
 
 				if (stack != null && !stack.isEmpty()) {
@@ -148,21 +178,31 @@ public final class ArtifactBackpack extends SimpleContainer {
 
 	// ------------------------------------------------------------------ 尺寸与格子等级
 
-	/** 高度（行数）；宽度固定 {@value #WIDTH}。 */
-	public int height() {
-		return this.height;
+	/** 当前格子数（默认 {@value #DEFAULT_SLOTS}，上限 {@value #MAX_SLOTS}）。 */
+	public int slots() {
+		return this.slots;
 	}
 
-	/** 当前可用的格子数 = 宽 × 高。 */
+	/** 当前格子数决定容器大小（宽固定 {@value #WIDTH}，所以最后一行可能只有几格）。 */
 	@Override
 	public int getContainerSize() {
-		return WIDTH * this.height;
+		return this.slots;
 	}
 
-	/** 扩容用（扩容方式待做）。 */
-	public void setHeight(int height) {
-		this.height = clampHeight(height);
+	/**
+	 * 扩容：+1 格（「赛菲莉娅额外背包栏」右键用一次走这里）。返回是否真的加了。
+	 *
+	 * <p>到上限（{@value #MAX_SLOTS} 格）就不再变化、返回 false，调用方据此决定要不要消耗道具。
+	 * 内容一变 {@code setChanged} 会把格子数一起写进附件，所以是永久扩容。
+	 */
+	public boolean addSlot() {
+		if (this.slots >= MAX_SLOTS) {
+			return false;
+		}
+
+		this.slots++;
 		this.setChanged();
+		return true;
 	}
 
 	/** 某个格子的格子等级：基础等级 + 石板的加成（可以为负）。 */
@@ -211,29 +251,9 @@ public final class ArtifactBackpack extends SimpleContainer {
 		this.setChanged();
 	}
 
-	/**
-	 * 格子等级的只读视图，用来当菜单的数据槽（服务端改、客户端读）。
-	 *
-	 * <p>格子等级是服务端算的东西，客户端只负责把数字画在格子里。
-	 */
-	public ContainerData levelData() {
-		return new ContainerData() {
-			@Override
-			public int get(int index) {
-				return slotLevel(index);
-			}
-
-			@Override
-			public void set(int index, int value) {
-				// 只读：客户端不需要回写
-			}
-
-			@Override
-			public int getCount() {
-				return WIDTH * height;
-			}
-		};
-	}
+	// 格子等级的数据槽以前在这里（levelData）；界面改成「固定一屏的可视窗口」之后，
+	// 数据槽必须按可视区下标给（还要带上滚到第几行），所以挪到两个菜单自己算——
+	// 见 ArtifactBackpackMenu.liveData / EnchantMenu.liveData。
 
 	// ------------------------------------------------------------------ 容器规则
 
@@ -287,20 +307,20 @@ public final class ArtifactBackpack extends SimpleContainer {
 		SkillStorage.syncAll(this.owner);
 	}
 
-	/** 保存用快照：物品 + 格子等级 + 高度。 */
+	/** 保存用快照：物品 + 格子等级 + 格子数（数组按上限开，多出来的位置是空的那份）。 */
 	private Saved snapshot() {
-		List<ItemStack> items = new ArrayList<>(WIDTH * MAX_HEIGHT);
-		List<Integer> levels = new ArrayList<>(WIDTH * MAX_HEIGHT);
+		List<ItemStack> items = new ArrayList<>(MAX_SLOTS);
+		List<Integer> levels = new ArrayList<>(MAX_SLOTS);
 
-		for (int slot = 0; slot < WIDTH * MAX_HEIGHT; slot++) {
+		for (int slot = 0; slot < MAX_SLOTS; slot++) {
 			items.add(getItem(slot));
 			levels.add(this.slotLevels[slot]);
 		}
 
-		return new Saved(items, levels, this.height);
+		return Saved.of(items, levels, this.slots);
 	}
 
-	private static int clampHeight(int height) {
-		return Math.max(1, Math.min(MAX_HEIGHT, height));
+	private static int clampSlots(int slots) {
+		return Math.max(1, Math.min(MAX_SLOTS, slots));
 	}
 }

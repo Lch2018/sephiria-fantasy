@@ -7,7 +7,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
 /**
- * 客户端 → 服务端：把赛菲利亚背包里某个格子上的石板旋转 90°（默认逆时针）。
+ * 客户端 → 服务端：把赛菲莉娅背包里某个格子上的石板旋转 90°（默认逆时针）。
  *
  * <p>只带格子编号，服务端自己查那块石板的朝向并接上去（客户端说的不算）。
  */

@@ -707,7 +707,7 @@ public final class FrostArmament {
 	}
 
 	/**
-	 * 永恒蚀是不是在赛菲利亚背包的<b>左半边</b>（在 = 冰霜武具整套改成火焰属性）。
+	 * 永恒蚀是不是在赛菲莉娅背包的<b>左半边</b>（在 = 冰霜武具整套改成火焰属性）。
 	 *
 	 * <p>现查背包（{@link EternalEclipseItem#sideOf}）而不是看物品组件：组件只管图标颜色。
 	 */

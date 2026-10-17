@@ -17,7 +17,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
 /**
- * 赛菲利亚药水：用法和原版口服药水一样——长按右键喝，喝完留下一个玻璃瓶。
+ * 赛菲莉娅药水：用法和原版口服药水一样——长按右键喝，喝完留下一个玻璃瓶。
  *
  * <p>效果不走原版 buff 系统（见 {@link PotionEffect}）：喝下去由服务端直接结算，
  * 所以牛奶解不掉、也不占效果栏。客户端那边只负责播喝药的动作与音效。

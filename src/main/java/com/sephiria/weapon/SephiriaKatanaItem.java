@@ -63,7 +63,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * 赛菲利亚的「刀」：带刀鞘的居合刀，模型与动画来自 Blockbench 的 GeckoLib 工程
+ * 赛菲莉娅的「刀」：带刀鞘的居合刀，模型与动画来自 Blockbench 的 GeckoLib 工程
  * （models/katana.bbmodel -> assets/sephiria/geckolib/{models,animations} + textures/item/katana.png）。
  *
  * <p>两种状态，右键切换，两个状态都会打出原版式的横扫（sweep）：
@@ -183,7 +183,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 
 	// ------------------------------------------------------------------ 耐久条 = 剑意条
 	//
-	// 赛菲利亚武器都带 UNBREAKABLE，而 26.2 的 ItemStack#isDamageableItem() 排除了不可破坏的
+	// 赛菲莉娅武器都带 UNBREAKABLE，而 26.2 的 ItemStack#isDamageableItem() 排除了不可破坏的
 	// 物品，于是原版耐久条本来永远不会绘制。这里照弩显示弹匣的做法，把耐久条的三个方法
 	// 改成读剑意层数。数值取自客户端镜像（见 SkillClientData）——这三个方法只有客户端
 	// 渲染物品栏时会调，服务端跑不到。

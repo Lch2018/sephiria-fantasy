@@ -15,7 +15,7 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCon
 import net.minecraft.world.level.storage.loot.providers.number.ints.ConstantValue;
 
 /**
- * 赛菲利亚货币进自然箱子：骰子与神器附魔币在所有 {@code minecraft:chests/*} 的表里
+ * 赛菲莉娅货币进自然箱子：骰子与神器附魔币在所有 {@code minecraft:chests/*} 的表里
  * 各加一个 10% 概率的独立池子。
  *
  * <p>用 {@code LootTableEvents.MODIFY} 在运行时改表，所以村庄、雪屋、废弃矿井、林地府邸、

@@ -17,7 +17,7 @@ import net.minecraft.world.item.Items;
  * 或者一个原版物品（原版背包那一页直接用木箱的图标）。
  */
 public class TabButton extends Button {
-	/** 赛菲利亚背包的图标。 */
+	/** 赛菲莉娅背包的图标。 */
 	public static final Identifier BACKPACK_ICON =
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "textures/gui/backpack_tab.png");
 

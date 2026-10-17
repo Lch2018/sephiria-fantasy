@@ -7,7 +7,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
 /**
- * 客户端 → 服务端：请求打开赛菲利亚背包的界面。
+ * 客户端 → 服务端：请求打开赛菲莉娅背包的界面。
  *
  * <p>背包界面是个容器菜单（要能拖动物品），而容器菜单必须由服务端打开（{@code openMenu}），
  * 所以点界面上那个标签页时先发这个包。

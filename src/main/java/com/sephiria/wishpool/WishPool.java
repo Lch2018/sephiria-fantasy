@@ -47,13 +47,25 @@ public final class WishPool {
 	 *
 	 * <p><b>四叶草是数值不是物品</b>（用户 2026-10-15 的口径）：与能量一样存在这里，不占背包格子。
 	 */
-	public record Saved(int clovers, int energy, String artifactAnchor, String slateAnchor) {
+	public record Saved(int clovers, int energy, String artifactAnchor, String slateAnchor, boolean overflowClover) {
 		public static final Codec<Saved> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.INT.optionalFieldOf("clovers", 0).forGetter(Saved::clovers),
 				Codec.INT.optionalFieldOf("energy", 0).forGetter(Saved::energy),
 				Codec.STRING.optionalFieldOf("artifact_anchor", "").forGetter(Saved::artifactAnchor),
-				Codec.STRING.optionalFieldOf("slate_anchor", "").forGetter(Saved::slateAnchor)
+				Codec.STRING.optionalFieldOf("slate_anchor", "").forGetter(Saved::slateAnchor),
+				// 「溢出的升级宝箱自动变四叶草」开关（许愿池界面里那个）。老存档没有这个字段、
+				// 默认关；只加可选字段、不动已有的键名，附件才读得回来（见记忆手册 §三 那条硬规矩）
+				Codec.BOOL.optionalFieldOf("overflow_clover", false).forGetter(Saved::overflowClover)
 		).apply(instance, Saved::new));
+
+		/**
+		 * 只换四叶草 / 能量 / 锚定，开关原样带上。
+		 *
+		 * <p>那几个改状态的入口各自都记着"还有个开关要带"太容易忘，忘了就会把它悄悄关掉。
+		 */
+		public Saved with(int clovers, int energy, String artifactAnchor, String slateAnchor) {
+			return new Saved(clovers, energy, artifactAnchor, slateAnchor, this.overflowClover);
+		}
 	}
 
 	private static final AttachmentType<Saved> SAVED = AttachmentRegistry.<Saved>builder()
@@ -82,11 +94,30 @@ public final class WishPool {
 		return saved == null ? 0 : Math.max(0, saved.clovers());
 	}
 
-	/** 加四叶草（许愿池吸掉升级宝箱时调）。 */
+	/** 加四叶草（许愿池吸掉升级宝箱、成就结算、溢出转化时调）。 */
 	public static void addClovers(ServerPlayer player, int delta) {
 		Saved saved = saved(player);
-		player.setAttached(SAVED, new Saved(Math.max(0, saved.clovers() + delta), saved.energy(),
+		player.setAttached(SAVED, saved.with(Math.max(0, saved.clovers() + delta), saved.energy(),
 				saved.artifactAnchor(), saved.slateAnchor()));
+	}
+
+	/**
+	 * 「溢出的升级宝箱自动转化为四叶草」开关（许愿池界面里那一行，默认关）。
+	 *
+	 * <p>开着的时候，背包满、本来是"掉在脚下"的升级宝箱会直接变成一片四叶草——
+	 * 判断在 {@code PlayerStats.addLeaves} 发宝箱那一步。
+	 */
+	public static boolean overflowToClover(ServerPlayer player) {
+		return saved(player).overflowClover();
+	}
+
+	/** 翻转开关，返回翻转后的值。 */
+	public static boolean toggleOverflowToClover(ServerPlayer player) {
+		Saved saved = saved(player);
+		boolean next = !saved.overflowClover();
+		player.setAttached(SAVED, new Saved(saved.clovers(), saved.energy(),
+				saved.artifactAnchor(), saved.slateAnchor(), next));
+		return next;
 	}
 
 	/** 扣四叶草；不够就返回 false（什么都不扣）。 */
@@ -116,7 +147,7 @@ public final class WishPool {
 		Saved saved = saved(player);
 		String id = anchor == null ? "" : BuiltInRegistries.ITEM.getKey(anchor).toString();
 
-		player.setAttached(SAVED, new Saved(saved.clovers(), saved.energy(),
+		player.setAttached(SAVED, saved.with(saved.clovers(), saved.energy(),
 				slatePool ? saved.artifactAnchor() : id,
 				slatePool ? id : saved.slateAnchor()));
 	}
@@ -124,7 +155,7 @@ public final class WishPool {
 	/** 改能量（神铸扣、抽卡加都走它；不会扣成负数）。 */
 	public static void addEnergy(ServerPlayer player, int delta) {
 		Saved saved = saved(player);
-		player.setAttached(SAVED, new Saved(saved.clovers(), Math.max(0, saved.energy() + delta),
+		player.setAttached(SAVED, saved.with(saved.clovers(), Math.max(0, saved.energy() + delta),
 				saved.artifactAnchor(), saved.slateAnchor()));
 	}
 
@@ -136,7 +167,7 @@ public final class WishPool {
 
 	private static Saved saved(ServerPlayer player) {
 		Saved saved = player.getAttached(SAVED);
-		return saved == null ? new Saved(0, 0, "", "") : saved;
+		return saved == null ? new Saved(0, 0, "", "", false) : saved;
 	}
 
 	private static Item byId(String id) {

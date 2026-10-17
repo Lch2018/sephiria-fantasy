@@ -26,6 +26,9 @@ import com.sephiria.network.ReloadPayload;
 import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.SunSwordSyncPayload;
+import com.sephiria.client.trader.SephiriaTraderRenderer;
+import com.sephiria.registry.ModEntities;
+import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaShieldItem;
@@ -38,13 +41,17 @@ import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.entity.LlamaRenderer;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -139,6 +146,13 @@ public class SephiriaClient implements ClientModInitializer {
 				}
 			}
 
+			// 赛菲莉娅额外背包栏：一行用途说明。按模组的惯例「说明文字套灰、行内数值用自己的颜色」，
+			// 所以「+1」用绿色覆盖灰（用户口径：+1 要绿的）
+			if (stack.getItem() == ModItems.EXTRA_BACKPACK_ROW) {
+				lines.add(Component.translatable("tooltip.sephiria_fantasy.extra_backpack_row",
+						Component.literal("+1").withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.GRAY));
+			}
+
 			// 神器：连招、【唯一】、词条、稀有度、背景描述
 			java.util.List<Component> artifactLines = ArtifactTooltip.lines(stack);
 
@@ -192,7 +206,7 @@ public class SephiriaClient implements ClientModInitializer {
 			}
 		});
 
-		// 背包界面顶部的标签栏：原版背包 / 赛菲利亚背包 / 属性。
+		// 背包界面顶部的标签栏：原版背包 / 赛菲莉娅背包 / 属性。
 		// 生存与创造用的是两个不同的界面类，所以两种都挂——之前只挂了生存的，创造模式下看不到。
 		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
 			if (!(screen instanceof InventoryScreen) && !(screen instanceof CreativeModeInventoryScreen)) {
@@ -207,7 +221,16 @@ public class SephiriaClient implements ClientModInitializer {
 			SephiriaTabs.add(screen, left, rowY, SephiriaTab.VANILLA);
 		});
 
-		HudElementRegistry.addLast(SephiriaHud.ID, new SephiriaHud());
+		// 层级：贴在原版热键栏之后（用户口径「与原版物品栏几乎同级、仅比它高一级」）——
+		// 以前用 addLast 画在整条 HUD 的最后，会压在聊天栏、F3 调试信息这些之上；
+		// 画在热键栏那一层之后就不会盖住任何东西，而且这一层只在没有界面打开时才绘制。
+		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, SephiriaHud.ID, new SephiriaHud());
+
+		// 赛菲莉娅流浪商人：模型与图层沿用原版，只换红袍贴图；羊驼用原版 LlamaRenderer
+		// （披的红毯由装备层画，见 trader.SephiriaTraderLlama）
+		EntityRendererRegistry.register(ModEntities.SEPHIRIA_WANDERING_TRADER, SephiriaTraderRenderer::new);
+		EntityRendererRegistry.register(ModEntities.SEPHIRIA_TRADER_LLAMA,
+				context -> new LlamaRenderer(context, ModelLayers.TRADER_LLAMA, ModelLayers.TRADER_LLAMA_BABY));
 
 		// 防御中的左键：原版在使用物品期间会把左键整个吞掉（handleKeybinds 的 isUsingItem 分支
 		// 只 consumeClick、既不 startAttack 也不发包），所以这里抢在它前面把这次点击取走，

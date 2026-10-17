@@ -1,4 +1,4 @@
-# 赛菲莉亚幻想 模组 — 工作约定
+# 赛菲莉娅幻想 模组 — 工作约定
 
 
 
@@ -42,7 +42,7 @@
   代理没开时推送会报 `Failed to connect ... over proxy`，此时直连也解析不了域名，
   必须等用户把代理打开再推。
 - 用户说「发布」= 建 GitHub Release（仓库本身已经是 public）：
-  `gh release create v<版本> build/libs/sephiria-fantasy-<版本>.jar --title "赛菲莉亚幻想 <版本>（A 测）" --notes-file <说明.md> --target main`。
+  `gh release create v<版本> build/libs/sephiria-fantasy-<版本>.jar --title "赛菲莉娅幻想 <版本>（A 测）" --notes-file <说明.md> --target main`。
   **本机的 `gh` 没有登录**，发布前先用 git 自己的凭据喂给它（别把 token 打印出来）：
   先 `CRED=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill)`，
   再 `export GH_TOKEN=$(printf '%s\n' "$CRED" | sed -n 's/^password=//p')`，

@@ -12,6 +12,8 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
 
@@ -41,7 +43,7 @@ public final class PlayerStats {
 	public static final double DEFAULT_ATTACK_SPEED = 100.0D;
 	/** 近战攻击范围（百分比）：武器的攻击范围与技能伤害范围都乘它。 */
 	public static final double DEFAULT_MELEE_RANGE = 100.0D;
-	/** 武器伤害（百分比）：赛菲莉亚武器的全部伤害（普攻 + 技能）都乘它；神器伤害不吃。 */
+	/** 武器伤害（百分比）：赛菲莉娅武器的全部伤害（普攻 + 技能）都乘它；神器伤害不吃。 */
 	public static final double DEFAULT_WEAPON_DAMAGE = 100.0D;
 	/** 特殊攻击伤害（百分比）：只加成武器技能的伤害。 */
 	public static final double DEFAULT_SPECIAL_ATTACK = 100.0D;
@@ -706,11 +708,35 @@ public final class PlayerStats {
 
 		while (values.experienceTowardsChest >= EXPERIENCE_PER_CHEST) {
 			values.experienceTowardsChest -= EXPERIENCE_PER_CHEST;
+			giveUpgradeChest(player);
+		}
+
+		sync(player);
+	}
+
+	/**
+	 * 发一个升级宝箱：装得下就进背包，装不下按玩家的「溢出转化」开关决定去向。
+	 *
+	 * <p>开关开着（许愿池界面里那行，见 {@link com.sephiria.wishpool.WishPool#overflowToClover}）时，
+	 * 背包满的情况下不再掉在脚下，而是**直接换成一片四叶草**（用户 2026-10-17 的口径）。
+	 * 「满」用的是 {@code Inventory#getFreeSlot()}——它只搜主背包那 36 格（不含装备/副手），
+	 * 和原版 {@code placeItemBackInInventory} 往哪儿塞是同一套；升级宝箱不可堆叠，需要的就是空格子。
+	 */
+	private static void giveUpgradeChest(ServerPlayer player) {
+		boolean converted = player.getInventory().getFreeSlot() < 0
+				&& com.sephiria.wishpool.WishPool.overflowToClover(player);
+
+		if (converted) {
+			com.sephiria.wishpool.WishPool.giveClover(player);
+		} else {
 			// 交付走 PlayerItems.give：背包满时掉在脚下（别用 Inventory#add 的返回值判断，见它顶部）
 			PlayerItems.give(player, new ItemStack(com.sephiria.registry.ModItems.UPGRADE_CHEST));
 		}
 
-		sync(player);
+		// 提示音（用户 2026-10-17）：拿到升级宝箱时响一声；转化成四叶草那条路也响（同样是"拿到了"）。
+		// 用与开箱交付、抽卡同一颗 PLAYER_LEVELUP，音量/音高也照抄开箱那一处
+		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+				SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.7F, 1.4F);
 	}
 
 	/** 取属性：首次访问时从存档里读出来，读不到就是一份默认值。 */

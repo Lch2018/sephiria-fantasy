@@ -21,7 +21,7 @@ import java.util.Set;
  * <p>两点都和原版箭矢不同：
  * <ul>
  *   <li><b>固定伤害</b>：原版 {@code AbstractArrow#onHitEntity} 算的是"当前飞行速度 × 基础伤害"，
- *       所以射远了、打高了伤害都会变；赛菲利亚弩要求恒定 {@value #FIXED_DAMAGE}。</li>
+ *       所以射远了、打高了伤害都会变；赛菲莉娅弩要求恒定 {@value #FIXED_DAMAGE}。</li>
  *   <li><b>穿透</b>：命中生物后不结束飞行，继续打下一个——只在撞到方块时才停。为避免穿透时
  *       每 tick 重复结算同一只生物，这里记下已命中的目标 id。</li>
  * </ul>
