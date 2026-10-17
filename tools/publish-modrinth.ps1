@@ -202,8 +202,19 @@ try {
         # 下次发布就会同步到项目页。注意 PATCH 收 application/json，POST 却要 multipart，两个口径不一样。
         Write-Output '刷新项目资料 …'
 
+        # PATCH 里**不带 categories**：Modrinth 重新插入分类会撞它自己的唯一键
+        # （`mods_categories_pkey`，2026-10-15 起每次发布都撞），整条 PATCH 会因此回 500、
+        # 标题 / 摘要 / 正文 / 链接一个都刷不上去。分类在建项目时就设好了，之后没必要再动。
+        $patchPayload = @{}
+
+        foreach ($key in $projectPayload.Keys) {
+            if ($key -ne 'categories') {
+                $patchPayload[$key] = $projectPayload[$key]
+            }
+        }
+
         $patchFile = Join-Path $tempDir 'project-patch.json'
-        Write-JsonFile -path $patchFile -payload $projectPayload
+        Write-JsonFile -path $patchFile -payload $patchPayload
 
         $patched = Invoke-Api -Method 'PATCH' -Path "/project/$($project.id)" -BodyFile $patchFile `
             -ExtraArgs @('-H', 'Content-Type: application/json')
