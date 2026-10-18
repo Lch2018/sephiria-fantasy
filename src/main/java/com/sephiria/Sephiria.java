@@ -34,6 +34,7 @@ import com.sephiria.stats.Lifesteal;
 import com.sephiria.stats.StatAttributes;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.stats.WeaponStats;
+import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.artifact.skill.ArtifactSkills;
 import com.sephiria.artifact.skill.EncouragementBannerSkill;
 import com.sephiria.artifact.skill.SkillSlots;
@@ -157,6 +158,8 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.artifact.ProshiumRingItem.register();
 		// 「冰霜武具」连击的两件充能神器：驱邪剑鞘（挥击发剑气）与暴风雪之锤（冲刺甩锤子）
 		com.sephiria.frost.FrostArmament.registerTicker();
+		// 特别神器「书」：书上附了火焰附加时，神器 / 连击的伤害点燃目标（抢夺在掉落结算那一侧接入）
+		com.sephiria.artifact.BookItem.register();
 
 		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.FrostQiPayload.TYPE,
@@ -317,6 +320,10 @@ public class Sephiria implements ModInitializer {
 		// 赛菲莉娅货币进自然生成的箱子（骰子 + 神器附魔币）：所有 minecraft:chests/* 的表
 		// 各加一个 10% 概率的池子
 		com.sephiria.shop.ChestLoot.register();
+		// 不带精准采集挖特定矿石，小概率额外掉对应品质的石板（slate/OreSlateDrops 里的概率表）
+		com.sephiria.slate.OreSlateDrops.register();
+		// 品质概率的唯一入口（宝箱/商店/抽卡/药水四组比值 + config 覆盖）：服务器启动时读覆盖文件
+		ArtifactLoot.register();
 
 		// 进服时把各技能的存储量推给客户端，HUD 才有初始值
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

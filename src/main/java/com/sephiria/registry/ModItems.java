@@ -52,6 +52,7 @@ import com.sephiria.artifact.ChestItem;
 import com.sephiria.artifact.DiceItem;
 import com.sephiria.artifact.ShieldTextbookItem;
 import com.sephiria.artifact.SwordTextbookItem;
+import com.sephiria.artifact.BookItem;
 import com.sephiria.artifact.WindScoreItem;
 import com.sephiria.artifact.EnchantCoinItem;
 import com.sephiria.artifact.GoldenCloakItem;
@@ -246,6 +247,54 @@ public final class ModItems {
 	/** 石板 · 握手（普通）：正上方与正下方各 +1。 */
 	public static final Item SLATE_OF_HANDSHAKE = registerSlate("slate_of_handshake", ArtifactRarity.COMMON,
 			Slates.HANDSHAKE, true);
+
+	/** 断绝（稀有）：断绝。 */
+	public static final Item SLATE_OF_SEVERANCE = registerSlate("slate_of_severance", ArtifactRarity.RARE,
+			Slates.SEVERANCE, false);
+
+	/** 楔子（稀有）：楔子。 */
+	public static final Item SLATE_OF_WEDGE = registerSlate("slate_of_wedge", ArtifactRarity.RARE,
+			Slates.WEDGE, true);
+
+	/** 防御招式（稀有）：防御招式。 */
+	public static final Item SLATE_OF_DEFENSE = registerSlate("slate_of_defense", ArtifactRarity.RARE,
+			Slates.DEFENSE, true);
+
+	/** 干燥（普通）：干燥。 */
+	public static final Item SLATE_OF_DROUGHT = registerSlate("slate_of_drought", ArtifactRarity.COMMON,
+			Slates.DROUGHT, false);
+
+	/** 剥削（普通）：剥削。 */
+	public static final Item SLATE_OF_EXPLOITATION = registerSlate("slate_of_exploitation", ArtifactRarity.COMMON,
+			Slates.EXPLOITATION, true);
+
+	/** 团结（普通）：团结。 */
+	public static final Item SLATE_OF_UNITY = registerSlate("slate_of_unity", ArtifactRarity.COMMON,
+			Slates.UNITY, true);
+
+	/** 和平（传说）：和平。 */
+	public static final Item SLATE_OF_PEACE = registerSlate("slate_of_peace", ArtifactRarity.LEGENDARY,
+			Slates.PEACE, true);
+
+	/** 白日梦（传说）：。 */
+	public static final Item SLATE_OF_DAYDREAM = registerSlate("slate_of_daydream", ArtifactRarity.LEGENDARY,
+			Slates.DAYDREAM, true);
+
+	/** 反抗（稀有）：。 */
+	public static final Item SLATE_OF_REBELLION = registerSlate("slate_of_rebellion", ArtifactRarity.RARE,
+			Slates.REBELLION, true);
+
+	/** 接合（稀有）：。 */
+	public static final Item SLATE_OF_JUNCTION = registerSlate("slate_of_junction", ArtifactRarity.RARE,
+			Slates.JUNCTION, true);
+
+	/** 报恩（永恒）：。 */
+	public static final Item SLATE_OF_GRATITUDE = registerSlate("slate_of_gratitude", ArtifactRarity.ETERNAL,
+			Slates.GRATITUDE, true);
+
+	/** 到来（普通）：。 */
+	public static final Item SLATE_OF_ARRIVAL = registerSlate("slate_of_arrival", ArtifactRarity.COMMON,
+			Slates.ARRIVAL, true);
 
 	/** 石板统一走通用实现：范围与增量都在 Slates 里，这里只挑品质与风味文本。 */
 	private static Item registerSlate(String name, ArtifactRarity rarity, java.util.List<PatternSlateItem.Cell> pattern,
@@ -623,6 +672,11 @@ public final class ModItems {
 			p -> new IceBowItem(p),
 			new Item.Properties().stacksTo(1));
 
+	/** 「书」（稀有，无连击）：【唯一】铁砧里能合入火焰附加与抢夺（书 + 附魔书，等级相加）。 */
+	public static final Item BOOK = register(key("book"),
+			p -> new BookItem(p),
+			new Item.Properties().stacksTo(1));
+
 	/**
 	 * 太阳剑的贴图载体（隐藏物品）：不是给玩家用的东西，只给「掉在地上的太阳剑」当外观。
 	 *
@@ -737,10 +791,22 @@ public final class ModItems {
 	/** 吸血鬼领主的誓约（红）：HP 偷取 +1，永久。 */
 	public static final Item VAMPIRE_LORD_OATH = registerPotion("vampire_lord_oath", Potions.VAMPIRE_LORD_OATH,
 			Potions.VAMPIRE_LORD_OATH_RARITY);
+	/** 索莱拉的偶然（黄）：随机一种连击 +1 级，永久。 */
+	public static final Item SOLERA_CHANCE = registerPotion("solera_chance", Potions.SOLERA_CHANCE,
+			Potions.SOLERA_CHANCE_RARITY);
+	/** 梅尔岑之烟（蓝）：火元素强度 +2，永久。 */
+	public static final Item MELTZEN_SMOKE = registerPotion("meltzen_smoke", Potions.MELTZEN_SMOKE,
+			Potions.MELTZEN_SMOKE_RARITY);
+	/** 阿凡提努斯的水晶（蓝）：冰元素强度 +2，永久。 */
+	public static final Item AVANTINUS_CRYSTAL = registerPotion("avantinus_crystal", Potions.AVANTINUS_CRYSTAL,
+			Potions.AVANTINUS_CRYSTAL_RARITY);
+	/** 高泽之晨（蓝）：电元素强度 +2，永久。 */
+	public static final Item GAOZE_MORNING = registerPotion("gaoze_morning", Potions.GAOZE_MORNING,
+			Potions.GAOZE_MORNING_RARITY);
 
 	/** 药水池（商店的两个药水格按品质加权从这里抽）。 */
 	public static final List<Item> POTIONS = List.of(REGENERATION_POTION, APPLE_JUICE, TRAPPIST_SACRED,
-			BIG_DICE_POTION, VAMPIRE_LORD_OATH);
+			BIG_DICE_POTION, VAMPIRE_LORD_OATH, SOLERA_CHANCE, MELTZEN_SMOKE, AVANTINUS_CRYSTAL, GAOZE_MORNING);
 
 	private ModItems() {
 	}

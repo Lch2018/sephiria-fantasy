@@ -57,15 +57,28 @@ public class PatternSlateItem extends SlateItem {
 	/**
 	 * 影响说明：把同类增量合并成一行（{@code +1（4 格）}），从大到小排。
 	 *
-	 * <p>末尾一行说明能不能旋转——不能转的（入口）直接写「不可旋转」，省得玩家按 R 按不出反应。
+	 * <p>末尾几行是<b>自动生成的「描述」</b>（用户 2026-10-18 定的口径，石板作者不再写文案）：
+	 * 图案里有正增量就写「提高神器等级」（绿）、有负增量就写「降低神器等级」（红）；
+	 * 不能转的（入口这类）写「不可旋转」（红），能转的写按 R 的提示
+	 * ——省得玩家按 R 按不出反应。
 	 */
 	@Override
 	public List<Component> effectLines() {
 		List<Component> lines = new ArrayList<>();
 		Map<Integer, Integer> counts = new LinkedHashMap<>();
+		boolean boosts = false;
+		boolean lowers = false;
 
 		for (Cell cell : this.pattern) {
 			counts.merge(cell.delta(), 1, Integer::sum);
+
+			if (cell.delta() > 0) {
+				boosts = true;
+			}
+
+			if (cell.delta() < 0) {
+				lowers = true;
+			}
 		}
 
 		List<Integer> deltas = new ArrayList<>(counts.keySet());
@@ -76,6 +89,14 @@ public class PatternSlateItem extends SlateItem {
 					Component.literal((delta > 0 ? "+" : "") + Numbers.format(delta))
 							.withColor(delta > 0 ? COLOUR_POSITIVE : COLOUR_NEGATIVE),
 					Component.literal(String.valueOf(counts.get(delta))).withColor(COLOUR_POSITIVE)));
+		}
+
+		if (boosts) {
+			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.tag.boost").withColor(COLOUR_POSITIVE));
+		}
+
+		if (lowers) {
+			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.tag.reduce").withColor(COLOUR_NEGATIVE));
 		}
 
 		lines.add(this.rotatable

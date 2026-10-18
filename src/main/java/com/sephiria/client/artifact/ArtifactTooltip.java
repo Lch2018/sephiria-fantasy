@@ -64,6 +64,12 @@ public final class ArtifactTooltip {
 
 		lines.addAll(artifact.affixLines(level));
 
+		// 「书」：附魔等级挂在物品栈上（铁砧合出来的），不在等级表里，所以要拿 stack 现读——
+		// 效果数字（点燃几秒 / 掉落加几级）跟着当前的附魔走
+		if (artifact instanceof com.sephiria.artifact.BookItem) {
+			lines.addAll(com.sephiria.artifact.BookItem.enchantmentLines(stack));
+		}
+
 		// 桑德耳环的闪电攻击按「当前电元素强度」现算：客户端用同步过来的面板值补一行当前伤害
 		if (artifact instanceof com.sephiria.artifact.SandeEarringsItem) {
 			double current = com.sephiria.client.ClientStats.lightning()
@@ -87,7 +93,7 @@ public final class ArtifactTooltip {
 		return lines;
 	}
 
-	/** 石板的提示行：效果 + 品质 + 当前朝向 + 背景描述。 */
+	/** 石板的提示行：效果（含自动生成的描述）+ 品质 + 当前朝向 + 背景描述。 */
 	private static List<Component> slateLines(ItemStack stack, com.sephiria.slate.SlateItem slate) {
 		List<Component> lines = new ArrayList<>();
 		lines.addAll(slate.effectLines());
@@ -102,17 +108,31 @@ public final class ArtifactTooltip {
 					.withStyle(ChatFormatting.DARK_GRAY));
 		}
 
-		lines.add(Component.translatable(slate.flavorKey()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+		// 风味文案可以为空：新石板的「描述」是 effectLines 里自动生成的那几行，作者不写风味——
+		// 空字符串就不写这一行（与神器那条同一个规矩）
+		MutableComponent flavor = Component.translatable(slate.flavorKey());
+
+		if (!flavor.getString().isEmpty()) {
+			lines.add(flavor.withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+		}
+
 		return lines;
 	}
 
-	/** 药水的提示行：效果 + 品质（药水不写风味，效果本身已经够说明问题）。 */
+	/** 药水的提示行：效果 + 品质（大部分药水没有风味，有才画那行斜体灰字）。 */
 	private static List<Component> potionLines(com.sephiria.potion.SephiriaPotionItem potion) {
 		List<Component> lines = new ArrayList<>();
 		lines.add(potion.effect().describe());
 		lines.add(Component.translatable("artifact.sephiria_fantasy.rarity_line",
 						Component.translatable(potion.rarity().translationKey()).withColor(potion.rarity().color()))
 				.withStyle(ChatFormatting.GRAY));
+		// 风味可以为空（大部分药水没写）：空字符串就不写这一行，免得留一条空白斜体行
+		MutableComponent flavor = Component.translatable(potion.flavorKey());
+
+		if (!flavor.getString().isEmpty()) {
+			lines.add(flavor.withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+		}
+
 		return lines;
 	}
 

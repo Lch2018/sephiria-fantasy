@@ -6,6 +6,7 @@ import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.registry.ModItems;
+import com.sephiria.slate.SlateItem;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -177,14 +178,36 @@ public final class WishPool {
 
 	// ------------------------------------------------------------------ 换算表
 
-	/** 抽到某一档给多少能量：白 1 / 蓝 2 / 黄 4 / 红 8 / 彩 10（石板最高的「永恒」按彩那一档）。 */
-	public static int energyOf(ArtifactRarity rarity) {
+	/**
+	 * 抽到某一件给多少愿力：神器与石板**各一套**（用户 2026-10-17 的口径）。
+	 *
+	 * <p>以前是一张共用表（白 1 / 蓝 2 / 黄 4 / 红 8 / 彩 10），现在神器 2/4/6/8/10、
+	 * 石板 3/6/9/12/15。
+	 */
+	public static int energyFor(Item item) {
+		return item instanceof SlateItem ? slateEnergyOf(ArtifactLoot.rarityOf(item))
+				: artifactEnergyOf(ArtifactLoot.rarityOf(item));
+	}
+
+	/** 神器那套：白 2 / 蓝 4 / 黄 6 / 红 8 / 羁绊 10。 */
+	public static int artifactEnergyOf(ArtifactRarity rarity) {
 		return switch (rarity) {
-			case COMMON -> 1;
-			case ADVANCED -> 2;
-			case RARE -> 4;
+			case COMMON -> 2;
+			case ADVANCED -> 4;
+			case RARE -> 6;
 			case LEGENDARY -> 8;
 			case BOND, ETERNAL -> 10;
+		};
+	}
+
+	/** 石板那套：白 3 / 蓝 6 / 黄 9 / 红 12 / 永恒 15。 */
+	public static int slateEnergyOf(ArtifactRarity rarity) {
+		return switch (rarity) {
+			case COMMON -> 3;
+			case ADVANCED -> 6;
+			case RARE -> 9;
+			case LEGENDARY -> 12;
+			case BOND, ETERNAL -> 15;
 		};
 	}
 
@@ -211,7 +234,7 @@ public final class WishPool {
 	 */
 	public static ItemStack drawOne(RandomSource random, boolean slatePool, Item anchor) {
 		List<Item> pool = poolOf(slatePool);
-		ArtifactRarity rarity = ArtifactLoot.rollRarity(random, pool, ArtifactLoot.Weights.SHOP);
+		ArtifactRarity rarity = ArtifactLoot.rollRarity(random, pool, ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.GACHA));
 
 		if (rarity == null) {
 			return ItemStack.EMPTY;
@@ -248,7 +271,7 @@ public final class WishPool {
 				continue;
 			}
 
-			gained += energyOf(ArtifactLoot.rarityOf(stack.getItem()));
+			gained += energyFor(stack.getItem());
 			drawn.add(stack);
 		}
 

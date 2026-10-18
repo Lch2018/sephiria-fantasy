@@ -10,16 +10,22 @@ import net.minecraft.network.chat.Component;
  */
 public interface SephiriaArtifact extends Quality {
 
-	/** 连招（坚固……）：双连击神器这里是主连击，另一个见 {@link #combos()}。 */
+	/**
+	 * 连招（坚固……）：双连击神器这里是主连击，另一个见 {@link #combos()}。
+	 *
+	 * <p><b>无连击神器</b>（「书」是第一个）返回 {@code null}——调用方一律走 {@link #combos()}，
+	 * 那里会把 null 处理成空集（提示框不画连击行、连击计数不加级、许愿池归到「无连击」那一类）。
+	 */
 	ArtifactCombo combo();
 
 	/**
-	 * 这件神器参与的所有连击：默认就是 {@link #combo()} 一个。
+	 * 这件神器参与的所有连击：默认就是 {@link #combo()} 一个（返回 null 的无连击神器 = 空集）。
 	 *
 	 * <p><b>双连击神器</b>（风车是第一个）重写这个方法，它会同时给两种连击各加 1 级。
 	 */
 	default java.util.List<ArtifactCombo> combos() {
-		return java.util.List.of(combo());
+		ArtifactCombo combo = this.combo();
+		return combo == null ? java.util.List.of() : java.util.List.of(combo);
 	}
 
 	ArtifactRarity rarity();

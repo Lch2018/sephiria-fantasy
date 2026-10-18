@@ -97,6 +97,8 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 	/** 选择页的筛选：品质（null = 全部）与连击（null = 全部）。 */
 	private ArtifactRarity rarityFilter;
 	private ArtifactCombo comboFilter;
+	/** 连击筛选里选中的是不是「无连击」那一格（「书」这类不吃连击的神器；与 comboFilter 互斥）。 */
+	private boolean noComboFilter;
 	private int page;
 	/** 抽卡动画：要展示的东西与已经过去的刻数。 */
 	private List<ItemStack> drawn = List.of();
@@ -123,6 +125,7 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 	 * 每个元素是 {x, y}（绝对坐标），与 {@link #comboButtonValues} 一一对应。
 	 */
 	private final List<int[]> comboRects = new ArrayList<>();
+	/** 与 {@link #comboRects} 一一对应的筛选值：最后一格是「无连击」，值记 null。 */
 	private final List<ArtifactCombo> comboButtonValues = new ArrayList<>();
 
 	public WishPoolScreen(WishPoolMenu menu, Inventory inventory, Component title) {
@@ -202,6 +205,14 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 						this.topPos + COMBO_ROW_Y + row * COMBO_ROW_HEIGHT });
 				this.comboButtonValues.add(combo);
 			}
+
+			// 最后一格是「无连击」（「书」这类一件连击都不吃的神器）：值记 null，
+			// 选中状态在 noComboFilter 上；图标是自带的那张小圆盘（combo_none.png）
+			int index = this.comboButtonValues.size();
+			this.comboRects.add(new int[] {
+					this.leftPos + GRID_X + (index % GRID_COLS) * CELL,
+					this.topPos + COMBO_ROW_Y + (index / GRID_COLS) * COMBO_ROW_HEIGHT });
+			this.comboButtonValues.add(null);
 		}
 
 		// 选择页底部：返回 / 取消锚定 / 翻页
@@ -254,6 +265,7 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		this.slatePool = slate;
 		this.rarityFilter = null;
 		this.comboFilter = null;
+		this.noComboFilter = false;
 		this.forgeSelection = null;
 		this.page = 0;
 		// 池子换了、品质档位可能不同 → 重建筛选按钮（重新 init 最省事）
@@ -315,6 +327,12 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 
 			if (this.comboFilter != null
 					&& (!(item instanceof SephiriaArtifact artifact) || !artifact.combos().contains(this.comboFilter))) {
+				continue;
+			}
+
+			// 「无连击」筛的是「一件连击都不吃」的神器（书）
+			if (this.noComboFilter
+					&& (!(item instanceof SephiriaArtifact artifact) || !artifact.combos().isEmpty())) {
 				continue;
 			}
 
@@ -487,10 +505,12 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		for (int index = 0; index < this.comboRects.size(); index++) {
 			int x = this.comboRects.get(index)[0];
 			int y = this.comboRects.get(index)[1];
-			boolean selected = this.comboButtonValues.get(index) == this.comboFilter;
+			ArtifactCombo combo = this.comboButtonValues.get(index);
+			// null = 「无连击」那一格（选中状态记在 noComboFilter 上，不在 comboFilter 里）
+			boolean selected = combo == null ? this.noComboFilter : combo == this.comboFilter;
 			boolean hovered = mouseX >= x && mouseX < x + CELL - 2 && mouseY >= y && mouseY < y + CELL - 2;
 			extractor.fill(x, y, x + CELL - 2, y + CELL - 2, hovered ? 0x50FFFFFF : BOX_COLOR);
-			blitIcon(extractor, comboIcon(this.comboButtonValues.get(index)), x + 1, y + 1, 16);
+			blitIcon(extractor, comboIcon(combo), x + 1, y + 1, 16);
 
 			if (selected) {
 				// 白框：一格宽、贴着格子内沿
@@ -589,7 +609,7 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		int gained = 0;
 
 		for (ItemStack stack : this.drawn) {
-			gained += WishPool.energyOf(ArtifactLoot.rarityOf(stack.getItem()));
+			gained += WishPool.energyFor(stack.getItem());
 		}
 
 		Component energy = Component.translatable("screen.sephiria_fantasy.wish_pool.energy_gain",
@@ -623,8 +643,10 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 
 			if (mouseX >= rect[0] && mouseX < rect[0] + CELL - 2
 					&& mouseY >= rect[1] && mouseY < rect[1] + CELL - 2) {
-				renderTooltip(extractor, List.of(Component.translatable(
-						this.comboButtonValues.get(index).translationKey())), mouseX, mouseY);
+				ArtifactCombo combo = this.comboButtonValues.get(index);
+				renderTooltip(extractor, List.of(combo == null
+						? Component.translatable("screen.sephiria_fantasy.wish_pool.combo_none")
+						: Component.translatable(combo.translationKey())), mouseX, mouseY);
 				return;
 			}
 		}
@@ -704,7 +726,16 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 				if (event.x() >= rect[0] && event.x() < rect[0] + CELL - 2
 						&& event.y() >= rect[1] && event.y() < rect[1] + CELL - 2) {
 					ArtifactCombo combo = this.comboButtonValues.get(index);
-					this.comboFilter = this.comboFilter == combo ? null : combo;
+
+					if (combo == null) {
+						// 「无连击」那一格：与具体连击的筛选互斥
+						this.noComboFilter = !this.noComboFilter;
+						this.comboFilter = null;
+					} else {
+						this.comboFilter = this.comboFilter == combo ? null : combo;
+						this.noComboFilter = false;
+					}
+
 					this.page = 0;
 					refreshButtons();
 					return true;
@@ -749,8 +780,10 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		return id <= 0 ? null : BuiltInRegistries.ITEM.byId(id);
 	}
 
+	/** 连击筛选的图标：null = 「无连击」那一格，用它自己那张小圆盘。 */
 	private static Identifier comboIcon(ArtifactCombo combo) {
-		return Identifier.fromNamespaceAndPath(com.sephiria.Sephiria.MOD_ID, "textures/gui/combo_" + combo.id() + ".png");
+		String file = combo == null ? "combo_none" : "combo_" + combo.id();
+		return Identifier.fromNamespaceAndPath(com.sephiria.Sephiria.MOD_ID, "textures/gui/" + file + ".png");
 	}
 
 	/**

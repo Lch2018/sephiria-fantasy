@@ -19,8 +19,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * 赛菲莉娅流浪商人的刷怪器：**机制照原版 {@code WanderingTraderSpawner} 抄一份，但完全独立**
  * ——原版那个照旧刷原版商人，这个刷我们的（用户 2026-10-17 的口径：两个都刷、刷新各自独立）。
  *
- * <p>逐条对齐原版的部分（每个常量都对着原版字节码抄的）：每 {@value #TICK_DELAY} 刻检查一次；
- * 每次检查把出生延迟减 1200，减到 0 才真正动手（并重置回 {@value #SPAWN_DELAY} 刻 = 20 分钟）；
+ * <p>逐条对齐原版的部分：每 {@value #TICK_DELAY} 刻检查一次；每次检查把出生延迟减 1200，
+ * 减到 0 才真正动手（并重置回 {@value #SPAWN_DELAY} 刻 = 4 分钟）；
  * 几率从 {@value #MIN_SPAWN_CHANCE}% 起、每次 +{@value #SPAWN_CHANCE_INCREASE}%、封顶
  * {@value #MAX_SPAWN_CHANCE}%（真刷出来了就重置回最小值）；过了几率还有 1/{@value #SPAWN_ONE_IN_X}；
  * 落点优先挑玩家 {@value #SPAWN_RADIUS} 格内的**村庄集会点**、挑不到就用玩家脚下的位置，
@@ -28,8 +28,11 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * {@value #LLAMAS} 只随从羊驼，然后设 {@value #DESPAWN_DELAY} 刻（40 分钟）的离场倒计时、
  * 把集会点设成它游荡的"家"。受 {@code spawn_wandering_traders} 游戏规则控制（与原版一致）。
  *
- * <p>唯一没照抄的是**计时器不写存档**：原版把延迟与几率存在 {@code WanderingTraderData} 里，
- * 这里记在内存——服务端重启后从「刚进新世界的状态」重来（延迟 20 分钟、几率 25%），
+ * <p>与原版唯一的数值差异：**出生延迟改成 4800 刻**（原版 24000 = 20 分钟；用户 2026-10-17
+ * 要求改短，几率爬升与 1/10 判定不变——所以实际间隔仍不是固定的，平均下来短了很多）。
+ *
+ * <p>计时器不写存档：原版把延迟与几率存在 {@code WanderingTraderData} 里，
+ * 这里记在内存——服务端重启后从「刚进新世界的状态」重来（延迟 4 分钟、几率 25%），
  * 与原版的差别只出现在重启那一刻，A 测阶段接受。
  *
  * <p>不碰原版的刷怪器还有一个好处：升级 Minecraft 时不会因为原版私有方法改了签名而在启动时报错。
@@ -37,8 +40,11 @@ import net.minecraft.world.level.levelgen.Heightmap;
 public final class SephiriaTraderSpawner {
 	/** 每多少刻检查一次（原版默认 tickDelay）。 */
 	private static final int TICK_DELAY = 1200;
-	/** 每次尝试后重置的出生延迟：20 分钟（原版默认 spawnDelay）。 */
-	private static final int SPAWN_DELAY = 24000;
+	/**
+	 * 每次尝试后重置的出生延迟：4800 刻 = 4 分钟（原版 24000 = 20 分钟；
+	 * 用户 2026-10-17 要求改成这个数，几率爬升与 1/10 判定不变）。
+	 */
+	private static final int SPAWN_DELAY = 4800;
 	/** 出生几率：下限、上限、每次增量（原版三个常量）。 */
 	private static final int MIN_SPAWN_CHANCE = 25;
 	private static final int MAX_SPAWN_CHANCE = 75;

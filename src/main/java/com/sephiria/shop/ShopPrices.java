@@ -26,12 +26,22 @@ import java.util.Map;
  * （铜锭）；骰子 / 附魔币 / 宝箱这些稀有道具不收购。
  */
 public final class ShopPrices {
-	/** 白 / 蓝 / 黄 / 红 / 彩（石板为粉）五档买价。 */
+	/** 白 / 蓝 / 黄 / 红 / 彩 五档买价：神器用这套。 */
 	private static final int[] BY_RARITY = { 250, 500, 750, 1000, 1500 };
+	/**
+	 * 石板的五档买价（用户 2026-10-17：石板价格下调 30%）——所以不再与神器共用一张表。
+	 * 175 / 350 / 525 / 700 / 1050 恰好是神器那套的 7 折，向下取整不亏分。
+	 */
+	private static final int[] SLATE_BY_RARITY = { 175, 350, 525, 700, 1050 };
 	/** 药水的五档买价：白 25、蓝 1500、黄 5043、红与彩 0（0 = 商店不出售）。 */
 	private static final int[] POTION_BY_RARITY = { 25, 1500, 5043, 0, 0 };
-	/** 宝箱（神器 / 石板 / 升级）买价：用户定价，三种箱子同价。 */
+	/** 宝箱（神器 / 升级）买价：用户定价。 */
 	public static final int CHEST_PRICE = 750;
+	/**
+	 * 石板宝箱买价：比另两种箱子便宜 30%（用户 2026-10-18 定的，750 × 0.7 = 525），
+	 * 与石板本身「比神器便宜 30%」是同一条口径。
+	 */
+	public static final int SLATE_CHEST_PRICE = 525;
 	/** 出售折扣：原价的 3 折。 */
 	public static final int SELL_PERCENT = 30;
 	/**
@@ -53,15 +63,19 @@ public final class ShopPrices {
 	public static int buy(ItemStack stack) {
 		Item item = stack.getItem();
 
-		if (item instanceof ChestItem) {
-			return CHEST_PRICE;
+		if (item instanceof ChestItem chest) {
+			return chest.kind() == ChestItem.Kind.SLATE ? SLATE_CHEST_PRICE : CHEST_PRICE;
 		}
 
 		if (item instanceof SephiriaPotionItem potion) {
 			return byPotionRarity(potion.rarity());
 		}
 
-		if (item instanceof SephiriaArtifact || item instanceof SlateItem) {
+		if (item instanceof SlateItem) {
+			return bySlateRarity(ArtifactLoot.rarityOf(item));
+		}
+
+		if (item instanceof SephiriaArtifact) {
 			return byRarity(ArtifactLoot.rarityOf(item));
 		}
 
@@ -99,8 +113,20 @@ public final class ShopPrices {
 			case ADVANCED -> BY_RARITY[1];
 			case RARE -> BY_RARITY[2];
 			case LEGENDARY -> BY_RARITY[3];
-			// 神器最高是羁绊、石板最高是永恒，两者同价
+			// 神器最高是羁绊
 			case BOND, ETERNAL -> BY_RARITY[4];
+		};
+	}
+
+	/** 石板的买价（自家那张 7 折的表）。 */
+	private static int bySlateRarity(ArtifactRarity rarity) {
+		return switch (rarity) {
+			case COMMON -> SLATE_BY_RARITY[0];
+			case ADVANCED -> SLATE_BY_RARITY[1];
+			case RARE -> SLATE_BY_RARITY[2];
+			case LEGENDARY -> SLATE_BY_RARITY[3];
+			// 石板最高是永恒（与神器那边的羁绊同档）
+			case BOND, ETERNAL -> SLATE_BY_RARITY[4];
 		};
 	}
 

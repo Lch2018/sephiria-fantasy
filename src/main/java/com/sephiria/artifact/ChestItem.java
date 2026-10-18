@@ -44,29 +44,29 @@ public class ChestItem extends Item {
 					.networkSynchronized(ItemStack.STREAM_CODEC.apply(ByteBufCodecs.list()))
 					.build());
 
-	/** 箱子种类：决定奖池与品质权重。 */
+	/**
+	 * 箱子种类：决定奖池，以及「混着出」时石板占几成。
+	 *
+	 * <p>品质概率不缓存在这里：三种宝箱共用 {@link ArtifactLoot.WeightsKind#CHEST} 那一组比值，
+	 * 而它可能被 config 覆盖（整合包），所以领奖时（{@link #rewardsOf}）从概率函数现拿。
+	 */
 	public enum Kind {
 		/** 神器宝箱：只出神器。 */
-		ARTIFACT(ArtifactLoot.Pool.ARTIFACTS, ArtifactLoot.Weights.DEFAULT),
+		ARTIFACT(0.0D),
 		/** 石板宝箱：只出石板。 */
-		SLATE(ArtifactLoot.Pool.SLATES, ArtifactLoot.Weights.DEFAULT),
-		/** 升级宝箱：神器与石板混着出（会出现 2 石板 + 3 神器这种），好东西更少。 */
-		UPGRADE(ArtifactLoot.Pool.BOTH, ArtifactLoot.Weights.UPGRADE);
+		SLATE(100.0D),
+		/** 升级宝箱：神器 60% / 石板 40%（用户 2026-10-18 定的口径）。 */
+		UPGRADE(40.0D);
 
-		private final ArtifactLoot.Pool pool;
-		private final ArtifactLoot.Weights weights;
+		/** 混着抽时「这一件抽石板」的概率（%）：0 = 只出神器、100 = 只出石板。 */
+		private final double slatePercent;
 
-		Kind(ArtifactLoot.Pool pool, ArtifactLoot.Weights weights) {
-			this.pool = pool;
-			this.weights = weights;
+		Kind(double slatePercent) {
+			this.slatePercent = slatePercent;
 		}
 
-		public ArtifactLoot.Pool pool() {
-			return this.pool;
-		}
-
-		public ArtifactLoot.Weights weights() {
-			return this.weights;
+		public double slatePercent() {
+			return this.slatePercent;
 		}
 	}
 
@@ -109,8 +109,9 @@ public class ChestItem extends Item {
 			return stored;
 		}
 
-		List<ItemStack> rolled = List.copyOf(ArtifactLoot.roll(random,
-				Math.min(REWARDS, ArtifactLoot.MAX_ROLL), kind.pool(), kind.weights()));
+		List<ItemStack> rolled = List.copyOf(ArtifactLoot.rollMixed(random,
+				Math.min(REWARDS, ArtifactLoot.MAX_ROLL), kind.slatePercent(),
+				ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.CHEST)));
 		chest.set(ROLLED, rolled);
 		return rolled;
 	}

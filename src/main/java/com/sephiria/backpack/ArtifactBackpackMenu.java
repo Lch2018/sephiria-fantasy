@@ -20,6 +20,8 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.Map;
+
 /**
  * 赛菲莉娅背包的容器菜单：上半是背包的可视区（固定 {@link BackpackWindow#ROWS} 行，
  * 背包更高时滚轮翻页），下半是玩家自己的背包与快捷栏。
@@ -55,6 +57,12 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 	private final Container backpack;
 	private final BackpackWindow window;
 	private final ContainerData slotLevels;
+	/**
+	 * 开这个菜单的玩家：26.3 的 {@code AbstractContainerMenu} 不再存玩家字段，而连击档位
+	 * （服务端那份）要用到玩家身上的药水加成，所以自己留一份（菜单只活到界面关掉为止，
+	 * 不是那种「长期缓存存实体」的坑）。
+	 */
+	private final Player owner;
 	/** 现在滚到第几行；只有服务端会改，客户端从数据槽里读。 */
 	private int scrollRow;
 
@@ -71,10 +79,11 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 			ArtifactBackpack realBackpack) {
 		super(ModMenus.ARTIFACT_BACKPACK, containerId);
 		this.backpack = backpack;
+		this.owner = playerInventory.player;
 		this.window = new BackpackWindow(backpack);
 		this.slotLevels = realBackpack == null
 				? new SimpleContainerData(DATA_COUNT)
-				: liveData(realBackpack, this.window);
+				: liveData(realBackpack, this.window, this.owner);
 
 		for (int index = 0; index < BackpackWindow.SLOTS; index++) {
 			int col = index % ArtifactBackpack.WIDTH;
@@ -99,8 +108,10 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 	 *
 	 * <p>原版每刻对账一次这些数值（{@code broadcastChanges}），算错的代价只是「滚轮翻页时
 	 * 连击面板数字不对」，所以宁可每次都现算，也不用再加一层缓存失效逻辑。
+	 *
+	 * <p>{@code player} 只有服务端会传（客户端那份数据槽是空数组、等原版同步）。
 	 */
-	private static ContainerData liveData(ArtifactBackpack backpack, BackpackWindow window) {
+	private static ContainerData liveData(ArtifactBackpack backpack, BackpackWindow window, Player player) {
 		return new ContainerData() {
 			@Override
 			public int get(int index) {
@@ -117,16 +128,21 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 					return backpack.getContainerSize();
 				}
 
-				if (index >= DATA_COMBO_START) {
-					int combo = index - DATA_COMBO_START;
+					if (index >= DATA_COMBO_START) {
+						int combo = index - DATA_COMBO_START;
 
-					if (combo >= ArtifactCombo.values().length) {
-						return 0;
+						if (combo >= ArtifactCombo.values().length) {
+							return 0;
+						}
+
+						// 走服务端那一份：它把药水「索莱拉的偶然」给的连击加成也算进去了
+						// （这个数据槽只在服务端求值，客户端读的是同步过来的数）
+						Map<ArtifactCombo, Integer> levels = player instanceof ServerPlayer serverPlayer
+								? ArtifactEffects.comboLevels(serverPlayer)
+								: ArtifactEffects.comboLevels(backpack, backpack::slotLevel);
+
+						return levels.getOrDefault(ArtifactCombo.values()[combo], 0);
 					}
-
-					return ArtifactEffects.comboLevels(backpack, backpack::slotLevel)
-							.getOrDefault(ArtifactCombo.values()[combo], 0);
-				}
 
 				int real = window.sourceIndex(index);
 				return real < 0 ? 0 : backpack.slotLevel(real);

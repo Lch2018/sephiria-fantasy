@@ -10,9 +10,9 @@
 
 Blade / Steel Greatsword / Dagger / Default Sword and Shield / Quarterstaff / Colossal Crossbow — each with its own normal-attack feel and weapon skills (sweeping, whirlwind, dash, area lunge, …). The blade-type weapons are animated with GeckoLib.
 
-### Eleven combo sets and 66 artifacts
+### Twelve combo sets and 75 artifacts
 
-Sturdy / Wind Song / Precision / Shadow / Negotiation / Element / Magitech / Dark Cloud / Sun Sword / Embers / Glacier.
+Sturdy / Wind Song / Precision / Shadow / Negotiation / Element / Magitech / Dark Cloud / Sun Sword / Embers / Glacier / Frost Armament.
 
 Equipping artifacts of the same set in the Sephiria Backpack raises that combo's tier, and higher tiers give stronger effects. Hover a combo icon to see its full tier table. Artifacts come in five rarities (Common / Advanced / Rare / Legendary / Bond), and a 【Unique】 artifact only counts once no matter how many copies you carry.
 
@@ -51,7 +51,7 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 ## Known issues / not done yet
 
 - Most content has not been playtested thoroughly; numbers and feel are still being tuned;
-- Backpack expansion, slate upgrades, forging and the companion system are not implemented yet;
+- Slate upgrades, forging and the companion system are not implemented yet;
 - Some texts and icons will still change.
 
 ## Disclaimer
@@ -77,9 +77,9 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 刀 / 钢铁巨剑 / 匕首 / 标准剑盾 / 长棍 / 重型弩，各自有独立的普通攻击手感与武器技能（横扫、旋风、突刺、范围突进等）；刀类武器由 GeckoLib 驱动骨骼动画。
 
-### 十一套「连击」与 66 件神器
+### 十二套「连击」与 75 件神器
 
-坚固 / 风之歌 / 精密 / 影子 / 谈判 / 元素 / 魔法科技 / 乌云 / 太阳剑 / 余烬 / 冰川。
+坚固 / 风之歌 / 精密 / 影子 / 谈判 / 元素 / 魔法科技 / 乌云 / 太阳剑 / 余烬 / 冰川 / 冰霜武具。
 
 背包里凑齐同一套的神器会提升该连击的档位，档位越高效果越强；悬停连击图标可以查看完整档位表。神器分白 / 蓝 / 黄 / 红 / 彩五个品质，带【唯一】的同种神器只算一份。
 
@@ -118,7 +118,7 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 ## 已知问题 / 未完成
 
 - 大部分内容尚未充分实测，数值与手感仍在调整；
-- 背包扩容、石板升级、锻造、同伴系统尚未实现；
+- 石板升级、锻造、同伴系统尚未实现；
 - 部分文案与图标仍会变动。
 
 ## 声明

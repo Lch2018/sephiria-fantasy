@@ -1,43 +1,73 @@
-内容版：赛菲莉娅流浪商人（红袍 + 红毯羊驼）、新道具「赛菲莉娅额外背包栏」（背包 +1 格）、背包超出可滚轮翻页、达成成就送四叶草、许愿池的「溢出转化」开关、升级宝箱提示音、HUD 层级修正，中文名统一为**赛菲莉娅**。
+内容版：新神器「书」（铁砧里合附魔）、12 块新石板（石板说明改成自动生成）、四种新药水，以及一批经济与概率调整（石板宝箱 −30%、商店 / 升级宝箱的神器·石板比例、挖矿掉石板、概率可配置）。
 
 ## 新增
 
-- **赛菲莉娅流浪商人**：红袍商人 + 2 只披红毯的商队羊驼。刷新机制与原版流浪商人完全同一套，但**两者各自独立、都会出现**。9 个交易位全是「卖」：7 格道具（神器附魔币 / 骰子 / 赛菲莉娅额外背包栏，等概率三选一）+ 2 格药水（全部赛菲莉娅药水，含以后新增的）；每格 1 绿宝石、1 件，**卖完不补货**。
-- **新道具「赛菲莉娅额外背包栏」**：右键使用让赛菲莉娅背包**永久 +1 格**（默认 30 → 上限 54 格）；图标与背包标签页同一张，提示框写「赛菲莉娅背包格子+1」。
-- **背包超出可滚轮翻页**：界面固定显示 5 行，多出来的用滚轮翻（背包页与附魔页都有），右侧有滚动条；最后那一屏里**不存在的格子不会被画出来**。
-- **达成成就送四叶草**：每达成一个会弹提示的成就 +1 片四叶草（原版配方解锁与配方书展示条目不计数）。
-- **许愿池新增「溢出的升级宝箱自动转化为四叶草：开 / 关」开关**（神铸按钮下面一行，整行可点）：开着时背包已满获得的升级宝箱不再掉在脚下，而是**直接变 1 片四叶草**；每个玩家各设各的，随存档保留。
-- **升级宝箱提示音**：拿到时响一声，因背包满转化成四叶草时同样响。
+- **新神器「书」**（稀有 · 【唯一】 · 无连击）：铁砧里「书 + 附魔书」可以把**火焰附加 / 抢夺**合上去，等级相加、但**不超过原版上限**（火焰附加 II、抢夺 III；到顶之后那一手不出结果、也不扣经验）。待在赛菲莉娅背包里时，火焰附加让**神器 / 连击 / 减益**打出的伤害点燃目标（武器普攻不算），抢夺并进掉落结算。⚠ 图标目前是程序生成的临时贴图。
+- **12 块新石板**：断绝 / 楔子 / 防御招式 / 干燥 / 剥削 / 团结 / 和平 / 白日梦 / 反抗 / 接合 / **报恩（石板最高品质·永恒）** / 到来。石板的「说明」现在**自动生成**：有加等级就写「提高神器等级」（绿）、有减等级写「降低神器等级」（红）、不可旋转写「不可旋转」（红）。
+- **四种新药水**：**索莱拉的偶然**（黄：随机一种连击 +1 级，永久；喝下时动作栏会报是哪一种连击）、**梅尔岑之烟 / 阿凡提努斯的水晶 / 高泽之晨**（蓝：火 / 冰 / 电属性伤害 +2，永久）。药水提示框现在也会显示风味文本。
+- **挖矿掉石板**：不带精准采集时，铜 / 铁 / 金 / 钻石 / 绿宝石矿按品质加权掉石板。
+- **品质概率可配置**：整合包 / 服主可用 `config/sephiria-fantasy-loot-weights.json` 覆盖四种来源（宝箱 / 商店 / 抽卡 / 药水）的品质概率。
 
-## 修正
+## 调整
 
-- **HUD 层级**：从「画在所有 HUD 最后」改成**贴在原版热键栏之后**，不再压住聊天栏 / F3 / 玩家列表。
-- **中文名统一为「赛菲莉娅」**：此前混用「赛菲莉亚」「赛菲利亚」两种错写（包括背包界面标题），现在全部统一（英文与所有内部标识符不变）。
+- **宝箱价格**：石板宝箱 750 → **525**（−30%）；神器宝箱与升级宝箱仍是 750。
+- **商店货架**：改成**先掷神器 / 石板（石板 25%）再掷品质**。
+- **升级宝箱**：改成**石板 40% / 神器 60%**。
+- **石板价格**：175 / 350 / 525 / 700 / 1050（神器那套的 7 折）。
+- **抽卡愿力**：神器与石板各一套（神器 2/4/6/8/10、石板 3/6/9/12/15）。
+- **流浪商人**出生延迟 24000 → 4800 刻。
+- 品质概率按来源分开（宝箱 47/47/3.32/0.917/1.608、商店 20/20/10/3/5、抽卡 30/30/10/3/5、药水 200/10/5/1）；权重的含义改成「这一档实际开出的份数」，与这一档里有几件东西无关。
 
-## 未实测
+## 已知问题 / 未完成
 
-大部分内容尚未充分实测，数值与手感仍会调整；商人的刷新计时不写存档（服务端重启后重新计时）。
+- 「书」的图标是程序生成的临时贴图，后续会替换。
+- 「反抗」「报恩」这类大型图案石板：赛菲莉娅背包只有 6 列宽，超出背包的格子**不会生效**（图案会被裁掉）。
+- 石板升级、锻造、同伴系统尚未实现。
+- 这一版的内容（书 / 石板 / 药水 / 经济调整）是实装后直接发布的，尚未充分实测，数值仍会调整。
+
+## 运行环境
+
+Minecraft 26.3 + Fabric Loader 0.19.5 + Fabric API 0.161.0+26.3 + GeckoLib（必需）。
+
+## 声明
+
+同人模组、非官方作品；大量使用 AI 生成代码；**禁止任何商业行为**（详见项目正文）。
 
 ---
 
 ## English
 
-A content release: the Sephiria Wandering Trader (red robe + red-blanketed llamas), the "Extra Backpack Row" item, backpack scrolling, clovers for achievements, an "overflow chests become clovers" switch in the Wishing Pool, an Upgrade Chest pickup sound, HUD layering fixes, and the Chinese name is now consistently 赛菲莉娅.
+A content release: the new "Book" artifact (enchant merging at the anvil), 12 new slates with auto-generated descriptions, four new potions, plus an economy and probability pass (slate chest −30%, artifact/slate splits for the shop and upgrade chests, slates from mining, configurable rarity weights).
 
 ### New
 
-- **Sephiria Wandering Trader**: a red-robed trader with 2 red-blanketed trader llamas. Spawns exactly like the vanilla wandering trader, but the two are **completely independent — both appear**. All 9 trade slots sell only: 7 item slots (Artifact Enchant Coin / Dice / Extra Backpack Row, picked uniformly) + 2 potion slots (every Sephiria potion, including future ones); each costs 1 emerald for 1 item and **nothing restocks**.
-- **New item "Extra Backpack Row"**: right-click for **+1 permanent backpack slot** (30 by default, up to 54); its icon is the backpack tab icon and its tooltip reads "Sephiria Backpack slots +1".
-- **Backpack scrolling**: the UI shows 5 rows and the rest is reached with the mouse wheel (backpack and enchant pages), with a scrollbar; cells that **do not exist are not drawn**.
-- **Achievements grant clovers**: each toast-showing achievement grants +1 clover (vanilla recipe unlocks and recipe-book entries do not count).
-- **New Wishing Pool switch "Overflowing Upgrade Chests become clovers: ON / OFF"** (one clickable row below the Forge button): with a full inventory, an earned Upgrade Chest **becomes 1 clover** instead of dropping; per player, saved with the world.
-- **Upgrade Chest pickup sound**: plays when you receive one, and also when it is converted into a clover.
+- **New artifact "Book"** (Rare, 【Unique】, no combo): at an anvil, "Book + enchanted book" merges **Fire Aspect / Looting** into it — the levels add up but **never exceed the vanilla caps** (Fire Aspect II, Looting III; once at the cap the anvil shows no result and charges nothing). While it sits in the Sephiria Backpack, Fire Aspect sets targets on fire from **artifact / combo / debuff** damage (plain weapon attacks are excluded), and Looting is added to drop rolls. ⚠ Its icon is a generated placeholder for now.
+- **12 new slates**: Severance / Wedge / Defense / Drought / Exploitation / Unity / Peace / Daydream / Rebellion / Junction / **Gratitude (Eternal, the top slate rarity)** / Arrival. A slate's description is now **generated**: "Raises artifact level" (green) when it boosts slots, "Lowers artifact level" (red) when it reduces them, and "Cannot rotate" (red) when it is fixed.
+- **Four new potions**: **Solera's Chance** (Rare: a random combo gains +1 level, permanent; the action bar names which one), **Meltzen's Smoke / Avantinus' Crystal / Morning of Gaoze** (Advanced: Fire / Ice / Lightning Damage +2, permanent). Potion tooltips now also show flavor text.
+- **Slates from mining**: copper / iron / gold / diamond / emerald ore drop slates by rarity (without Silk Touch).
+- **Configurable rarity weights**: modpacks and server owners can override the four sources (chest / shop / gacha / potion) in `config/sephiria-fantasy-loot-weights.json`.
 
-### Fixes
+### Changes
 
-- **HUD layering**: moved from last to **right after the vanilla hotbar**, so it no longer covers chat / F3 / the player list.
-- **The Chinese name is consistently 赛菲莉娅 now** (previously mixed with two misspellings, including the backpack screen's title); English and all internal identifiers are untouched.
+- **Chest prices**: the Slate Chest is 750 → **525** (−30%); the Artifact Chest and Upgrade Chest stay at 750.
+- **Shop stock**: now rolls **artifact vs slate first (25% slates)**, then the rarity.
+- **Upgrade Chest**: now **40% slates / 60% artifacts**.
+- **Slate prices**: 175 / 350 / 525 / 700 / 1050 (70% of the artifact table).
+- **Wish power**: separate tables for artifacts (2/4/6/8/10) and slates (3/6/9/12/15).
+- **Wandering trader** spawn delay 24000 → 4800 ticks.
+- Rarity weights are now per source (chest 47/47/3.32/0.917/1.608, shop 20/20/10/3/5, gacha 30/30/10/3/5, potions 200/10/5/1); a weight now means the share of items rolled at that rarity, independent of how many items the tier contains.
 
-### Not yet play-tested
+### Known issues / not done yet
 
-Most content still needs thorough playtesting and numbers keep being tuned; the trader's spawn timer is not saved (it restarts when the server restarts).
+- The Book's icon is a generated placeholder and will be replaced.
+- Large-pattern slates (Rebellion, Gratitude): the Sephiria Backpack is only 6 columns wide, so cells outside it do **not** apply (the pattern is clipped).
+- Slate upgrades, forging and the companion system are not implemented yet.
+- This version's content (Book / slates / potions / economy) was released right after it was implemented; it has not been play-tested thoroughly and the numbers keep being tuned.
+
+### Requirements
+
+Minecraft 26.3 + Fabric Loader 0.19.5 + Fabric API 0.161.0+26.3 + GeckoLib (required).
+
+### Disclaimer
+
+A fan mod, not an official work; heavily AI-generated code; **any commercial use is forbidden** (see the project description).

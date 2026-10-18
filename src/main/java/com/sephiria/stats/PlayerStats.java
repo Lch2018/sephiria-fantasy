@@ -3,6 +3,7 @@ package com.sephiria.stats;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
+import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.util.PlayerItems;
@@ -71,16 +72,22 @@ public final class PlayerStats {
 	public static final double EXPERIENCE_PER_CHEST = 500.0D;
 
 	/**
-	 * 后加的那几项战斗属性单独成一组。
+	 * 后加的那几项属性单独成一组（战斗那几项 + 药水给的元素强度与连击加成）。
 	 *
-	 * <p>理由很实际：{@code RecordCodecBuilder} 一条记录最多 16 个字段，主记录已经占了 15 个，
+	 * <p>理由很实际：{@code RecordCodecBuilder} 一条记录最多 16 个字段，主记录已经占满了，
 	 * 所以新属性打包成一个可选的子记录——旧存档没有这一组时整组取默认值。
+	 *
+	 * <p>⚠ 这一组的 JSON 键仍叫 {@code combat}（老存档的字段名不能改），但内容是「后加属性的
+	 * 杂物箱」：2026-10-18 往里面加了药水那三项元素强度与连击加成。
 	 */
 	private record Combat(double normalAttackDamage, double critChance, double critDamage, double ignoreDefense,
-			double moveSpeed, double dodge, double negotiation, double leafGainPercent, double xpDropPercent) {
+			double moveSpeed, double dodge, double negotiation, double leafGainPercent, double xpDropPercent,
+			double potionFire, double potionIce, double potionLightning,
+			java.util.Map<String, Integer> comboBonus) {
 		static final Combat DEFAULT = new Combat(DEFAULT_NORMAL_ATTACK_DAMAGE, DEFAULT_CRIT_CHANCE,
 				DEFAULT_CRIT_DAMAGE, 0.0D, DEFAULT_MOVE_SPEED, 0.0D,
-				DEFAULT_NEGOTIATION, DEFAULT_LEAF_GAIN, DEFAULT_XP_DROP);
+				DEFAULT_NEGOTIATION, DEFAULT_LEAF_GAIN, DEFAULT_XP_DROP,
+				0.0D, 0.0D, 0.0D, java.util.Map.of());
 
 		static final Codec<Combat> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.DOUBLE.optionalFieldOf("normal_attack_damage", DEFAULT_NORMAL_ATTACK_DAMAGE)
@@ -92,7 +99,15 @@ public final class PlayerStats {
 				Codec.DOUBLE.optionalFieldOf("dodge", 0.0D).forGetter(Combat::dodge),
 				Codec.DOUBLE.optionalFieldOf("negotiation", DEFAULT_NEGOTIATION).forGetter(Combat::negotiation),
 				Codec.DOUBLE.optionalFieldOf("leaf_gain_percent", DEFAULT_LEAF_GAIN).forGetter(Combat::leafGainPercent),
-				Codec.DOUBLE.optionalFieldOf("xp_drop_percent", DEFAULT_XP_DROP).forGetter(Combat::xpDropPercent)
+				Codec.DOUBLE.optionalFieldOf("xp_drop_percent", DEFAULT_XP_DROP).forGetter(Combat::xpDropPercent),
+				// 药水给的那一份（2026-10-18 加）：三项元素强度 + 「索莱拉的偶然」的连击加成表。
+				// 放在这一组而不是主记录：主记录 16 个字段已满（见上面那条），而且塞进已有子组
+				// 不会动任何老键（potion_physical / combat 都原样读得到）
+				Codec.DOUBLE.optionalFieldOf("potion_fire", 0.0D).forGetter(Combat::potionFire),
+				Codec.DOUBLE.optionalFieldOf("potion_ice", 0.0D).forGetter(Combat::potionIce),
+				Codec.DOUBLE.optionalFieldOf("potion_lightning", 0.0D).forGetter(Combat::potionLightning),
+				Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("combo_bonus", java.util.Map.of())
+						.forGetter(Combat::comboBonus)
 		).apply(instance, Combat::new));
 	}
 
@@ -127,11 +142,14 @@ public final class PlayerStats {
 		/** 把当前数值打包成存档格式。 */
 		static Saved of(Values values) {
 			return new Saved(values.mp, values.mpRegen, values.physical, values.potionPhysical, values.fire,
-					values.ice, values.lightning, values.defense, values.lifesteal, values.leaves,
+					values.ice, values.lightning,
+					values.defense, values.lifesteal, values.leaves,
 					values.experienceTowardsChest, values.attackSpeed, values.meleeRange, values.weaponDamage,
 					values.specialAttack, new Combat(values.normalAttackDamage, values.critChance, values.critDamage,
 							values.ignoreDefense, values.moveSpeed, values.dodge,
-							values.negotiation, values.leafGainPercent, values.xpDropPercent));
+							values.negotiation, values.leafGainPercent, values.xpDropPercent,
+							values.potionFire, values.potionIce, values.potionLightning,
+							java.util.Map.copyOf(values.comboBonus)));
 		}
 
 		/** 读档：把存档里的数值填进一份新的 {@link Values}。 */
@@ -144,6 +162,10 @@ public final class PlayerStats {
 			values.fire = this.fire;
 			values.ice = this.ice;
 			values.lightning = this.lightning;
+			values.potionFire = this.combat.potionFire;
+			values.potionIce = this.combat.potionIce;
+			values.potionLightning = this.combat.potionLightning;
+			values.comboBonus.putAll(this.combat.comboBonus);
 			values.defense = this.defense;
 			values.lifesteal = this.lifesteal;
 			values.leaves = this.leaves;
@@ -261,6 +283,17 @@ public final class PlayerStats {
 		public double fire = DEFAULT_STRENGTH;
 		public double ice = DEFAULT_STRENGTH;
 		public double lightning = DEFAULT_STRENGTH;
+		/** 药水给的元素强度（火 / 冰 / 电），与 {@link #potionPhysical} 同一条口径：固定值那一段。 */
+		public double potionFire = 0.0D;
+		public double potionIce = 0.0D;
+		public double potionLightning = 0.0D;
+		/**
+		 * 药水「索莱拉的偶然」给的连击加成：连击 id → +几级。
+		 *
+		 * <p>按 id（{@code sun_sword} 这种字符串）存而不是按枚举下标：以后往 {@link ArtifactCombo}
+		 * 里加连击、调整枚举顺序时，旧存档的加成不会串到别的连击上去。
+		 */
+		public final java.util.Map<String, Integer> comboBonus = new java.util.HashMap<>();
 		public double defense = DEFAULT_DEFENSE;
 		/** HP 偷取（俗称吸血）：每点 = 造成伤害的 0.1% 回血，见 {@link #lifestealTotal}。 */
 		public double lifesteal = 0.0D;
@@ -510,6 +543,35 @@ public final class PlayerStats {
 		sync(player);
 	}
 
+	/**
+	 * 药水永久 +某项元素强度（火 / 冰 / 电）。
+	 *
+	 * <p>与物理那条同一条口径：单独记一份，{@link #elementTotal} 里当固定值加上——
+	 * 不并进基础值，这样以后要给面板加「药水」那一段时数据是分得开的。
+	 */
+	public static void addPotionElement(ServerPlayer player, Element element, double amount) {
+		Values values = of(player);
+
+		switch (element) {
+			case FIRE -> values.potionFire += amount;
+			case ICE -> values.potionIce += amount;
+			case LIGHTNING -> values.potionLightning += amount;
+			case PHYSICAL -> values.potionPhysical += amount;
+		}
+
+		sync(player);
+	}
+
+	/** 药水「索莱拉的偶然」给的连击加成（连击 → +几级）。 */
+	public static int comboBonus(ServerPlayer player, ArtifactCombo combo) {
+		return of(player).comboBonus.getOrDefault(combo.id(), 0);
+	}
+
+	/** 给某个连击永久 +amount 级（药水结算用）。 */
+	public static void addComboBonus(ServerPlayer player, ArtifactCombo combo, int amount) {
+		of(player).comboBonus.merge(combo.id(), amount, Integer::sum);
+	}
+
 	/** 四项强度：物理强度与三种元素强度，「最高元素伤害」只在它们之间挑一个。 */
 	public enum Element {
 		PHYSICAL, FIRE, ICE, LIGHTNING
@@ -572,16 +634,19 @@ public final class PlayerStats {
 
 		return switch (element) {
 			case PHYSICAL -> physicalTotal(player);
-			// 火元素强度有两类固定值来源：神器（索利斯那两枚徽章的「火焰属性伤害」）与连击（余烬 4/6 档）
-			case FIRE -> (of(player).fire + flat
+			// 火元素强度有三类固定值来源：神器（索利斯那两枚徽章的「火焰属性伤害」）、连击（余烬 4/6 档）
+			// 与药水（梅尔岑之烟）
+			case FIRE -> (of(player).fire + of(player).potionFire + flat
 					+ ArtifactEffects.fireElementBonus(player)
 					+ ArtifactEffects.comboFireElement(player)) * multiplier;
-			// 冰元素强度有两类固定值来源：神器（睿智护符 / 蓝爪的「冰属性伤害」；麒麟的角是负的）
-			// 与连击（冰川 4/8 档）；扣完夹在 0 以上
-			case ICE -> Math.max(0.0D, of(player).ice + flat + ArtifactEffects.iceElementBonus(player)
+			// 冰元素强度有三类固定值来源：神器（睿智护符 / 蓝爪的「冰属性伤害」；麒麟的角是负的）、
+			// 连击（冰川 4/8 档）与药水（阿凡提努斯的水晶）；扣完夹在 0 以上
+			case ICE -> Math.max(0.0D, of(player).ice + of(player).potionIce + flat
+					+ ArtifactEffects.iceElementBonus(player)
 					+ ArtifactEffects.comboIceElement(player)) * multiplier;
-			// 电元素强度有两类固定值来源：连击（魔法科技 4/8 档）与神器（护符 / 耳环 / 指南针 / 萤火虫）
-			case LIGHTNING -> (of(player).lightning + flat
+			// 电元素强度有三类固定值来源：连击（魔法科技 4/8 档）、神器（护符 / 耳环 / 指南针 / 萤火虫）
+			// 与药水（高泽之晨）
+			case LIGHTNING -> (of(player).lightning + of(player).potionLightning + flat
 					+ ArtifactEffects.comboLightningElement(player)
 					+ ArtifactEffects.lightningElementBonus(player)) * multiplier;
 		};

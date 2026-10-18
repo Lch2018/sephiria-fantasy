@@ -39,6 +39,16 @@ public class SephiriaPotionItem extends Item implements Quality {
 		return this.effect;
 	}
 
+	/**
+	 * 风味文本的键（提示框里空值不画）——按物品 id 现推，免得每瓶药水都塞一个构造参数。
+	 *
+	 * <p>口味文案属「用户给的才写」那类，所以大部分药水这条键是空的（空值游戏里不显示）。
+	 */
+	public String flavorKey() {
+		return "potion.sephiria_fantasy."
+				+ net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(this).getPath() + ".flavor";
+	}
+
 	@Override
 	public ArtifactRarity rarity() {
 		return this.rarity;

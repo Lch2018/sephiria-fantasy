@@ -63,6 +63,109 @@ public final class Slates {
 			new PatternSlateItem.Cell(0, -1, 1),
 			new PatternSlateItem.Cell(0, 1, 1));
 
+
+	/** 断绝（稀有，不可旋转）：断绝。 */
+	public static final List<PatternSlateItem.Cell> SEVERANCE = List.of(
+			new PatternSlateItem.Cell(0, -1, 3),
+			new PatternSlateItem.Cell(0, 1, 3),
+			new PatternSlateItem.Cell(-1, 0, -1),
+			new PatternSlateItem.Cell(1, 0, -1));
+
+	/** 楔子（稀有，可旋转）：楔子。 */
+	public static final List<PatternSlateItem.Cell> WEDGE = List.of(
+			new PatternSlateItem.Cell(-1, -1, 3));
+
+	/** 防御招式（稀有，可旋转）：防御招式。 */
+	public static final List<PatternSlateItem.Cell> DEFENSE = List.of(
+			new PatternSlateItem.Cell(-1, -1, 1),
+			new PatternSlateItem.Cell(1, 1, 1),
+			new PatternSlateItem.Cell(1, -1, 2),
+			new PatternSlateItem.Cell(-1, 1, 2),
+			new PatternSlateItem.Cell(-1, 0, -1),
+			new PatternSlateItem.Cell(1, 0, -1));
+
+	/** 干燥（普通，不可旋转）：干燥。 */
+	public static final List<PatternSlateItem.Cell> DROUGHT = List.of(
+			new PatternSlateItem.Cell(0, -1, 1),
+			new PatternSlateItem.Cell(0, 1, 1));
+
+	/** 剥削（普通，可旋转）：剥削。 */
+	public static final List<PatternSlateItem.Cell> EXPLOITATION = List.of(
+			new PatternSlateItem.Cell(-1, 0, -1),
+			new PatternSlateItem.Cell(1, 0, 1));
+
+	/** 团结（普通，可旋转）：团结。 */
+	public static final List<PatternSlateItem.Cell> UNITY = List.of(
+			new PatternSlateItem.Cell(0, 1, 1),
+			new PatternSlateItem.Cell(1, 0, 1),
+			new PatternSlateItem.Cell(-1, 0, -1),
+			new PatternSlateItem.Cell(0, -1, -1));
+
+	/** 和平（传说，可旋转）：和平。 */
+	public static final List<PatternSlateItem.Cell> PEACE = List.of(
+			new PatternSlateItem.Cell(-1, 0, 3),
+			new PatternSlateItem.Cell(1, 0, 3));
+
+	/** 白日梦（传说，可旋转）：。 */
+	public static final List<PatternSlateItem.Cell> DAYDREAM = List.of(
+			new PatternSlateItem.Cell(1, -1, 2),
+			new PatternSlateItem.Cell(-1, -1, 2),
+			new PatternSlateItem.Cell(-1, 1, 2),
+			new PatternSlateItem.Cell(1, 1, 2));
+
+	/** 反抗（稀有，可旋转）：。 */
+	public static final List<PatternSlateItem.Cell> REBELLION = List.of(
+			new PatternSlateItem.Cell(1, 1, 1),
+			new PatternSlateItem.Cell(2, 2, 1),
+			new PatternSlateItem.Cell(3, 3, 1),
+			new PatternSlateItem.Cell(4, 4, 1),
+			new PatternSlateItem.Cell(5, 5, 1),
+			new PatternSlateItem.Cell(6, 6, 1),
+			new PatternSlateItem.Cell(7, 7, 1),
+			new PatternSlateItem.Cell(8, 8, 1),
+			new PatternSlateItem.Cell(-1, -1, 1),
+			new PatternSlateItem.Cell(-2, -2, 1),
+			new PatternSlateItem.Cell(-3, -3, 1),
+			new PatternSlateItem.Cell(-4, -4, 1),
+			new PatternSlateItem.Cell(-5, -5, 1),
+			new PatternSlateItem.Cell(-6, -6, 1),
+			new PatternSlateItem.Cell(-7, -7, 1),
+			new PatternSlateItem.Cell(-8, -8, 1));
+
+	/** 接合（稀有，可旋转）：。 */
+	public static final List<PatternSlateItem.Cell> JUNCTION = List.of(
+			new PatternSlateItem.Cell(0, -1, 1),
+			new PatternSlateItem.Cell(0, -2, 1),
+			new PatternSlateItem.Cell(0, -3, 1),
+			new PatternSlateItem.Cell(1, 0, 1),
+			new PatternSlateItem.Cell(2, 0, 1),
+			new PatternSlateItem.Cell(3, 0, 1));
+
+	/** 报恩（永恒，可旋转）：。 */
+	public static final List<PatternSlateItem.Cell> GRATITUDE = List.of(
+			new PatternSlateItem.Cell(-1, 0, 3),
+			new PatternSlateItem.Cell(-2, 0, 3),
+			new PatternSlateItem.Cell(-3, 0, 3),
+			new PatternSlateItem.Cell(-4, 0, 3),
+			new PatternSlateItem.Cell(1, 0, 3),
+			new PatternSlateItem.Cell(2, 0, 3),
+			new PatternSlateItem.Cell(3, 0, 3),
+			new PatternSlateItem.Cell(4, 0, 3),
+			new PatternSlateItem.Cell(-5, 0, 3),
+			new PatternSlateItem.Cell(-6, 0, 3),
+			new PatternSlateItem.Cell(-7, 0, 3),
+			new PatternSlateItem.Cell(-8, 0, 3),
+			new PatternSlateItem.Cell(5, 0, 3),
+			new PatternSlateItem.Cell(6, 0, 3),
+			new PatternSlateItem.Cell(7, 0, 3),
+			new PatternSlateItem.Cell(8, 0, 3));
+
+	/** 到来（普通，可旋转）：。 */
+	public static final List<PatternSlateItem.Cell> ARRIVAL = List.of(
+			new PatternSlateItem.Cell(0, -1, 1),
+			new PatternSlateItem.Cell(0, -2, 1),
+			new PatternSlateItem.Cell(0, 1, -1),
+			new PatternSlateItem.Cell(0, 2, -1));
 	private Slates() {
 	}
 }

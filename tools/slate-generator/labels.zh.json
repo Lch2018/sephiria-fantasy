@@ -1,0 +1,12 @@
+{
+  "_comment": "中文文案：apply-slates.ps1 生成 Java 注释时用。脚本本身保持 ASCII（PS 5.1 会把非 BOM 的 UTF-8 .ps1 当 GBK 读），这些字只在这里出现。",
+  "common": "普通",
+  "advanced": "高级",
+  "rare": "稀有",
+  "legendary": "传说",
+  "eternal": "永恒",
+  "rotatable": "可旋转",
+  "fixed": "不可旋转",
+  "docPattern": "{0}（{1}，{2}）：{3}。",
+  "docItem": "{0}（{1}）：{2}。"
+}

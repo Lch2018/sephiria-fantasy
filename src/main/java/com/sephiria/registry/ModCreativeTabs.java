@@ -115,6 +115,7 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.FROZEN_HEART);
 						output.accept(ModItems.VOLSPA);
 						output.accept(ModItems.ICE_BOW);
+						output.accept(ModItems.BOOK);
 					})
 					.build());
 
@@ -139,6 +140,18 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.SLATE_OF_BELIEF);
 						output.accept(ModItems.SLATE_OF_ENTRANCE);
 						output.accept(ModItems.SLATE_OF_COMPETITION);
+						output.accept(ModItems.SLATE_OF_SEVERANCE);
+						output.accept(ModItems.SLATE_OF_WEDGE);
+						output.accept(ModItems.SLATE_OF_DEFENSE);
+						output.accept(ModItems.SLATE_OF_DROUGHT);
+						output.accept(ModItems.SLATE_OF_EXPLOITATION);
+						output.accept(ModItems.SLATE_OF_UNITY);
+						output.accept(ModItems.SLATE_OF_PEACE);
+						output.accept(ModItems.SLATE_OF_DAYDREAM);
+						output.accept(ModItems.SLATE_OF_REBELLION);
+						output.accept(ModItems.SLATE_OF_JUNCTION);
+						output.accept(ModItems.SLATE_OF_GRATITUDE);
+						output.accept(ModItems.SLATE_OF_ARRIVAL);
 					})
 					.build());
 

@@ -1,6 +1,7 @@
 package com.sephiria.artifact;
 
 import com.sephiria.backpack.ArtifactBackpack;
+import com.sephiria.stats.PlayerStats;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
@@ -651,9 +652,28 @@ public final class ArtifactEffects {
 	 * 失效（实际等级为负）的神器不计入。
 	 *
 	 * <p>这个重载不依赖服务端：客户端用菜单同步过来的容器与格子等级自己算一遍，
-	 * 连击面板就能显示等级与颜色，不用再多发一个同步包。
+	 * 连击面板就能显示等级与颜色，不用再多发一个同步包。**不含药水加成**（那份在服务端）。
 	 */
 	public static Map<ArtifactCombo, Integer> comboLevels(Container backpack, java.util.function.IntUnaryOperator slotLevels) {
+		return comboLevels(backpack, slotLevels, combo -> 0);
+	}
+
+	/**
+	 * 服务端版本：直接读玩家的背包，并把药水「索莱拉的偶然」给的连击加成
+	 * （{@code PlayerStats.comboBonus}）一起加进去。
+	 *
+	 * <p>连击档位的实际效果（下面那一串 {@code comboXxx}）都走这个版本，所以药水加成对战斗生效；
+	 * 客户端的连击面板读的是菜单数据槽——那边也调这个版本（见 {@code ArtifactBackpackMenu.liveData}），
+	 * 所以面板数字与服务端一致。
+	 */
+	public static Map<ArtifactCombo, Integer> comboLevels(ServerPlayer player) {
+		ArtifactBackpack backpack = ArtifactBackpack.of(player);
+		return comboLevels(backpack, backpack::slotLevel, combo -> PlayerStats.comboBonus(player, combo));
+	}
+
+	/** 连击计数本体：背包里数一遍，最后把 {@code bonus} 那一份（药水给的）加上。 */
+	private static Map<ArtifactCombo, Integer> comboLevels(Container backpack,
+			java.util.function.IntUnaryOperator slotLevels, java.util.function.ToIntFunction<ArtifactCombo> bonus) {
 		Map<ArtifactCombo, Integer> levels = new EnumMap<>(ArtifactCombo.class);
 		Set<Item> uniqueCounted = new HashSet<>();
 
@@ -679,18 +699,12 @@ public final class ArtifactEffects {
 			}
 		}
 
-		// 一件都没有的连击也要留一项（连击面板要显示 0 级）
+		// 一件都没有的连击也要留一项（连击面板要显示 0 级）；药水加成算在最后
 		for (ArtifactCombo combo : ArtifactCombo.values()) {
-			levels.putIfAbsent(combo, 0);
+			levels.merge(combo, bonus.applyAsInt(combo), Integer::sum);
 		}
 
 		return levels;
-	}
-
-	/** 服务端版本：直接读玩家的背包。 */
-	public static Map<ArtifactCombo, Integer> comboLevels(ServerPlayer player) {
-		ArtifactBackpack backpack = ArtifactBackpack.of(player);
-		return comboLevels(backpack, backpack::slotLevel);
 	}
 
 	private static Slot read(ArtifactBackpack backpack, int slot) {

@@ -46,6 +46,9 @@ public final class ShopStock extends SimpleContainer {
 	/** 药水格起始下标；药水物品还没做，这两格先空着。 */
 	public static final int POTION_START = GOOD_SLOTS + CHEST_SLOTS;
 
+	/** 商品格里「抽到石板」的比例（%）：神器 75% / 石板 25%（用户 2026-10-18 定的口径）。 */
+	public static final double SLATE_PERCENT = 25.0D;
+
 	public static final int CHEST_LIMIT = 3;
 	public static final int GOOD_LIMIT = 1;
 
@@ -179,11 +182,11 @@ public final class ShopStock extends SimpleContainer {
 		return new Saved(slots, bought);
 	}
 
-	/** 重新刷一批货：商品按品质加权抽，宝箱固定两种，药水按品质加权抽，购买记录清零。 */
+	/** 重新刷一批货：商品按品质加权抽（神器 75% / 石板 25%），宝箱固定两种，药水按品质加权抽，购买记录清零。 */
 	public void refresh(RandomSource random) {
 		clearContent();
 
-		List<ItemStack> goods = ArtifactLoot.roll(random, GOOD_SLOTS, ArtifactLoot.Pool.BOTH, ArtifactLoot.Weights.SHOP);
+		List<ItemStack> goods = ArtifactLoot.rollMixed(random, GOOD_SLOTS, SLATE_PERCENT, ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.SHOP));
 
 		for (int index = 0; index < goods.size(); index++) {
 			setItem(index, goods.get(index));

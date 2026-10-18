@@ -40,7 +40,9 @@ public final class ModelDecodeCheck {
 			// 根之退 / 许愿池（方块物品）与四叶草：没有组件，替换串在文件里不存在，等于原样解一遍
 			new String[] { "root_retreat", "sephiria_fantasy:root_retreat_side", "minecraft:damage" },
 			new String[] { "wish_pool", "sephiria_fantasy:wish_pool_side", "minecraft:damage" },
-			new String[] { "root_retreat", "sephiria_fantasy:root_retreat_side2", "minecraft:damage" });
+			new String[] { "root_retreat", "sephiria_fantasy:root_retreat_side2", "minecraft:damage" },
+			// 「书」：最普通的一层定义（同样没有组件，原样解一遍，防止以后改贴图路径时写坏）
+			new String[] { "book", "sephiria_fantasy:book_marker", "minecraft:damage" });
 
 	public static void main(String[] args) throws Exception {
 		SharedConstants.tryDetectVersion();

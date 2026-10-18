@@ -1,4 +1,4 @@
-﻿# Static consistency check for SEPHIRIA resources.
+﻿﻿﻿# Static consistency check for SEPHIRIA resources.
 #
 # Structure-agnostic on purpose: item definitions are walked for model references, every
 # referenced model must exist, every element model must be well formed, every palette texture
@@ -10,7 +10,7 @@ $assets = Join-Path $root 'src\main\resources\assets\sephiria_fantasy'
 $modelsDir = Join-Path $assets 'models\item'
 $texDir = Join-Path $assets 'textures\item'
 
-$items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'crossbow_bolt', 'blade', 'quarterstaff', 'charm_of_strength', 'artifact_tab_icon', 'warriors_proof', 'slate_of_future', 'enchant_coin', 'slate_tab_icon', 'dice', 'artifact_chest', 'slate_chest', 'upgrade_chest', 'shield_textbook', 'sword_textbook', 'wind_score', 'pressure_bandage', 'golden_cloak', 'wanderer_necklace', 'projection_sword', 'colorless_cube', 'silver_plate', 'encouragement_banner', 'haste_grimoire', 'red_dew', 'longing_amulet', 'fault_probe', 'deft_amulet', 'pinwheel', 'specimen_beak', 'evergreen_cloak', 'resistance_band', 'warm_stone', 'slate_of_oath', 'slate_of_belief', 'slate_of_entrance', 'slate_of_competition', 'slate_of_rally', 'slate_of_wave', 'slate_of_double_star', 'slate_of_handshake', 'regeneration_potion', 'apple_juice', 'trappist_sacred', 'big_dice_potion', 'vampire_lord_oath',
+$items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_crossbow', 'crossbow_bolt', 'blade', 'quarterstaff', 'charm_of_strength', 'artifact_tab_icon', 'warriors_proof', 'slate_of_future', 'enchant_coin', 'slate_tab_icon', 'dice', 'artifact_chest', 'slate_chest', 'upgrade_chest', 'shield_textbook', 'sword_textbook', 'wind_score', 'pressure_bandage', 'golden_cloak', 'wanderer_necklace', 'projection_sword', 'colorless_cube', 'silver_plate', 'encouragement_banner', 'haste_grimoire', 'red_dew', 'longing_amulet', 'fault_probe', 'deft_amulet', 'pinwheel', 'specimen_beak', 'evergreen_cloak', 'resistance_band', 'warm_stone', 'slate_of_oath', 'slate_of_belief', 'slate_of_entrance', 'slate_of_competition', 'slate_of_rally', 'slate_of_wave', 'slate_of_double_star', 'slate_of_handshake', 'slate_of_arrival', 'slate_of_gratitude', 'slate_of_junction', 'slate_of_rebellion', 'slate_of_daydream', 'slate_of_peace', 'slate_of_unity', 'slate_of_exploitation', 'slate_of_drought', 'slate_of_defense', 'slate_of_wedge', 'slate_of_severance', 'regeneration_potion', 'apple_juice', 'trappist_sacred', 'big_dice_potion', 'vampire_lord_oath', 'solera_chance', 'meltzen_smoke', 'avantinus_crystal', 'gaoze_morning',
     # the magic-tech / dark-cloud artifact batches: an icon texture without these two definition
     # files renders as a missing model in game, so every artifact added since batch 10 is listed
     'magic_carrot', 'sharp_flint', 'resonance_stone', 'lightning_struck_branch', 'electric_bug',
@@ -26,6 +26,8 @@ $items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_c
     'ice_wings', 'frozen_heart', 'volspa', 'ice_bow',
     # batch 23 (eternal eclipse): the sun-sword + frost-armament bond artifact
     'eternal_eclipse',
+    # the compatible book (rare, no combo): merges Fire Aspect / Looting at the anvil
+    'book',
     # the three hidden carriers the frost projectiles are drawn with (ice-blue recolours)
     'ice_hammer', 'ice_spear', 'ice_arrow')
 
@@ -259,6 +261,9 @@ foreach ($lang in @('en_us', 'zh_cn')) {
         'tooltip.sephiria_fantasy.part.range'        = 2
         'tooltip.sephiria_fantasy.part.cooldown'     = 1
         'tooltip.sephiria_fantasy.part.distance'     = 1
+        # 「书」的两行动态词条：等级 + 点燃秒数 / 等级
+        'artifact.sephiria_fantasy.affix.book_fire_aspect' = 2
+        'artifact.sephiria_fantasy.affix.book_looting'     = 1
     }
     foreach ($key in $placeholders.Keys) {
         $line = $json.$key
@@ -291,6 +296,44 @@ foreach ($lang in @('en_us', 'zh_cn')) {
     if ($barePercent -gt 0) { Write-Output ("      affected keys: " + $barePercent) }
 
     Ok "lang/$lang.json checked ($($keys.Count) keys)"
+}
+
+# 4b) flavor keys: ArtifactTooltip 拿它们当文本读（空串 = 不画那一行），**缺键会把键名本身
+#     画进提示框**（2026-10-18 加药水风味时踩到）。键的来源：Java 源码里的字面量，以及
+#     registerSlate / registerPotion 那两个工厂拿到的 id（它们的 flavor 键是拼出来的）。
+$javaRoot = Join-Path $root 'src\main\java'
+$flavorKeys = New-Object System.Collections.Generic.List[string]
+
+foreach ($javaFile in (Get-ChildItem -Path $javaRoot -Recurse -Filter '*.java')) {
+    $javaText = ReadText $javaFile.FullName
+
+    foreach ($m in [regex]::Matches($javaText, '"(?:artifact|potion)\.sephiria_fantasy\.[a-z0-9_]+\.flavor"')) {
+        $flavorKeys.Add($m.Value.Trim('"'))
+    }
+
+    foreach ($m in [regex]::Matches($javaText, 'registerSlate\(\s*"([a-z0-9_]+)"')) {
+        $flavorKeys.Add('artifact.sephiria_fantasy.' + $m.Groups[1].Value + '.flavor')
+    }
+
+    foreach ($m in [regex]::Matches($javaText, 'registerPotion\(\s*"([a-z0-9_]+)"')) {
+        $flavorKeys.Add('potion.sephiria_fantasy.' + $m.Groups[1].Value + '.flavor')
+    }
+}
+
+$uniqueFlavorKeys = @($flavorKeys | Select-Object -Unique)
+
+foreach ($lang in @('en_us', 'zh_cn')) {
+    $langKeys = (ReadJson (Join-Path $assets "lang\$lang.json")).PSObject.Properties.Name
+    $missing = 0
+
+    foreach ($key in $uniqueFlavorKeys) {
+        if ($langKeys -notcontains $key) {
+            Fail "lang/$lang.json missing flavor key $key (a missing key renders as the raw key in the tooltip)"
+            $missing++
+        }
+    }
+
+    if ($missing -eq 0) { Ok "lang/$lang.json flavor keys ok ($($uniqueFlavorKeys.Count))" }
 }
 
 if (-not (Test-Path (Join-Path $assets 'icon.png'))) { Fail "missing icon.png" }
