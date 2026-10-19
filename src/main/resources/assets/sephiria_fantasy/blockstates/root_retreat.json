@@ -1,7 +1,8 @@
 {
   "variants": {
-    "": {
-      "model": "sephiria_fantasy:block/root_retreat"
-    }
+    "facing=north": { "model": "sephiria_fantasy:block/root_retreat", "y": 180 },
+    "facing=east":  { "model": "sephiria_fantasy:block/root_retreat", "y": 270 },
+    "facing=south": { "model": "sephiria_fantasy:block/root_retreat", "y": 0 },
+    "facing=west":  { "model": "sephiria_fantasy:block/root_retreat", "y": 90 }
   }
 }

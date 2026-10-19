@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "sephiria_fantasy:block/root_retreat"
+    "model": "sephiria_fantasy:item/root_retreat_icon"
   }
 }
