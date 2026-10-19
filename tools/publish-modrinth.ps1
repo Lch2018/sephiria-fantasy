@@ -128,7 +128,9 @@ function Invoke-Api {
 
     $out = Join-Path $tempDir 'response.json'
     # 注意别用 $args：那是 PowerShell 的自动变量
-    $curlArgs = @('-sS', '-x', $Proxy, '-A', $userAgent, '-X', $Method, '-H', "Authorization: Bearer $Token",
+    # -Proxy 传空串 = 直连：代理没开时（Modrinth 本身直连能通）用它，别再塞一个空的 -x 参数给 curl
+    $proxyArgs = if ($Proxy) { @('-x', $Proxy) } else { @() }
+    $curlArgs = @('-sS') + $proxyArgs + @('-A', $userAgent, '-X', $Method, '-H', "Authorization: Bearer $Token",
         '-o', $out, '-w', '%{http_code}', "$api$Path")
 
     if ($BodyFile) { $curlArgs += @('--data-binary', "@$BodyFile") }
