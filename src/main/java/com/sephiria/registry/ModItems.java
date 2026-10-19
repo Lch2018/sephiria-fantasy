@@ -53,6 +53,7 @@ import com.sephiria.artifact.DiceItem;
 import com.sephiria.artifact.ShieldTextbookItem;
 import com.sephiria.artifact.SwordTextbookItem;
 import com.sephiria.artifact.BookItem;
+import com.sephiria.artifact.SixLeafCloverItem;
 import com.sephiria.artifact.WindScoreItem;
 import com.sephiria.artifact.EnchantCoinItem;
 import com.sephiria.artifact.GoldenCloakItem;
@@ -675,6 +676,11 @@ public final class ModItems {
 	/** 「书」（稀有，无连击）：【唯一】铁砧里能合入火焰附加与抢夺（书 + 附魔书，等级相加）。 */
 	public static final Item BOOK = register(key("book"),
 			p -> new BookItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 六叶草（影子，传说）：【唯一】闪避 / 幸运值 / 暴击几率 / 无视防御伤害。 */
+	public static final Item SIX_LEAF_CLOVER = register(key("six_leaf_clover"),
+			p -> new SixLeafCloverItem(p),
 			new Item.Properties().stacksTo(1));
 
 	/**

@@ -401,6 +401,11 @@ public final class ArtifactEffects {
 		return sumAffix(player, SephiriaArtifact::fireElementBonus);
 	}
 
+	/** 神器给的「幸运值」加成总和（点）：影响稀有及以上物品的掉落概率（商店 / 宝箱 / 抽卡）。 */
+	public static double luckBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::luckBonus);
+	}
+
 	/** 神器给的「最大生命值」加成总和（点）：StatAttributes 挂成原版属性修饰符。 */
 	public static double maxHpBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::maxHpBonus);

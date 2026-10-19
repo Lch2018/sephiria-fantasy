@@ -16,7 +16,11 @@
 #      Not nearest-neighbour: at a 5x reduction the source's 2px grid cannot survive and nearest
 #      gives uneven blocks and stair-step aliasing on the block's edges.
 #
-# Artwork history (all in tools/artifact-ref/mod-icon/): rabbit_grass_block.png = the current
+# 2026-10-19: the user supplied a new finished icon (96x96 pixel art, square) - it replaced the
+# rabbit-on-grass artwork and is copied verbatim as well.
+#
+# Artwork history (all in tools/artifact-ref/mod-icon/): icon_20261019.png = the current artwork;
+# rabbit_grass_block.png = the previous
 # transparent artwork; _v2.png = the same art with the #7092BE plate; _v1.png = the earlier 1280
 # orange rabbit on cream.
 #
@@ -45,7 +49,7 @@ Add-Type -AssemblyName System.Drawing
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
-$source = Join-Path $root 'tools/artifact-ref/mod-icon/rabbit_grass_block.png'
+$source = Join-Path $root 'tools/artifact-ref/mod-icon/icon_20261019.png'
 $modIcon = Join-Path $root 'src/main/resources/assets/sephiria_fantasy/icon.png'
 $modrinthIcon = Join-Path $root 'tools/modrinth/icon.png'
 $previewDir = Join-Path $root '.preview'

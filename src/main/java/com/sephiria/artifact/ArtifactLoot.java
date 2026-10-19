@@ -70,6 +70,38 @@ public final class ArtifactLoot {
 		/** 药水（商店的两个药水格）：档位份数 200/10/5/1，白药水常见、红的极稀有。 */
 		public static final Weights POTION = new Weights(200, 10, 5, 1, 1, 1);
 
+		/**
+		 * 按幸运值调整过的这一份权重：稀有及以上（稀有 / 传说 / 羁绊 / 永恒）的概率乘 (1 + y%)，
+		 * 多出来的那一份从普通 + 高级里按原比例扣——两档之间的比例不变，两边的和始终是 1。
+		 *
+		 * <p>y 由 {@link ArtifactLoot#luckPercent} 算（用户 2026-10-18 给的曲线）。权重是相对值，
+		 * 所以这里只做缩放，绝对大小不影响掷档。
+		 */
+		public Weights withLuck(double luck) {
+			double bonus = luckPercent(luck);
+
+			if (bonus <= 0.0D) {
+				return this;
+			}
+
+			double high = this.rare + this.legendary + this.bond + this.eternal;
+			double low = this.common + this.advanced;
+			double total = low + high;
+
+			if (total <= 0.0D || high <= 0.0D || low <= 0.0D) {
+				return this;
+			}
+
+			double highShare = high / total;
+			double newHighShare = Math.min(1.0D, highShare * (1.0D + bonus / 100.0D));
+			double highScale = newHighShare / highShare;
+			double lowScale = (1.0D - newHighShare) / (low / total);
+
+			return new Weights(this.common * lowScale, this.advanced * lowScale,
+					this.rare * highScale, this.legendary * highScale, this.bond * highScale,
+					this.eternal * highScale);
+		}
+
 		double weightOf(ArtifactRarity rarity) {
 			return switch (rarity) {
 				case COMMON -> this.common;
@@ -108,8 +140,31 @@ public final class ArtifactLoot {
 	 * （第一次启动会自动生成默认文件），键是 {@code chest / shop / gacha / potion}，
 	 * 每档的数字就是「抽多了各品质开出的数量比」；缺的档回退到内置默认，改完重启服务端生效。
 	 */
+	/**
+	 * 幸运值换算成「稀有及以上物品出现概率」的加成（%）：{@code y = 50·(1 − e^(−0.0601x))}
+	 * （用户 2026-10-18 给的曲线：x=39 → y≈45.2%，收敛到 +50%）。
+	 *
+	 * <p>掷档时用它把稀有及以上的那份概率整体放大（见 {@link Weights#withLuck}）——
+	 * 商店 / 宝箱 / 抽卡三处都吃，只有药水那套表不吃（它跟神器/石板不是一回事）。
+	 */
+	public static double luckPercent(double luck) {
+		return luck <= 0.0D ? 0.0D
+				: com.sephiria.stats.PlayerStats.LUCK_CAP
+						* (1.0D - Math.exp(-com.sephiria.stats.PlayerStats.LUCK_SCALE * luck));
+	}
+
 	public static Weights weightsFor(WeightsKind kind) {
 		return overrides.getOrDefault(kind, BUILTIN.get(kind));
+	}
+
+	/**
+	 * 同上，但按玩家的幸运值调整过（{@code luck} = 幸运值点数，0 = 不调）。
+	 *
+	 * <p>掷品质的地方都该走这一条重载——商店货架 / 宝箱奖励 / 抽卡都传玩家的
+	 * {@code PlayerStats.luckTotal}。
+	 */
+	public static Weights weightsFor(WeightsKind kind, double luck) {
+		return weightsFor(kind).withLuck(luck);
 	}
 
 	/** 概率覆盖的入口注册：服务器每次启动（重新）读一遍覆盖文件，改完 JSON 重启即生效。 */
@@ -277,7 +332,7 @@ public final class ArtifactLoot {
 				ModItems.ETERNAL_ECLIPSE,
 				ModItems.EXORCISM_SCABBARD, ModItems.BLIZZARD_HAMMER, ModItems.MAGIC_CONCH,
 				ModItems.ICE_WINGS, ModItems.FROZEN_HEART, ModItems.VOLSPA, ModItems.ICE_BOW,
-				ModItems.BOOK);
+				ModItems.BOOK, ModItems.SIX_LEAF_CLOVER);
 	}
 
 	private static List<Item> slates() {

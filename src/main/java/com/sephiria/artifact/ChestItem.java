@@ -101,17 +101,20 @@ public class ChestItem extends Item {
 	 * 这一箱的奖励：已经抽过就直接返回存着的那批，没抽过才抽并写回物品。
 	 *
 	 * <p>写进物品组件而不是每次开界面重抽，是为了「不能关掉再打开刷奖池」。
+	 *
+	 * @param luck 玩家的幸运值（点数）：稀有及以上的概率按曲线放大，见 {@link ArtifactLoot#luckPercent}
 	 */
-	public static List<ItemStack> rewardsOf(ItemStack chest, RandomSource random, Kind kind) {
+	public static List<ItemStack> rewardsOf(ItemStack chest, RandomSource random, Kind kind, double luck) {
 		List<ItemStack> stored = chest.get(ROLLED);
 
 		if (stored != null) {
 			return stored;
 		}
 
+		// 幸运值：稀有及以上的概率按曲线放大（用户 2026-10-18 的「幸运值」口径）
 		List<ItemStack> rolled = List.copyOf(ArtifactLoot.rollMixed(random,
 				Math.min(REWARDS, ArtifactLoot.MAX_ROLL), kind.slatePercent(),
-				ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.CHEST)));
+				ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.CHEST, luck)));
 		chest.set(ROLLED, rolled);
 		return rolled;
 	}

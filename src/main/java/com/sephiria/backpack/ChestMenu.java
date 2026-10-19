@@ -83,7 +83,8 @@ public class ChestMenu extends AbstractContainerMenu {
 		ChestItem.Kind kind = held.getItem() instanceof ChestItem chest ? chest.kind() : ChestItem.Kind.ARTIFACT;
 		Container rewards = new SimpleContainer(ChestItem.REWARDS);
 
-		java.util.List<ItemStack> rolled = ChestItem.rewardsOf(held, player.getRandom(), kind);
+		java.util.List<ItemStack> rolled = ChestItem.rewardsOf(held, player.getRandom(), kind,
+				com.sephiria.stats.PlayerStats.luckTotal(player));
 
 		for (int index = 0; index < rolled.size(); index++) {
 			rewards.setItem(index, rolled.get(index));

@@ -7,6 +7,7 @@ import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.registry.ModItems;
 import com.sephiria.slate.SlateItem;
+import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -232,9 +233,10 @@ public final class WishPool {
 	 *
 	 * <p>同一批里允许重复（这是抽卡，也是锚定能刷同一件的意义所在）。
 	 */
-	public static ItemStack drawOne(RandomSource random, boolean slatePool, Item anchor) {
+	public static ItemStack drawOne(RandomSource random, boolean slatePool, Item anchor, double luck) {
 		List<Item> pool = poolOf(slatePool);
-		ArtifactRarity rarity = ArtifactLoot.rollRarity(random, pool, ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.GACHA));
+		// 幸运值：稀有及以上的概率按曲线放大（用户 2026-10-18 的「幸运值」口径）
+		ArtifactRarity rarity = ArtifactLoot.rollRarity(random, pool, ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.GACHA, luck));
 
 		if (rarity == null) {
 			return ItemStack.EMPTY;
@@ -265,7 +267,7 @@ public final class WishPool {
 		int gained = 0;
 
 		for (int index = 0; index < count; index++) {
-			ItemStack stack = drawOne(random, slatePool, anchor);
+			ItemStack stack = drawOne(random, slatePool, anchor, PlayerStats.luckTotal(player));
 
 			if (stack.isEmpty()) {
 				continue;

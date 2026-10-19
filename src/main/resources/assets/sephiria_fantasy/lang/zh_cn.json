@@ -308,6 +308,7 @@
     "artifact.sephiria_fantasy.affix.weapon_crit_chance":  "- 武器攻击的暴击几率 +%s%%",
     "artifact.sephiria_fantasy.affix.crit_chance":  "- 暴击几率 +%s%%",
     "artifact.sephiria_fantasy.affix.dodge":  "- 闪避 +%s",
+    "artifact.sephiria_fantasy.affix.luck":  "- 幸运值 +%s",
     "artifact.sephiria_fantasy.affix.dodge_restore":  "- 闪避触发时恢复 %s 次冲刺",
     "artifact.sephiria_fantasy.affix.crit_damage":  "- 暴击伤害 +%s%%",
     "artifact.sephiria_fantasy.affix.crit_splash":  "- 暴击时对周围敌人造成相当于最高属性值 %s%% 的伤害（范围 300）",
@@ -420,6 +421,8 @@
     "screen.sephiria_fantasy.stats.dodge_formula":  "闪避率：%s%%（0.8 × (1 − e^(−%s / 43.28))）",
     "screen.sephiria_fantasy.stats.lifesteal":  "HP 偷取：%s",
     "screen.sephiria_fantasy.stats.negotiation":  "谈判力：%s",
+    "screen.sephiria_fantasy.stats.luck":  "幸运值：%s",
+    "screen.sephiria_fantasy.stats.luck_bonus":  "稀有及以上物品的出现概率增加 %s",
     "screen.sephiria_fantasy.stats.shop_discount":  "商店折扣：%s",
     "screen.sephiria_fantasy.stats.leaf_gain":  "叶子获得量：%s",
     "screen.sephiria_fantasy.stats.xp_drop":  "经验掉落：%s",
@@ -574,6 +577,8 @@
     "item.sephiria_fantasy.ice_bow":  "冰弓",
     "item.sephiria_fantasy.book":  "书",
     "artifact.sephiria_fantasy.book.flavor":  "这是一本兼容性很好的书",
+    "item.sephiria_fantasy.six_leaf_clover":  "六叶草",
+    "artifact.sephiria_fantasy.six_leaf_clover.flavor":  "据说是大铃兰花下众多三叶草中的一个特别的。",
     "artifact.sephiria_fantasy.affix.book_merge":  "- 可合入火焰附加与抢夺（铁砧：书 + 附魔书，等级相加、不超过原版上限）",
     "artifact.sephiria_fantasy.affix.book_fire_aspect":  "- 火焰附加 %s：神器与连击的伤害点燃目标 %s 秒",
     "artifact.sephiria_fantasy.affix.book_looting":  "- 抢夺 %s：掉落结算时与原版抢夺相加",
@@ -627,5 +632,8 @@
     "potion.sephiria_fantasy.apple_juice.flavor":  "",
     "potion.sephiria_fantasy.trappist_sacred.flavor":  "",
     "potion.sephiria_fantasy.big_dice_potion.flavor":  "",
-    "potion.sephiria_fantasy.vampire_lord_oath.flavor":  ""
+    "potion.sephiria_fantasy.vampire_lord_oath.flavor":  "",
+    "modmenu.nameTranslation.sephiria_fantasy":  "赛菲莉娅幻想",
+    "modmenu.summaryTranslation.sephiria_fantasy":  "把《SEPHIRIA（赛菲莉娅）》的武器系统带进 Minecraft",
+    "modmenu.descriptionTranslation.sephiria_fantasy":  "把《SEPHIRIA（赛菲莉娅）》的武器系统带进 Minecraft。非官方同人模组，大量使用 AI 生成代码，仅供学习交流，禁止商业行为；完整条款见仓库 LICENSE。"
 }

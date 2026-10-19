@@ -31,30 +31,34 @@ function Copy-Tree {
 
 foreach ($rel in @('src', 'models', 'tools')) { Copy-Tree -Rel $rel }
 
-$jar = Join-Path $root 'build\libs\sephiria-fantasy-0.1.0.jar'
+# the jar name follows gradle.properties, so read it instead of pinning a version here
+# (this used to say 0.1.0, so every snapshot silently shipped without a jar)
+$version = 'unknown'
+$gradleProps = Join-Path $root 'gradle.properties'
+if (Test-Path $gradleProps) {
+    $line = Select-String -Path $gradleProps -Pattern '^version=' | Select-Object -First 1
+    if ($line) { $version = ($line.Line -split '=', 2)[1].Trim() }
+}
+$jarName = 'sephiria-fantasy-' + $version + '.jar'
+$jar = Join-Path $root ('build\libs\' + $jarName)
 if (Test-Path $jar) {
     New-Item -ItemType Directory -Force -Path (Join-Path $stage 'build') | Out-Null
-    Copy-Item $jar (Join-Path $stage 'build\sephiria-fantasy-0.1.0.jar') -Force
+    Copy-Item $jar (Join-Path $stage ('build\' + $jarName)) -Force
 }
 
-# a short note so a snapshot is self-describing months later
+# a short note so a snapshot is self-describing months later.
+# Interpolated strings, not 'x' + (command): inside @() PowerShell 5.1 splits that into two
+# array elements, which quietly put every value on a line of its own.
 $note = @(
     'SEPHIRIA mod snapshot',
-    'taken   : ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'),
-    'project : ' + $root,
+    "taken   : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')",
+    "project : $root",
+    "version : $version",
     '',
     'contents: src/ (mod sources), models/ (Blockbench authoring copies),',
-    '          tools/ (build + import scripts), build/sephiria-fantasy-0.1.0.jar',
+    "          tools/ (build + import scripts), build/$jarName",
     '',
-    'katana state at this snapshot:',
-    '  - model/animation imported from the Blockbench GeckoLib project (katana.bbmodel)',
-    '  - texture path returns sephiria_fantasy:textures/item/katana.png (full file path, GeckoLib requirement)',
-    '  - controller: state handler loops animation.idle_unsheathed; switch_to_sheathed/',
-    '    switch_to_unsheathed are triggerable animations (no receiveTriggeredAnimations!)',
-    '  - render pose rotated +90 deg about the model Y axis so the blade edge faces forward',
-    '  - scabbard hidden by the idle_unsheathed animation scaling it to 0',
-    '',
-    'deploy target: D:\PCL\.minecraft\versions\26.2-Fabric 0.19.5\mods\sephiria-fantasy-0.1.0.jar'
+    "deploy target: D:\PCL\.minecraft\versions\26.3-Fabric 0.19.5\mods\$jarName"
 )
 [System.IO.File]::WriteAllLines((Join-Path $stage 'SNAPSHOT.txt'), $note, (New-Object System.Text.UTF8Encoding($false)))
 

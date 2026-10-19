@@ -12,6 +12,7 @@ import com.sephiria.stats.PlayerStats;
 public final class ClientStats {
 	private static double mp = PlayerStats.DEFAULT_MP;
 	private static double maxMp = PlayerStats.DEFAULT_MP;
+	private static double luck = PlayerStats.DEFAULT_LUCK;
 	private static double mpRegen = PlayerStats.DEFAULT_MP_REGEN;
 	private static double physical = PlayerStats.DEFAULT_STRENGTH;
 	private static double fire = PlayerStats.DEFAULT_STRENGTH;
@@ -47,6 +48,7 @@ public final class ClientStats {
 	public static void accept(StatsSyncPayload payload) {
 		mp = payload.mp();
 		maxMp = payload.maxMp();
+		luck = payload.luck();
 		mpRegen = payload.mpRegen();
 		physical = payload.physical();
 		fire = payload.fire();
@@ -196,6 +198,11 @@ public final class ClientStats {
 	/** 最大蓝量（点）：被剑耳环削过的话 HUD 与技能蓝耗校验都用它。 */
 	public static double maxMp() {
 		return maxMp;
+	}
+
+	/** 幸运值（点）：属性页那一行显示点数，悬停时按公式换算成「稀有及以上 +y%」。 */
+	public static double luck() {
+		return luck;
 	}
 
 	public static double mpRegen() {

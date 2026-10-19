@@ -116,6 +116,7 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.VOLSPA);
 						output.accept(ModItems.ICE_BOW);
 						output.accept(ModItems.BOOK);
+						output.accept(ModItems.SIX_LEAF_CLOVER);
 					})
 					.build());
 

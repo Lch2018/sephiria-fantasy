@@ -7,6 +7,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /**
@@ -25,6 +27,8 @@ public final class StatAttributes {
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_max_hp");
 	/** 检查间隔（tick）：属性变化后最多等这么久就会重算。 */
 	private static final int CHECK_INTERVAL = 4;
+	/** 原版「幸运」buff 每次续多久（刻）：每 4 刻对账一次，时长比它大就不会闪断。 */
+	private static final int LUCK_BUFF_TICKS = 60;
 
 	private static int ticker;
 
@@ -40,6 +44,7 @@ public final class StatAttributes {
 	public static void refresh(ServerPlayer player) {
 		applyMoveSpeed(player);
 		applyMaxHp(player);
+		applyLuck(player);
 	}
 
 	private static void tick(MinecraftServer server) {
@@ -50,7 +55,35 @@ public final class StatAttributes {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			applyMoveSpeed(player);
 			applyMaxHp(player);
+			applyLuck(player);
 		}
+	}
+
+	/**
+	 * 幸运值换原版「幸运」buff：每满 {@link PlayerStats#LUCK_PER_VANILLA_LEVEL} 点一级
+	 * （6..11 → 幸运 I、12..17 → 幸运 II……），掉到 6 点以下就把 buff 摘掉。
+	 *
+	 * <p>时长 {@value #LUCK_BUFF_TICKS} 刻、每 {@value #CHECK_INTERVAL} 刻续一次（时间还够就不重发，
+	 * 免得每秒发好几遍效果包）；粒子关掉（幸运本来也没有粒子），图标留着——它是实打实挂在身上的 buff。
+	 */
+	private static void applyLuck(ServerPlayer player) {
+		int level = (int) Math.floor(PlayerStats.luckTotal(player) / PlayerStats.LUCK_PER_VANILLA_LEVEL);
+		MobEffectInstance current = player.getEffect(MobEffects.LUCK);
+
+		if (level <= 0) {
+			if (current != null) {
+				player.removeEffect(MobEffects.LUCK);
+			}
+
+			return;
+		}
+
+		if (current != null && current.getAmplifier() == level - 1
+				&& current.getDuration() > LUCK_BUFF_TICKS / 2) {
+			return;
+		}
+
+		player.addEffect(new MobEffectInstance(MobEffects.LUCK, LUCK_BUFF_TICKS, level - 1, false, false, true));
 	}
 
 	private static void applyMoveSpeed(ServerPlayer player) {

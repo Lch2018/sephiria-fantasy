@@ -157,6 +157,17 @@ public interface SephiriaArtifact extends Quality {
 		return 0.0D;
 	}
 
+	/**
+	 * 该等级给的「幸运值」加成（点）。
+	 *
+	 * <p>幸运值只影响<b>稀有及以上</b>物品的掉落概率（商店货架 / 宝箱奖励 / 抽卡），
+	 * 换算见 {@code artifact.ArtifactLoot#luckPercent}；面板里是属性页「幸运值」那一行，
+	 * 悬停显示换算出的 +y%。
+	 */
+	default double luckBonus(int level) {
+		return 0.0D;
+	}
+
 	/** 该等级给的叶子获得量加成（百分点，100 = 100%）。 */
 	default double leafGainPercentBonus(int level) {
 		return 0.0D;

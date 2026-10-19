@@ -1,29 +1,20 @@
-内容版：新神器「书」（铁砧里合附魔）、12 块新石板（石板说明改成自动生成）、四种新药水，以及一批经济与概率调整（石板宝箱 −30%、商店 / 升级宝箱的神器·石板比例、挖矿掉石板、概率可配置）。
+内容版：许愿池与根之退换成**全新的方块模型**与贴图；新的模组图标；模组名 / 简介在英文界面下会显示英文；新属性「**幸运值**」与第一件给它的神器「**六叶草**」。
 
 ## 新增
 
-- **新神器「书」**（稀有 · 【唯一】 · 无连击）：铁砧里「书 + 附魔书」可以把**火焰附加 / 抢夺**合上去，等级相加、但**不超过原版上限**（火焰附加 II、抢夺 III；到顶之后那一手不出结果、也不扣经验）。待在赛菲莉娅背包里时，火焰附加让**神器 / 连击 / 减益**打出的伤害点燃目标（武器普攻不算），抢夺并进掉落结算。⚠ 图标目前是程序生成的临时贴图。
-- **12 块新石板**：断绝 / 楔子 / 防御招式 / 干燥 / 剥削 / 团结 / 和平 / 白日梦 / 反抗 / 接合 / **报恩（石板最高品质·永恒）** / 到来。石板的「说明」现在**自动生成**：有加等级就写「提高神器等级」（绿）、有减等级写「降低神器等级」（红）、不可旋转写「不可旋转」（红）。
-- **四种新药水**：**索莱拉的偶然**（黄：随机一种连击 +1 级，永久；喝下时动作栏会报是哪一种连击）、**梅尔岑之烟 / 阿凡提努斯的水晶 / 高泽之晨**（蓝：火 / 冰 / 电属性伤害 +2，永久）。药水提示框现在也会显示风味文本。
-- **挖矿掉石板**：不带精准采集时，铜 / 铁 / 金 / 钻石 / 绿宝石矿按品质加权掉石板。
-- **品质概率可配置**：整合包 / 服主可用 `config/sephiria-fantasy-loot-weights.json` 覆盖四种来源（宝箱 / 商店 / 抽卡 / 药水）的品质概率。
-
-## 调整
-
-- **宝箱价格**：石板宝箱 750 → **525**（−30%）；神器宝箱与升级宝箱仍是 750。
-- **商店货架**：改成**先掷神器 / 石板（石板 25%）再掷品质**。
-- **升级宝箱**：改成**石板 40% / 神器 60%**。
-- **石板价格**：175 / 350 / 525 / 700 / 1050（神器那套的 7 折）。
-- **抽卡愿力**：神器与石板各一套（神器 2/4/6/8/10、石板 3/6/9/12/15）。
-- **流浪商人**出生延迟 24000 → 4800 刻。
-- 品质概率按来源分开（宝箱 47/47/3.32/0.917/1.608、商店 20/20/10/3/5、抽卡 30/30/10/3/5、药水 200/10/5/1）；权重的含义改成「这一档实际开出的份数」，与这一档里有几件东西无关。
+- **许愿池新模型**（Blockbench 手工建模，30 个元素）：石台与四根角柱、池底水面、键帽状的喷口与四面漫下来的水帘、池面的泡沫环，以及两片十字交叉的四叶草（原版 `cross` 的做法，只对两片平面做 alpha 镂空）；石材 / 水 / 水流 / 泡沫 / 四叶草贴图全部重画。
+- **根之退新模型**（26 个元素）：矮树桩底座（根系在底部铺开、正面的根指托住书底）、**像讲台一样斜立的书**（白书页包着封面、封面上有浅色文字块）、书后一根横向根梁与两根斜向上的根枝。石材直接引用原版 `stone` / `cobblestone` / `smooth_stone`，书页与封面自绘。
+- **模组图标换新**：换成用户新画的像素图标（96×96）。
+- **模组名 / 简介 / 描述按语言显示**：英文界面下模组列表显示 **Sephiria Fantasy**（此前无论什么语言都是中文名）。
+- **新属性「幸运值」**：提高**稀有及以上**（稀有 / 传说 / 羁绊 / 永恒）物品的出现概率——**商店货架、宝箱奖励、抽卡**三处都吃。换算 `y = 50×(1−e^(−0.0601x))`（x=39 → y≈45.2%）：稀有及以上的概率乘 (1+0.01y)，多出来的那份从普通 + 高级里按原比例扣。属性页多一行「幸运值」，**悬停显示「稀有及以上物品的出现概率增加 y%」（y% 绿色）**；幸运值每满 6 点还会获得原版「幸运」buff I / II / III……（掉到 6 点以下自动消失）。
+- **新神器「六叶草」**（影子 · 传说 · 【唯一】 · 4 档）：闪避 +3/6/9/12、**幸运值 +3/6/9/12**、暴击几率 +2/4/6/8%、无视防御伤害 +1/1/2/2——幸运值的第一个来源。掉落池 75 → **76 件**。
 
 ## 已知问题 / 未完成
 
-- 「书」的图标是程序生成的临时贴图，后续会替换。
-- 「反抗」「报恩」这类大型图案石板：赛菲莉娅背包只有 6 列宽，超出背包的格子**不会生效**（图案会被裁掉）。
+- 许愿池与根之退的新模型是刚完成的，比例与贴图可能还会调整。
+- 「幸运值」的掉落加成已按公式实现，具体手感仍待实测（六叶草可以升到 3 级 = 12 点幸运值来试）。
 - 石板升级、锻造、同伴系统尚未实现。
-- 这一版的内容（书 / 石板 / 药水 / 经济调整）是实装后直接发布的，尚未充分实测，数值仍会调整。
+- 部分文案与图标仍会变动。
 
 ## 运行环境
 
@@ -37,32 +28,23 @@ Minecraft 26.3 + Fabric Loader 0.19.5 + Fabric API 0.161.0+26.3 + GeckoLib（必
 
 ## English
 
-A content release: the new "Book" artifact (enchant merging at the anvil), 12 new slates with auto-generated descriptions, four new potions, plus an economy and probability pass (slate chest −30%, artifact/slate splits for the shop and upgrade chests, slates from mining, configurable rarity weights).
+A content release: brand-new block models and textures for the **Wishing Pool** and **Root Retreat**, a new mod icon, localized mod metadata (the mod list now shows "Sephiria Fantasy" in English), and a new **Luck** attribute with its first artifact, the **Six-Leaf Clover**.
 
 ### New
 
-- **New artifact "Book"** (Rare, 【Unique】, no combo): at an anvil, "Book + enchanted book" merges **Fire Aspect / Looting** into it — the levels add up but **never exceed the vanilla caps** (Fire Aspect II, Looting III; once at the cap the anvil shows no result and charges nothing). While it sits in the Sephiria Backpack, Fire Aspect sets targets on fire from **artifact / combo / debuff** damage (plain weapon attacks are excluded), and Looting is added to drop rolls. ⚠ Its icon is a generated placeholder for now.
-- **12 new slates**: Severance / Wedge / Defense / Drought / Exploitation / Unity / Peace / Daydream / Rebellion / Junction / **Gratitude (Eternal, the top slate rarity)** / Arrival. A slate's description is now **generated**: "Raises artifact level" (green) when it boosts slots, "Lowers artifact level" (red) when it reduces them, and "Cannot rotate" (red) when it is fixed.
-- **Four new potions**: **Solera's Chance** (Rare: a random combo gains +1 level, permanent; the action bar names which one), **Meltzen's Smoke / Avantinus' Crystal / Morning of Gaoze** (Advanced: Fire / Ice / Lightning Damage +2, permanent). Potion tooltips now also show flavor text.
-- **Slates from mining**: copper / iron / gold / diamond / emerald ore drop slates by rarity (without Silk Touch).
-- **Configurable rarity weights**: modpacks and server owners can override the four sources (chest / shop / gacha / potion) in `config/sephiria-fantasy-loot-weights.json`.
-
-### Changes
-
-- **Chest prices**: the Slate Chest is 750 → **525** (−30%); the Artifact Chest and Upgrade Chest stay at 750.
-- **Shop stock**: now rolls **artifact vs slate first (25% slates)**, then the rarity.
-- **Upgrade Chest**: now **40% slates / 60% artifacts**.
-- **Slate prices**: 175 / 350 / 525 / 700 / 1050 (70% of the artifact table).
-- **Wish power**: separate tables for artifacts (2/4/6/8/10) and slates (3/6/9/12/15).
-- **Wandering trader** spawn delay 24000 → 4800 ticks.
-- Rarity weights are now per source (chest 47/47/3.32/0.917/1.608, shop 20/20/10/3/5, gacha 30/30/10/3/5, potions 200/10/5/1); a weight now means the share of items rolled at that rarity, independent of how many items the tier contains.
+- **New Wishing Pool model** (hand-built in Blockbench, 30 elements): a stone plinth with four corner pillars, water at the bottom of the pool, a keycap-shaped spout with four water curtains spilling down and a foam ring on the surface, plus a cross-shaped four-leaf clover (the vanilla `cross` trick, alpha-cut from two planes); all stone / water / waterfall / foam / clover textures were redrawn.
+- **New Root Retreat model** (26 elements): a low tree-stump base with roots spreading out and front roots holding up the book; the **book leans back like a lectern** (white pages around a cover with a pale text block); behind it a horizontal root beam and two branches rising diagonally. The stone textures reuse vanilla `stone` / `cobblestone` / `smooth_stone`; the pages and cover are hand-drawn.
+- **New mod icon**: the user's new pixel-art icon (96×96).
+- **Localized mod name / summary / description**: the in-game mod list now shows **Sephiria Fantasy** in English (it previously showed the Chinese name in every language).
+- **New attribute "Luck"**: raises the chance of **Rare or better** (Rare / Legendary / Bond / Eternal) items from **shop stock, chest rewards and the Wishing Pool gacha**. Conversion `y = 50×(1−e^(−0.0601x))` (x=39 → y≈45.2%): the Rare-or-better share is multiplied by (1+0.01y) and the extra share is taken proportionally from Common + Advanced. The Attributes screen has a new "Luck" row; **hovering shows "Chance of Rare or better items increases by y%" with y% in green**. Every 6 points also grants the vanilla **Luck** effect at level I / II / III… (removed when it drops below 6).
+- **New artifact "Six-Leaf Clover"** (Shadow · Legendary · 【Unique】 · 4 levels): Dodge +3/6/9/12, **Luck +3/6/9/12**, Crit chance +2/4/6/8%, damage that ignores defence +1/1/2/2 — the first source of Luck. The artifact pool grows from 75 to **76** items.
 
 ### Known issues / not done yet
 
-- The Book's icon is a generated placeholder and will be replaced.
-- Large-pattern slates (Rebellion, Gratitude): the Sephiria Backpack is only 6 columns wide, so cells outside it do **not** apply (the pattern is clipped).
+- The new Wishing Pool and Root Retreat models were finished just now; proportions and textures may still be adjusted.
+- The Luck drop bonus follows the formula, but its feel still needs playtesting (levelling the Six-Leaf Clover to 3 gives 12 Luck).
 - Slate upgrades, forging and the companion system are not implemented yet.
-- This version's content (Book / slates / potions / economy) was released right after it was implemented; it has not been play-tested thoroughly and the numbers keep being tuned.
+- Some texts and icons will still change.
 
 ### Requirements
 

@@ -216,7 +216,7 @@ public class ShopMenu extends AbstractContainerMenu {
 
 		this.dice.getItem(0).shrink(1);
 		this.dice.setChanged();
-		shopStock.refresh(player.getRandom());
+		shopStock.refresh(player.getRandom(), PlayerStats.luckTotal(player));
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.NOTE_BLOCK_BELL, SoundSource.PLAYERS, 0.7F, 0.9F);
 		broadcastChanges();

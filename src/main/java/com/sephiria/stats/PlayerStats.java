@@ -70,6 +70,19 @@ public final class PlayerStats {
 	public static final double VILLAGE_HERO_NEGOTIATION = 20.0D;
 	/** 多少点经验换一个升级宝箱（2026-10-16 用户从 1000 降到 500）。 */
 	public static final double EXPERIENCE_PER_CHEST = 500.0D;
+	/**
+	 * 幸运值（点）：默认 0，只影响「稀有及以上」物品的掉落概率（商店 / 宝箱 / 抽卡）。
+	 *
+	 * <p>换算曲线（用户 2026-10-18 给的）：{@code y = 50·(1 − e^(−0.0601x))}——x=39 时 y≈45.2%，
+	 * 也就是稀有及以上的概率乘 (1 + y%)，多出来的那一份从普通 + 高级里按原比例扣，
+	 * 曲线收敛到 +50%。换算与掷档在 {@code artifact.ArtifactLoot} 里（{@code luckPercent} /
+     * {@code Weights#withLuck}），面板显示在属性页「幸运值」那一行的悬停里。
+	 */
+	public static final double LUCK_CAP = 50.0D;
+	public static final double LUCK_SCALE = 0.0601D;
+	public static final double DEFAULT_LUCK = 0.0D;
+	/** 幸运值每满这么多点就获得一级原版「幸运」buff（6 → 幸运 I、12 → 幸运 II……）。 */
+	public static final double LUCK_PER_VANILLA_LEVEL = 6.0D;
 
 	/**
 	 * 后加的那几项属性单独成一组（战斗那几项 + 药水给的元素强度与连击加成）。
@@ -78,16 +91,16 @@ public final class PlayerStats {
 	 * 所以新属性打包成一个可选的子记录——旧存档没有这一组时整组取默认值。
 	 *
 	 * <p>⚠ 这一组的 JSON 键仍叫 {@code combat}（老存档的字段名不能改），但内容是「后加属性的
-	 * 杂物箱」：2026-10-18 往里面加了药水那三项元素强度与连击加成。
+	 * 杂物箱」：2026-10-18 往里面加了药水那三项元素强度与连击加成，2026-10-19 又加了幸运值。
 	 */
 	private record Combat(double normalAttackDamage, double critChance, double critDamage, double ignoreDefense,
 			double moveSpeed, double dodge, double negotiation, double leafGainPercent, double xpDropPercent,
 			double potionFire, double potionIce, double potionLightning,
-			java.util.Map<String, Integer> comboBonus) {
+			java.util.Map<String, Integer> comboBonus, double luck) {
 		static final Combat DEFAULT = new Combat(DEFAULT_NORMAL_ATTACK_DAMAGE, DEFAULT_CRIT_CHANCE,
 				DEFAULT_CRIT_DAMAGE, 0.0D, DEFAULT_MOVE_SPEED, 0.0D,
 				DEFAULT_NEGOTIATION, DEFAULT_LEAF_GAIN, DEFAULT_XP_DROP,
-				0.0D, 0.0D, 0.0D, java.util.Map.of());
+				0.0D, 0.0D, 0.0D, java.util.Map.of(), DEFAULT_LUCK);
 
 		static final Codec<Combat> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.DOUBLE.optionalFieldOf("normal_attack_damage", DEFAULT_NORMAL_ATTACK_DAMAGE)
@@ -107,7 +120,8 @@ public final class PlayerStats {
 				Codec.DOUBLE.optionalFieldOf("potion_ice", 0.0D).forGetter(Combat::potionIce),
 				Codec.DOUBLE.optionalFieldOf("potion_lightning", 0.0D).forGetter(Combat::potionLightning),
 				Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("combo_bonus", java.util.Map.of())
-						.forGetter(Combat::comboBonus)
+						.forGetter(Combat::comboBonus),
+				Codec.DOUBLE.optionalFieldOf("luck", DEFAULT_LUCK).forGetter(Combat::luck)
 		).apply(instance, Combat::new));
 	}
 
@@ -149,7 +163,7 @@ public final class PlayerStats {
 							values.ignoreDefense, values.moveSpeed, values.dodge,
 							values.negotiation, values.leafGainPercent, values.xpDropPercent,
 							values.potionFire, values.potionIce, values.potionLightning,
-							java.util.Map.copyOf(values.comboBonus)));
+							java.util.Map.copyOf(values.comboBonus), values.luck));
 		}
 
 		/** 读档：把存档里的数值填进一份新的 {@link Values}。 */
@@ -166,6 +180,7 @@ public final class PlayerStats {
 			values.potionIce = this.combat.potionIce;
 			values.potionLightning = this.combat.potionLightning;
 			values.comboBonus.putAll(this.combat.comboBonus);
+			values.luck = this.combat.luck;
 			values.defense = this.defense;
 			values.lifesteal = this.lifesteal;
 			values.leaves = this.leaves;
@@ -264,7 +279,9 @@ public final class PlayerStats {
 				// 火/冰/电的面板值也进指纹：元素连击换装时（物理不是最高项的话）总物理不变，
 				// 不对账的话面板的元素数值要等下一次 sync 才刷新
 				+ "/" + elementTotal(player, Element.FIRE) + "/" + elementTotal(player, Element.ICE)
-				+ "/" + elementTotal(player, Element.LIGHTNING);
+				+ "/" + elementTotal(player, Element.LIGHTNING)
+				// 幸运值也一样：换装（神器的「幸运值 +N」）后那一行与悬停的 y% 要跟着刷
+				+ "/" + luckTotal(player);
 		}
 
 	/** 玩家退出时清缓存（附件里已经是最新状态，下次进来重新读）。 */
@@ -287,6 +304,8 @@ public final class PlayerStats {
 		public double potionFire = 0.0D;
 		public double potionIce = 0.0D;
 		public double potionLightning = 0.0D;
+		/** 幸运值（点）：见 {@link #LUCK_SCALE}，影响稀有及以上物品的掉落概率。 */
+		public double luck = DEFAULT_LUCK;
 		/**
 		 * 药水「索莱拉的偶然」给的连击加成：连击 id → +几级。
 		 *
@@ -572,6 +591,22 @@ public final class PlayerStats {
 		of(player).comboBonus.merge(combo.id(), amount, Integer::sum);
 	}
 
+	/**
+	 * 幸运值总点数（点）：存档里那一份 + 神器词条（{@link ArtifactEffects#luckBonus}）。
+	 *
+	 * <p>换算成概率的地方在 {@code ArtifactLoot.luckPercent} / {@code Weights#withLuck}；
+	 * 属性页那一行的悬停也用它（客户端拿同步过来的总值现算同一个公式）。
+	 */
+	public static double luckTotal(ServerPlayer player) {
+		return of(player).luck + ArtifactEffects.luckBonus(player);
+	}
+
+	/** 永久 +幸运值（以后给药水 / 事件用；神器走 {@code luckBonus} 词条，不写回存档）。 */
+	public static void addLuck(ServerPlayer player, double amount) {
+		of(player).luck += amount;
+		sync(player);
+	}
+
 	/** 四项强度：物理强度与三种元素强度，「最高元素伤害」只在它们之间挑一个。 */
 	public enum Element {
 		PHYSICAL, FIRE, ICE, LIGHTNING
@@ -830,7 +865,7 @@ public final class PlayerStats {
 				moveSpeedPercentTotal(player) + TimedAttributes.moveSpeedPercent(player),
 				dodgeTotal(player), dodgeRatePercent(player), meleeRangeTotal(player),
 				negotiationTotal(player), shopDiscountPercent(player),
-				leafGainPercentTotal(player), xpDropPercentTotal(player), maxMpTotal(player)));
+				leafGainPercentTotal(player), xpDropPercentTotal(player), maxMpTotal(player), luckTotal(player)));
 	}
 
 	/** 进服时推一次，面板才有初始值（顺带把读出来的那份写回附件）。 */

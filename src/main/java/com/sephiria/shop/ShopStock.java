@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactLoot;
+import com.sephiria.stats.PlayerStats;
 import com.sephiria.potion.SephiriaPotionItem;
 import com.sephiria.registry.ModItems;
 import com.sephiria.util.PlayerItems;
@@ -143,7 +144,7 @@ public final class ShopStock extends SimpleContainer {
 		}
 
 		ShopStock stock = new ShopStock(player, null);
-		stock.refresh(player.getRandom());
+		stock.refresh(player.getRandom(), PlayerStats.luckTotal(player));
 		STOCKS.put(player.getUUID(), stock);
 		return stock;
 	}
@@ -182,11 +183,15 @@ public final class ShopStock extends SimpleContainer {
 		return new Saved(slots, bought);
 	}
 
-	/** 重新刷一批货：商品按品质加权抽（神器 75% / 石板 25%），宝箱固定两种，药水按品质加权抽，购买记录清零。 */
-	public void refresh(RandomSource random) {
+	/**
+	 * 重新刷一批货：商品按品质加权抽（神器 75% / 石板 25%、稀有及以上吃玩家的幸运值），
+	 * 宝箱固定两种，药水按品质加权抽，购买记录清零。
+	 */
+	public void refresh(RandomSource random, double luck) {
 		clearContent();
 
-		List<ItemStack> goods = ArtifactLoot.rollMixed(random, GOOD_SLOTS, SLATE_PERCENT, ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.SHOP));
+		List<ItemStack> goods = ArtifactLoot.rollMixed(random, GOOD_SLOTS, SLATE_PERCENT,
+				ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.SHOP, luck));
 
 		for (int index = 0; index < goods.size(); index++) {
 			setItem(index, goods.get(index));

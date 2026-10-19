@@ -30,6 +30,8 @@ public class StatsScreen extends Screen {
 	private int dodgeRowY;
 	/** 「谈判力」那一行的位置：悬停时显示换算出的商店折扣（折扣不再单独占一行）。 */
 	private int negotiationRowY;
+	/** 「幸运值」那一行的位置：悬停时显示换算出的「稀有及以上 +y%」。 */
+	private int luckRowY;
 	/** 叶子那一行：图标 + 数值，画在最上面。 */
 	private int leafRowY;
 	private int rowsLeft;
@@ -107,6 +109,9 @@ public class StatsScreen extends Screen {
 		// 商店折扣是谈判力换算出来的，单独占一行太浪费——藏进谈判力的悬停里
 		this.negotiationRowY = y += ROW_HEIGHT;
 		row(rightX, this.negotiationRowY, "screen.sephiria_fantasy.stats.negotiation", format(ClientStats.negotiation()));
+		// 幸运值也只显示点数，换算出的「稀有及以上 +y%」藏在悬停里（和商店折扣同一个套路）
+		this.luckRowY = y += ROW_HEIGHT;
+		row(rightX, this.luckRowY, "screen.sephiria_fantasy.stats.luck", format(ClientStats.luck()));
 		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.leaf_gain",
 				format(ClientStats.leafGainPercent()) + "%");
 		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.xp_drop",
@@ -136,7 +141,8 @@ public class StatsScreen extends Screen {
 		// 悬停提示跟着行所在的那一列：物理强度与攻速在左列，闪避与谈判力在右列
 		// （先按行定列再查 x——谈判力在右列，用左列的 x 范围判断会永远判不中）
 		boolean leftRow = inRow(this.physicalRowY, mouseY) || inRow(this.attackSpeedRowY, mouseY);
-		boolean rightRow = inRow(this.dodgeRowY, mouseY) || inRow(this.negotiationRowY, mouseY);
+		boolean rightRow = inRow(this.dodgeRowY, mouseY) || inRow(this.negotiationRowY, mouseY)
+				|| inRow(this.luckRowY, mouseY);
 
 		if (!leftRow && !rightRow) {
 			return;
@@ -157,12 +163,20 @@ public class StatsScreen extends Screen {
 			extractor.text(this.font, Component.translatable("screen.sephiria_fantasy.stats.dodge_formula",
 					format(ClientStats.dodgeRate()), format(ClientStats.dodge())), this.rowsRight, this.dodgeRowY + 10,
 					0xFFDDDDDD);
-		} else {
+		} else if (inRow(this.negotiationRowY, mouseY)) {
 			// 商店折扣 = 70×(1−e^(−谈判力/27.94))：数值与叶子一样用黄色，方便和其它悬停算式区分
 			extractor.text(this.font,
 					Component.translatable("screen.sephiria_fantasy.stats.shop_discount",
 							Component.literal(formatDecimal(ClientStats.shopDiscount()) + "%").withColor(0xFFFFD24A)),
 					this.rowsRight, this.negotiationRowY + 10, 0xFFDDDDDD);
+		} else {
+			// 幸运值 = 50×(1−e^(−0.0601x))——「稀有及以上物品的出现概率增加 y%」，用户要求 y% 是绿的
+			extractor.text(this.font,
+					Component.translatable("screen.sephiria_fantasy.stats.luck_bonus",
+							Component.literal(formatDecimal(
+											com.sephiria.artifact.ArtifactLoot.luckPercent(ClientStats.luck())) + "%")
+									.withColor(0xFF55FF55)),
+					this.rowsRight, this.luckRowY + 10, 0xFFDDDDDD);
 		}
 	}
 

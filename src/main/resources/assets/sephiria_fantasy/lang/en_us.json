@@ -201,6 +201,7 @@
     "artifact.sephiria_fantasy.affix.weapon_crit_chance":  "- Weapon attack crit chance +%s%%",
     "artifact.sephiria_fantasy.affix.crit_chance":  "- Crit chance +%s%%",
     "artifact.sephiria_fantasy.affix.dodge":  "- Dodge +%s",
+    "artifact.sephiria_fantasy.affix.luck":  "- Luck +%s",
     "artifact.sephiria_fantasy.affix.dodge_restore":  "- Restores %s dash charge(s) when you dodge",
     "artifact.sephiria_fantasy.affix.crit_damage":  "- Crit damage +%s%%",
     "artifact.sephiria_fantasy.affix.crit_splash":  "- On crit, deal damage equal to %s%% of your highest stat to nearby enemies (range 300)",
@@ -313,6 +314,8 @@
     "screen.sephiria_fantasy.stats.dodge_formula":  "Dodge rate: %s%% (0.8 x (1 - e^(-%s / 43.28)))",
     "screen.sephiria_fantasy.stats.lifesteal":  "HP Steal: %s",
     "screen.sephiria_fantasy.stats.negotiation":  "Negotiation: %s",
+    "screen.sephiria_fantasy.stats.luck":  "Luck: %s",
+    "screen.sephiria_fantasy.stats.luck_bonus":  "Chance of Rare or better items increases by %s",
     "screen.sephiria_fantasy.stats.shop_discount":  "Shop Discount: %s",
     "screen.sephiria_fantasy.stats.leaf_gain":  "Leaf Gain: %s",
     "screen.sephiria_fantasy.stats.xp_drop":  "XP Drop: %s",
@@ -577,6 +580,8 @@
     "item.sephiria_fantasy.ice_bow":  "Ice Bow",
     "item.sephiria_fantasy.book":  "Book",
     "artifact.sephiria_fantasy.book.flavor":  "This is a very compatible book.",
+    "item.sephiria_fantasy.six_leaf_clover":  "Six-Leaf Clover",
+    "artifact.sephiria_fantasy.six_leaf_clover.flavor":  "They say it is a special one among the many clovers beneath the great lily of the valley.",
     "artifact.sephiria_fantasy.affix.book_merge":  "- Accepts Fire Aspect and Looting (anvil: Book + enchanted book, levels add up, up to the vanilla cap)",
     "artifact.sephiria_fantasy.affix.book_fire_aspect":  "- Fire Aspect %s: artifact and combo damage sets the target on fire for %s s",
     "artifact.sephiria_fantasy.affix.book_looting":  "- Looting %s: added to vanilla Looting in drop rolls",
@@ -630,5 +635,8 @@
     "potion.sephiria_fantasy.apple_juice.flavor":  "",
     "potion.sephiria_fantasy.trappist_sacred.flavor":  "",
     "potion.sephiria_fantasy.big_dice_potion.flavor":  "",
-    "potion.sephiria_fantasy.vampire_lord_oath.flavor":  ""
+    "potion.sephiria_fantasy.vampire_lord_oath.flavor":  "",
+    "modmenu.nameTranslation.sephiria_fantasy":  "Sephiria Fantasy",
+    "modmenu.summaryTranslation.sephiria_fantasy":  "Brings SEPHIRIA's weapon system into Minecraft",
+    "modmenu.descriptionTranslation.sephiria_fantasy":  "Brings SEPHIRIA's weapon system into Minecraft. An unofficial fan mod with heavily AI-generated code, for learning and sharing only - any commercial use is forbidden; see the repository LICENSE for the full terms."
 }

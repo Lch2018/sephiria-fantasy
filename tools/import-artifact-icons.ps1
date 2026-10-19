@@ -75,6 +75,8 @@ $slatesRef = Join-Path $root 'tools\slate-generator\inbox'
 # the potion batch (four potions, 2026-10-18): the references were COPIED into the repository
 # (tools/artifact-ref/potion_batch), same as the glacier / frost / eclipse batches.
 $potionBatchRef = Join-Path $root 'tools\artifact-ref\potion_batch'
+# the six-leaf clover artifact (2026-10-19): copied-in reference again.
+$cloverRef = Join-Path $root 'tools\artifact-ref\clover'
 
 foreach ($dir in @($texDir, $guiDir, $previewDir)) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -794,6 +796,10 @@ $jobs = @(
        target = 16; dir = 'item' },
     @{ name = 'gaoze_morning'; root = 'potion_batch'; source = 'gaoze_morning.png';
        target = 16; dir = 'item' }
+
+    # six-leaf clover (2026-10-19): reference in tools/artifact-ref/clover
+    @{ name = 'six_leaf_clover'; root = 'clover'; source = 'six_leaf_clover.png';
+       target = 16; dir = 'item' }
 )
 
 $skipped = @()
@@ -808,7 +814,7 @@ foreach ($job in $jobs) {
     $outDir = if ($job.dir -eq 'gui') { $guiDir } else { $texDir }
     $outFile = Join-Path $outDir ($name + '.png')
 
-    $sourceRoot = if ($job.root -eq 'slates') { $slatesRef } elseif ($job.root -eq 'potion_batch') { $potionBatchRef } elseif ($job.root -eq 'eclipse') { $eclipseRef } elseif ($job.root -eq 'frost') { $frostRef } elseif ($job.root -eq 'glacier') { $glacierRef } elseif ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
+    $sourceRoot = if ($job.root -eq 'slates') { $slatesRef } elseif ($job.root -eq 'clover') { $cloverRef } elseif ($job.root -eq 'potion_batch') { $potionBatchRef } elseif ($job.root -eq 'eclipse') { $eclipseRef } elseif ($job.root -eq 'frost') { $frostRef } elseif ($job.root -eq 'glacier') { $glacierRef } elseif ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
 
     if (-not (Test-Path $sourceRoot)) {
         # the wechat temp folder is recycled by the chat client: once a whole batch's reference
