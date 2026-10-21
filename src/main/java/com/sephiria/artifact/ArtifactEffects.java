@@ -529,7 +529,7 @@ public final class ArtifactEffects {
 		return (int) sumAffix(player, SephiriaArtifact::cloudCapacityBonus);
 	}
 
-	/** 神器给的「蓝量再生」加成总和（点/秒）。 */
+	/** 神器给的 MP再生加成总和（内部点/秒；显示与战斗结算在 mpRegenTotal 里 ×10）。 */
 	public static double mpRegenBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::mpRegenBonus);
 	}

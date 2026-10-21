@@ -27,7 +27,7 @@ import java.util.UUID;
  *
  * <p>生命值不在这里——它就是原版的玩家血量，直接读 {@code LivingEntity} 即可，不需要另存一份
  * （否则两处数据还得互相同步）。这里只管自定义的那几项：
- * 蓝量、蓝量再生、物理强度、火/冰/电元素强度、防御力，以及攻击速度 / 近战范围 / 武器伤害这类
+ * 蓝量、MP再生、物理强度、火/冰/电元素强度、防御力，以及攻击速度 / 近战范围 / 武器伤害这类
  * 换算用的百分比。
  *
  * <p>数值<b>跟着存档走</b>：每个玩家一份存在 Fabric 数据附件里（{@code player_stats}），
@@ -35,7 +35,12 @@ import java.util.UUID;
  * 的进度都不会因为重登或重启而丢。附件只在服务端，客户端那边由 {@link StatsSyncPayload} 推。
  */
 public final class PlayerStats {
-	/** 默认值：MP 50、MP 再生 1、三种元素与物理强度各 20、防御 0。 */
+	/**
+	 * 默认值：MP 50、MP 再生 1、三种元素与物理强度各 20、防御 0。
+	 *
+	 * <p>{@link #DEFAULT_MP_REGEN} 是<b>内部每秒值</b>（老存档口径）；对外显示与战斗结算用
+	 * {@link #mpRegenTotal}，它把每秒值 ×10 换成每 10 秒的「MP再生」。
+	 */
 	public static final double DEFAULT_MP = 50.0D;
 	public static final double DEFAULT_MP_REGEN = 1.0D;
 	public static final double DEFAULT_STRENGTH = 20.0D;
@@ -238,41 +243,48 @@ public final class PlayerStats {
 				}
 			}
 
-			if (server.getTickCount() % 20 != 0) {
-				return;
-			}
-
-			// 天赋「智慧」的 MP 再生：只在战斗中每 10 秒回 x 点（与每秒的「蓝量再生」分开）
-			if (server.getTickCount() % com.sephiria.talent.Talents.WISDOM_MP_REGEN_INTERVAL_TICKS == 0) {
+			// 脱战：每 0.5 秒回 12.5% 最大 MP（用户 2026-10-21 定）
+			if (server.getTickCount() % 10 == 0) {
 				for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-					double talentRegen = com.sephiria.talent.Talents.wisdomMpRegenPoints(player);
+					if (CombatState.isInCombat(player)) {
+						continue;
+					}
 
-					if (talentRegen > 0.0D && CombatState.isInCombat(player)) {
-						gainMp(player, talentRegen);
+					double maxMp = maxMpTotal(player);
+
+					if (of(player).mp < maxMp) {
+						gainMp(player, maxMp * 0.125D);
 					}
 				}
 			}
 
-			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-				Values values = of(player);
-				double maxMp = maxMpTotal(player);
-				double regen = mpRegenTotal(player);
+			// 战斗：每 10 秒回「MP再生」那一份（基础 10 + 神器 + 智慧天赋每点 +1）
+			if (server.getTickCount() % com.sephiria.talent.Talents.WISDOM_MP_REGEN_INTERVAL_TICKS == 0) {
+				for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+					if (!CombatState.isInCombat(player) || of(player).mp >= maxMpTotal(player)) {
+						continue;
+					}
 
-				if (values.mp >= maxMp || regen <= 0.0D) {
-					continue;
+					double regen = mpRegenTotal(player);
+
+					if (regen > 0.0D) {
+						gainMp(player, regen);
+					}
 				}
-
-				// 蓝量回复：每秒加再生总值（含神器那一份，不写回 Values——免得把神器加成存进存档），
-				// 回到当前上限为止（上限被剑耳环削过的也回到削过的那条线）
-				values.mp = Math.min(maxMp, values.mp + regen);
-				sync(player);
 			}
 		});
 	}
 
-	/** 蓝量再生（点/秒）：面板值 + 神器（沙波特果实那一批）。 */
+	/**
+	 * MP 再生（点 / 10 秒，只在战斗中结算）：面板值 + 神器 + 智慧天赋每点 +1。
+	 *
+	 * <p>{@link Values#mpRegen} 与 {@link ArtifactEffects#mpRegenBonus} 仍按历史口径存「每秒」，
+	 * 这里统一 ×10 换成「每 10 秒」显示与结算，老存档的 1（每秒）等价于 10（每 10 秒），
+	 * 不需要迁移字段。脱战那一路不看这个值，固定每 0.5 秒回 12.5% 最大 MP。
+	 */
 	public static double mpRegenTotal(ServerPlayer player) {
-		return of(player).mpRegen + ArtifactEffects.mpRegenBonus(player);
+		return (of(player).mpRegen + ArtifactEffects.mpRegenBonus(player)) * 10.0D
+				+ com.sephiria.talent.Talents.wisdomMpRegenPoints(player);
 	}
 
 	/** 神器给的「最大生命值」加成（点）：StatAttributes 把它挂成原版属性修饰符。 */
@@ -288,7 +300,7 @@ public final class PlayerStats {
 				+ "/" + moveSpeedPercentTotal(player) + "/" + dodgeTotal(player) + "/" + dodgeRatePercent(player)
 				+ "/" + physicalTotal(player) + "/" + negotiationTotal(player) + "/" + shopDiscountPercent(player)
 				+ "/" + leafGainPercentTotal(player) + "/" + xpDropPercentTotal(player) + "/" + maxMpTotal(player)
-				// 蓝量再生的神器加成也进指纹：换装时（沙波特果实）面板的再生行要跟着刷新
+				// MP再生的神器加成也进指纹：换装时（沙波特果实）面板的再生行要跟着刷新
 				+ "/" + mpRegenTotal(player)
 				// 火/冰/电的面板值也进指纹：元素连击换装时（物理不是最高项的话）总物理不变，
 				// 不对账的话面板的元素数值要等下一次 sync 才刷新
@@ -309,6 +321,7 @@ public final class PlayerStats {
 	/** 一名玩家的全部自定义属性。 */
 	public static final class Values {
 		public double mp = DEFAULT_MP;
+		/** MP再生（内部按每秒存；对外显示 / 战斗结算 ×10 成每 10 秒）。 */
 		public double mpRegen = DEFAULT_MP_REGEN;
 		public double physical = DEFAULT_STRENGTH;
 		/** 药水给的物理强度（面板算式里「药水」那一份固定值）。 */

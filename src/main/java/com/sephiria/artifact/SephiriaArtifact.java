@@ -419,7 +419,7 @@ public interface SephiriaArtifact extends Quality {
 		return 0;
 	}
 
-	/** 该等级给的「蓝量再生」加成（点/秒）。 */
+	/** 该等级给的 MP再生加成（内部点/秒；显示与战斗结算 ×10 成每 10 秒）。 */
 	default double mpRegenBonus(int level) {
 		return 0.0D;
 	}

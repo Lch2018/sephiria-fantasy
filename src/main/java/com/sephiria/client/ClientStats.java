@@ -13,7 +13,8 @@ public final class ClientStats {
 	private static double mp = PlayerStats.DEFAULT_MP;
 	private static double maxMp = PlayerStats.DEFAULT_MP;
 	private static double luck = PlayerStats.DEFAULT_LUCK;
-	private static double mpRegen = PlayerStats.DEFAULT_MP_REGEN;
+	/** MP再生：属性页显示的是「每 10 秒」的值，默认 1×10 = 10（服务端会推真实总值）。 */
+	private static double mpRegen = PlayerStats.DEFAULT_MP_REGEN * 10.0D;
 	private static double physical = PlayerStats.DEFAULT_STRENGTH;
 	private static double fire = PlayerStats.DEFAULT_STRENGTH;
 	private static double ice = PlayerStats.DEFAULT_STRENGTH;

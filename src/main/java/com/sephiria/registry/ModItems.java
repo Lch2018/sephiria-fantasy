@@ -661,7 +661,7 @@ public final class ModItems {
 			p -> new StoneFlowerItem(p),
 			new Item.Properties().stacksTo(1));
 
-	/** 沙波特果实（乌云，高级）：乌云容量 +4/8/12/16、蓝量再生 +1/2/3/4，没有【唯一】。 */
+	/** 沙波特果实（乌云，高级）：乌云容量 +4/8/12/16、MP再生 +10/20/30/40（内部每秒 1/2/3/4），没有【唯一】。 */
 	public static final Item SAPOTE_FRUIT = register(key("sapote_fruit"),
 			p -> new SapoteFruitItem(p),
 			new Item.Properties().stacksTo(1));

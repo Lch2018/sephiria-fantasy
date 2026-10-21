@@ -556,7 +556,7 @@
     "screen.sephiria_fantasy.stats":  "Attributes",
     "screen.sephiria_fantasy.stats.hp":  "Health: %s",
     "screen.sephiria_fantasy.stats.mp":  "Mana: %s",
-    "screen.sephiria_fantasy.stats.mp_regen":  "Mana Regen: %s",
+    "screen.sephiria_fantasy.stats.mp_regen":  "MP Regeneration: %s",
     "screen.sephiria_fantasy.stats.physical":  "Physical Power: %s",
     "screen.sephiria_fantasy.stats.fire":  "Fire Power: %s",
     "screen.sephiria_fantasy.stats.ice":  "Ice Power: %s",
