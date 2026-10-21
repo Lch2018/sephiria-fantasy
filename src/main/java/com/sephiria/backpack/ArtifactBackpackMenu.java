@@ -16,6 +16,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -96,6 +97,8 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 					return backpackSlotExists(getContainerSlot())
 							&& stack.getItem() instanceof BackpackStorable;
 				}
+				// mayPickup 保持默认 true：石板基础 / 合并过的神器也要能在背包格之间拖动，
+				// 「不能带出背包」由 clicked / quickMoveStack / removed 在「放到哪里」那一步拦。
 			});
 		}
 
@@ -216,6 +219,18 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 		return index >= 0 && index < backpackSlotCount();
 	}
 
+	/** 这一格在真实背包里的下标（滚轮翻页 + 末尾空格判定）；不是背包格返回 -1。 */
+	@Override
+	public int backpackIndex(Slot slot) {
+		int visible = this.slots.indexOf(slot);
+
+		if (visible < 0 || visible >= backpackSlotCount() || !backpackSlotExists(visible)) {
+			return -1;
+		}
+
+		return scrollRow() * ArtifactBackpack.WIDTH + visible;
+	}
+
 	/** 格子等级（按格子对象取，客户端也适用）。 */
 	public int slotLevelOf(Slot slot) {
 		return slotLevel(this.slots.indexOf(slot));
@@ -299,6 +314,103 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 		};
 	}
 
+	/**
+	 * 光标上的神器放进背包格之前先走一次「智慧」二阶段的合并判定。
+	 *
+	 * <p>只拦 PICKUP（左/右键放置）：合并成功后把被消耗的那件从光标扣掉，不能再让原版
+	 * 把它放进格子里（否则会出现「格子里原有那件 + 光标上这件」的复制）。
+	 */
+	@Override
+	public void clicked(int slotId, int button, ContainerInput input, Player player) {
+		if (blocksProtectedMove(player, slotId, button, input)) {
+			return;
+		}
+
+		if (player instanceof ServerPlayer serverPlayer
+				&& slotId >= 0 && slotId < backpackSlotCount()) {
+			Slot slot = this.slots.get(slotId);
+
+			if (isBackpackSlot(slot) && backpackSlotExists(slot)) {
+				// 左/右键放置与拖拽：合并光标上那件
+				if ((input == ContainerInput.PICKUP || input == ContainerInput.QUICK_CRAFT)
+						&& !this.getCarried().isEmpty()
+						&& com.sephiria.talent.WisdomTalent.tryMerge(serverPlayer, this.getCarried())) {
+					if (this.getCarried().isEmpty()) {
+						this.setCarried(ItemStack.EMPTY);
+					}
+
+					this.broadcastChanges();
+					return;
+				}
+
+				// 数字键交换：被换进来的快捷栏那件也要合并
+				if (input == ContainerInput.SWAP && button >= 0 && button < 9) {
+					ItemStack hotbar = serverPlayer.getInventory().getItem(button);
+
+					if (!hotbar.isEmpty()
+							&& com.sephiria.talent.WisdomTalent.tryMerge(serverPlayer, hotbar)) {
+						serverPlayer.getInventory().setChanged();
+						this.broadcastChanges();
+						return;
+					}
+				}
+			}
+		}
+
+		super.clicked(slotId, button, input, player);
+	}
+
+	/**
+	 * 石板基础 / 合并过的神器：允许在背包格之间拖，但不允许丢出、放进普通背包或换到快捷栏。
+	 *
+	 * @return true 表示这次点击要整个吞掉
+	 */
+	private boolean blocksProtectedMove(Player player, int slotId, int button, ContainerInput input) {
+		if (!(player instanceof ServerPlayer serverPlayer)) {
+			return false;
+		}
+
+		ItemStack carried = this.getCarried();
+		Slot target = slotId >= 0 && slotId < this.slots.size() ? this.slots.get(slotId) : null;
+
+		// Q 丢出（鼠标下的格子 / 光标上的那件）
+		if (input == ContainerInput.THROW) {
+			return target != null && BackpackRules.isProtected(serverPlayer, target.getItem())
+					|| slotId < 0 && BackpackRules.isProtected(serverPlayer, carried);
+		}
+
+		// 点界面外 = 丢弃光标物品
+		if (slotId < 0 && BackpackRules.isProtected(serverPlayer, carried)) {
+			return true;
+		}
+
+		// 双击收集到光标上
+		if (input == ContainerInput.PICKUP_ALL && target != null
+				&& BackpackRules.isProtected(serverPlayer, target.getItem())) {
+			return true;
+		}
+
+		// 放到玩家背包（非背包格）
+		if (target != null && slotId >= backpackSlotCount()
+				&& BackpackRules.isProtected(serverPlayer, carried)) {
+			return true;
+		}
+
+		// 数字键：背包格里的受保护物品不能换到快捷栏；快捷栏里的受保护物品不能换进玩家背包
+		if (input == ContainerInput.SWAP && target != null) {
+			if (slotId < backpackSlotCount() && BackpackRules.isProtected(serverPlayer, target.getItem())) {
+				return true;
+			}
+
+			if (slotId >= backpackSlotCount() && button >= 0 && button < 9
+					&& BackpackRules.isProtected(serverPlayer, serverPlayer.getInventory().getItem(button))) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	@Override
 	public ItemStack quickMoveStack(Player player, int index) {
 		Slot slot = this.slots.get(index);
@@ -312,12 +424,28 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 		int backpackSlots = backpackSlotCount();
 
 		if (index < backpackSlots) {
+			// 石板基础 / 合并过的神器不能从背包移出
+			if (com.sephiria.talent.PatienceTalent.isBase(stack)
+					|| com.sephiria.talent.WisdomTalent.isLocked(player, stack)) {
+				return ItemStack.EMPTY;
+			}
+
 			// 赛菲莉娅背包 → 玩家背包
 			if (!moveItemStackTo(stack, backpackSlots, this.slots.size(), true)) {
 				return ItemStack.EMPTY;
 			}
 		} else if (stack.getItem() instanceof BackpackStorable) {
-			// 玩家背包 → 赛菲莉娅背包（只搬得动神器与石板；只能进当前这一屏）
+			// 玩家背包 → 赛菲莉娅背包：智慧二阶段先试合并
+			if (player instanceof ServerPlayer serverPlayer
+					&& com.sephiria.talent.WisdomTalent.tryMerge(serverPlayer, stack)) {
+				if (stack.isEmpty()) {
+					slot.setByPlayer(ItemStack.EMPTY);
+				}
+
+				return ItemStack.EMPTY;
+			}
+
+			// 只搬得动神器与石板；只能进当前这一屏
 			if (!moveItemStackTo(stack, 0, backpackSlots, false)) {
 				return ItemStack.EMPTY;
 			}
@@ -341,6 +469,14 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 
 	@Override
 	public void removed(Player player) {
+		// 光标上拿着石板基础 / 合并过的神器：关界面时放回背包（不能带进普通背包）
+		if (player instanceof ServerPlayer serverPlayer && !this.getCarried().isEmpty()
+				&& BackpackRules.isProtected(serverPlayer, this.getCarried())) {
+			ItemStack carried = this.getCarried();
+			this.setCarried(ItemStack.EMPTY);
+			BackpackRules.returnToBackpack(serverPlayer, carried);
+		}
+
 		super.removed(player);
 		this.backpack.stopOpen(player);
 	}

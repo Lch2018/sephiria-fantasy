@@ -58,7 +58,8 @@ public final class ArtifactTooltip {
 			lines.add(Component.translatable(combo.translationKey()).withStyle(ChatFormatting.GREEN));
 		}
 
-		if (artifact.unique()) {
+		if (artifact.unique()
+				|| com.sephiria.client.ClientTalents.stage(com.sephiria.talent.Talent.WISDOM) >= 2) {
 			lines.add(Component.translatable("artifact.sephiria_fantasy.tag.unique").withColor(COLOUR_TAG));
 		}
 

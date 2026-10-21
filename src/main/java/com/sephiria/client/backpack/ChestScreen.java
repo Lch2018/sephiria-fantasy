@@ -1,7 +1,10 @@
 package com.sephiria.client.backpack;
 
 import com.sephiria.backpack.ChestMenu;
+import com.sephiria.network.ChestRerollPayload;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -20,9 +23,33 @@ public class ChestScreen extends AbstractContainerScreen<ChestMenu> {
 	private static final int SLOT_EDGE = 0xFF15151A;
 	private static final int HINT_COLOR = 0xFF9A9AA2;
 
+	private Button rerollButton;
+
 	public ChestScreen(ChestMenu menu, Inventory inventory, Component title) {
 		super(menu, inventory, title, ChestMenu.IMAGE_WIDTH, ChestMenu.imageHeight());
 		this.inventoryLabelY = ChestMenu.playerRowsY() - 11;
+	}
+
+	@Override
+	protected void init() {
+		super.init();
+		// 「刷新」：天赋「智慧」三阶段每个宝箱 1 次免费；没有免费次数时要有骰子才亮
+		this.rerollButton = Button.builder(
+						Component.translatable("screen.sephiria_fantasy.chest.reroll"),
+						pressed -> ClientPlayNetworking.send(ChestRerollPayload.INSTANCE))
+				.bounds(this.leftPos + ChestMenu.REROLL_BUTTON_X,
+						this.topPos + ChestMenu.REROLL_BUTTON_Y, 28, 18)
+				.build();
+		addRenderableWidget(this.rerollButton);
+	}
+
+	@Override
+	public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
+		if (this.rerollButton != null) {
+			this.rerollButton.active = this.menu.canReroll();
+		}
+
+		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 	}
 
 	@Override
@@ -42,7 +69,7 @@ public class ChestScreen extends AbstractContainerScreen<ChestMenu> {
 		for (Slot slot : this.menu.slots) {
 			int index = this.menu.slots.indexOf(slot);
 
-			if (index >= ChestMenu.REWARD_SLOTS) {
+			if (index >= this.menu.rewardCount()) {
 				continue;
 			}
 
@@ -51,6 +78,12 @@ public class ChestScreen extends AbstractContainerScreen<ChestMenu> {
 			extractor.fill(x - 1, y - 1, x + 17, y + 17, SLOT_EDGE);
 			extractor.fill(x, y, x + 16, y + 16, SLOT_COLOR);
 		}
+
+		// 骰子格（刷新用）单独画一个底：它不在奖励循环里
+		int diceX = left + ChestMenu.DICE_X;
+		int diceY = top + ChestMenu.SLOT_Y;
+		extractor.fill(diceX - 1, diceY - 1, diceX + 17, diceY + 17, SLOT_EDGE);
+		extractor.fill(diceX, diceY, diceX + 16, diceY + 16, SLOT_COLOR);
 	}
 
 	@Override

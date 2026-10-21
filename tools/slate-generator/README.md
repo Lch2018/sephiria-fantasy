@@ -95,7 +95,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\deploy.ps1
 | `tools/import-artifact-icons.ps1` | 图标任务（`slates` 根 = `tools/slate-generator/inbox`） |
 
 图标会自动跑一遍切图（与其它神器同一套：抠底板 → 裁主体 → 16×16），
-原图留在 `inbox/` 里（先复制成 `<id>.png` 再切）。
+原图留在 `inbox/` 里（先复制成 `<id>.png` 再切）。**生成器的图没有自带描边**，所以
+`import-artifact-icons.ps1` 对 `root = 'slates'` 的作业会自动补一圈 1px `#1F1A31`
+（缩进 target−2 后 8 邻域膨胀，四周留 1px 边距；2026-10-21 起，12 块旧图已重切）。
 
 ## 给改这个工具的助手（约定）
 

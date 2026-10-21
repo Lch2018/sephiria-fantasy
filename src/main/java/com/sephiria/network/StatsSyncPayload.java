@@ -22,7 +22,8 @@ public record StatsSyncPayload(double mp, double mpRegen, double physical, doubl
 		double attackArtifactPercent, double attackPotionPercent, double leaves, double weaponDamage,
 		double specialAttack, double lifesteal, double normalAttackDamage, double critChance, double critDamage,
 		double ignoreDefense, double moveSpeed, double dodge, double dodgeRate, double negotiation,
-		double shopDiscount, double leafGainPercent, double xpDropPercent, double maxMp, double luck)
+		double shopDiscount, double leafGainPercent, double xpDropPercent, double maxMp, double luck,
+		double mpAbsorb)
 		implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<StatsSyncPayload> TYPE =
 			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "stats_sync"));
@@ -66,6 +67,7 @@ public record StatsSyncPayload(double mp, double mpRegen, double physical, doubl
 				buffer.writeDouble(payload.xpDropPercent());
 				buffer.writeDouble(payload.maxMp());
 				buffer.writeDouble(payload.luck());
+				buffer.writeDouble(payload.mpAbsorb());
 			},
 			(RegistryFriendlyByteBuf buffer) -> new StatsSyncPayload(
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
@@ -77,7 +79,7 @@ public record StatsSyncPayload(double mp, double mpRegen, double physical, doubl
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
 					buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
-					buffer.readDouble(), buffer.readDouble()));
+					buffer.readDouble(), buffer.readDouble(), buffer.readDouble()));
 
 	/**
 	 * {@code physicalTotal} / {@code attackSpeedTotal} 与三个元素值都是含神器加成的总值
@@ -91,16 +93,16 @@ public record StatsSyncPayload(double mp, double mpRegen, double physical, doubl
 			double critChanceTotal, double critDamageTotal, double ignoreDefenseTotal, double moveSpeedTotal,
 			double dodgeTotal, double dodgeRate, double meleeRangeTotal,
 			double negotiationTotal, double shopDiscount, double leafGainTotal, double xpDropTotal, double maxMp,
-			double luck) {
+			double luck, double defenseTotal, double mpAbsorb) {
 		return new StatsSyncPayload(values.mp, mpRegenTotal, physicalTotal, fireTotal, iceTotal,
-				lightningTotal, values.defense, attackSpeedTotal, meleeRangeTotal, physicalAmp,
+				lightningTotal, defenseTotal, attackSpeedTotal, meleeRangeTotal, physicalAmp,
 				breakdown.base(), breakdown.artifactFlat(), breakdown.potionFlat(),
 				breakdown.artifactPercent(), breakdown.potionPercent(), attackBreakdown.base(),
 				attackBreakdown.artifactFlat(), attackBreakdown.potionFlat(),
 				attackBreakdown.artifactPercent(), attackBreakdown.potionPercent(), values.leaves,
 				weaponDamageTotal, specialAttackTotal, values.lifesteal, normalAttackDamageTotal,
 				critChanceTotal, critDamageTotal, ignoreDefenseTotal, moveSpeedTotal, dodgeTotal, dodgeRate,
-				negotiationTotal, shopDiscount, leafGainTotal, xpDropTotal, maxMp, luck);
+				negotiationTotal, shopDiscount, leafGainTotal, xpDropTotal, maxMp, luck, mpAbsorb);
 	}
 
 	@Override

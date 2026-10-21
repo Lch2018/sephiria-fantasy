@@ -187,6 +187,9 @@ public class SephiriaClient implements ClientModInitializer {
 		// 冰霜武具两件神器的充能状态：HUD 那一行「冰霜武具：剑 锤」读它
 		ClientPlayNetworking.registerGlobalReceiver(FrostSyncPayload.TYPE,
 				(payload, context) -> FrostClientData.accept(payload));
+		// 天赋点与两条天赋页的加点数：天赋界面读它
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentSyncPayload.TYPE,
+				(payload, context) -> ClientTalents.accept(payload));
 		// 换世界 / 重连时清掉镜像：云、减益、太阳剑与冰霜武具状态都不跨世界，
 		// 免得新世界里 UI 还挂着上个世界的残值
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
@@ -194,6 +197,9 @@ public class SephiriaClient implements ClientModInitializer {
 			ClientDebuffs.reset();
 			SunSwordClientData.reset();
 			FrostClientData.reset();
+			ClientTalents.reset();
+			// 专注 / 剑意同样不跨世界：不清的话换世界后匕首与刀的微光会按上个世界的层数多亮一瞬
+			SkillClientData.reset();
 		});
 		// 神器技能页的可用技能与 6 个栏位
 		ClientPlayNetworking.registerGlobalReceiver(ArtifactSkillsPayload.TYPE, (payload, context) -> {

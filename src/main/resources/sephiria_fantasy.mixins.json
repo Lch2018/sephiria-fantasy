@@ -10,10 +10,15 @@
 		"DebuffTickMixin",
 		"EnchantmentHelperMixin",
 		"FrozenMotionMixin",
+		"FurnaceHeavenSlateMixin",
 		"ItemCombinerMenuAccessor",
 		"LeafExperienceMixin",
 		"MobStunMixin",
 		"PlayerAdvancementsMixin",
+		"RootRetreatDeathMixin",
+		"RootRetreatFallMixin",
+		"RootRetreatHealingMixin",
+		"RootRetreatNameMixin",
 		"SephiriaDamageFramesMixin"
 	],
 	"injectors": {

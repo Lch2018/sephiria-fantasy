@@ -153,6 +153,46 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.SLATE_OF_JUNCTION);
 						output.accept(ModItems.SLATE_OF_GRATITUDE);
 						output.accept(ModItems.SLATE_OF_ARRIVAL);
+						output.accept(ModItems.SLATE_OF_APPROXIMATION);
+						output.accept(ModItems.SLATE_OF_MISCHIEF);
+						output.accept(ModItems.SLATE_OF_NOURISHMENT);
+						output.accept(ModItems.SLATE_OF_WISDOM);
+						output.accept(ModItems.SLATE_OF_CHIVALRY);
+						output.accept(ModItems.SLATE_OF_FATE);
+						output.accept(ModItems.SLATE_OF_GAZE);
+						output.accept(ModItems.SLATE_OF_GOODWILL);
+						output.accept(ModItems.SLATE_OF_HOPE);
+						output.accept(ModItems.SLATE_OF_CHEER);
+						output.accept(ModItems.SLATE_OF_EXIT);
+						output.accept(ModItems.SLATE_OF_PROGRESS);
+						output.accept(ModItems.SLATE_OF_THREE_HEADS);
+						output.accept(ModItems.SLATE_OF_PREPARATION);
+						output.accept(ModItems.SLATE_OF_DISTRIBUTION);
+						output.accept(ModItems.SLATE_OF_STACK);
+						output.accept(ModItems.SLATE_OF_HONOR);
+						output.accept(ModItems.SLATE_OF_PAST);
+						output.accept(ModItems.SLATE_OF_ADVANCE);
+						output.accept(ModItems.SLATE_OF_OFFERING);
+						output.accept(ModItems.SLATE_OF_DESIRE);
+						output.accept(ModItems.SLATE_OF_AGITATION);
+						output.accept(ModItems.SLATE_OF_HARVEST);
+						output.accept(ModItems.SLATE_OF_TRANSFER);
+						output.accept(ModItems.SLATE_OF_JUSTICE);
+						output.accept(ModItems.SLATE_OF_GATHERING);
+						output.accept(ModItems.SLATE_OF_BANNER);
+						output.accept(ModItems.SLATE_OF_SIMULTANEITY);
+						output.accept(ModItems.SLATE_OF_BURN_THE_BOATS);
+						output.accept(ModItems.SLATE_OF_FOUNDATION);
+						output.accept(ModItems.SLATE_OF_AUTHORITY);
+						output.accept(ModItems.SLATE_OF_COMPRESSION);
+						output.accept(ModItems.SLATE_OF_MIRACLE);
+						output.accept(ModItems.SLATE_OF_THORNS);
+						output.accept(ModItems.SLATE_OF_RADIANCE);
+						output.accept(ModItems.SLATE_OF_COURAGE);
+						// 石板基础只由「耐心」一阶段发放；创造页留一件方便测试
+						output.accept(ModItems.SLATE_BASE);
+						// 天国不进掉落池：创造页留一件，只用于测试（正常游戏只能烧远古残骸碰运气）
+						output.accept(ModItems.SLATE_OF_HEAVEN);
 					})
 					.build());
 
@@ -174,6 +214,9 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.ARTIFACT_CHEST);
 						output.accept(ModItems.SLATE_CHEST);
 						output.accept(ModItems.UPGRADE_CHEST);
+						// 稀有宝箱正常只有 BOSS 掉；创造页留两件，方便测试奖池
+						output.accept(ModItems.RARE_ARTIFACT_CHEST);
+						output.accept(ModItems.RARE_SLATE_CHEST);
 						output.accept(ModItems.ROOT_RETREAT);
 						output.accept(ModItems.WISH_POOL);
 					})

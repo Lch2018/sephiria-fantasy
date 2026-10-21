@@ -272,7 +272,52 @@ function Remove-Specks($mask, [int]$w, [int]$h, [int]$minBlob) {
     }
 }
 
-function Import-Icon([string]$file, [string]$outFile, [string]$label, [int]$target, [int]$tol, [int]$ring, [int]$share, [int]$trim, [int]$minBlob, [int]$frames = 1) {
+# Paint a 1px dark ring around the opaque pixels. The opacity snapshot keeps the ring from eating
+# into the sprite or chaining over itself; 8-neighbour keeps diagonal silhouettes closed. The
+# Slate Generator's 75x75 references have no outline of their own (they sit straight on the plate),
+# so their icons need this to look like the older slates, which carry a #1F1A31 border in the art.
+function Add-IconOutline([System.Drawing.Bitmap]$canvas, [int]$rgb = 0x1F1A31) {
+    $w = $canvas.Width
+    $h = $canvas.Height
+    $opaque = New-Object 'bool[]' ($w * $h)
+
+    for ($y = 0; $y -lt $h; $y++) {
+        for ($x = 0; $x -lt $w; $x++) {
+            $opaque[$y * $w + $x] = ($canvas.GetPixel($x, $y).A -ge 128)
+        }
+    }
+
+    $r = ($rgb -shr 16) -band 0xFF
+    $g = ($rgb -shr 8) -band 0xFF
+    $b = $rgb -band 0xFF
+    $added = 0
+    $dirs = @(@(1, 0), @(-1, 0), @(0, 1), @(0, -1), @(1, 1), @(1, -1), @(-1, 1), @(-1, -1))
+
+    for ($y = 0; $y -lt $h; $y++) {
+        for ($x = 0; $x -lt $w; $x++) {
+            if ($opaque[$y * $w + $x]) { continue }
+            $near = $false
+
+            foreach ($d in $dirs) {
+                $nx = $x + $d[0]
+                $ny = $y + $d[1]
+
+                if ($nx -lt 0 -or $ny -lt 0 -or $nx -ge $w -or $ny -ge $h) { continue }
+
+                if ($opaque[$ny * $w + $nx]) { $near = $true; break }
+            }
+
+            if (-not $near) { continue }
+
+            $canvas.SetPixel($x, $y, [System.Drawing.Color]::FromArgb(255, $r, $g, $b))
+            $added++
+        }
+    }
+
+    return $added
+}
+
+function Import-Icon([string]$file, [string]$outFile, [string]$label, [int]$target, [int]$tol, [int]$ring, [int]$share, [int]$trim, [int]$minBlob, [int]$frames = 1, [bool]$outline = $false) {
     $src = [System.Drawing.Bitmap]::FromFile($file)
     $w = $src.Width
     $h = $src.Height
@@ -302,18 +347,23 @@ function Import-Icon([string]$file, [string]$outFile, [string]$label, [int]$targ
     $sw = $maxX - $minX + 1
     $sh = $maxY - $minY + 1
 
+    # an outline job reserves one pixel on every side: scaling into target-2 and painting the ring
+    # afterwards keeps the border a crisp 1px line instead of a sub-pixel resample artifact
+    $inset = if ($outline) { 1 } else { 0 }
+    $box = $target - 2 * $inset
+
     # sprite already fits the slot 1:1 -> paste native, never resample (that is how a 16x16
     # reference keeps every pixel)
     $scale = 1.0
-    if ($sw -gt $target -or $sh -gt $target) {
-        $scale = [Math]::Min($target / $sw, $target / $sh)
+    if ($sw -gt $box -or $sh -gt $box) {
+        $scale = [Math]::Min($box / $sw, $box / $sh)
     }
 
     $dw = [Math]::Max(1, [int][Math]::Round($sw * $scale))
     $dh = [Math]::Max(1, [int][Math]::Round($sh * $scale))
     $canvas = New-Canvas $target
-    $offX = [int](($target - $dw) / 2)
-    $offY = [int](($target - $dh) / 2)
+    $offX = $inset + [int](($box - $dw) / 2)
+    $offY = $inset + [int](($box - $dh) / 2)
 
     for ($dy = 0; $dy -lt $dh; $dy++) {
         for ($dx = 0; $dx -lt $dw; $dx++) {
@@ -355,6 +405,9 @@ function Import-Icon([string]$file, [string]$outFile, [string]$label, [int]$targ
         }
     }
 
+    $outlinePx = 0
+    if ($outline) { $outlinePx = Add-IconOutline $canvas }
+
     if ($frames -gt 1) {
         # single-frame art -> a "churning" animation: keep the base frame untouched and stack a
         # 50%-alpha copy of the same sprite shifted by 2px, cycling the direction per frame. The
@@ -388,8 +441,9 @@ function Import-Icon([string]$file, [string]$outFile, [string]$label, [int]$targ
     }
 
     $pal = ($palette | ForEach-Object { '#{0:X2}{1:X2}{2:X2}' -f $_[0], $_[1], $_[2] }) -join ' '
-    Write-Host ("{0,-22} src {1,3}x{2,-3} plate {3,5}px [{4}]  sprite {5,3}x{6,-3} -> {7,2}x{8,-2} at {9},{10}  tol={11}" -f `
-        $label, $w, $h, $plate, $pal, $sw, $sh, $dw, $dh, $offX, $offY, $tol)
+    $outlineText = if ($outline) { '  outline=' + $outlinePx + 'px' } else { '' }
+    Write-Host ("{0,-22} src {1,3}x{2,-3} plate {3,5}px [{4}]  sprite {5,3}x{6,-3} -> {7,2}x{8,-2} at {9},{10}  tol={11}{12}" -f `
+        $label, $w, $h, $plate, $pal, $sw, $sh, $dw, $dh, $offX, $offY, $tol, $outlineText)
     Save-Preview $canvas $label
     $canvas.Dispose()
 }
@@ -405,6 +459,7 @@ function Import-Icon([string]$file, [string]$outFile, [string]$label, [int]$targ
 #   share  percentage of the ring the palette has to cover (default 96)
 #   trim   pixels to shave off each side of the sprite box (slate: the dashed decoration)
 #   minBlob smallest opaque blob kept, in source pixels (default 4)
+#   outline add a 1px #1F1A31 ring around the sprite (default: on for root 'slates', off otherwise)
 $jobs = @(
     # batch 1: the original artifact icons (75x75 = 25 art cells at 3x, on the #32313E plate)
     @{ name = 'charm_of_strength'; root = 'cache'; source = 'image-1d019ab0e7545779bfcaf948ac4276da.png';
@@ -547,8 +602,10 @@ $jobs = @(
        target = 16; dir = 'item'; tol = 10; minBlob = 24 },
     @{ name = 'slate_of_wave'; root = 'wechat2'; source = '958b3ef99b40e621c50d2af0699e85e6.png';
        target = 16; dir = 'item'; tol = 10; minBlob = 24 },
-    @{ name = 'slate_of_double_star'; root = 'wechat2'; source = 'e701a22f22f43c5229046f544405017c.png';
-       target = 16; dir = 'item'; tol = 10; minBlob = 24 },
+    # 2026-10-21: the user re-drew this icon and moved the pattern out one cell; it now comes from
+    # the Slate Generator inbox (root 'slates') like the newer slates, so it gets the 1px outline too.
+    @{ name = 'slate_of_double_star'; root = 'slates'; source = 'slate_of_double_star.png';
+       target = 16; dir = 'item' },
     @{ name = 'slate_of_handshake'; root = 'wechat2'; source = '7197415cfcf6fb6c0a32ee0cc4b36211.png';
        target = 16; dir = 'item'; tol = 10; minBlob = 24 },
 
@@ -800,6 +857,155 @@ $jobs = @(
     # six-leaf clover (2026-10-19): reference in tools/artifact-ref/clover
     @{ name = 'six_leaf_clover'; root = 'clover'; source = 'six_leaf_clover.png';
        target = 16; dir = 'item' }
+
+    # slate batch (slate_of_approximation): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_approximation'; root = 'slates'; source = 'slate_of_approximation.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_mischief): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_mischief'; root = 'slates'; source = 'slate_of_mischief.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_nourishment): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_nourishment'; root = 'slates'; source = 'slate_of_nourishment.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_wisdom): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_wisdom'; root = 'slates'; source = 'slate_of_wisdom.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_chivalry): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_chivalry'; root = 'slates'; source = 'slate_of_chivalry.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_fate): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_fate'; root = 'slates'; source = 'slate_of_fate.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_gaze): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_gaze'; root = 'slates'; source = 'slate_of_gaze.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_goodwill): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_goodwill'; root = 'slates'; source = 'slate_of_goodwill.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_hope): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_hope'; root = 'slates'; source = 'slate_of_hope.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_cheer): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_cheer'; root = 'slates'; source = 'slate_of_cheer.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_exit): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_exit'; root = 'slates'; source = 'slate_of_exit.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_progress): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_progress'; root = 'slates'; source = 'slate_of_progress.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_three_heads): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_three_heads'; root = 'slates'; source = 'slate_of_three_heads.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_preparation): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_preparation'; root = 'slates'; source = 'slate_of_preparation.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_distribution): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_distribution'; root = 'slates'; source = 'slate_of_distribution.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_stack): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_stack'; root = 'slates'; source = 'slate_of_stack.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_honor): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_honor'; root = 'slates'; source = 'slate_of_honor.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_past): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_past'; root = 'slates'; source = 'slate_of_past.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_advance): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_advance'; root = 'slates'; source = 'slate_of_advance.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_offering): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_offering'; root = 'slates'; source = 'slate_of_offering.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_desire): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_desire'; root = 'slates'; source = 'slate_of_desire.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_agitation): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_agitation'; root = 'slates'; source = 'slate_of_agitation.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_harvest): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_harvest'; root = 'slates'; source = 'slate_of_harvest.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_transfer): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_transfer'; root = 'slates'; source = 'slate_of_transfer.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_justice): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_justice'; root = 'slates'; source = 'slate_of_justice.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_gathering): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_gathering'; root = 'slates'; source = 'slate_of_gathering.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_banner): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_banner'; root = 'slates'; source = 'slate_of_banner.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_simultaneity): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_simultaneity'; root = 'slates'; source = 'slate_of_simultaneity.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_burn_the_boats): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_burn_the_boats'; root = 'slates'; source = 'slate_of_burn_the_boats.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_foundation): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_foundation'; root = 'slates'; source = 'slate_of_foundation.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_authority): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_authority'; root = 'slates'; source = 'slate_of_authority.png';
+       target = 16; dir = 'item' }
+
+    # 天国 (2026-10-21): the special slate. Its reference arrived as a chat image; it is copied
+    # into the Slate Generator inbox so the job cannot rot, and it gets the same 1px outline.
+    @{ name = 'slate_of_heaven'; root = 'slates'; source = 'slate_of_heaven.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_compression): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_compression'; root = 'slates'; source = 'slate_of_compression.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_miracle): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_miracle'; root = 'slates'; source = 'slate_of_miracle.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_thorns): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_thorns'; root = 'slates'; source = 'slate_of_thorns.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_radiance): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_radiance'; root = 'slates'; source = 'slate_of_radiance.png';
+       target = 16; dir = 'item' }
+
+    # slate batch (slate_of_courage): cut from the Slate Generator inbox reference
+    @{ name = 'slate_of_courage'; root = 'slates'; source = 'slate_of_courage.png';
+       target = 16; dir = 'item' }
 )
 
 $skipped = @()
@@ -848,7 +1054,12 @@ foreach ($job in $jobs) {
     $minBlob = if ($job.minBlob) { [int]$job.minBlob } else { 4 }
     $frames = if ($job.frames) { [int]$job.frames } else { 1 }
 
-    Import-Icon $file $outFile $name ([int]$job.target) $tol $ring $share $trim $minBlob $frames
+    # Slate Generator references carry no outline of their own (the artwork sits straight on the
+    # plate), so every 'slates' job gets the 1px ring automatically. A job can opt out with
+    # outline = $false; other roots opt in the same way.
+    $outline = if ($job.ContainsKey('outline')) { [bool]$job.outline } else { $job.root -eq 'slates' }
+
+    Import-Icon $file $outFile $name ([int]$job.target) $tol $ring $share $trim $minBlob $frames $outline
 
     if ($job.dir -ne 'gui') {
         Write-ItemDefinitions $name

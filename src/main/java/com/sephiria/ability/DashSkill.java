@@ -53,9 +53,12 @@ public final class DashSkill {
 	/** 注册存储配置（由 {@link Sephiria#onInitialize()} 调用）。 */
 	public static void register() {
 		SkillStorage.register(STORAGE, MAX_CHARGES, REGEN_AMOUNT, REGEN_INTERVAL_TICKS);
-		// 神器与连击的「冲刺次数 +N」「冲刺恢复速度 +x%」在这里接进存储池
-		SkillStorage.registerMaxBonus(STORAGE, ArtifactEffects::dashChargeBonus);
-		SkillStorage.registerRegenBonus(STORAGE, player -> (int) Math.round(ArtifactEffects.dashRegenPercent(player)));
+		// 神器与连击的「冲刺次数 +N」「冲刺恢复速度 +x%」在这里接进存储池；
+		// 天赋「迅捷」的一阶段 +1 次、二阶段 +20% 恢复也走同一条路
+		SkillStorage.registerMaxBonus(STORAGE,
+				player -> ArtifactEffects.dashChargeBonus(player) + com.sephiria.talent.Talents.dashCharges(player));
+		SkillStorage.registerRegenBonus(STORAGE, player -> (int) Math.round(
+				ArtifactEffects.dashRegenPercent(player) + com.sephiria.talent.Talents.dashRegenPercent(player)));
 	}
 
 	public static void perform(ServerPlayer player) {
@@ -64,7 +67,7 @@ public final class DashSkill {
 			return;
 		}
 
-		Invulnerability.grant(player, INVULNERABLE_TICKS);
+		Invulnerability.grant(player, INVULNERABLE_TICKS + com.sephiria.talent.Talents.dashInvulnerableTicks(player));
 
 		Vec3 look = player.getLookAngle();
 		Vec3 direction = new Vec3(look.x, 0.0D, look.z);

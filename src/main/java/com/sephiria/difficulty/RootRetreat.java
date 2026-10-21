@@ -3,15 +3,20 @@ package com.sephiria.difficulty;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
+import com.sephiria.backpack.ArtifactBackpack;
+import com.sephiria.stats.CombatState;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -215,5 +220,75 @@ public final class RootRetreat {
 		}
 
 		return (float) (tenacious * armor);
+	}
+
+	// ------------------------------------------------------------------ 新增选项与祝福（2026-10-21）
+
+	/** 「轻盈」祝福的激活阶段。 */
+	public static final int LIGHTNESS_STAGE = 20;
+	/** 「力量」祝福的激活阶段。 */
+	public static final int STRENGTH_STAGE = 30;
+	/** 「勇气」祝福的激活阶段。 */
+	public static final int COURAGE_STAGE = 40;
+
+	/**
+	 * 「衰退」+「紧张」：玩家这次治疗实际拿到的比例（1.0 = 全额，0 = 完全不回）。
+	 *
+	 * <p>「衰退」按等级削 5/10/20/30/40/50%；「紧张」在战斗状态直接把比例压到 0。
+	 * 结算挂在 {@code LivingEntity#heal} 上，自然回复 / 再生药水 / 瞬间治疗 / 金苹果都走这条。
+	 */
+	public static float healingMultiplier(ServerPlayer player) {
+		double decay = DifficultyOption.DECAY.effectAt(levelOf(player, DifficultyOption.DECAY));
+		double multiplier = 1.0D - decay / 100.0D;
+
+		if (levelOf(player, DifficultyOption.TENSION) > 0 && CombatState.isInCombat(player)) {
+			multiplier = 0.0D;
+		}
+
+		return (float) Math.max(0.0D, multiplier);
+	}
+
+	/**
+	 * 「心之重担」：死亡时按等级概率让物品消失（主背包 36 格 + 赛菲莉娅背包）。
+	 *
+	 * <p>由 {@code ServerPlayer#die} 的 mixin 在 <b>HEAD</b> 调用——也就是在原版死亡掉落之前，
+	 * 所以消失的东西不会掉到地上。不区分 keepInventory：即使开了死亡不掉落，这一部分也照样消失
+	 * （用户 2026-10-21 的口径）。
+	 *
+	 * <p>概率按「每一摞物品」独立掷：20% 就是每摞各有 20% 的概率消失，期望是两成。
+	 */
+	public static void applyDeathBurden(ServerPlayer player) {
+		double percent = DifficultyOption.HEART_BURDEN.effectAt(
+				levelOf(player, DifficultyOption.HEART_BURDEN));
+
+		if (percent <= 0.0D || player.isCreative() || player.isSpectator()) {
+			return;
+		}
+
+		RandomSource random = player.getRandom();
+		Inventory inventory = player.getInventory();
+
+		for (int slot = 0; slot < Inventory.INVENTORY_SIZE; slot++) {
+			if (!inventory.getItem(slot).isEmpty() && random.nextDouble() * 100.0D < percent) {
+				inventory.setItem(slot, ItemStack.EMPTY);
+			}
+		}
+
+		ArtifactBackpack backpack = ArtifactBackpack.of(player);
+
+		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
+			if (!backpack.getItem(slot).isEmpty() && random.nextDouble() * 100.0D < percent) {
+				backpack.setItem(slot, ItemStack.EMPTY);
+			}
+		}
+	}
+
+	/**
+	 * 「轻盈」：最终摔落伤害乘 0.8（没激活就是 1.0）。
+	 *
+	 * <p>挂在 {@code LivingEntity#causeFallDamage} 的第一个参数（下落距离）上，等比缩小 20%。
+	 */
+	public static double lightnessFallMultiplier(ServerPlayer player) {
+		return stageOf(player) >= LIGHTNESS_STAGE ? 0.8D : 1.0D;
 	}
 }

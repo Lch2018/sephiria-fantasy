@@ -11,7 +11,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * 达成成就就送一片四叶草（＝许愿池的抽奖次数 +1，用户 2026-10-17 的口径）。
+ * 达成成就送一片四叶草（＝许愿池的抽奖次数 +1）与一点天赋点（用户 2026-10-21 的口径：
+ * 天赋点「达成任意成就加一点，与四叶草类似」）。
  *
  * <p>挂 {@code PlayerAdvancements#award(holder, criterion)}：它按「条件」调用，**只有这次调用把
  * 整个成就做完时才返回 true**，所以按返回值判定正好是「每个成就一次」（重复调用返回 false）。
@@ -20,12 +21,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * （{@code show_toast}）。两个反例正好都被这条排除掉：原版的配方解锁成就是隐藏的；
  * 模组自己那些「配方书展示用」的条目（{@code advancement/weapons/*.json}）是
  * {@code show_toast: false}，而且用 `minecraft:tick` 触发、进游戏就自动发——
- * 不排除的话每个玩家一进服就会白拿八片。
+ * 不排除的话每个玩家一进服就会白拿八片四叶草与八点天赋。
  */
 @Mixin(PlayerAdvancements.class)
 public class PlayerAdvancementsMixin {
 	/** 达成一个成就送几片四叶草。 */
 	private static final int CLOVERS_PER_ACHIEVEMENT = 1;
+	/** 达成一个成就送几点天赋点。 */
+	private static final int TALENT_POINTS_PER_ACHIEVEMENT = 1;
 
 	@Shadow
 	private ServerPlayer player;
@@ -38,6 +41,7 @@ public class PlayerAdvancementsMixin {
 		}
 
 		WishPool.addClovers(this.player, CLOVERS_PER_ACHIEVEMENT);
+		com.sephiria.talent.Talents.addPoints(this.player, TALENT_POINTS_PER_ACHIEVEMENT);
 	}
 
 	/** 会弹 toast 的成就才算（见类注释的两个反例）。 */

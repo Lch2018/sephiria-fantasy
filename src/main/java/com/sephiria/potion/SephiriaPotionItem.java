@@ -88,6 +88,8 @@ public class SephiriaPotionItem extends Item implements Quality {
 	public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
 		if (entity instanceof ServerPlayer player) {
 			this.effect.apply(player);
+			// 天赋「生存」一阶段：高级及以上品质的药水额外给一项随机属性 +1
+			com.sephiria.talent.SurvivalTalent.onPotionDrunk(player, stack);
 		}
 
 		stack.shrink(1);

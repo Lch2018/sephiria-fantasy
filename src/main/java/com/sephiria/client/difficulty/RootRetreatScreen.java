@@ -51,6 +51,9 @@ public class RootRetreatScreen extends AbstractContainerScreen<RootRetreatMenu> 
 	private static final int STAGE_COLOR = 0xFFFFD24A;
 	/** 「经验加成 x%」的颜色：绿色（祝福对玩家是好处）。 */
 	private static final int BLESSING_COLOR = 0xFF55FF55;
+	/** 未激活的祝福名字：同色系压暗（力量 / 轻盈绿、勇气黄）。 */
+	private static final int BLESSING_DIM_GREEN = 0xFF3F7F3F;
+	private static final int BLESSING_DIM_YELLOW = 0xFF7F6A2A;
 	/** 小标题（「你的方案」）的颜色。 */
 	private static final int HEADER_COLOR = 0xFFAAAAAA;
 	/** 鼠标下那一行的底色。 */
@@ -258,9 +261,9 @@ public class RootRetreatScreen extends AbstractContainerScreen<RootRetreatMenu> 
 		int right = left + RootRetreatMenu.RIGHT_WIDTH;
 		int listBottom = top + RootRetreatMenu.LIST_TOP + RootRetreatMenu.LIST_HEIGHT;
 
-		// 右上：这个方块那份方案的阶段 + 它带来的祝福（每层阶段 +10% 经验）
-		extractor.fill(left, top + RootRetreatMenu.LIST_TOP, right, top + RootRetreatMenu.BLESSING_Y + 12,
-				BOX_COLOR);
+		// 右上：这个方块那份方案的阶段 + 它带来的祝福（每层阶段 +10% 经验 + 三条新祝福）
+		extractor.fill(left, top + RootRetreatMenu.LIST_TOP, right,
+				top + RootRetreatMenu.BLESSING_ROW_Y + 12, BOX_COLOR);
 		Component blockStage = Component.translatable("screen.sephiria_fantasy.root_retreat.stage",
 				this.menu.blockStage());
 		extractor.text(font, blockStage,
@@ -272,6 +275,7 @@ public class RootRetreatScreen extends AbstractContainerScreen<RootRetreatMenu> 
 		extractor.text(font, blessing,
 				left + (RootRetreatMenu.RIGHT_WIDTH - font.width(blessing)) / 2,
 				top + RootRetreatMenu.BLESSING_Y, TEXT_COLOR);
+		renderBlessings(extractor, left, top);
 
 		// 右下：你自己的方案——第 1 行「第 x 阶段」，之后每项一行「名字 z层」
 		extractor.fill(left, top + RootRetreatMenu.YOUR_PLAN_TITLE_Y - 6, right, listBottom, BOX_COLOR);
@@ -298,6 +302,94 @@ public class RootRetreatScreen extends AbstractContainerScreen<RootRetreatMenu> 
 		}
 
 		extractor.disableScissor();
+	}
+
+	/** 右上框里的「祝福 力量 轻盈 勇气」：名字按激活阶段上色（未激活压暗）。 */
+	private void renderBlessings(GuiGraphicsExtractor extractor, int left, int top) {
+		Font font = this.font;
+		int y = top + RootRetreatMenu.BLESSING_ROW_Y;
+		Component label = Component.translatable("screen.sephiria_fantasy.root_retreat.blessings");
+		extractor.text(font, label, left + 4, y, HEADER_COLOR);
+		int x = left + 4 + font.width(label) + 4;
+		int stage = this.menu.blockStage();
+
+		for (int index = 0; index < 3; index++) {
+			Component name = blessingName(index);
+			int color = stage >= blessingStage(index) ? blessingColor(index) : blessingDimColor(index);
+			extractor.text(font, name.copy().withColor(color), x, y, color);
+			x += font.width(name) + 4;
+		}
+	}
+
+	private static Component blessingName(int index) {
+		return Component.translatable(switch (index) {
+			case 0 -> "screen.sephiria_fantasy.root_retreat.blessing.strength";
+			case 1 -> "screen.sephiria_fantasy.root_retreat.blessing.lightness";
+			default -> "screen.sephiria_fantasy.root_retreat.blessing.courage";
+		});
+	}
+
+	private static int blessingStage(int index) {
+		return switch (index) {
+			case 0 -> RootRetreat.STRENGTH_STAGE;
+			case 1 -> RootRetreat.LIGHTNESS_STAGE;
+			default -> RootRetreat.COURAGE_STAGE;
+		};
+	}
+
+	/** 勇气没有描述（用户口径），返回 null。 */
+	private static String blessingDescKey(int index) {
+		return switch (index) {
+			case 0 -> "screen.sephiria_fantasy.root_retreat.blessing.strength.desc";
+			case 1 -> "screen.sephiria_fantasy.root_retreat.blessing.lightness.desc";
+			default -> null;
+		};
+	}
+
+	private static int blessingColor(int index) {
+		return index == 2 ? STAGE_COLOR : BLESSING_COLOR;
+	}
+
+	private static int blessingDimColor(int index) {
+		return index == 2 ? BLESSING_DIM_YELLOW : BLESSING_DIM_GREEN;
+	}
+
+	private int blessingRowX() {
+		return this.leftPos + RootRetreatMenu.RIGHT_X + 4;
+	}
+
+	private int blessingRowY() {
+		return this.topPos + RootRetreatMenu.BLESSING_ROW_Y;
+	}
+
+	private int blessingNameX(int index) {
+		int x = blessingRowX()
+				+ this.font.width(Component.translatable("screen.sephiria_fantasy.root_retreat.blessings")) + 4;
+
+		for (int i = 0; i < index; i++) {
+			x += this.font.width(blessingName(i)) + 4;
+		}
+
+		return x;
+	}
+
+	/** 鼠标下的祝福（0 力量 / 1 轻盈 / 2 勇气），不在那一行返回 -1。 */
+	private int hoveredBlessing(int mouseX, int mouseY) {
+		int y = blessingRowY();
+
+		if (mouseY < y || mouseY >= y + 10) {
+			return -1;
+		}
+
+		for (int index = 0; index < 3; index++) {
+			int x = blessingNameX(index);
+
+			if (mouseX >= x && mouseX < x + this.font.width(blessingName(index))) {
+				return index;
+			}
+		}
+
+		return -1;
 	}
 
 	/** 鼠标下的那一项；不在左列（或那一行被滚出去）时返回 null。 */
@@ -336,26 +428,47 @@ public class RootRetreatScreen extends AbstractContainerScreen<RootRetreatMenu> 
 		extractor.text(this.font, this.title, RootRetreatMenu.PAD, 8, TEXT_COLOR);
 	}
 
-	/** 悬停浮窗：这一级的效果（数值红色）+「解除了 x 层束缚」（x层 红色）+ 可选的机制说明。 */
+	/** 悬停浮窗：难度选项那一行，或者右上框里的祝福名字。 */
 	@Override
 	protected void extractTooltip(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
 		super.extractTooltip(extractor, mouseX, mouseY);
-		DifficultyOption hovered = hoveredOption(mouseX, mouseY);
+		int blessing = hoveredBlessing(mouseX, mouseY);
 
-		if (hovered == null) {
+		if (blessing >= 0) {
+			List<Component> lines = new ArrayList<>();
+			lines.add(Component.translatable("screen.sephiria_fantasy.root_retreat.blessing.activate",
+					blessingStage(blessing)).withColor(STAGE_COLOR));
+			String desc = blessingDescKey(blessing);
+
+			if (desc != null) {
+				lines.add(Component.translatable(desc).withColor(HEADER_COLOR));
+			}
+
+			// 祝福名字在面板最右侧，浮窗放右边会顶出屏幕——改到鼠标左侧（用户 2026-10-21）
+			drawTooltip(extractor, mouseX, mouseY, lines, true);
 			return;
 		}
 
-		List<Component> lines = hovered.tooltip(this.menu.blockLevelOf(hovered));
+		DifficultyOption hovered = hoveredOption(mouseX, mouseY);
+
+		if (hovered != null) {
+			drawTooltip(extractor, mouseX, mouseY, hovered.tooltip(this.menu.blockLevelOf(hovered)), false);
+		}
+	}
+
+	/** 统一的浮窗画法（难度选项在右侧、祝福在左侧，四周夹进屏幕内）。 */
+	private void drawTooltip(GuiGraphicsExtractor extractor, int mouseX, int mouseY, List<Component> lines,
+			boolean toLeft) {
 		int width = 0;
 
 		for (Component line : lines) {
 			width = Math.max(width, this.font.width(line));
 		}
 
-		int x = mouseX + 8;
-		int y = mouseY + 8;
 		int height = lines.size() * 10 + 6;
+		int x = toLeft ? mouseX - width - 8 : mouseX + 8;
+		x = Mth.clamp(x, 4, Math.max(4, this.width - width - 4));
+		int y = Mth.clamp(mouseY + 8, 4, Math.max(4, this.height - height - 4));
 		extractor.fill(x - 3, y - 3, x + width + 3, y + height - 3, 0xF0100010);
 		extractor.fill(x - 3, y - 3, x + width + 3, y - 2, 0xFF5050A0);
 

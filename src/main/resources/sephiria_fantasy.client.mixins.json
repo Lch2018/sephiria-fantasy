@@ -11,7 +11,8 @@
 		"EntityRendererMixin",
 		"EntityRenderStateMixin",
 		"MinecraftAttackMixin",
-		"CraftingRecipeBookTabsMixin"
+		"CraftingRecipeBookTabsMixin",
+		"WeaponGlintMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

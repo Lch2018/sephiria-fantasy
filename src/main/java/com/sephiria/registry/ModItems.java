@@ -85,6 +85,7 @@ import com.sephiria.artifact.WisdomAmuletItem;
 import com.sephiria.potion.PotionEffect;
 import com.sephiria.potion.Potions;
 import com.sephiria.potion.SephiriaPotionItem;
+import com.sephiria.slate.HeavenSlateItem;
 import com.sephiria.slate.PatternSlateItem;
 import com.sephiria.slate.Slates;
 import com.sephiria.weapon.BaseWeapon;
@@ -241,7 +242,7 @@ public final class ModItems {
 	public static final Item SLATE_OF_WAVE = registerSlate("slate_of_wave", ArtifactRarity.ADVANCED,
 			Slates.WAVE, true);
 
-	/** 石板 · 双星（高级）：正上方与正下方各 +2。 */
+	/** 石板 · 双星（高级）：正上方第二格与正下方第二格各 +2。 */
 	public static final Item SLATE_OF_DOUBLE_STAR = registerSlate("slate_of_double_star", ArtifactRarity.ADVANCED,
 			Slates.DOUBLE_STAR, true);
 
@@ -296,6 +297,166 @@ public final class ModItems {
 	/** 到来（普通）：。 */
 	public static final Item SLATE_OF_ARRIVAL = registerSlate("slate_of_arrival", ArtifactRarity.COMMON,
 			Slates.ARRIVAL, true);
+
+	/** 近似（普通）：。 */
+	public static final Item SLATE_OF_APPROXIMATION = registerSlate("slate_of_approximation", ArtifactRarity.COMMON,
+			Slates.APPROXIMATION, true);
+
+	/** 恶作剧（普通）：。 */
+	public static final Item SLATE_OF_MISCHIEF = registerSlate("slate_of_mischief", ArtifactRarity.COMMON,
+			Slates.MISCHIEF, true);
+
+	/** 滋养（普通）：。 */
+	public static final Item SLATE_OF_NOURISHMENT = registerSlate("slate_of_nourishment", ArtifactRarity.COMMON,
+			Slates.NOURISHMENT, true);
+
+	/** 智慧（普通）：。 */
+	public static final Item SLATE_OF_WISDOM = registerSlate("slate_of_wisdom", ArtifactRarity.COMMON,
+			Slates.WISDOM, true);
+
+	/** 骑士道（普通）：。 */
+	public static final Item SLATE_OF_CHIVALRY = registerSlate("slate_of_chivalry", ArtifactRarity.COMMON,
+			Slates.CHIVALRY, true);
+
+	/** 命运（普通）：。 */
+	public static final Item SLATE_OF_FATE = registerSlate("slate_of_fate", ArtifactRarity.COMMON,
+			Slates.FATE, false);
+
+	/** 凝视（普通）：。 */
+	public static final Item SLATE_OF_GAZE = registerSlate("slate_of_gaze", ArtifactRarity.COMMON,
+			Slates.GAZE, true);
+
+	/** 善意（普通）：。 */
+	public static final Item SLATE_OF_GOODWILL = registerSlate("slate_of_goodwill", ArtifactRarity.COMMON,
+			Slates.GOODWILL, false);
+
+	/** 希望（普通）：。 */
+	public static final Item SLATE_OF_HOPE = registerSlate("slate_of_hope", ArtifactRarity.COMMON,
+			Slates.HOPE, true);
+
+	/** 欢呼（普通）：。 */
+	public static final Item SLATE_OF_CHEER = registerSlate("slate_of_cheer", ArtifactRarity.COMMON,
+			Slates.CHEER, false);
+
+	/** 出口（高级）：。 */
+	public static final Item SLATE_OF_EXIT = registerSlate("slate_of_exit", ArtifactRarity.ADVANCED,
+			Slates.EXIT, false);
+
+	/** 进步（高级）：。 */
+	public static final Item SLATE_OF_PROGRESS = registerSlate("slate_of_progress", ArtifactRarity.ADVANCED,
+			Slates.PROGRESS, true);
+
+	/** 三头（高级）：。 */
+	public static final Item SLATE_OF_THREE_HEADS = registerSlate("slate_of_three_heads", ArtifactRarity.ADVANCED,
+			Slates.THREE_HEADS, false);
+
+	/** 准备（高级）：。 */
+	public static final Item SLATE_OF_PREPARATION = registerSlate("slate_of_preparation", ArtifactRarity.ADVANCED,
+			Slates.PREPARATION, true);
+
+	/** 分配（高级）：。 */
+	public static final Item SLATE_OF_DISTRIBUTION = registerSlate("slate_of_distribution", ArtifactRarity.ADVANCED,
+			Slates.DISTRIBUTION, false);
+
+	/** 堆叠（高级）：。 */
+	public static final Item SLATE_OF_STACK = registerSlate("slate_of_stack", ArtifactRarity.ADVANCED,
+			Slates.STACK, true);
+
+	/** 荣誉（高级）：。 */
+	public static final Item SLATE_OF_HONOR = registerSlate("slate_of_honor", ArtifactRarity.ADVANCED,
+			Slates.HONOR, true);
+
+	/** 过去（高级）：。 */
+	public static final Item SLATE_OF_PAST = registerSlate("slate_of_past", ArtifactRarity.ADVANCED,
+			Slates.PAST, true);
+
+	/** 前进（高级）：。 */
+	public static final Item SLATE_OF_ADVANCE = registerSlate("slate_of_advance", ArtifactRarity.ADVANCED,
+			Slates.ADVANCE, true);
+
+	/** 献礼（高级）：。 */
+	public static final Item SLATE_OF_OFFERING = registerSlate("slate_of_offering", ArtifactRarity.ADVANCED,
+			Slates.OFFERING, true);
+
+	/** 渴望（高级）：。 */
+	public static final Item SLATE_OF_DESIRE = registerSlate("slate_of_desire", ArtifactRarity.ADVANCED,
+			Slates.DESIRE, false);
+
+	/** 鼓动（高级）：。 */
+	public static final Item SLATE_OF_AGITATION = registerSlate("slate_of_agitation", ArtifactRarity.ADVANCED,
+			Slates.AGITATION, true);
+
+	/** 收获（高级）：。 */
+	public static final Item SLATE_OF_HARVEST = registerSlate("slate_of_harvest", ArtifactRarity.ADVANCED,
+			Slates.HARVEST, true);
+
+	/** 转移（高级）：。 */
+	public static final Item SLATE_OF_TRANSFER = registerSlate("slate_of_transfer", ArtifactRarity.ADVANCED,
+			Slates.TRANSFER, true);
+
+	/** 正义（高级）：。 */
+	public static final Item SLATE_OF_JUSTICE = registerSlate("slate_of_justice", ArtifactRarity.ADVANCED,
+			Slates.JUSTICE, true);
+
+	/** 聚集（高级）：。 */
+	public static final Item SLATE_OF_GATHERING = registerSlate("slate_of_gathering", ArtifactRarity.ADVANCED,
+			Slates.GATHERING, true);
+
+	/** 旗帜（稀有）：。 */
+	public static final Item SLATE_OF_BANNER = registerSlate("slate_of_banner", ArtifactRarity.RARE,
+			Slates.BANNER, false);
+
+	/** 同时性（稀有）：。 */
+	public static final Item SLATE_OF_SIMULTANEITY = registerSlate("slate_of_simultaneity", ArtifactRarity.RARE,
+			Slates.SIMULTANEITY, false);
+
+	/** 破釜沉舟（稀有）：。 */
+	public static final Item SLATE_OF_BURN_THE_BOATS = registerSlate("slate_of_burn_the_boats", ArtifactRarity.RARE,
+			Slates.BURN_THE_BOATS, true);
+
+	/** 基础（稀有）：。 */
+	public static final Item SLATE_OF_FOUNDATION = registerSlate("slate_of_foundation", ArtifactRarity.RARE,
+			Slates.FOUNDATION, false);
+
+	/** 权能（稀有）：。 */
+	public static final Item SLATE_OF_AUTHORITY = registerSlate("slate_of_authority", ArtifactRarity.RARE,
+			Slates.AUTHORITY, true);
+
+	/** 压缩（传说）：。 */
+	public static final Item SLATE_OF_COMPRESSION = registerSlate("slate_of_compression", ArtifactRarity.LEGENDARY,
+			Slates.COMPRESSION, true);
+
+	/** 奇迹（传说）：。 */
+	public static final Item SLATE_OF_MIRACLE = registerSlate("slate_of_miracle", ArtifactRarity.LEGENDARY,
+			Slates.MIRACLE, true);
+
+	/** 荆棘（传说）：。 */
+	public static final Item SLATE_OF_THORNS = registerSlate("slate_of_thorns", ArtifactRarity.LEGENDARY,
+			Slates.THORNS, false);
+
+	/** 光辉（传说）：。 */
+	public static final Item SLATE_OF_RADIANCE = registerSlate("slate_of_radiance", ArtifactRarity.LEGENDARY,
+			Slates.RADIANCE, true);
+
+	/** 勇气（传说）：。 */
+	public static final Item SLATE_OF_COURAGE = registerSlate("slate_of_courage", ArtifactRarity.LEGENDARY,
+			Slates.COURAGE, true);
+
+	/**
+	 * 天国（表面永恒）：背包所有格子等级 +9、不可旋转；<b>不进任何掉落池</b>，只能烧炼远古残骸时
+	 * 以 0.01% 的概率从熔炉里弹出（见 FurnaceHeavenSlateMixin）。
+	 */
+	public static final Item SLATE_OF_HEAVEN = register(key("slate_of_heaven"),
+			p -> new HeavenSlateItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/**
+	 * 石板基础（天赋「耐心」第一阶段）：空效果、占一格且不可移出背包；
+	 * 第一阶段熄灭时由 {@code PatienceTalent} 直接删掉。
+	 */
+	public static final Item SLATE_BASE = register(key("slate_base"),
+			p -> new com.sephiria.slate.SlateBaseItem(p),
+			new Item.Properties().stacksTo(1));
 
 	/** 石板统一走通用实现：范围与增量都在 Slates 里，这里只挑品质与风味文本。 */
 	private static Item registerSlate(String name, ArtifactRarity rarity, java.util.List<PatternSlateItem.Cell> pattern,
@@ -766,6 +927,16 @@ public final class ModItems {
 	/** 升级宝箱：每 1000 点经验发一个，奖池混着神器与石板，好东西更少。 */
 	public static final Item UPGRADE_CHEST = register(key("upgrade_chest"),
 			p -> new ChestItem(ChestItem.Kind.UPGRADE, p),
+			new Item.Properties().stacksTo(1));
+
+	/** 稀有神器宝箱（BOSS 掉落）：奖池只保留稀有及以上品质的神器。 */
+	public static final Item RARE_ARTIFACT_CHEST = register(key("rare_artifact_chest"),
+			p -> new ChestItem(ChestItem.Kind.RARE_ARTIFACT, p),
+			new Item.Properties().stacksTo(1));
+
+	/** 稀有石板宝箱（BOSS 掉落）：奖池只保留稀有及以上品质的石板。 */
+	public static final Item RARE_SLATE_CHEST = register(key("rare_slate_chest"),
+			p -> new ChestItem(ChestItem.Kind.RARE_SLATE, p),
 			new Item.Properties().stacksTo(1));
 
 	/**

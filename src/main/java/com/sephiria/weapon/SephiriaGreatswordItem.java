@@ -78,6 +78,9 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	/** 横扫触发的充能门槛，与原版一致。 */
 	private static final float SWEEP_CHARGE_THRESHOLD = 0.9F;
 
+	/** 「旋风」的蓝耗：满蓄松开时收，蓝不够就放不出来（蓄力白蓄，得等回蓝再按）。 */
+	private static final double WHIRLWIND_MP_COST = 15.0D;
+
 	/** 待结算的环形斩击。 */
 	private static final List<Pending> PENDING = new ArrayList<>();
 
@@ -212,6 +215,11 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 		}
 
 		if (chargeTicks(stack, entity, timeLeft) < CHARGE_TICKS) {
+			return false;
+		}
+
+		// 蓝不够时整段技能都不发动（返回 false：不突进、不出环形斩击，蓄力作废）
+		if (!PlayerStats.spendMp(player, WHIRLWIND_MP_COST)) {
 			return false;
 		}
 

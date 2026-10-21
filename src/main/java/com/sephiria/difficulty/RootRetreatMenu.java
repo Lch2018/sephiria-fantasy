@@ -49,14 +49,16 @@ public class RootRetreatMenu extends AbstractContainerMenu {
 	/** 右列的左沿与宽度。 */
 	public static final int RIGHT_X = 164;
 	public static final int RIGHT_WIDTH = 96;
-	/** 右上：这个方块的阶段与祝福；右下：你自己的方案。 */
+	/** 右上：这个方块的阶段、经验加成与三条新祝福；右下：你自己的方案。 */
 	public static final int BLOCK_STAGE_Y = 26;
 	public static final int BLESSING_Y = 40;
-	public static final int YOUR_PLAN_TITLE_Y = 62;
-	public static final int YOUR_STAGE_Y = 76;
-	public static final int YOUR_ROWS_TOP = 90;
-	/** 右下的「名字 z层」行高。 */
-	public static final int YOUR_ROW_HEIGHT = 11;
+	/** 「祝福 力量 轻盈 勇气」那一行（右上框内）。 */
+	public static final int BLESSING_ROW_Y = 52;
+	public static final int YOUR_PLAN_TITLE_Y = 70;
+	public static final int YOUR_STAGE_Y = 84;
+	public static final int YOUR_ROWS_TOP = 96;
+	/** 右下的「名字 z层」行高（6 项要塞进原来的高度，比左列紧一点）。 */
+	public static final int YOUR_ROW_HEIGHT = 9;
 	/** 底部两个按钮。 */
 	public static final int BUTTON_Y = LIST_TOP + LIST_HEIGHT + 8;
 	public static final int WIDE_BUTTON_WIDTH = 72;

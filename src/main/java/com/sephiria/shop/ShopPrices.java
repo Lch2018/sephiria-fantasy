@@ -5,6 +5,7 @@ import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.artifact.ChestItem;
 import com.sephiria.artifact.SephiriaArtifact;
 import com.sephiria.potion.SephiriaPotionItem;
+import com.sephiria.registry.ModItems;
 import com.sephiria.slate.SlateItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -63,8 +64,16 @@ public final class ShopPrices {
 	public static int buy(ItemStack stack) {
 		Item item = stack.getItem();
 
+		// 天国只是「看起来是永恒」：不进经济系统，既不能买也不能卖
+		if (item == ModItems.SLATE_OF_HEAVEN) {
+			return 0;
+		}
+
 		if (item instanceof ChestItem chest) {
-			return chest.kind() == ChestItem.Kind.SLATE ? SLATE_CHEST_PRICE : CHEST_PRICE;
+			// 稀有石板宝箱按石板宝箱的价走，稀有神器宝箱按神器宝箱的价走（两者都只能卖，不出售）
+			boolean slateChest = chest.kind() == ChestItem.Kind.SLATE
+					|| chest.kind() == ChestItem.Kind.RARE_SLATE;
+			return slateChest ? SLATE_CHEST_PRICE : CHEST_PRICE;
 		}
 
 		if (item instanceof SephiriaPotionItem potion) {

@@ -107,12 +107,23 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 	/** 技能冷却：1.8 秒。比整段（0.5 秒）长得多，避免连点把无敌无限续上。 */
 	private static final int COOLDOWN_TICKS = 36;
 
+	/**
+	 * 蓝耗：回击 7、完美回击 3。
+	 *
+	 * <p>回击 2 / 回击 3 是同一段的后续，不再单独收费；完美防御触发时把多收的 4 点退回去，
+	 * 玩家实际付 3 点。
+	 */
+	private static final double RIPOSTE_MP_COST = 7.0D;
+	private static final double PERFECT_RIPOSTE_MP_COST = 3.0D;
+
 	/** 回击期间"格挡窗口"的到期刻：窗口内挨打算完美防御（伤害由本类自己取消）。 */
 	private static final Map<UUID, Long> GUARD_UNTIL = new ConcurrentHashMap<>();
 	/** 最终伤害减免的到期刻：无敌结束后生效。 */
 	private static final Map<UUID, Long> REDUCTION_UNTIL = new ConcurrentHashMap<>();
 	/** 本次回击是否已经判定为完美防御。 */
 	private static final Set<UUID> PERFECT = ConcurrentHashMap.newKeySet();
+	/** 刚判定完美回击、等下一刻退蓝的玩家（见 register 里的说明）。 */
+	private static final Set<UUID> PENDING_REFUND = ConcurrentHashMap.newKeySet();
 	/** 待结算的范围伤害与后续段。 */
 	private static final List<Pending> PENDING = new ArrayList<>();
 
@@ -171,7 +182,15 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
 			if (entity instanceof ServerPlayer player && isGuarding(player)) {
 				// 完美防御：无敌窗口里挨到攻击。伤害在这里直接取消（不依赖其它无敌实现的注册顺序）
-				PERFECT.add(player.getUUID());
+				boolean first = PERFECT.add(player.getUUID());
+
+				// 完美回击净收 3 点：回击 2/3 不再收费，这里把多收的 4 点退回去。
+				// 同一段里只退一次（无敌窗口里可能挨好几下）；退款挪到下一刻发，
+				// 不在伤害事件里改属性/发包（与匕首招架的奖励同一个写法）
+				if (first) {
+					PENDING_REFUND.add(player.getUUID());
+				}
+
 				player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 						SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0F, 1.5F);
 				return false;
@@ -222,6 +241,11 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 		ServerPlayer serverPlayer = (ServerPlayer) player;
 		long now = player.level().getGameTime();
 
+		// 回击先收 7 点；蓝不够就整段放不出来（不进冷却、不位移、不无敌）
+		if (!PlayerStats.spendMp(serverPlayer, RIPOSTE_MP_COST)) {
+			return InteractionResult.FAIL;
+		}
+
 		PERFECT.remove(serverPlayer.getUUID());
 		GUARD_UNTIL.put(serverPlayer.getUUID(), now + INVULNERABLE_TICKS);
 		REDUCTION_UNTIL.put(serverPlayer.getUUID(), now + INVULNERABLE_TICKS + REDUCTION_TICKS);
@@ -266,6 +290,19 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 		long now = server.overworld().getGameTime();
 		GUARD_UNTIL.entrySet().removeIf(entry -> entry.getValue() <= now);
 		REDUCTION_UNTIL.entrySet().removeIf(entry -> entry.getValue() <= now);
+
+		// 完美回击的退款：伤害事件里只打标记，下一刻在这里真正退（见 register 里的说明）
+		if (!PENDING_REFUND.isEmpty()) {
+			for (UUID id : PENDING_REFUND) {
+				ServerPlayer player = server.getPlayerList().getPlayer(id);
+
+				if (player != null) {
+					PlayerStats.refundMp(player, RIPOSTE_MP_COST - PERFECT_RIPOSTE_MP_COST);
+				}
+			}
+
+			PENDING_REFUND.clear();
+		}
 
 		if (PENDING.isEmpty()) {
 			return;

@@ -1,49 +1,49 @@
 === SLATE v2 ===
-name: 白日梦
+name: 压缩
 rarity: legendary
 rotatable: true
-icon: inbox/20261018-173250_白日梦.png
+icon: inbox/20261021-130425_压缩.png
+turns: 0
+anchor: 4,5
+cells: 0,-3,1 0,-2,2 0,-1,3
+=== END ===
+
+=== SLATE v2 ===
+name: 奇迹
+rarity: legendary
+rotatable: true
+icon: inbox/20261021-130515_奇迹.png
 turns: 0
 anchor: 4,4
-cells: 1,-1,2 -1,-1,2 -1,1,2 1,1,2
+cells: 0,-1,1 0,-2,1 0,-3,1 0,-4,1 0,-5,1 0,-6,1 0,-7,1 0,-8,1 -1,0,1 -2,0,1 -3,0,1 -4,0,1 -5,0,1 -6,0,1 -7,0,1 -8,0,1 1,0,1 2,0,1 3,0,1 4,0,1 5,0,1 6,0,1 7,0,1 8,0,1 0,1,1 0,3,1 0,2,1 0,4,1 0,6,1 0,7,1 0,5,1 0,8,1
 === END ===
 
 === SLATE v2 ===
-name: 反抗
-rarity: rare
-rotatable: true
-icon: inbox/20261018-173425_反抗.png
-turns: 7
-anchor: 4,4
-cells: 1,1,1 2,2,1 3,3,1 4,4,1 5,5,1 6,6,1 7,7,1 8,8,1 -1,-1,1 -2,-2,1 -3,-3,1 -4,-4,1 -5,-5,1 -6,-6,1 -7,-7,1 -8,-8,1
-=== END ===
-
-=== SLATE v2 ===
-name: 接合
-rarity: rare
-rotatable: true
-icon: inbox/20261018-173542_接合.png
+name: 荆棘
+rarity: legendary
+rotatable: false
+icon: inbox/20261021-130623_荆棘.png
 turns: 0
 anchor: 4,4
-cells: 0,-1,1 0,-2,1 0,-3,1 1,0,1 2,0,1 3,0,1
+cells: 0,-1,2 1,-1,1 1,0,1 1,1,1 0,1,2 -1,1,1 -1,0,1 -1,-1,1
 === END ===
 
 === SLATE v2 ===
-name: 报恩
-rarity: eternal
+name: 光辉
+rarity: legendary
 rotatable: true
-icon: inbox/20261018-173904_报恩.png
-turns: 4
-anchor: 4,4
-cells: -1,0,3 -2,0,3 -3,0,3 -4,0,3 1,0,3 2,0,3 3,0,3 4,0,3 -5,0,3 -6,0,3 -7,0,3 -8,0,3 5,0,3 6,0,3 7,0,3 8,0,3
-=== END ===
-
-=== SLATE v2 ===
-name: 到来
-rarity: common
-rotatable: true
-icon: inbox/20261018-174029_到来.png
+icon: inbox/20261021-130733_光辉.png
 turns: 0
 anchor: 4,4
-cells: 0,-1,1 0,-2,1 0,1,-1 0,2,-1
+cells: -1,0,1 -2,0,1 -3,0,1 -4,0,1 -6,0,1 -5,0,1 -7,0,1 -8,0,1 1,0,1 2,0,1 3,0,1 4,0,1 5,0,1 6,0,1 7,0,1 8,0,1 0,-1,2 0,1,2
+=== END ===
+
+=== SLATE v2 ===
+name: 勇气
+rarity: legendary
+rotatable: true
+icon: inbox/20261021-130831_勇气.png
+turns: 0
+anchor: 4,4
+cells: -1,-1,1 -2,-2,1 -3,-3,1 -4,-4,1 -5,-5,1 -6,-6,1 -7,-7,1 -8,-8,1 1,1,1 2,2,1 3,3,1 4,4,1 5,5,1 6,6,1 7,7,1 8,8,1 1,-1,2 -1,1,2
 === END ===

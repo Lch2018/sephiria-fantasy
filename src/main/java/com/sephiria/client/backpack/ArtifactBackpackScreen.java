@@ -80,6 +80,11 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	/** 按 R 旋转鼠标下的石板（默认逆时针 90°）；写着「不可旋转」的石板不响应。 */
 	@Override
 	public boolean keyPressed(KeyEvent event) {
+		// F 是石板刻印的长按键：在界面里吞掉，别让它触发原版的交换副手
+		if (event.key() == InputConstants.KEY_F) {
+			return true;
+		}
+
 		// 26.3 移除了 GLFW，键位常量改用 InputConstants（KeyEvent.key() 与
 		// InputConstants.KEY_* 同一套键码，原版 InputConstants.getKey 也是这么取的）
 		if (event.key() == InputConstants.KEY_R) {
@@ -95,10 +100,43 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	}
 
 	@Override
+	public void removed() {
+		SlateImprintController.cancel();
+		super.removed();
+	}
+
+	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
 		ArtifactTooltip.setSlotLevelHint(hoveredSlotLevel(mouseX, mouseY));
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
+		// 长按 F 刻印：每帧轮询按键（26.3 的 Screen 没有 keyReleased），鼠标指着的那格现算
+		SlateImprintController.tickKey(this.menu, backpackSlotAt(mouseX, mouseY),
+				InputConstants.isKeyDown(InputConstants.KEY_F));
+		drawImprintBar(extractor);
 		ArtifactTooltip.clearSlotLevelHint();
+	}
+
+	/**
+	 * 刻印进度条：界面自己画（13×2，位置同原版耐久条），不依赖物品组件同步。
+	 *
+	 * <p>旋转过的石板会因服务端重推物品而丢掉客户端临时写上的进度组件，所以不能只靠
+	 * {@code SlateItem.isBarVisible} 那条路；这里每帧按控制器进度补一条，旋转前后都能看到。
+	 */
+	private void drawImprintBar(GuiGraphicsExtractor extractor) {
+		Slot slot = SlateImprintController.activeSlot();
+
+		if (slot == null) {
+			return;
+		}
+
+		int x = this.leftPos + slot.x + 2;
+		int y = this.topPos + slot.y + 13;
+		extractor.fill(x, y, x + 13, y + 2, 0xFF1A1A1E);
+		int width = Math.round(13 * SlateImprintController.progress());
+
+		if (width > 0) {
+			extractor.fill(x, y, x + width, y + 2, 0xFFD49ED8);
+		}
 	}
 
 	@Override
@@ -426,6 +464,28 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		}
 
 		return -1;
+	}
+
+	/** 鼠标坐标下的背包格（不依赖上一帧的 hoveredSlot；长按刻印要用它）。 */
+	private Slot backpackSlotAt(double mouseX, double mouseY) {
+		Slot slot = slotAt(mouseX, mouseY);
+		return slot != null && this.menu.isBackpackSlot(slot) && this.menu.backpackSlotExists(slot)
+				? slot
+				: null;
+	}
+
+	/** 鼠标坐标下的任意菜单格（松手放置时用）。 */
+	private Slot slotAt(double mouseX, double mouseY) {
+		for (Slot slot : this.menu.slots) {
+			int x = this.leftPos + slot.x;
+			int y = this.topPos + slot.y;
+
+			if (mouseX >= x && mouseX < x + 16 && mouseY >= y && mouseY < y + 16) {
+				return slot;
+			}
+		}
+
+		return null;
 	}
 
 	private static Identifier comboIcon(ArtifactCombo combo) {

@@ -23,7 +23,15 @@ Equipping artifacts of the same set in the Sephiria Backpack raises that combo's
 
 ### Attributes and progression
 
-Physical Power, Fire / Ice / Lightning element strength, crit chance and crit damage, dodge, defense-ignoring (true) damage, movement speed, mana, Leaves (currency), and more. The Attributes page is two columns; hover an entry to see its formula.
+Physical Power, Fire / Ice / Lightning element strength, crit chance and crit damage, dodge, defense, defense-ignoring (true) damage, HP steal, MP absorption, combat MP regeneration, movement speed, mana, Leaves (currency), and more. The Attributes page is two columns; hover an entry to see its formula.
+
+### Talents
+
+Seven talent pages (Wrath / Swiftness / Survival / Patience / Wisdom / Will / Quick Wit), each with three stages at 5 / 10 / 20 points. Talent points come from achievements, boss kills and leveling up. Highlights:
+
+- **Survival**: max HP per point; Advanced-or-better potions grant +1 to a random permanent attribute; extra backpack slots; stage 3 unlocks **Slate Imprint** (hover a slate in the Sephiria Backpack and hold **F** to consume it while keeping its effect on nearby slots).
+- **Patience**: Defense (the same stat enemies use), a Slate Base with the same effect as the Foundation slate, low-health regeneration, and a revival at 60% health once every 10 in-game days (totems take priority).
+- **Wisdom**: combat MP regeneration, MP Absorption, all artifacts forced to 【Unique】 with duplicate merging, dice from boss kills, and one free chest reroll per chest.
 
 ### Shop and chests
 
@@ -90,7 +98,15 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 ### 属性与成长
 
-物理强度、火 / 冰 / 电元素强度、暴击（几率与伤害）、闪避、无视防御伤害、移动速度、蓝量、叶子（货币）等十余项属性；属性页分两列，悬停出算式。
+物理强度、火 / 冰 / 电元素强度、暴击（几率与伤害）、闪避、防御力、无视防御伤害、HP 偷取、MP 吸收、战斗 MP 再生、移动速度、蓝量、叶子（货币）等十余项属性；属性页分两列，悬停出算式。
+
+### 天赋
+
+七条天赋页（愤怒 / 迅捷 / 生存 / 耐心 / 智慧 / 意志 / 急智），每条 5 / 10 / 20 点解锁三个阶段；天赋点来自成就、击杀 BOSS 与升级。要点：
+
+- **生存**：每点最大 HP；喝高级及以上品质药水随机一项属性永久 +1；额外背包格；三阶段解锁**石板刻印**（鼠标指着赛菲莉娅背包里的石板、按住 **F** 消耗它并保留其对周围格子的效果）。
+- **耐心**：防御力（与敌人防御同口径）、与石板「基础」效果相同的石板基础、低血回复、每 10 个游戏日一次的 60% 复活（不死图腾优先）。
+- **智慧**：战斗 MP 再生、MP 吸收、所有神器强制【独特】与同种合并、BOSS 掉落骰子、每个宝箱一次免费刷新。
 
 ### 商店与宝箱
 

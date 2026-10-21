@@ -63,6 +63,9 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 	private static final int TAB_ACTIVE = 0x40FFFFFF;
 	/** 「选中」的白框（锚定件、连击筛选选中的那个）。 */
 	private static final int SELECT_COLOR = 0xFFFFFFFF;
+	/** 锚定格的大小与间距。 */
+	private static final int ANCHOR_SLOT_SIZE = 20;
+	private static final int ANCHOR_SLOT_GAP = 4;
 
 	/** 选择页的物品网格：7 列 × 4 行，每格 20。 */
 	private static final int GRID_COLS = 7;
@@ -423,17 +426,22 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		extractor.fill(left + WishPoolMenu.TAB_X - 2, tabY - 2, left + WishPoolMenu.TAB_X + WishPoolMenu.TAB_WIDTH + 2,
 				tabY + WishPoolMenu.TAB_HEIGHT + 2, TAB_ACTIVE);
 
-		// 锚定物品的图标（没锚定就画一个空框）
-		int iconX = left + WishPoolMenu.ANCHOR_ICON_X;
-		int iconY = top + WishPoolMenu.ANCHOR_ICON_Y;
-		extractor.fill(iconX - 2, iconY - 2, iconX + 22, iconY + 22, BOX_COLOR);
-		Item anchor = anchorItem();
+		// 锚定格：默认 1 格，意志天赋最多加到 5 格；同一件物品占多格时框色按次数变
+		int capacity = anchorSlotCount();
+		int rowX = anchorRowX(capacity);
+		int rowY = top + WishPoolMenu.ANCHOR_ICON_Y;
 
-		if (anchor != null) {
-			drawIcon(extractor, anchor, iconX + 2, iconY + 2, 16);
-		} else {
-			Component none = Component.translatable("screen.sephiria_fantasy.wish_pool.anchor_none");
-			extractor.text(this.font, none, iconX + 10 - this.font.width(none) / 2, iconY + 6, DIM_COLOR);
+		for (int slot = 0; slot < capacity; slot++) {
+			int x = rowX + slot * (ANCHOR_SLOT_SIZE + ANCHOR_SLOT_GAP);
+			int id = this.menu.anchorId(this.slatePool, slot);
+			Item anchor = id > 0 ? BuiltInRegistries.ITEM.byId(id) : null;
+			extractor.fill(x, rowY, x + ANCHOR_SLOT_SIZE, rowY + ANCHOR_SLOT_SIZE, BOX_COLOR);
+
+			if (anchor != null) {
+				int count = this.menu.anchorCount(this.slatePool, anchor);
+				drawIcon(extractor, anchor, x + 2, rowY + 2, 16);
+				drawFrame(extractor, x, rowY, ANCHOR_SLOT_SIZE, anchorColor(count));
+			}
 		}
 
 		// 四叶草与能量同一行：**四叶草在前、能量在后**（用户 2026-10-15 的口径）
@@ -544,15 +552,15 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 			drawIcon(extractor, item, x + 1, y + 1, 16);
 			drawRarityStrip(extractor, x, y + CELL - 3, CELL - 2, rarity);
 
-			// 锚定页 = 当前锚定的那件；神铸页 = 刚选中的那件。都套白框（用户 2026-10-15 的口径）
-			boolean selected = this.mode == Mode.ANCHOR ? item == anchorItem()
+			// 锚定页 = 已锚定的物品（框色按锚定次数：1 白 / 2 绿 / 3 蓝 / 4 黄 / 5 红）；
+			// 神铸页 = 刚选中的那件，套白框
+			int anchors = this.mode == Mode.ANCHOR ? this.menu.anchorCount(this.slatePool, item) : 0;
+			boolean selected = this.mode == Mode.ANCHOR ? anchors > 0
 					: this.mode == Mode.FORGE && item == this.forgeSelection;
 
 			if (selected) {
-				extractor.fill(x, y, x + CELL - 2, y + 1, SELECT_COLOR);
-				extractor.fill(x, y + CELL - 3, x + CELL - 2, y + CELL - 2, SELECT_COLOR);
-				extractor.fill(x, y, x + 1, y + CELL - 2, SELECT_COLOR);
-				extractor.fill(x + CELL - 3, y, x + CELL - 2, y + CELL - 2, SELECT_COLOR);
+				drawFrame(extractor, x, y, CELL - 2,
+						this.mode == Mode.ANCHOR ? anchorColor(anchors) : SELECT_COLOR);
 			}
 		}
 
@@ -694,6 +702,31 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		return null;
 	}
 
+	/** 鼠标下的锚定格下标；空格子或不在卡池页返回 -1。 */
+	private int anchorSlotAt(int mouseX, int mouseY) {
+		if (this.mode != Mode.POOL) {
+			return -1;
+		}
+
+		int capacity = anchorSlotCount();
+		int rowX = anchorRowX(capacity);
+		int rowY = this.topPos + WishPoolMenu.ANCHOR_ICON_Y;
+
+		if (mouseY < rowY || mouseY >= rowY + ANCHOR_SLOT_SIZE) {
+			return -1;
+		}
+
+		for (int slot = 0; slot < capacity; slot++) {
+			int x = rowX + slot * (ANCHOR_SLOT_SIZE + ANCHOR_SLOT_GAP);
+
+			if (mouseX >= x && mouseX < x + ANCHOR_SLOT_SIZE) {
+				return this.menu.anchorId(this.slatePool, slot) > 0 ? slot : -1;
+			}
+		}
+
+		return -1;
+	}
+
 	/**
 	 * 点击：动画期间点一下先跳到全部显示、再点一下回卡池页；选择页点物品就是锚定 / 神铸。
 	 */
@@ -716,6 +749,16 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		if (isOverOverflowToggle((int) event.x(), (int) event.y())) {
 			ClientPlayNetworking.send(WishPoolClickPayload.toggleOverflow());
 			return true;
+		}
+
+		// 卡池页：点已填的锚定格 = 取消这一格（空格子不响应）
+		if (this.mode == Mode.POOL) {
+			int slot = anchorSlotAt((int) event.x(), (int) event.y());
+
+			if (slot >= 0) {
+				ClientPlayNetworking.send(WishPoolClickPayload.clearAnchorSlot(this.slatePool, slot));
+				return true;
+			}
 		}
 
 		if (this.mode == Mode.ANCHOR || this.mode == Mode.FORGE) {
@@ -774,10 +817,42 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 
 	// ------------------------------------------------------------------ 小工具
 
-	/** 锚定件（菜单同步过来的是注册表数字 id，0 = 没锚定）。 */
-	private Item anchorItem() {
-		int id = this.menu.anchorId(this.slatePool);
-		return id <= 0 ? null : BuiltInRegistries.ITEM.byId(id);
+	/** 锚定次数对应的框色：1 白 / 2 绿 / 3 蓝 / 4 黄 / 5 红（0 = 没锚定，不画框）。 */
+	private static int anchorColor(int count) {
+		return switch (count) {
+			case 0 -> 0;
+			case 1 -> SELECT_COLOR;
+			case 2 -> 0xFF55FF55;
+			case 3 -> 0xFF5599FF;
+			case 4 -> 0xFFFFFF55;
+			default -> 0xFFFF5555;
+		};
+	}
+
+	/** 画一圈 1px 的框（锚定格 / 物品格共用）。 */
+	private static void drawFrame(GuiGraphicsExtractor extractor, int x, int y, int size, int colour) {
+		if (colour == 0) {
+			return;
+		}
+
+		extractor.fill(x, y, x + size, y + 1, colour);
+		extractor.fill(x, y + size - 1, x + size, y + size, colour);
+		extractor.fill(x, y, x + 1, y + size, colour);
+		extractor.fill(x + size - 1, y, x + size, y + size, colour);
+	}
+
+	/** 当前卡池显示几个锚定格。 */
+	private int anchorSlotCount() {
+		return Math.max(1, Math.min(WishPool.MAX_ANCHOR_SLOTS, this.menu.anchorCapacity()));
+	}
+
+	private static int anchorRowWidth(int capacity) {
+		return capacity * ANCHOR_SLOT_SIZE + (capacity - 1) * ANCHOR_SLOT_GAP;
+	}
+
+	private int anchorRowX(int capacity) {
+		return this.leftPos + WishPoolMenu.POOL_X
+				+ (WishPoolMenu.POOL_WIDTH - anchorRowWidth(capacity)) / 2;
 	}
 
 	/** 连击筛选的图标：null = 「无连击」那一格，用它自己那张小圆盘。 */

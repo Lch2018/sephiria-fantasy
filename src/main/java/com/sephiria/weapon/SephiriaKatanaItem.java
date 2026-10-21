@@ -5,6 +5,7 @@ import com.sephiria.ability.Dash;
 import com.sephiria.ability.Invulnerability;
 import com.sephiria.ability.SkillStorage;
 import com.sephiria.client.SkillClientData;
+import com.sephiria.client.render.WeaponGlintLayer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
@@ -147,6 +148,14 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	/** 待结算的斩击：突进结束才结算，所以范围到那时候再按落点现算。 */
 	private static final List<Pending> PENDING = new ArrayList<>();
 
+	/**
+	 * 入鞘普通攻击的蓝耗。
+	 *
+	 * <p>蓝不够时这一下不会取消：仍然打出去，但只算<b>空手伤害</b>、没有横扫（相当于空手打），
+	 * 也不攒剑意。强力斩击不耗蓝，所以满层那一刀不受影响。
+	 */
+	private static final double SHEATHED_ATTACK_MP_COST = 5.0D;
+
 	/** 剑意条（物品栏里占耐久条的位置）的颜色：平时浅青，满层金色。 */
 	private static final int INTENT_BAR_COLOR = 0xFF6FD8FF;
 	private static final int INTENT_BAR_FULL_COLOR = 0xFFFFD24A;
@@ -241,6 +250,18 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 						.skillDamage(POWERFUL_DAMAGE_AT_FULL).cooldownTicks(POWERFUL_COOLDOWN)
 						.range(POWERFUL_RANGE).distance(POWERFUL_DISTANCE).build(),
 				desc("tooltip.sephiria_fantasy.skill.slash", "tooltip.sephiria_fantasy.desc.slash"));
+	}
+
+	/**
+	 * 剑意满层时给刀一层附魔式的微光（蓝白，见 {@code WeaponGlint}）。
+	 *
+	 * <p>剑意只存在服务端，客户端读的是 {@link SkillClientData} 镜像；服务端调用时镜像恒为 0，
+	 * 所以只会影响客户端渲染。
+	 */
+	@Override
+	public boolean isFoil(ItemStack stack) {
+		double max = SkillClientData.max(SWORD_INTENT);
+		return max > 0.0D && SkillClientData.current(SWORD_INTENT) >= max;
 	}
 
 
@@ -372,6 +393,13 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				return InteractionResult.FAIL;
 			}
 
+			// 入鞘普通攻击耗 5 点蓝；不够就退化成空手（只有空手伤害、没有横扫、不攒剑意）。
+			// 这里返回 FAIL 会把原版这一下整个取消，所以空手伤害由 bareHandedAttack 自己结算
+			if (isSheathed(stack) && !PlayerStats.spendMp(serverPlayer, SHEATHED_ATTACK_MP_COST)) {
+				bareHandedAttack(serverPlayer, serverLevel, entity);
+				return InteractionResult.FAIL;
+			}
+
 			// 命中才给剑意（这个回调只在真正打到实体时触发，挥空不计），但有 0.3 秒内置冷却：
 			// 冷却内的连续命中不再叠加，逼着玩家按节奏打，而不是贴着目标连点刷层。
 			long now = serverLevel.getGameTime();
@@ -389,6 +417,29 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 			sweep(serverPlayer, serverLevel, stack, entity);
 			return InteractionResult.PASS;
 		});
+	}
+
+	/**
+	 * 蓝不够时的空手一击：伤害按玩家基础攻击力（{@value #PLAYER_BASE_ATTACK_DAMAGE}）乘普通攻击倍率，
+	 * 没有横扫、没有剑意。
+	 *
+	 * <p>攻击回调返回 FAIL 会取消原版 {@code Player#attack}，所以攻击充能要自己清零，
+	 * 否则这一下之后充能一直是满的。
+	 */
+	private static void bareHandedAttack(ServerPlayer player, ServerLevel level, Entity target) {
+		// 不管目标是不是生物，攻击充能都要清（非生物目标也可能走到攻击回调）
+		player.resetAttackStrengthTicker();
+
+		if (!(target instanceof LivingEntity victim)) {
+			return;
+		}
+
+		float damage = (float) (PLAYER_BASE_ATTACK_DAMAGE * PlayerStats.normalAttackMultiplier(player));
+		DamageSource source = level.damageSources().playerAttack(player);
+
+		if (victim.hurtServer(level, source, damage)) {
+			victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ(), source, damage);
+		}
 	}
 
 	/**
@@ -613,6 +664,8 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 							passInfo.poseStack().rotate(new Quaternionf().rotateY((float) Math.toRadians(90.0D)));
 						}
 					};
+					// 剑意满层时的那一遍蓝白微光（GeckoLib 渲染层，见 WeaponGlintLayer）
+					this.renderer.withRenderLayer(new WeaponGlintLayer(this.renderer));
 				}
 				return this.renderer;
 			}

@@ -33,8 +33,39 @@ public abstract class SlateItem extends Item implements BackpackStorable, Qualit
 	/** 四个朝向（0 = 默认，每次 +1 是逆时针 90°）。 */
 	public static final int ROTATIONS = 4;
 
+	/**
+	 * 刻印进度（0..100）：只在客户端长按时临时写在物品副本上，靠原版耐久条画出来。
+	 *
+	 * <p>不参与服务端结算（服务端只认 {@code SlateImprintPayload} 与格子里的真物品），
+	 * 所以同步组件只是为了让同一份 ItemStack 在客户端各处画法一致。
+	 */
+	public static final DataComponentType<Integer> IMPRINT = Registry.register(
+			BuiltInRegistries.DATA_COMPONENT_TYPE,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_imprint_progress"),
+			DataComponentType.<Integer>builder().persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
+
+	/** 刻印进度条的颜色：天赋「生存」的颜色 #D49ED8。 */
+	private static final int IMPRINT_COLOUR = 0xFFD49ED8;
+
 	protected SlateItem(Properties properties) {
 		super(properties);
+	}
+
+	/** 长按刻印时显示耐久条；平时不显示。 */
+	@Override
+	public boolean isBarVisible(ItemStack stack) {
+		return stack.getOrDefault(IMPRINT, 0) > 0;
+	}
+
+	@Override
+	public int getBarWidth(ItemStack stack) {
+		int progress = Mth.clamp(stack.getOrDefault(IMPRINT, 0), 0, 100);
+		return Math.round(13.0F * progress / 100.0F);
+	}
+
+	@Override
+	public int getBarColor(ItemStack stack) {
+		return IMPRINT_COLOUR;
 	}
 
 	public static int rotationOf(ItemStack stack) {

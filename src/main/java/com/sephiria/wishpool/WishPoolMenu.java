@@ -16,6 +16,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
@@ -77,12 +78,13 @@ public class WishPoolMenu extends AbstractContainerMenu {
 	public static final int TEN_BUTTON_X = SINGLE_BUTTON_X + DRAW_BUTTON_WIDTH + DRAW_BUTTON_GAP;
 	public static final int STATS_TEXT_Y = DRAW_BUTTON_Y + DRAW_BUTTON_HEIGHT + 8;
 
-	/** 数据槽：能量、四叶草（数值）、神器池锚定件数字 id、石板池锚定件数字 id、「溢出转化」开关（0/1）。 */
+	/** 数据槽：能量、四叶草、锚定格数、神器池 5 个锚定格、石板池 5 个锚定格、「溢出转化」开关。 */
 	public static final int DATA_ENERGY = 0;
 	public static final int DATA_CLOVERS = 1;
-	public static final int DATA_ARTIFACT_ANCHOR = 2;
-	public static final int DATA_SLATE_ANCHOR = 3;
-	public static final int DATA_OVERFLOW = 4;
+	public static final int DATA_ANCHOR_CAPACITY = 2;
+	public static final int DATA_ARTIFACT_ANCHORS = 3;
+	public static final int DATA_SLATE_ANCHORS = DATA_ARTIFACT_ANCHORS + WishPool.MAX_ANCHOR_SLOTS;
+	public static final int DATA_OVERFLOW = DATA_SLATE_ANCHORS + WishPool.MAX_ANCHOR_SLOTS;
 
 	/** 服务端用的玩家与方块坐标（客户端壳里都是 null / 0）。 */
 	private final ServerPlayer owner;
@@ -105,7 +107,7 @@ public class WishPoolMenu extends AbstractContainerMenu {
 	}
 
 	public static int dataSize() {
-		return 5;
+		return DATA_OVERFLOW + 1;
 	}
 
 	/** 服务端使用：数据槽接玩家的真实状态。 */
@@ -139,14 +141,32 @@ public class WishPoolMenu extends AbstractContainerMenu {
 		return new ContainerData() {
 			@Override
 			public int get(int index) {
-				return switch (index) {
-					case DATA_ENERGY -> WishPool.energy(player);
-					case DATA_CLOVERS -> WishPool.clovers(player);
-					case DATA_ARTIFACT_ANCHOR -> WishPool.anchorNetworkId(player, false);
-						case DATA_SLATE_ANCHOR -> WishPool.anchorNetworkId(player, true);
-						case DATA_OVERFLOW -> WishPool.overflowToClover(player) ? 1 : 0;
-						default -> 0;
-				};
+				if (index == DATA_ENERGY) {
+					return WishPool.energy(player);
+				}
+
+				if (index == DATA_CLOVERS) {
+					return WishPool.clovers(player);
+				}
+
+				if (index == DATA_ANCHOR_CAPACITY) {
+					return WishPool.anchorCapacity(player);
+				}
+
+				if (index >= DATA_ARTIFACT_ANCHORS
+						&& index < DATA_ARTIFACT_ANCHORS + WishPool.MAX_ANCHOR_SLOTS) {
+					return WishPool.anchorNetworkId(player, false, index - DATA_ARTIFACT_ANCHORS);
+				}
+
+				if (index >= DATA_SLATE_ANCHORS && index < DATA_SLATE_ANCHORS + WishPool.MAX_ANCHOR_SLOTS) {
+					return WishPool.anchorNetworkId(player, true, index - DATA_SLATE_ANCHORS);
+				}
+
+				if (index == DATA_OVERFLOW) {
+					return WishPool.overflowToClover(player) ? 1 : 0;
+				}
+
+				return 0;
 			}
 
 			@Override
@@ -171,9 +191,46 @@ public class WishPoolMenu extends AbstractContainerMenu {
 		return this.data.get(DATA_CLOVERS);
 	}
 
-	/** 某个卡池的锚定件数字 id（0 = 没锚定）。 */
-	public int anchorId(boolean slatePool) {
-		return this.data.get(slatePool ? DATA_SLATE_ANCHOR : DATA_ARTIFACT_ANCHOR);
+	/** 当前有几个锚定格（默认 1，意志天赋加到最多 5）。 */
+	public int anchorCapacity() {
+		return this.data.get(DATA_ANCHOR_CAPACITY);
+	}
+
+	/** 某个卡池第 {@code slot} 个锚定格的物品数字 id（0 = 空）。 */
+	public int anchorId(boolean slatePool, int slot) {
+		if (slot < 0 || slot >= WishPool.MAX_ANCHOR_SLOTS) {
+			return 0;
+		}
+
+		return this.data.get((slatePool ? DATA_SLATE_ANCHORS : DATA_ARTIFACT_ANCHORS) + slot);
+	}
+
+	/** 某个物品在这个池子里被锚定了几次（界面用它选框色）。 */
+	public int anchorCount(boolean slatePool, Item item) {
+		int count = 0;
+
+		for (int slot = 0; slot < anchorCapacity(); slot++) {
+			int id = anchorId(slatePool, slot);
+
+			if (id > 0 && net.minecraft.core.registries.BuiltInRegistries.ITEM.byId(id) == item) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	/** 当前已经用掉的锚定格数。 */
+	public int anchorsUsed(boolean slatePool) {
+		int used = 0;
+
+		for (int slot = 0; slot < anchorCapacity(); slot++) {
+			if (anchorId(slatePool, slot) > 0) {
+				used++;
+			}
+		}
+
+		return used;
 	}
 
 	/** 「溢出的升级宝箱自动转化为四叶草」开着吗（界面画「开 / 关」用它）。 */
@@ -242,13 +299,33 @@ public class WishPoolMenu extends AbstractContainerMenu {
 		this.broadcastChanges();
 	}
 
-	/** 锚定 / 取消锚定（{@code anchor} 传 null 就是取消）。 */
-	public void setAnchor(boolean slatePool, net.minecraft.world.item.Item anchor) {
+	/** 增加一次锚定（同一件物品可以占多格，格数就是锚定次数）。 */
+	public void addAnchor(boolean slatePool, net.minecraft.world.item.Item anchor) {
 		if (this.owner == null) {
 			return;
 		}
 
-		WishPool.setAnchor(this.owner, slatePool, anchor);
+		WishPool.addAnchor(this.owner, slatePool, anchor);
+		this.broadcastChanges();
+	}
+
+	/** 清空某个池子的全部锚定。 */
+	public void clearAnchors(boolean slatePool) {
+		if (this.owner == null) {
+			return;
+		}
+
+		WishPool.clearAnchors(this.owner, slatePool);
+		this.broadcastChanges();
+	}
+
+	/** 清掉某个池子的第 {@code slot} 个锚定格。 */
+	public void clearAnchor(boolean slatePool, int slot) {
+		if (this.owner == null) {
+			return;
+		}
+
+		WishPool.clearAnchor(this.owner, slatePool, slot);
 		this.broadcastChanges();
 	}
 

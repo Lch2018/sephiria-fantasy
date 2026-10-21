@@ -65,9 +65,8 @@ public class StatsScreen extends Screen {
 		int rightX = left + 210;
 		int y = 34;
 
-		// 标签栏：与背包界面里那一排位置对应（原版背包 / 赛菲莉娅背包 / 属性）
-		// 标签栏仍按「单列面板」居中，属性分两列后它不跟着左移
-		SephiriaTabs.add(this, this.width / 2 - 100, 14, SephiriaTab.ATTRIBUTES);
+		// 标签栏：按整排宽度居中（加了「天赋」页之后固定偏移会偏左）
+		SephiriaTabs.add(this, (this.width - SephiriaTabs.width()) / 2, 14, SephiriaTab.ATTRIBUTES);
 
 		var player = Minecraft.getInstance().player;
 		String health = player == null
@@ -79,7 +78,10 @@ public class StatsScreen extends Screen {
 		y += ROW_HEIGHT;
 
 		row(left, y, "screen.sephiria_fantasy.stats.hp", health);
-		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.mp", format(ClientStats.mp()));
+		// 蓝量与血量同一套写法（当前 / 上限）：上限会被剑耳环与天赋改动，
+		// 只写当前值的话 HUD 上的「当前/上限」看起来就像对不上（用户 2026-10-21 报的）
+		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.mp",
+				format(ClientStats.mp()) + " / " + format(ClientStats.maxMp()));
 		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.mp_regen", format(ClientStats.mpRegen()));
 		this.physicalRowY = y += ROW_HEIGHT;
 		row(left, this.physicalRowY, "screen.sephiria_fantasy.stats.physical", format(ClientStats.physical()));
@@ -87,6 +89,7 @@ public class StatsScreen extends Screen {
 		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.ice", format(ClientStats.ice()));
 		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.lightning", format(ClientStats.lightning()));
 		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.defense", format(ClientStats.defense()));
+		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.mp_absorb", format(ClientStats.mpAbsorb()));
 		this.ampRowY = y += ROW_HEIGHT;
 		row(left, this.ampRowY, "screen.sephiria_fantasy.stats.physical_amp", format(ClientStats.physicalAmp()) + "%");
 		this.attackSpeedRowY = y += ROW_HEIGHT;

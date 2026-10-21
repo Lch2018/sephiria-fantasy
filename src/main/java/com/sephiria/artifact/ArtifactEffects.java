@@ -38,6 +38,8 @@ public final class ArtifactEffects {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		double total = 0.0D;
 		Map<Item, Integer> bestPerKind = new HashMap<>();
+		// 天赋「智慧」二阶段：所有神器都按【独特】结算（同种只取等级最高的那件）
+		boolean forceUnique = com.sephiria.talent.WisdomTalent.forceUnique(player);
 
 		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
 			Slot slotData = read(backpack, slot);
@@ -46,7 +48,7 @@ public final class ArtifactEffects {
 				continue;
 			}
 
-			if (slotData.artifact().unique()) {
+			if (slotData.artifact().unique() || forceUnique) {
 				bestPerKind.merge(slotData.item(), slotData.level(), Math::max);
 			} else {
 				total += slotData.artifact().physicalBonus(slotData.level());
@@ -70,6 +72,7 @@ public final class ArtifactEffects {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		double total = 0.0D;
 		Map<Item, Integer> bestPerKind = new HashMap<>();
+		boolean forceUnique = com.sephiria.talent.WisdomTalent.forceUnique(player);
 
 		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
 			Slot slotData = read(backpack, slot);
@@ -78,7 +81,7 @@ public final class ArtifactEffects {
 				continue;
 			}
 
-			if (slotData.artifact().unique()) {
+			if (slotData.artifact().unique() || forceUnique) {
 				bestPerKind.merge(slotData.item(), slotData.level(), Math::max);
 			} else {
 				total += slotData.artifact().attackSpeedBonus(slotData.level());
@@ -609,6 +612,7 @@ public final class ArtifactEffects {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		double total = 0.0D;
 		Map<Item, Integer> bestPerKind = new HashMap<>();
+		boolean forceUnique = com.sephiria.talent.WisdomTalent.forceUnique(player);
 
 		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
 			Slot slotData = read(backpack, slot);
@@ -617,7 +621,7 @@ public final class ArtifactEffects {
 				continue;
 			}
 
-			if (slotData.artifact().unique()) {
+			if (slotData.artifact().unique() || forceUnique) {
 				bestPerKind.merge(slotData.item(), slotData.level(), Math::max);
 			} else {
 				total += affix.at(slotData.artifact(), slotData.level());
@@ -660,7 +664,7 @@ public final class ArtifactEffects {
 	 * 连击面板就能显示等级与颜色，不用再多发一个同步包。**不含药水加成**（那份在服务端）。
 	 */
 	public static Map<ArtifactCombo, Integer> comboLevels(Container backpack, java.util.function.IntUnaryOperator slotLevels) {
-		return comboLevels(backpack, slotLevels, combo -> 0);
+		return comboLevels(backpack, slotLevels, combo -> 0, false);
 	}
 
 	/**
@@ -673,12 +677,16 @@ public final class ArtifactEffects {
 	 */
 	public static Map<ArtifactCombo, Integer> comboLevels(ServerPlayer player) {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
-		return comboLevels(backpack, backpack::slotLevel, combo -> PlayerStats.comboBonus(player, combo));
+		return comboLevels(backpack, backpack::slotLevel,
+				combo -> PlayerStats.comboBonus(player, combo)
+						+ com.sephiria.talent.WisdomTalent.comboBonus(player, combo),
+				com.sephiria.talent.WisdomTalent.forceUnique(player));
 	}
 
-	/** 连击计数本体：背包里数一遍，最后把 {@code bonus} 那一份（药水给的）加上。 */
+	/** 连击计数本体：背包里数一遍，最后把 {@code bonus} 那一份（药水 / 合并给的）加上。 */
 	private static Map<ArtifactCombo, Integer> comboLevels(Container backpack,
-			java.util.function.IntUnaryOperator slotLevels, java.util.function.ToIntFunction<ArtifactCombo> bonus) {
+			java.util.function.IntUnaryOperator slotLevels, java.util.function.ToIntFunction<ArtifactCombo> bonus,
+			boolean forceUnique) {
 		Map<ArtifactCombo, Integer> levels = new EnumMap<>(ArtifactCombo.class);
 		Set<Item> uniqueCounted = new HashSet<>();
 
@@ -693,8 +701,9 @@ public final class ArtifactEffects {
 				continue;
 			}
 
-			// 【唯一】的同种神器只记一次；没有【唯一】的每个副本都记，所以带三本就是 +3 级
-			if (artifact.unique() && !uniqueCounted.add(stack.getItem())) {
+			// 【唯一】的同种神器只记一次；没有【唯一】的每个副本都记，所以带三本就是 +3 级。
+			// 天赋「智慧」二阶段把所有神器都当【独特】处理
+			if ((artifact.unique() || forceUnique) && !uniqueCounted.add(stack.getItem())) {
 				continue;
 			}
 

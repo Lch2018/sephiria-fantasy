@@ -54,7 +54,39 @@ public enum DifficultyOption {
 	PROTECTIVE_ARMOR("protective_armor",
 			new double[] { 0.0D, 20.0D, 40.0D, 60.0D, 80.0D, 100.0D },
 			new int[] { 0, 1, 2, 4, 5, 6 },
-			"note.protective_armor");
+			"note.protective_armor"),
+
+	/**
+	 * 衰退：所有生命恢复效果降低 5/10/20/30/40/50%（1..6 级，阶段 1..6）。
+	 *
+	 * <p>结算在 {@link RootRetreat#healingMultiplier}，挂在 {@code LivingEntity#heal} 上——
+	 * 自然回复、再生药水、瞬间治疗、金苹果等所有走 heal 的恢复都会被削。
+	 */
+	DECAY("decay",
+			new double[] { 0.0D, 5.0D, 10.0D, 20.0D, 30.0D, 40.0D, 50.0D },
+			new int[] { 0, 1, 2, 3, 4, 5, 6 },
+			null),
+
+	/**
+	 * 紧张：战斗状态下生命值无法恢复（1 级，阶段 4）。
+	 *
+	 * <p>用户口径是「层数 4」——这一项只有一级，但一次给 4 层阶段。
+	 */
+	TENSION("tension",
+			new double[] { 0.0D, 100.0D },
+			new int[] { 0, 4 },
+			"note.tension"),
+
+	/**
+	 * 心之重担：死亡时背包物品消失 20/40/60/80/100%（1..5 级，阶段 2/4/6/8/10）。
+	 *
+	 * <p>结算在 {@link RootRetreat#applyDeathBurden}，由 {@code ServerPlayer#die} 的 mixin 在
+	 * 死亡掉落之前调用；赛菲莉娅背包（附件）也按同一个概率消失。
+	 */
+	HEART_BURDEN("heart_burden",
+			new double[] { 0.0D, 20.0D, 40.0D, 60.0D, 80.0D, 100.0D },
+			new int[] { 0, 2, 4, 6, 8, 10 },
+			"note.heart_burden");
 
 	/**
 	 * 效果行里数值的颜色：<b>红色</b>。

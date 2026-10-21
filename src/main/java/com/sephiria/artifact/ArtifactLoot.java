@@ -35,8 +35,8 @@ import java.util.Map;
 	 * 神器/石板比例掷「这一件抽哪一边」，再在那一侧按品质掷。
 	 */
 public final class ArtifactLoot {
-	/** 一批里最多能出几件（受现有物品数量限制）。 */
-	public static final int MAX_ROLL = 5;
+	/** 一批里最多能出几件（宝箱页：基础 5 选 1，急智二阶段 6 选 1）。 */
+	public static final int MAX_ROLL = 6;
 
 	/**
 	 * 品质概率：宝箱（神器 / 石板 / 升级共用一组）、商店货架、抽卡、药水各一套。
@@ -272,6 +272,22 @@ public final class ArtifactLoot {
 	}
 
 	/**
+	 * 稀有及以上的神器 / 石板（稀有宝箱用）。<b>天国不在 {@link #slates()} 里</b>，所以永远不会
+	 * 出现在稀有石板宝箱里——这符合它「不进任何常规获取渠道」的口径。
+	 */
+	public static List<Item> rarePool(boolean slatePool) {
+		List<Item> result = new ArrayList<>();
+
+		for (Item item : slatePool ? slates() : artifacts()) {
+			if (rarityOf(item).ordinal() >= ArtifactRarity.RARE.ordinal()) {
+				result.add(item);
+			}
+		}
+
+		return result;
+	}
+
+	/**
 	 * 按品质掷一档（许愿池要先知道掷到哪一档，才好套「锚定」）。
 	 *
 	 * <p>权重口径（2026-10-18 用户定）：**权重就是这一档的概率份数**——抽多了，各品质开出的
@@ -349,7 +365,43 @@ public final class ArtifactLoot {
 				ModItems.SLATE_OF_REBELLION,
 				ModItems.SLATE_OF_JUNCTION,
 				ModItems.SLATE_OF_GRATITUDE,
-				ModItems.SLATE_OF_ARRIVAL);
+				ModItems.SLATE_OF_ARRIVAL,
+				ModItems.SLATE_OF_APPROXIMATION,
+				ModItems.SLATE_OF_MISCHIEF,
+				ModItems.SLATE_OF_NOURISHMENT,
+				ModItems.SLATE_OF_WISDOM,
+				ModItems.SLATE_OF_CHIVALRY,
+				ModItems.SLATE_OF_FATE,
+				ModItems.SLATE_OF_GAZE,
+				ModItems.SLATE_OF_GOODWILL,
+				ModItems.SLATE_OF_HOPE,
+				ModItems.SLATE_OF_CHEER,
+				ModItems.SLATE_OF_EXIT,
+				ModItems.SLATE_OF_PROGRESS,
+				ModItems.SLATE_OF_THREE_HEADS,
+				ModItems.SLATE_OF_PREPARATION,
+				ModItems.SLATE_OF_DISTRIBUTION,
+				ModItems.SLATE_OF_STACK,
+				ModItems.SLATE_OF_HONOR,
+				ModItems.SLATE_OF_PAST,
+				ModItems.SLATE_OF_ADVANCE,
+				ModItems.SLATE_OF_OFFERING,
+				ModItems.SLATE_OF_DESIRE,
+				ModItems.SLATE_OF_AGITATION,
+				ModItems.SLATE_OF_HARVEST,
+				ModItems.SLATE_OF_TRANSFER,
+				ModItems.SLATE_OF_JUSTICE,
+				ModItems.SLATE_OF_GATHERING,
+				ModItems.SLATE_OF_BANNER,
+				ModItems.SLATE_OF_SIMULTANEITY,
+				ModItems.SLATE_OF_BURN_THE_BOATS,
+				ModItems.SLATE_OF_FOUNDATION,
+				ModItems.SLATE_OF_AUTHORITY,
+				ModItems.SLATE_OF_COMPRESSION,
+				ModItems.SLATE_OF_MIRACLE,
+				ModItems.SLATE_OF_THORNS,
+				ModItems.SLATE_OF_RADIANCE,
+				ModItems.SLATE_OF_COURAGE);
 	}
 
 	/**

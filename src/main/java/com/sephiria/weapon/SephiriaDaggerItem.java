@@ -60,6 +60,15 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	/** 专注上限：默认 1 层。 */
 	public static final double FOCUS_MAX = 1.0D;
 
+	/**
+	 * 蓝耗：招架 7、完美招架 5、狂怒 0。
+	 *
+	 * <p>招架是按下时先收 7 点；如果这一下真的在无敌窗口里挨到攻击（招架成功），
+	 * 多收的 2 点退回去——玩家看到的就是「完美招架只花 5」。狂怒不耗蓝。
+	 */
+	private static final double PARRY_MP_COST = 7.0D;
+	private static final double PERFECT_PARRY_MP_COST = 5.0D;
+
 	/** 两段位移的距离；无敌时长 {@value #INVULNERABLE_TICKS} 刻比位移多 2 刻，落地后仍有一点容错。 */
 	/** 攻速目标值（供物品注册使用）。 */
 	public static final float ATTACK_SPEED = 6.4F;
@@ -122,10 +131,23 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 						.stat("tooltip.sephiria_fantasy.part.max", FOCUS_MAX, COLOR_RANGE).build());
 	}
 
+	/**
+	 * 有专注时给匕首一层附魔式的微光（红白，见 {@code WeaponGlint}）。
+	 *
+	 * <p>专注只存在服务端，客户端看的是 {@link com.sephiria.client.SkillClientData} 镜像；
+	 * 服务端调用时镜像恒为 0，所以这条只会影响客户端的渲染。
+	 */
+	@Override
+	public boolean isFoil(ItemStack stack) {
+		return com.sephiria.client.SkillClientData.current(FOCUS) > 0.0D;
+	}
+
 
 	/** 注册专注存储、结算推进器与招架判定（招架窗口内的伤害由本处理器直接取消，与注册顺序无关）。 */
 	public static void register() {
-		SkillStorage.registerManual(FOCUS, FOCUS_MAX);
+		// 开局 0 层专注（用户 2026-10-21：以前是 1 层，一进来右键就是狂怒）。
+		// 专注不自动回复，只能靠招架攒
+		SkillStorage.registerManual(FOCUS, FOCUS_MAX, 0.0D);
 		ServerTickEvents.END_SERVER_TICK.register(SephiriaDaggerItem::tick);
 
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
@@ -159,9 +181,15 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		ServerPlayer serverPlayer = (ServerPlayer) player;
 
 		if (SkillStorage.current(serverPlayer, FOCUS) >= 1.0D) {
+			// 狂怒 0 蓝耗
 			fury(serverPlayer, stack);
 		}
 		else {
+			// 招架先收 7 点；完美招架（真的挡到攻击）在 rewardParry 里退 2 点
+			if (!PlayerStats.spendMp(serverPlayer, PARRY_MP_COST)) {
+				return InteractionResult.FAIL;
+			}
+
 			parry(serverPlayer, stack);
 		}
 
@@ -201,6 +229,8 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	 */
 	private static void rewardParry(ServerPlayer player) {
 		SkillStorage.regenerate(player, FOCUS, FOCUS_MAX);
+		// 完美招架：把招架先收的 7 点里的 2 点退回去（净 5 点）
+		PlayerStats.refundMp(player, PARRY_MP_COST - PERFECT_PARRY_MP_COST);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0F, 1.4F);
 

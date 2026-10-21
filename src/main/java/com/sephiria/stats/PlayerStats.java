@@ -96,11 +96,11 @@ public final class PlayerStats {
 	private record Combat(double normalAttackDamage, double critChance, double critDamage, double ignoreDefense,
 			double moveSpeed, double dodge, double negotiation, double leafGainPercent, double xpDropPercent,
 			double potionFire, double potionIce, double potionLightning,
-			java.util.Map<String, Integer> comboBonus, double luck) {
+			java.util.Map<String, Integer> comboBonus, double luck, double mpAbsorb) {
 		static final Combat DEFAULT = new Combat(DEFAULT_NORMAL_ATTACK_DAMAGE, DEFAULT_CRIT_CHANCE,
 				DEFAULT_CRIT_DAMAGE, 0.0D, DEFAULT_MOVE_SPEED, 0.0D,
 				DEFAULT_NEGOTIATION, DEFAULT_LEAF_GAIN, DEFAULT_XP_DROP,
-				0.0D, 0.0D, 0.0D, java.util.Map.of(), DEFAULT_LUCK);
+				0.0D, 0.0D, 0.0D, java.util.Map.of(), DEFAULT_LUCK, 0.0D);
 
 		static final Codec<Combat> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.DOUBLE.optionalFieldOf("normal_attack_damage", DEFAULT_NORMAL_ATTACK_DAMAGE)
@@ -121,7 +121,9 @@ public final class PlayerStats {
 				Codec.DOUBLE.optionalFieldOf("potion_lightning", 0.0D).forGetter(Combat::potionLightning),
 				Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("combo_bonus", java.util.Map.of())
 						.forGetter(Combat::comboBonus),
-				Codec.DOUBLE.optionalFieldOf("luck", DEFAULT_LUCK).forGetter(Combat::luck)
+				Codec.DOUBLE.optionalFieldOf("luck", DEFAULT_LUCK).forGetter(Combat::luck),
+				// 2026-10-21 智慧一阶段：MP 吸收（与 HP 偷取同一口径，每点 = 0.1%）
+				Codec.DOUBLE.optionalFieldOf("mp_absorb", 0.0D).forGetter(Combat::mpAbsorb)
 		).apply(instance, Combat::new));
 	}
 
@@ -163,7 +165,7 @@ public final class PlayerStats {
 							values.ignoreDefense, values.moveSpeed, values.dodge,
 							values.negotiation, values.leafGainPercent, values.xpDropPercent,
 							values.potionFire, values.potionIce, values.potionLightning,
-							java.util.Map.copyOf(values.comboBonus), values.luck));
+							java.util.Map.copyOf(values.comboBonus), values.luck, values.mpAbsorb));
 		}
 
 		/** 读档：把存档里的数值填进一份新的 {@link Values}。 */
@@ -181,6 +183,7 @@ public final class PlayerStats {
 			values.potionLightning = this.combat.potionLightning;
 			values.comboBonus.putAll(this.combat.comboBonus);
 			values.luck = this.combat.luck;
+			values.mpAbsorb = this.combat.mpAbsorb;
 			values.defense = this.defense;
 			values.lifesteal = this.lifesteal;
 			values.leaves = this.leaves;
@@ -239,6 +242,17 @@ public final class PlayerStats {
 				return;
 			}
 
+			// 天赋「智慧」的 MP 再生：只在战斗中每 10 秒回 x 点（与每秒的「蓝量再生」分开）
+			if (server.getTickCount() % com.sephiria.talent.Talents.WISDOM_MP_REGEN_INTERVAL_TICKS == 0) {
+				for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+					double talentRegen = com.sephiria.talent.Talents.wisdomMpRegenPoints(player);
+
+					if (talentRegen > 0.0D && CombatState.isInCombat(player)) {
+						gainMp(player, talentRegen);
+					}
+				}
+			}
+
 			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 				Values values = of(player);
 				double maxMp = maxMpTotal(player);
@@ -263,7 +277,7 @@ public final class PlayerStats {
 
 	/** 神器给的「最大生命值」加成（点）：StatAttributes 把它挂成原版属性修饰符。 */
 	public static double maxHpBonus(ServerPlayer player) {
-		return ArtifactEffects.maxHpBonus(player);
+		return ArtifactEffects.maxHpBonus(player) + com.sephiria.talent.Talents.maxHpFlat(player);
 	}
 
 	/** 面板上那些实际值的指纹（神器一变它就会变）。 */
@@ -281,7 +295,9 @@ public final class PlayerStats {
 				+ "/" + elementTotal(player, Element.FIRE) + "/" + elementTotal(player, Element.ICE)
 				+ "/" + elementTotal(player, Element.LIGHTNING)
 				// 幸运值也一样：换装（神器的「幸运值 +N」）后那一行与悬停的 y% 要跟着刷
-				+ "/" + luckTotal(player);
+				+ "/" + luckTotal(player)
+				// 防御力与 MP 吸收会随天赋 / 药水变化：面板那两行也要跟着刷
+				+ "/" + defenseTotal(player) + "/" + mpAbsorbTotal(player);
 		}
 
 	/** 玩家退出时清缓存（附件里已经是最新状态，下次进来重新读）。 */
@@ -306,6 +322,8 @@ public final class PlayerStats {
 		public double potionLightning = 0.0D;
 		/** 幸运值（点）：见 {@link #LUCK_SCALE}，影响稀有及以上物品的掉落概率。 */
 		public double luck = DEFAULT_LUCK;
+		/** MP 吸收（点）：每点 = 造成伤害的 0.1% 回蓝，见 {@link #mpAbsorbTotal}。 */
+		public double mpAbsorb = 0.0D;
 		/**
 		 * 药水「索莱拉的偶然」给的连击加成：连击 id → +几级。
 		 *
@@ -366,7 +384,9 @@ public final class PlayerStats {
 
 	/** 武器伤害的实际值（%%）：面板值 × (1 + 神器与连击的百分比加成)。 */
 	public static double weaponDamageTotal(ServerPlayer player) {
-		return of(player).weaponDamage * (1.0D + ArtifactEffects.weaponDamagePercent(player) / 100.0D);
+		return of(player).weaponDamage
+				* (1.0D + (ArtifactEffects.weaponDamagePercent(player)
+						+ com.sephiria.talent.Talents.weaponDamagePercent(player)) / 100.0D);
 	}
 
 	/** 特殊攻击伤害的实际值（%%）：面板值 + 神器固定加成。 */
@@ -397,6 +417,7 @@ public final class PlayerStats {
 	public static double critChanceTotal(ServerPlayer player) {
 		return of(player).critChance + ArtifactEffects.critChanceBonus(player)
 				+ ArtifactEffects.comboCritChancePercent(player)
+				+ com.sephiria.talent.Talents.critChancePercent(player)
 				+ TimedAttributes.statBonusOf(player, com.sephiria.artifact.skill.KeenEyeSkill.CRIT_BONUS_ID);
 	}
 
@@ -413,7 +434,8 @@ public final class PlayerStats {
 	/** 暴击伤害（%）：面板值 + 神器 + 精密连击，默认 150。 */
 	public static double critDamageTotal(ServerPlayer player) {
 		return of(player).critDamage + ArtifactEffects.critDamageBonus(player)
-				+ ArtifactEffects.comboCritDamagePercent(player);
+				+ ArtifactEffects.comboCritDamagePercent(player)
+				+ com.sephiria.talent.Talents.critDamagePercent(player);
 	}
 
 	/**
@@ -441,7 +463,8 @@ public final class PlayerStats {
 
 	/** 闪避（点）：面板值 + 神器 + 影子连击。 */
 	public static double dodgeTotal(ServerPlayer player) {
-		return of(player).dodge + ArtifactEffects.dodgeBonus(player) + ArtifactEffects.comboDodgeBonus(player);
+		return of(player).dodge + ArtifactEffects.dodgeBonus(player) + ArtifactEffects.comboDodgeBonus(player)
+				+ com.sephiria.talent.Talents.dodgePoints(player);
 	}
 
 	/**
@@ -476,10 +499,11 @@ public final class PlayerStats {
 
 	/** 经验掉落（%）：面板值 + 神器，默认 100；结算见 LeafExperienceMixin（获得经验时先乘它）。 */
 	public static double xpDropPercentTotal(ServerPlayer player) {
-		// 根之退的祝福（每层阶段 +10%）也走这里：它和经验掉落是同一个池子，
-		// 所以属性面板那一行会显示加成后的值、实际入账在 LeafExperienceMixin 里
+		// 根之退的祝福（每层阶段 +10%）与天赋「智慧」三阶段（+20%）也走这里：
+		// 它们和经验掉落是同一个池子，所以属性面板那一行会显示加成后的值、实际入账在 LeafExperienceMixin 里
 		return of(player).xpDropPercent + ArtifactEffects.xpDropPercent(player)
-				+ com.sephiria.difficulty.RootRetreat.xpGainPercent(player);
+				+ com.sephiria.difficulty.RootRetreat.xpGainPercent(player)
+				+ com.sephiria.talent.Talents.wisdomXpDropPercent(player);
 	}
 
 	/**
@@ -556,6 +580,37 @@ public final class PlayerStats {
 		sync(player);
 	}
 
+	/**
+	 * 防御力（点）：面板值 + 天赋「耐心」每点 +1。
+	 *
+	 * <p>与敌人的「防御力」是同一个口径：在伤害入口里并进 {@code getArmorValue()}，
+	 * 所以吃护甲减伤公式与愤怒三阶段的防御穿透（见 {@code DamageReductionMixin}）。
+	 */
+	public static double defenseTotal(ServerPlayer player) {
+		return of(player).defense + com.sephiria.talent.Talents.defensePoints(player);
+	}
+
+	/** 永久 +防御力（药水 / 生存的随机属性用）。 */
+	public static void addDefense(ServerPlayer player, double amount) {
+		of(player).defense += amount;
+		sync(player);
+	}
+
+	/**
+	 * MP 吸收总点数：面板值 + 天赋「智慧」一阶段 +5。
+	 *
+	 * <p>与 HP 偷取同一口径：每点 = 造成伤害的 0.1% 回蓝，见 {@code Lifesteal}。
+	 */
+	public static double mpAbsorbTotal(ServerPlayer player) {
+		return of(player).mpAbsorb + com.sephiria.talent.Talents.mpAbsorbBonus(player);
+	}
+
+	/** 永久 +MP 吸收（生存的随机属性用）。 */
+	public static void addMpAbsorb(ServerPlayer player, double amount) {
+		of(player).mpAbsorb += amount;
+		sync(player);
+	}
+
 	/** 药水永久 +物理强度（算「药水」那一份来源，面板里红字）。 */
 	public static void addPotionPhysical(ServerPlayer player, double amount) {
 		of(player).potionPhysical += amount;
@@ -598,7 +653,8 @@ public final class PlayerStats {
 	 * 属性页那一行的悬停也用它（客户端拿同步过来的总值现算同一个公式）。
 	 */
 	public static double luckTotal(ServerPlayer player) {
-		return of(player).luck + ArtifactEffects.luckBonus(player);
+		return of(player).luck + ArtifactEffects.luckBonus(player)
+				+ com.sephiria.talent.Talents.luckPoints(player);
 	}
 
 	/** 永久 +幸运值（以后给药水 / 事件用；神器走 {@code luckBonus} 词条，不写回存档）。 */
@@ -729,7 +785,8 @@ public final class PlayerStats {
 	/** 攻击速度的实际值（%）：面板值 + 神器加成。 */
 	public static double attackSpeedTotal(ServerPlayer player) {
 		return of(player).attackSpeed + ArtifactEffects.attackSpeedBonus(player)
-				+ ArtifactEffects.comboAttackSpeedPercent(player);
+				+ ArtifactEffects.comboAttackSpeedPercent(player)
+				+ com.sephiria.talent.Talents.attackSpeedPercent(player);
 	}
 
 	/** 当前蓝量。 */
@@ -738,13 +795,15 @@ public final class PlayerStats {
 	}
 
 	/**
-	 * 最大蓝量（点）：默认值 50 + 各神器加成的总和，下限夹在 1。
+	 * 最大蓝量（点）：默认值 50 + 各神器与天赋加成的总和，下限夹在 1。
 	 *
-	 * <p>加成可能是负数（剑耳环削上限）。已经超出上限的蓝不会被强行扣掉——只是回不上去，
-	 * 花掉之后按新上限回。
+	 * <p>加成可能是负数（剑耳环削上限）。上限变低时，{@link #sync} 会把当前蓝量夹回新上限——
+	 * 2026-10-21 起改成硬夹：之前「超出的不硬扣」会让 HUD 出现「当前 59 / 上限 34」，
+	 * 与属性页对不上（用户报的）。
 	 */
 	public static double maxMpTotal(ServerPlayer player) {
-		return Math.max(1.0D, DEFAULT_MP + ArtifactEffects.maxMpBonus(player));
+		return Math.max(1.0D, DEFAULT_MP + ArtifactEffects.maxMpBonus(player)
+				+ com.sephiria.talent.Talents.maxMpFlat(player));
 	}
 
 	/** 花蓝；不够返回 false（技能释放前先问一次，不够就不放、也不扣）。 */
@@ -758,6 +817,27 @@ public final class PlayerStats {
 		values.mp -= amount;
 		sync(player);
 		return true;
+	}
+
+	/**
+	 * 回蓝（完美招架 / 完美回击的退款、MP 吸收、战斗 MP 再生都走这里）。
+	 *
+	 * <p>回当前上限为止：上限被剑耳环削过时，不会把蓝量顶到上限之外——
+	 * 这与自然回复走同一条线，HUD 上不会出现「当前 > 上限」。
+	 */
+	public static void gainMp(ServerPlayer player, double amount) {
+		if (amount <= 0.0D) {
+			return;
+		}
+
+		Values values = of(player);
+		values.mp = Math.min(maxMpTotal(player), values.mp + amount);
+		sync(player);
+	}
+
+	/** 退蓝：语义上的别名，见 {@link #gainMp}。 */
+	public static void refundMp(ServerPlayer player, double amount) {
+		gainMp(player, amount);
 	}
 
 	/** 叶子持有量。 */
@@ -852,9 +932,18 @@ public final class PlayerStats {
 	 * （物理强度与攻速都用含神器加成的总值）。
 	 */
 	public static void sync(ServerPlayer player) {
+		Values values = of(player);
+		double maxMp = maxMpTotal(player);
+
+		// 上限被削（剑耳环 / 天赋重置）时把超出的蓝收回来：HUD 与属性页读的是同一份当前值，
+		// 不收会出现「当前 59 / 上限 34」这种对不上的显示（用户 2026-10-21 报的）。
+		if (values.mp > maxMp) {
+			values.mp = maxMp;
+		}
+
 		// 所有改动都会走到这里，所以存档只在这一个地方写——属性存在附件里，重登/重启都不丢
-		player.setAttached(SAVED, Saved.of(of(player)));
-		ServerPlayNetworking.send(player, StatsSyncPayload.of(of(player), mpRegenTotal(player), physicalTotal(player),
+		player.setAttached(SAVED, Saved.of(values));
+		ServerPlayNetworking.send(player, StatsSyncPayload.of(values, mpRegenTotal(player), physicalTotal(player),
 				elementTotal(player, Element.FIRE), elementTotal(player, Element.ICE),
 				elementTotal(player, Element.LIGHTNING),
 				// 面板要显示当前实际值：把限时加成（急速/旗帜）加回去；机械结算那边不加，免得重复
@@ -865,7 +954,8 @@ public final class PlayerStats {
 				moveSpeedPercentTotal(player) + TimedAttributes.moveSpeedPercent(player),
 				dodgeTotal(player), dodgeRatePercent(player), meleeRangeTotal(player),
 				negotiationTotal(player), shopDiscountPercent(player),
-				leafGainPercentTotal(player), xpDropPercentTotal(player), maxMpTotal(player), luckTotal(player)));
+				leafGainPercentTotal(player), xpDropPercentTotal(player), maxMp, luckTotal(player),
+				defenseTotal(player), mpAbsorbTotal(player)));
 	}
 
 	/** 进服时推一次，面板才有初始值（顺带把读出来的那份写回附件）。 */

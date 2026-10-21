@@ -1,5 +1,6 @@
 package com.sephiria.artifact;
 
+import com.mojang.serialization.Codec;
 import com.sephiria.Sephiria;
 import com.sephiria.backpack.ChestMenu;
 import net.minecraft.ChatFormatting;
@@ -32,8 +33,15 @@ import java.util.List;
  * 否则玩家可以反复开关界面刷奖池。
  */
 public class ChestItem extends Item {
-	/** 宝箱页面的奖励格数。 */
+	/** 宝箱页面的基础奖励格数。 */
 	public static final int REWARDS = 5;
+	/** 天赋「急智」二阶段之后的奖励格数上限（5 选 1 → 6 选 1）。 */
+	public static final int MAX_REWARDS = 6;
+
+	/** 这一箱给几选 1：基础 5，急智二阶段 +1。 */
+	public static int choicesFor(ServerPlayer player) {
+		return Math.min(MAX_REWARDS, REWARDS + com.sephiria.talent.Talents.chestChoices(player));
+	}
 
 	/** 这一箱抽到的奖励（第一次打开时写入）。 */
 	public static final DataComponentType<List<ItemStack>> ROLLED = Registry.register(
@@ -43,6 +51,16 @@ public class ChestItem extends Item {
 					.persistent(ItemStack.CODEC.listOf())
 					.networkSynchronized(ItemStack.STREAM_CODEC.apply(ByteBufCodecs.list()))
 					.build());
+
+	/**
+	 * 这一箱的「免费刷新」用过了没有（天赋「智慧」三阶段每个宝箱免费刷新 1 次）。
+	 *
+	 * <p>存在宝箱物品上而不是菜单里：关掉界面再打开不能把免费次数刷回来。
+	 */
+	public static final DataComponentType<Boolean> FREE_REROLL_USED = Registry.register(
+			BuiltInRegistries.DATA_COMPONENT_TYPE,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "chest_free_reroll_used"),
+			DataComponentType.<Boolean>builder().persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL).build());
 
 	/**
 	 * 箱子种类：决定奖池，以及「混着出」时石板占几成。
@@ -56,7 +74,11 @@ public class ChestItem extends Item {
 		/** 石板宝箱：只出石板。 */
 		SLATE(100.0D),
 		/** 升级宝箱：神器 60% / 石板 40%（用户 2026-10-18 定的口径）。 */
-		UPGRADE(40.0D);
+		UPGRADE(40.0D),
+		/** 稀有神器宝箱：只出稀有及以上品质的神器（BOSS 掉落，2026-10-21）。 */
+		RARE_ARTIFACT(0.0D),
+		/** 稀有石板宝箱：只出稀有及以上品质的石板（BOSS 掉落，2026-10-21）。 */
+		RARE_SLATE(100.0D);
 
 		/** 混着抽时「这一件抽石板」的概率（%）：0 = 只出神器、100 = 只出石板。 */
 		private final double slatePercent;
@@ -67,6 +89,11 @@ public class ChestItem extends Item {
 
 		public double slatePercent() {
 			return this.slatePercent;
+		}
+
+		/** 只抽稀有及以上（稀有 / 传说 / 羁绊 / 永恒），普通与高级不出。 */
+		public boolean rareOnly() {
+			return this == RARE_ARTIFACT || this == RARE_SLATE;
 		}
 	}
 
@@ -103,8 +130,10 @@ public class ChestItem extends Item {
 	 * <p>写进物品组件而不是每次开界面重抽，是为了「不能关掉再打开刷奖池」。
 	 *
 	 * @param luck 玩家的幸运值（点数）：稀有及以上的概率按曲线放大，见 {@link ArtifactLoot#luckPercent}
+	 * @param choices 这一箱开几选 1（基础 5；急智二阶段 6）
 	 */
-	public static List<ItemStack> rewardsOf(ItemStack chest, RandomSource random, Kind kind, double luck) {
+	public static List<ItemStack> rewardsOf(ItemStack chest, RandomSource random, Kind kind, double luck,
+			int choices) {
 		List<ItemStack> stored = chest.get(ROLLED);
 
 		if (stored != null) {
@@ -112,10 +141,36 @@ public class ChestItem extends Item {
 		}
 
 		// 幸运值：稀有及以上的概率按曲线放大（用户 2026-10-18 的「幸运值」口径）
-		List<ItemStack> rolled = List.copyOf(ArtifactLoot.rollMixed(random,
-				Math.min(REWARDS, ArtifactLoot.MAX_ROLL), kind.slatePercent(),
-				ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.CHEST, luck)));
+		ArtifactLoot.Weights weights = ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.CHEST, luck);
+		int count = Math.min(Math.max(1, choices), Math.min(MAX_REWARDS, ArtifactLoot.MAX_ROLL));
+
+		// 稀有宝箱：池子先过滤成稀有及以上，再按同一组品质权重抽；普通 / 高级根本不在池里
+		List<ItemStack> rolled = kind.rareOnly()
+				? List.copyOf(ArtifactLoot.rollFrom(random, count,
+						ArtifactLoot.rarePool(kind == Kind.RARE_SLATE), weights))
+				: List.copyOf(ArtifactLoot.rollMixed(random, count, kind.slatePercent(), weights));
 		chest.set(ROLLED, rolled);
 		return rolled;
+	}
+
+	/**
+	 * 刷新这一箱：丢掉旧的一批重新抽（天赋「智慧」三阶段的免费刷新 / 骰子刷新都走这里）。
+	 *
+	 * @return 新的一批奖励
+	 */
+	public static List<ItemStack> reroll(ItemStack chest, RandomSource random, Kind kind, double luck,
+			int choices) {
+		chest.remove(ROLLED);
+		return rewardsOf(chest, random, kind, luck, choices);
+	}
+
+	/** 这一箱的免费刷新用过了吗。 */
+	public static boolean freeRerollUsed(ItemStack chest) {
+		return Boolean.TRUE.equals(chest.get(FREE_REROLL_USED));
+	}
+
+	/** 标成「免费刷新已用」。 */
+	public static void markFreeRerollUsed(ItemStack chest) {
+		chest.set(FREE_REROLL_USED, true);
 	}
 }

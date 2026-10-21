@@ -3,6 +3,7 @@ package com.sephiria.weapon;
 import com.sephiria.Sephiria;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -12,6 +13,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -21,6 +23,11 @@ import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * 标准剑盾：主手是剑、副手渲染成盾（见物品定义的 display_context 分流）。
  *
@@ -28,6 +35,11 @@ import net.minecraft.world.phys.AABB;
  * （与长棍回击后那段用的是同一套减伤机制，见 {@link SephiriaDamage#damageMultiplier}）。
  * 这里没有沿用原版盾牌的 {@code BlocksAttacks} 组件——那是 90° 定向的满额减伤，
  * 与"防御状态下 50%"不是一回事。
+ *
+ * <p><b>防御的蓝耗</b>（2026-10-21）：防御期间每挨一下扣 {@value #DEFEND_MP_COST} 点蓝，
+ * 刚举盾的 {@value #PERFECT_GUARD_TICKS} tick 内挨打算「完美防御」、只扣 {@value #PERFECT_DEFEND_MP_COST} 点，
+ * 并让下一次横扫免费；蓝不够时这一下防不住（不减伤）。横扫本身 {@value #SWEEP_MP_COST} 点。
+ * 这些数字刻意<b>不写进武器描述</b>（用户口径）。
  *
  * <p><b>防御中攻击·横扫</b>：按住右键时点左键，不再打普通攻击，而是以自身为原点横扫一圈：
  * 伤害 = 物理强度 × {@value #SWEEP_DAMAGE_RATIO}（默认物理强度下就是 10），
@@ -50,6 +62,24 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	private static final double SWEEP_HEIGHT = 0.825D;
 	/** 攻击充能下限：与普通攻击同一套判据（原版横扫之刃也是 0.9）。 */
 	private static final float SWEEP_CHARGE_THRESHOLD = 0.9F;
+
+	/**
+	 * 防御挨打时的蓝耗：普通 10、完美防御 5（半价）。
+	 *
+	 * <p>「完美防御」= 刚举盾的 {@value #PERFECT_GUARD_TICKS} tick（0.3 秒）内挨到攻击——
+	 * 判定窗口和长棍的完美防御一样长，只是这里按「举盾时刻」算。完美防御还会让<b>下一次横扫免费</b>。
+	 */
+	private static final double DEFEND_MP_COST = 10.0D;
+	private static final double PERFECT_DEFEND_MP_COST = 5.0D;
+	private static final int PERFECT_GUARD_TICKS = 6;
+
+	/** 防御中横扫的蓝耗（完美防御后的一次免费，见 {@link #FREE_SWEEP}）。 */
+	private static final double SWEEP_MP_COST = 15.0D;
+
+	/** 完美防御窗口的到期刻。 */
+	private static final Map<UUID, Long> PERFECT_GUARD_UNTIL = new ConcurrentHashMap<>();
+	/** 完美防御奖励的「下一次横扫免费」标记；只存一个，连着完美防御不会叠加。 */
+	private static final Set<UUID> FREE_SWEEP = ConcurrentHashMap.newKeySet();
 
 	private final WeaponBranch branch;
 
@@ -83,6 +113,12 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 
 	/** 注册"防御中攻击释放横扫"的判定（由 {@link Sephiria#onInitialize()} 调用）。 */
 	public static void register() {
+		// 完美防御窗口按绝对游戏刻记，到期清掉（与长棍 / 匕首同一套写法）
+		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			long now = server.overworld().getGameTime();
+			PERFECT_GUARD_UNTIL.entrySet().removeIf(entry -> entry.getValue() <= now);
+		});
+
 		// 这一条是兜底：正常玩法下防御中的左键会被客户端吞掉，走不到攻击回调（见 tryDefendSweep）。
 		// 留着是为了覆盖非常规来源的攻击包——冷却会挡住重复触发，不会打出两次。
 		AttackEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
@@ -97,6 +133,55 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 			tryDefendSweep(serverPlayer);
 			return InteractionResult.PASS;
 		});
+	}
+
+	/**
+	 * 伤害入口在结算减伤之前调这里：扣这一下防御的蓝，并返回本下该用的防御倍率。
+	 *
+	 * <p>蓝不够时防御失败、返回 {@code 1.0}（这一下全额吃伤害）——不然蓝就永远花不完，
+	 * 防御也就没有代价了。真实伤害 / 元素伤害那几路本来就不走减伤，不会调到这里。
+	 *
+	 * <p>完美防御（刚举盾的 0.3 秒内挨打）按半价扣蓝，并把下一次横扫标成免费。
+	 */
+	public static float onIncomingDamage(LivingEntity entity, DamageSource source, float amount) {
+		if (!(entity instanceof ServerPlayer player) || !isDefending(player)) {
+			return 1.0F;
+		}
+
+		// 0 伤害的「命中」（雪球那类）不该扣蓝
+		if (amount <= 0.0F) {
+			return DEFEND_REDUCTION;
+		}
+
+		// 创造模式 / 旁观者不扣蓝，防御照旧生效（与各种减伤对创造模式的口径一致）；
+		// 冲刺 / 招架那类无敌窗口里的伤害本来就会被整个取消，也不该为它付蓝
+		if (player.isCreative() || player.isSpectator()
+				|| com.sephiria.ability.Invulnerability.isActive(player)) {
+			return DEFEND_REDUCTION;
+		}
+
+		long now = player.level().getGameTime();
+		boolean perfect = isPerfectGuard(player, now);
+
+		if (!PlayerStats.spendMp(player, perfect ? PERFECT_DEFEND_MP_COST : DEFEND_MP_COST)) {
+			return 1.0F;
+		}
+
+		if (perfect) {
+			// 一次完美防御只发一次奖励：把窗口清掉，接着挨的那几下按普通防御算
+			PERFECT_GUARD_UNTIL.remove(player.getUUID());
+			FREE_SWEEP.add(player.getUUID());
+			player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+					SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0F, 1.45F);
+		}
+
+		return DEFEND_REDUCTION;
+	}
+
+	/** 是否处在「刚举盾」的完美防御窗口里。 */
+	private static boolean isPerfectGuard(ServerPlayer player, long now) {
+		Long until = PERFECT_GUARD_UNTIL.get(player.getUUID());
+		return until != null && now < until;
 	}
 
 	/**
@@ -116,6 +201,13 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 		if (!(stack.getItem() instanceof SephiriaShieldItem)
 				|| player.getCooldowns().isOnCooldown(stack)
 				|| player.getAttackStrengthScale(0.5F) <= SWEEP_CHARGE_THRESHOLD) {
+			return;
+		}
+
+		// 完美防御奖励的那一次免费；否则 15 点，不够就放不出来（冷却与充能都还在）
+		boolean free = FREE_SWEEP.remove(player.getUUID());
+
+		if (!free && !PlayerStats.spendMp(player, SWEEP_MP_COST)) {
 			return;
 		}
 
@@ -151,6 +243,13 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	@Override
 	public InteractionResult use(Level level, Player player, InteractionHand hand) {
 		player.startUsingItem(hand);
+
+		// 举盾那一刻开一个 0.3 秒的完美防御窗口：这段时间内挨打按半价扣蓝 + 下一次横扫免费
+		if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
+			PERFECT_GUARD_UNTIL.put(serverPlayer.getUUID(),
+					level.getGameTime() + PERFECT_GUARD_TICKS);
+		}
+
 		return InteractionResult.CONSUME;
 	}
 

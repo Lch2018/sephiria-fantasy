@@ -22,6 +22,11 @@ public final class SkillClientData {
 		VALUES.put(payload.skill(), new double[]{payload.current(), payload.max()});
 	}
 
+	/** 换世界时清空：不清的话上一个世界的专注 / 剑意会让匕首和刀多亮一瞬（见 JOIN 注册处）。 */
+	public static void reset() {
+		VALUES.clear();
+	}
+
 	/** 现有存储量；还没同步过时返回 0。 */
 	public static double current(Identifier skill) {
 		double[] value = VALUES.get(skill);

@@ -27,18 +27,35 @@ public final class Lifesteal {
 
 			double lifesteal = PlayerStats.lifestealTotal(player);
 
-			if (lifesteal <= 0.0D) {
-				return;
+			if (lifesteal > 0.0D) {
+				player.heal((float) (damageTaken * lifesteal / PER_POINT));
 			}
 
-			player.heal((float) (damageTaken * lifesteal / PER_POINT));
+			// MP 吸收与 HP 偷取同一口径：每点 = 伤害的 0.1%。回蓝要同步 HUD，所以走 gainMp
+			double mpAbsorb = PlayerStats.mpAbsorbTotal(player);
+
+			if (mpAbsorb > 0.0D) {
+				PlayerStats.gainMp(player, damageTaken * mpAbsorb / PER_POINT);
+			}
 		});
 	}
 
 	/** 供以后的神器词条用：某个实体挨打时按比例回血（暂时只有玩家自己吃）。 */
 	public static void healFrom(LivingEntity attacker, float damage) {
-		if (attacker instanceof ServerPlayer player && PlayerStats.lifestealTotal(player) > 0.0D) {
-			player.heal((float) (damage * PlayerStats.lifestealTotal(player) / PER_POINT));
+		if (!(attacker instanceof ServerPlayer player)) {
+			return;
+		}
+
+		double lifesteal = PlayerStats.lifestealTotal(player);
+
+		if (lifesteal > 0.0D) {
+			player.heal((float) (damage * lifesteal / PER_POINT));
+		}
+
+		double mpAbsorb = PlayerStats.mpAbsorbTotal(player);
+
+		if (mpAbsorb > 0.0D) {
+			PlayerStats.gainMp(player, damage * mpAbsorb / PER_POINT);
 		}
 	}
 }

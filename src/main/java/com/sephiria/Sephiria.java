@@ -24,6 +24,8 @@ import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.network.SunSwordSyncPayload;
+import com.sephiria.network.TalentClickPayload;
+import com.sephiria.network.TalentSyncPayload;
 import com.sephiria.potion.PotionTimers;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.debuff.Debuffs;
@@ -70,9 +72,12 @@ import com.sephiria.weapon.WeaponSweep;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.WeaponBranch;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -102,8 +107,16 @@ public class Sephiria implements ModInitializer {
 		ArtifactBackpack.register();
 		// 根之退的难度设置：每玩家一份的数据附件（方块本身不存东西）
 		com.sephiria.difficulty.RootRetreat.register();
+		// 根之退的祝福：力量（30 阶段）/ 轻盈（20 阶段）的战斗/脱战增益每刻续上；勇气在名字 mixin
+		com.sephiria.difficulty.RootRetreatBlessings.register();
 		// 许愿池：能量与锚定也是每玩家一份的数据附件（方块只是入口 + 吸升级宝箱）
 		com.sephiria.wishpool.WishPool.register();
+		// 天赋：成就是四叶草之外再 +1 天赋点，击杀 BOSS 也 +1（见 talent/Talents）
+		com.sephiria.talent.Talents.register();
+		// 天赋「耐心」：石板基础、低血回复、十日复活
+		com.sephiria.talent.PatienceTalent.register();
+		// 稀有宝箱：击败 BOSS（玩家补刀）固定掉一个稀有神器宝箱 + 一个稀有石板宝箱
+		com.sephiria.artifact.BossChestDrops.register();
 		// 商店货架的内容与限购次数存在玩家附件里：跨会话保留，重登/重启不会换一批货
 		com.sephiria.shop.ShopStock.register();
 		PlayerStats.register();
@@ -188,6 +201,12 @@ public class Sephiria implements ModInitializer {
 				com.sephiria.network.FrostSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(TalentClickPayload.TYPE, TalentClickPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(TalentSyncPayload.TYPE, TalentSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.SlateImprintPayload.TYPE,
+				com.sephiria.network.SlateImprintPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.ChestRerollPayload.TYPE,
+				com.sephiria.network.ChestRerollPayload.STREAM_CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(DashPayload.TYPE,
 				(payload, context) -> DashSkill.perform(context.player()));
@@ -285,13 +304,93 @@ public class Sephiria implements ModInitializer {
 						case WishPoolClickPayload.ACTION_DRAW_SINGLE -> menu.draw(payload.slatePool(), 1);
 						case WishPoolClickPayload.ACTION_DRAW_TEN ->
 								menu.draw(payload.slatePool(), com.sephiria.wishpool.WishPool.TEN_DRAW);
-						case WishPoolClickPayload.ACTION_ANCHOR -> menu.setAnchor(payload.slatePool(), item);
+						case WishPoolClickPayload.ACTION_ANCHOR -> {
+							// itemId = 0 是「清空这个池子的全部锚定」（选择页的取消按钮）
+							if (item == null) {
+								menu.clearAnchors(payload.slatePool());
+							} else {
+								menu.addAnchor(payload.slatePool(), item);
+							}
+						}
+						case WishPoolClickPayload.ACTION_CLEAR_ANCHOR_SLOT ->
+								menu.clearAnchor(payload.slatePool(), payload.itemId());
 						case WishPoolClickPayload.ACTION_FORGE -> menu.forge(item);
 						case WishPoolClickPayload.ACTION_TOGGLE_OVERFLOW -> menu.toggleOverflowToClover();
 						default -> {
 						}
 					}
 				});
+
+		// 石板刻印：客户端长按进度满后发过来。只带菜单格子编号，其余全部服务端再判一次
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.SlateImprintPayload.TYPE,
+				(payload, context) -> {
+					ServerPlayer player = context.player();
+
+					if (!(player.containerMenu instanceof com.sephiria.backpack.BackpackGridMenu grid)
+							|| com.sephiria.talent.Talents.stage(player,
+									com.sephiria.talent.Talent.SURVIVAL) < 3) {
+						return;
+					}
+
+					AbstractContainerMenu menu = player.containerMenu;
+
+					if (payload.slot() < 0 || payload.slot() >= menu.slots.size()) {
+						return;
+					}
+
+					Slot slot = menu.getSlot(payload.slot());
+					int real = grid.backpackIndex(slot);
+
+					if (real < 0) {
+						return;
+					}
+
+					ItemStack stack = slot.getItem();
+
+					if (!(stack.getItem() instanceof com.sephiria.slate.SlateItem)
+							|| com.sephiria.talent.PatienceTalent.isBase(stack)) {
+						return;
+					}
+
+					ItemStack imprinted = stack.copy();
+					com.sephiria.backpack.ArtifactBackpack backpack =
+							com.sephiria.backpack.ArtifactBackpack.of(player);
+					// 先清格子再写刻印：不然算格子等级时「背包里这块 + 存档里那块」会短暂叠两次
+					backpack.setItem(real, ItemStack.EMPTY);
+					com.sephiria.talent.SlateImprint.imprint(player, real, imprinted);
+					backpack.setChanged();
+					player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+							SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.8F, 1.4F);
+					player.sendSystemMessage(Component.translatable(
+							"message.sephiria_fantasy.slate_imprinted", imprinted.getHoverName()), true);
+				});
+
+		// 宝箱刷新：免费次数优先，没有就吃骰子格里的骰子
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.ChestRerollPayload.TYPE,
+				(payload, context) -> {
+					if (context.player().containerMenu instanceof com.sephiria.backpack.ChestMenu menu) {
+						menu.reroll(context.player());
+					}
+				});
+
+		// 天赋界面的按钮：哪一页、加减多少、是不是重置。范围与剩余点数全部由 Talents 判，
+		// 客户端发 -5 但这一页只有 3 点时就只退 3 点（不会出现负加点）
+		ServerPlayNetworking.registerGlobalReceiver(TalentClickPayload.TYPE, (payload, context) -> {
+			ServerPlayer player = context.player();
+
+			if (payload.reset()) {
+				com.sephiria.talent.Talents.reset(player);
+				return;
+			}
+
+			com.sephiria.talent.Talent[] talents = com.sephiria.talent.Talent.values();
+
+			if (payload.page() < 0 || payload.page() >= talents.length) {
+				return;
+			}
+
+			com.sephiria.talent.Talents.adjust(player, talents[payload.page()], payload.delta());
+		});
 
 		// 根之退界面里的三个动作：加减号 / 清空 / 应用——只认「第几项 + 方向」这种最小信息，
 		// 等级范围与「方块还在不在」都由菜单那边判
@@ -329,6 +428,9 @@ public class Sephiria implements ModInitializer {
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			SkillStorage.syncAll(handler.player);
 			PlayerStats.syncOnJoin(handler.player);
+			// 先按当前等级补一次「升级天赋点」（老存档 / 已经 30 级的玩家一次补满），再同步界面
+			com.sephiria.talent.Talents.claimLevelPoints(handler.player);
+			com.sephiria.talent.Talents.sync(handler.player);
 			WeaponStats.refresh(handler.player);
 			StatAttributes.refresh(handler.player);
 		});

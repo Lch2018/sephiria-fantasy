@@ -1,5 +1,10 @@
 accessWidener	v2	official
 
+# 26.3 的附魔光效颜色写死在 GLINT 管线的 GlintSampler 里（紫色）。匕首红白 / 刀蓝白的微光
+# 需要照原版 Sheets 的写法自己建 glint 渲染类型，只换 GlintSampler 贴图；RenderType.create 是
+# 包私有的，靠访问拓宽打开（RenderSetup.builder 本身就是公开的）。
+accessible	method	net/minecraft/client/renderer/rendertype/RenderType	create	(Ljava/lang/String;Lnet/minecraft/client/renderer/rendertype/RenderSetup;)Lnet/minecraft/client/renderer/rendertype/RenderType;
+
 # 26.2 把菜单类型与「菜单 → 界面」的注册都收成了私有/包私有：
 #   - MenuType 的构造函数私有 —— 用 Fabric 的 ExtendedMenuType 绕开（它的构造函数是公开的）；
 #   - MenuScreens.register 与 ScreenConstructor 包私有 —— 只能靠访问拓宽打开，

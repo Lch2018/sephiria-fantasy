@@ -54,7 +54,7 @@ public class ArtifactSkillScreen extends Screen {
 
 	@Override
 	protected void init() {
-		SephiriaTabs.add(this, this.width / 2 - 100, 14, SephiriaTab.ARTIFACT_SKILLS);
+		SephiriaTabs.add(this, (this.width - SephiriaTabs.width()) / 2, 14, SephiriaTab.ARTIFACT_SKILLS);
 		this.entries.clear();
 		this.listRects.clear();
 		this.slotRects.clear();

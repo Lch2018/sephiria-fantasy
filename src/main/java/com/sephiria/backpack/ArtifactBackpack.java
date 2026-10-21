@@ -186,7 +186,11 @@ public final class ArtifactBackpack extends SimpleContainer {
 	/** 当前格子数决定容器大小（宽固定 {@value #WIDTH}，所以最后一行可能只有几格）。 */
 	@Override
 	public int getContainerSize() {
-		return this.slots;
+		// 天赋给的是动态格数：急智一阶段 +2、生存二阶段 +3 / 三阶段 -12（不写进存档，
+		// 重置/退点就收回）；放进去的东西仍在存档的 items 列表里（再点回天赋就又能看到）。
+		// 下限夹 1：生存三阶段在很小的背包装备上也不能变成负格子。
+		int talent = com.sephiria.talent.Talents.backpackSlots(this.owner);
+		return Math.max(1, Math.min(MAX_SLOTS, this.slots + talent));
 	}
 
 	/**
@@ -227,15 +231,20 @@ public final class ArtifactBackpack extends SimpleContainer {
 			int[] levels = java.util.Arrays.copyOf(this.slotLevels, this.slotLevels.length);
 			int size = getContainerSize();
 
-			for (int slot = 0; slot < size; slot++) {
-				ItemStack stack = getItem(slot);
+				for (int slot = 0; slot < size; slot++) {
+					ItemStack stack = getItem(slot);
 
-				if (stack.getItem() instanceof com.sephiria.slate.SlateItem slate) {
-					slate.apply(levels, slot, WIDTH, com.sephiria.slate.SlateItem.rotationOf(stack));
+					if (stack.getItem() instanceof com.sephiria.slate.SlateItem slate) {
+						slate.apply(levels, slot, WIDTH, com.sephiria.slate.SlateItem.rotationOf(stack));
+					}
 				}
-			}
 
-			this.levelCache = levels;
+				// 已刻印（从格子里消耗掉、但效果保留）的石板：仍然按它原来的格子生效
+				if (this.owner != null) {
+					com.sephiria.talent.SlateImprint.apply(this.owner, levels);
+				}
+
+				this.levelCache = levels;
 		}
 
 		return this.levelCache;
@@ -249,6 +258,15 @@ public final class ArtifactBackpack extends SimpleContainer {
 
 		this.slotLevels[slot] = level;
 		this.setChanged();
+	}
+
+	/**
+	 * 让格子等级缓存失效：天赋改格数（急智 / 生存）或刻印存档变化时调。
+	 *
+	 * <p>不写存档、不调 {@code setChanged}——这两件事的调用方各自负责。
+	 */
+	public void invalidateLevels() {
+		this.levelCache = null;
 	}
 
 	// 格子等级的数据槽以前在这里（levelData）；界面改成「固定一屏的可视窗口」之后，

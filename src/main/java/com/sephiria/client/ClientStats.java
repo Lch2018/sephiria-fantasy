@@ -26,6 +26,7 @@ public final class ClientStats {
 	private static double weaponDamage = PlayerStats.DEFAULT_WEAPON_DAMAGE;
 	private static double specialAttack = PlayerStats.DEFAULT_SPECIAL_ATTACK;
 	private static double lifesteal = 0.0D;
+	private static double mpAbsorb = 0.0D;
 	private static double normalAttackDamage = PlayerStats.DEFAULT_NORMAL_ATTACK_DAMAGE;
 	private static double critChance = PlayerStats.DEFAULT_CRIT_CHANCE;
 	private static double critDamage = PlayerStats.DEFAULT_CRIT_DAMAGE;
@@ -62,6 +63,7 @@ public final class ClientStats {
 		weaponDamage = payload.weaponDamage();
 		specialAttack = payload.specialAttack();
 		lifesteal = payload.lifesteal();
+		mpAbsorb = payload.mpAbsorb();
 		normalAttackDamage = payload.normalAttackDamage();
 		critChance = payload.critChance();
 		critDamage = payload.critDamage();
@@ -184,6 +186,11 @@ public final class ClientStats {
 	/** HP 偷取（俗称吸血）：造成伤害的 0.1% 回血。 */
 	public static double lifesteal() {
 		return lifesteal;
+	}
+
+	/** MP 吸收：造成伤害的 0.1% 回蓝（每点）。 */
+	public static double mpAbsorb() {
+		return mpAbsorb;
 	}
 
 	/** 攻击速度的来源明细（面板悬停时显示算式）。 */

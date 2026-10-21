@@ -1,6 +1,7 @@
 package com.sephiria.client.tabs;
 
 import com.sephiria.client.gui.StatsScreen;
+import com.sephiria.client.gui.TalentScreen;
 import com.sephiria.client.skill.ArtifactSkillScreen;
 import com.sephiria.network.OpenArtifactSkillsPayload;
 import net.minecraft.client.gui.components.Button;
@@ -16,10 +17,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * 四个页面的标签栏：原版背包（木箱）/ 赛菲莉娅背包 / 属性 / 商店。
+ * 六个页面的标签栏：原版背包（木箱）/ 赛菲莉娅背包 / 属性 / 天赋 / 神器技能 / 商店。
  *
- * <p>原版背包、赛菲莉娅背包与商店（后两者都是容器菜单）、属性面板是四个不同的界面，所以每个界面
- * 都在同一位置画出这一排标签，当前页那一格高亮；这样从任意一页都能直接切到另外几页。
+ * <p>原版背包、赛菲莉娅背包与商店（后两者都是容器菜单）、属性面板、天赋页是五个不同的界面，
+ * 所以每个界面都在同一位置画出这一排标签，当前页那一格高亮；这样从任意一页都能直接切到另外几页。
  */
 public final class SephiriaTabs {
 	private static final int GAP = 1;
@@ -52,6 +53,8 @@ public final class SephiriaTabs {
 			case VANILLA -> TabButton.item(x, y, new ItemStack(Items.CHEST), tab.title(), active, press);
 			case BACKPACK -> TabButton.texture(x, y, TabButton.BACKPACK_ICON, tab.title(), active, press);
 			case ATTRIBUTES -> TabButton.texture(x, y, TabButton.ATTRIBUTES_ICON, tab.title(), active, press);
+			// 天赋页的图标是用户给的宝箱/书图（已切好的 20×20 透明底）
+			case TALENT -> TabButton.texture(x, y, TabButton.TALENT_ICON, tab.title(), active, press);
 			// 技能页的图标直接用「急速」那本魔法书的贴图，不额外画一张
 			case ARTIFACT_SKILLS -> TabButton.texture(x, y, TabButton.SKILLS_ICON, tab.title(), active, press);
 			// 配方页用工作台图标（原版物品，不用另画图）
@@ -88,6 +91,7 @@ public final class SephiriaTabs {
 			// 背包与商店都是容器菜单，只能由服务端打开，所以这里发包
 			case BACKPACK -> ClientPlayNetworking.send(OpenBackpackPayload.INSTANCE);
 			case ATTRIBUTES -> client.setScreenAndShow(new StatsScreen());
+			case TALENT -> client.setScreenAndShow(new TalentScreen());
 			// 技能列表由服务端算（客户端没有背包内容），所以先开页面再发请求，包一到就填上
 			case ARTIFACT_SKILLS -> {
 				client.setScreenAndShow(new ArtifactSkillScreen());

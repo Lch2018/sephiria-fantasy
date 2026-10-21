@@ -80,6 +80,11 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 	/** 按 R 旋转鼠标下的石板（默认逆时针 90°）；写着「不可旋转」的石板不响应。与背包页同一套。 */
 	@Override
 	public boolean keyPressed(KeyEvent event) {
+		// F 是石板刻印的长按键：在界面里吞掉，别让它触发原版的交换副手
+		if (event.key() == InputConstants.KEY_F) {
+			return true;
+		}
+
 		// 26.3 移除了 GLFW，键位常量改用 InputConstants（KeyEvent.key() 与
 		// InputConstants.KEY_* 同一套键码，原版 InputConstants.getKey 也是这么取的）
 		if (event.key() == InputConstants.KEY_R) {
@@ -94,6 +99,12 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 		return super.keyPressed(event);
 	}
 
+	@Override
+	public void removed() {
+		SlateImprintController.cancel();
+		super.removed();
+	}
+
 	/** 每个选项能不能用：按「实际能升的级数」判断，够不着就置灰。 */
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
@@ -106,7 +117,28 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 		// 悬停在背包格子上时，把格子等级塞给提示框（神器词条按「自身等级+格子等级」显示）
 		ArtifactTooltip.setSlotLevelHint(hoveredSlotLevel(mouseX, mouseY));
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
+		SlateImprintController.tickKey(this.menu, backpackSlotAt(mouseX, mouseY),
+				InputConstants.isKeyDown(InputConstants.KEY_F));
+		drawImprintBar(extractor);
 		ArtifactTooltip.clearSlotLevelHint();
+	}
+
+	/** 刻印进度条：界面自己画（13×2，位置同原版耐久条），旋转过的石板也能显示。 */
+	private void drawImprintBar(GuiGraphicsExtractor extractor) {
+		Slot slot = SlateImprintController.activeSlot();
+
+		if (slot == null) {
+			return;
+		}
+
+		int x = this.leftPos + slot.x + 2;
+		int y = this.topPos + slot.y + 13;
+		extractor.fill(x, y, x + 13, y + 2, 0xFF1A1A1E);
+		int width = Math.round(13 * SlateImprintController.progress());
+
+		if (width > 0) {
+			extractor.fill(x, y, x + width, y + 2, 0xFFD49ED8);
+		}
 	}
 
 	@Override
@@ -257,6 +289,24 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 		}
 
 		return -1;
+	}
+
+	/** 鼠标坐标下的背包格（不依赖上一帧的 hoveredSlot；长按刻印要用它）。 */
+	private Slot backpackSlotAt(double mouseX, double mouseY) {
+		for (Slot slot : this.menu.slots) {
+			if (!this.menu.isBackpackSlot(slot) || !this.menu.backpackSlotExists(slot)) {
+				continue;
+			}
+
+			int x = this.leftPos + slot.x;
+			int y = this.topPos + slot.y;
+
+			if (mouseX >= x && mouseX < x + 16 && mouseY >= y && mouseY < y + 16) {
+				return slot;
+			}
+		}
+
+		return null;
 	}
 
 	/** 附魔币栏的枚数（黄色数字）。 */

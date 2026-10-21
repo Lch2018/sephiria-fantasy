@@ -26,6 +26,8 @@ public record WishPoolClickPayload(int action, boolean slatePool, int itemId) im
 	public static final int ACTION_ANCHOR = 2;
 	public static final int ACTION_FORGE = 3;
 	public static final int ACTION_TOGGLE_OVERFLOW = 4;
+	/** 清掉指定的一个锚定格（itemId 当作格子下标用）。 */
+	public static final int ACTION_CLEAR_ANCHOR_SLOT = 5;
 
 	public static final CustomPacketPayload.Type<WishPoolClickPayload> TYPE =
 			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool_click"));
@@ -44,9 +46,14 @@ public record WishPoolClickPayload(int action, boolean slatePool, int itemId) im
 		return new WishPoolClickPayload(ten ? ACTION_DRAW_TEN : ACTION_DRAW_SINGLE, slatePool, 0);
 	}
 
-	/** 锚定（{@code itemId} = 0 表示取消锚定）。 */
+	/** 锚定（{@code itemId} = 0 表示清空这个池子的全部锚定）。 */
 	public static WishPoolClickPayload anchor(boolean slatePool, int itemId) {
 		return new WishPoolClickPayload(ACTION_ANCHOR, slatePool, itemId);
+	}
+
+	/** 清掉某个池子的第 {@code slot} 个锚定格。 */
+	public static WishPoolClickPayload clearAnchorSlot(boolean slatePool, int slot) {
+		return new WishPoolClickPayload(ACTION_CLEAR_ANCHOR_SLOT, slatePool, slot);
 	}
 
 	/** 神铸。 */

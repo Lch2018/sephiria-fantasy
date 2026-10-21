@@ -2,13 +2,18 @@ package com.sephiria.mixin;
 
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.difficulty.RootRetreat;
+import com.sephiria.talent.Talents;
+import com.sephiria.weapon.SephiriaShieldItem;
+import com.sephiria.weapon.SephiriaStaffItem;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
@@ -43,7 +48,10 @@ public class DamageReductionMixin {
 			result = SephiriaDamage.applyCrit(self, source, amount);
 		} else {
 			float critted = SephiriaDamage.applyCrit(self, source, amount);
-			float multiplier = SephiriaDamage.damageMultiplier(self);
+			// 长棍的「回击后减免」是纯倍率；盾剑的防御要在这里先扣蓝（扣不起就防不住），
+			// 所以不能走 SephiriaDamage.damageMultiplier 那条不带伤害来源的纯查询
+			float multiplier = SephiriaStaffItem.damageMultiplier(self)
+					* SephiriaShieldItem.onIncomingDamage(self, source, amount);
 
 			// 黄金之手是攻击方的增益，接在减伤之后统一放大
 			result = SephiriaDamage.applyGoldenHands(source, multiplier >= 1.0F ? critted : critted * multiplier);
@@ -54,8 +62,51 @@ public class DamageReductionMixin {
 		//    玩家打的与环境伤害都不算，所以绝大多数伤害这里是 ×1）；
 		// ② 顽强之躯 / 防护铠甲：自己打敌人的伤害被削（前者是「最底层的减免」、真实伤害也吃，
 		//    后者是「敌人的防御力」、真实伤害不吃）
-		return result * RootRetreat.incomingDamageMultiplier(self, source)
+		float adjusted = result * RootRetreat.incomingDamageMultiplier(self, source)
 				* RootRetreat.outgoingDamageMultiplier(self, source, kind == SephiriaDamage.Kind.TRUE);
+
+		// 天赋「愤怒」二阶段：对 BOSS 造成的伤害 +10%（所有由玩家打出的伤害都吃，含减益与真实伤害）；
+		// 天赋「急智」三阶段：每种激活的连击类型再放大 7%
+		ServerPlayer talentAttacker = Talents.attackerOf(source);
+
+		if (talentAttacker != null) {
+			adjusted *= Talents.bossDamageMultiplier(talentAttacker, self);
+			adjusted *= Talents.comboDamageMultiplier(talentAttacker);
+		}
+
+		return adjusted;
+	}
+
+	/**
+	 * 天赋「愤怒」二阶段的防御穿透：无视目标 20% 的防御力。
+	 *
+	 * <p>原版在 {@code getDamageAfterArmorAbsorb} 里把 {@code getArmorValue()} 的结果直接交给
+	 * 护甲减伤公式，所以这里只改<b>这一次结算</b>读到的护甲值——装备本身、护甲耐久、
+	 * 面板上的防御力都不变。护甲被削到 0 以下没有意义，夹在 0。
+	 */
+	@Redirect(method = "getDamageAfterArmorAbsorb",
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getArmorValue()I"))
+	private int sephiria$talentArmorPenetration(LivingEntity instance, DamageSource source) {
+		int armor = instance.getArmorValue();
+
+		// 玩家自己的「防御力」属性与敌人的防御力同一口径：并进护甲值里一起走减伤公式
+		if (instance instanceof ServerPlayer victim) {
+			armor += (int) Math.round(com.sephiria.stats.PlayerStats.defenseTotal(victim));
+		}
+
+		ServerPlayer attacker = Talents.attackerOf(source);
+
+		if (attacker == null) {
+			return armor;
+		}
+
+		double penetration = Talents.defensePenetrationPercent(attacker);
+
+		if (penetration <= 0.0D) {
+			return armor;
+		}
+
+		return Math.max(0, (int) Math.round(armor * (1.0D - penetration / 100.0D)));
 	}
 
 	@Inject(method = "hurtServer", at = @At("TAIL"))
