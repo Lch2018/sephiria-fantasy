@@ -18,6 +18,8 @@ public final class ClientTalents {
 	private static int survival;
 	private static int patience;
 	private static int wisdom;
+	/** 服务端算的「能否在出生点附近改天赋」：世界出生点或玩家自己设置的床 / 重生锚都算。 */
+	private static boolean nearSpawn;
 
 	private ClientTalents() {
 	}
@@ -31,6 +33,7 @@ public final class ClientTalents {
 		survival = payload.survival();
 		patience = payload.patience();
 		wisdom = payload.wisdom();
+		nearSpawn = payload.nearSpawn();
 	}
 
 	/** 换世界 / 重连时清掉镜像，等新世界的同步包。 */
@@ -43,6 +46,7 @@ public final class ClientTalents {
 		survival = 0;
 		patience = 0;
 		wisdom = 0;
+		nearSpawn = false;
 	}
 
 	public static int earned() {
@@ -59,6 +63,11 @@ public final class ClientTalents {
 			case PATIENCE -> patience;
 			case WISDOM -> wisdom;
 		};
+	}
+
+	/** 能否修改天赋：服务端在进服 / 变更 / 打开界面时算好并在同步包里告知。 */
+	public static boolean nearSpawn() {
+		return nearSpawn;
 	}
 
 	/** 客户端按同一套门槛算阶段（只用于界面显示，不参与数值结算）。 */

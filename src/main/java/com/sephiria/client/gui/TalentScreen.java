@@ -5,12 +5,12 @@ import com.sephiria.client.ClientTalents;
 import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.client.tabs.SephiriaTabs;
 import com.sephiria.network.TalentClickPayload;
+import com.sephiria.network.TalentSyncRequestPayload;
 import com.sephiria.talent.Talent;
 import com.sephiria.talent.Talents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.core.BlockPos;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -102,6 +102,8 @@ public class TalentScreen extends Screen {
 
 	@Override
 	protected void init() {
+		// 打开界面时向服务端要一次最新状态：个人出生点（床 / 重生锚 / 指令）只在服务端
+		ClientPlayNetworking.send(TalentSyncRequestPayload.INSTANCE);
 		// 标签栏按整排宽度居中（六个标签后固定偏移会让它偏左）
 		SephiriaTabs.add(this, (this.width - SephiriaTabs.width()) / 2, TAB_Y, SephiriaTab.TALENT);
 
@@ -247,16 +249,14 @@ public class TalentScreen extends Screen {
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 	}
 
-	/** 玩家是否在出生点 100 格内（与服务端 {@link Talents#nearSpawn} 同一口径）。 */
+	/**
+	 * 玩家是否在出生点 100 格内（与服务端 {@link Talents#nearSpawn} 同一口径）。
+	 *
+	 * <p>客户端拿不到玩家自己设置的床 / 重生锚，直接用服务端在同步包里算好的
+	 * {@link ClientTalents#nearSpawn()}；打开界面时会主动请求一次，所以在哪都准。
+	 */
 	private boolean canEditHere() {
-		Minecraft minecraft = Minecraft.getInstance();
-
-		if (minecraft.player == null || minecraft.level == null) {
-			return false;
-		}
-
-		BlockPos spawn = minecraft.level.getRespawnData().pos();
-		return minecraft.player.blockPosition().distSqr(spawn) <= Talents.SPAWN_RANGE * Talents.SPAWN_RANGE;
+		return ClientTalents.nearSpawn();
 	}
 
 	private void drawHeader(GuiGraphicsExtractor extractor) {

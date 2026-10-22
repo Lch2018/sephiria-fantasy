@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -42,11 +43,16 @@ public class SephiriaBoltArrow extends Arrow implements SephiriaDamage.Source {
 
 	@Override
 	protected void onHitEntity(EntityHitResult result) {
-		if (!(this.level() instanceof ServerLevel level) || !(result.getEntity() instanceof LivingEntity target)) {
+		if (!(this.level() instanceof ServerLevel level)) {
 			return;
 		}
 
-		if (!this.hitTargets.add(target.getId())) {
+		Entity target = result.getEntity();
+		// 末影龙受击的是 EnderDragonPart（不是 LivingEntity）；同一发弩矢穿过头 / 身多个部位时
+		// 按整条龙只结算一次，否则一发会打出好几份伤害
+		Entity targetKey = target instanceof EnderDragonPart part ? part.parentMob : target;
+
+		if (!this.hitTargets.add(targetKey.getId())) {
 			return;
 		}
 
@@ -56,6 +62,8 @@ public class SephiriaBoltArrow extends Arrow implements SephiriaDamage.Source {
 				? (float) (FIXED_DAMAGE * PlayerStats.normalAttackMultiplier(shooter))
 				: FIXED_DAMAGE;
 
-		target.hurtServer(level, level.damageSources().arrow(this, owner), damage);
+		// 与原版箭走同一条 hurtOrSimulate：末地水晶不是 LivingEntity，末影龙要靠部位转发给本体，
+		// 之前只对 LivingEntity 结算，这两类目标整段被跳过（用户 2026-10-22 报的 bug）
+		target.hurtOrSimulate(level.damageSources().arrow(this, owner), damage);
 	}
 }

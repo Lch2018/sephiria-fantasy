@@ -12,7 +12,8 @@
 		"EntityRenderStateMixin",
 		"MinecraftAttackMixin",
 		"CraftingRecipeBookTabsMixin",
-		"WeaponGlintMixin"
+		"WeaponGlintMixin",
+		"CrossbowArmPoseMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

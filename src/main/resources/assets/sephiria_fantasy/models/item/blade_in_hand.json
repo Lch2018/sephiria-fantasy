@@ -1,0 +1,19 @@
+{
+	"parent": "sephiria_fantasy:item/blade",
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [ 0, -90, 0 ],
+			"translation": [ 0, -2.75, 1.25 ],
+			"scale": [ 0.6, 0.6, 0.6 ]
+		},
+		"firstperson_righthand": {
+			"rotation": [ 0, -90, 0 ],
+			"translation": [ 1.75, -2.5, 0 ],
+			"scale": [ 0.75, 0.75, 0.75 ]
+		},
+		"firstperson_lefthand": {
+			"rotation": [ 0, 90, 0 ],
+			"translation": [ 4.5, -4.75, -2.5 ]
+		}
+	}
+}

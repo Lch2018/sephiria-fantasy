@@ -31,6 +31,7 @@ import com.sephiria.registry.ModEntities;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.weapon.SephiriaCrossbowItem;
+import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.SephiriaShieldItem;
 import com.sephiria.weapon.SephiriaWeapon;
 import com.sephiria.weapon.TooltipScale;
@@ -47,6 +48,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.client.Minecraft;
@@ -262,6 +264,39 @@ public class SephiriaClient implements ClientModInitializer {
 			InvulnClientData.tick();
 			// 实体死亡/卸载后服务端不会再发清除包，靠这里按「实体还在不在」清掉它的减益标签
 			ClientDebuffs.prune(client.level);
+
+			// 刀的收刀 / 拔刀动画：服务端不碰动画，由每个客户端按自己看到的视角触发
+			// （自己的刀看相机；别人手里的刀在这边永远是第三人称）。⚠ 必须看玩家身上真实的
+			// 物品栈——第一人称那条渲染状态里的是旧副本，见 SephiriaKatanaItem#syncClientAnimation。
+			// 每 tick 只做「比引用」，真的对账只在物品栈换了对象时做，所以这里的开销可以忽略
+			if (client.player != null) {
+				boolean firstPerson = client.options.getCameraType().isFirstPerson();
+
+				SephiriaKatanaItem.syncClientHand(client.player, InteractionHand.MAIN_HAND, firstPerson);
+				SephiriaKatanaItem.syncClientHand(client.player, InteractionHand.OFF_HAND, firstPerson);
+
+				// 自己这边切到第三人称时，把还在播的「带动作过渡」掐成待机：
+				// 否则第一人称右键后立刻按 F5，还能看到那段过渡在第三人称里继续播
+				if (!firstPerson) {
+					SephiriaKatanaItem.cancelAnimatedSwitch(client.player, client.player.getMainHandItem());
+					SephiriaKatanaItem.cancelAnimatedSwitch(client.player, client.player.getOffhandItem());
+				}
+
+				if (client.level != null) {
+					// 别人只扫渲染距离内的：看不见的刀没必要对账
+					double range = client.options.getEffectiveRenderDistance() * 16.0D;
+					double rangeSqr = range * range;
+
+					for (AbstractClientPlayer other : client.level.players()) {
+						if (other == client.player || other.distanceToSqr(client.player) > rangeSqr) {
+							continue;
+						}
+
+						SephiriaKatanaItem.syncClientHand(other, InteractionHand.MAIN_HAND, false);
+						SephiriaKatanaItem.syncClientHand(other, InteractionHand.OFF_HAND, false);
+					}
+				}
+			}
 
 			// consumeClick 会把这期间累积的按键次数一次取出，避免连点丢事件
 			while (DASH_KEY.consumeClick()) {

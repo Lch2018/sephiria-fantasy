@@ -2,13 +2,12 @@ package com.sephiria.difficulty;
 
 import com.sephiria.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
-import net.minecraft.world.phys.Vec3;
 
 /**
  * 根之退方块上存着的<b>方案</b>（草稿）：每项难度选项一个等级。
@@ -22,8 +21,6 @@ import net.minecraft.world.phys.Vec3;
 public class RootRetreatBlockEntity extends BlockEntity {
 	/** 放置时间达到一个游戏日（用户口径：24000 刻）就可以交互。 */
 	public static final long ACTIVATION_TICKS = 24000L;
-	/** 出生点附近多少格内可以直接交互。 */
-	public static final double SPAWN_RANGE = 100.0D;
 	/** 存档键。 */
 	private static final String KEY_LEVELS = "levels";
 	private static final String KEY_PLACED_AT = "placed_at";
@@ -83,15 +80,20 @@ public class RootRetreatBlockEntity extends BlockEntity {
 		this.setChanged();
 	}
 
-	/** 这个根之退现在能不能交互：放够一个游戏日，或者在出生点 100 格内（任意一条）。 */
-	public boolean isActive(ServerLevel level) {
-		if (level.getGameTime() - this.placedAt >= ACTIVATION_TICKS) {
+	/**
+	 * 这个根之退现在能不能交互：放够一个游戏日，或者在出生点 100 格内（任意一条）。
+	 *
+	 * <p>「出生点」与世界出生点<b>或玩家自己设置的出生点</b>（床 / 重生锚 / {@code /spawnpoint}）
+	 * 都算（用户 2026-10-22 报的 bug：之前只认世界出生点）。判定统一走
+	 * {@link com.sephiria.talent.Talents#nearSpawn(net.minecraft.server.level.ServerPlayer, BlockPos)}，
+	 * 与天赋页的修改门槛同一口径。
+	 */
+	public boolean isActive(ServerPlayer player) {
+		if (player.level().getGameTime() - this.placedAt >= ACTIVATION_TICKS) {
 			return true;
 		}
 
-		BlockPos spawn = level.getRespawnData().pos();
-		return Vec3.atCenterOf(this.getBlockPos()).distanceToSqr(Vec3.atCenterOf(spawn))
-				<= SPAWN_RANGE * SPAWN_RANGE;
+		return com.sephiria.talent.Talents.nearSpawn(player, this.getBlockPos());
 	}
 
 	@Override

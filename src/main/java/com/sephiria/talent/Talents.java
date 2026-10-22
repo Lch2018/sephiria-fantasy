@@ -14,6 +14,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -310,18 +311,41 @@ public final class Talents {
 	public static final double SPAWN_RANGE = 100.0D;
 
 	/**
-	 * 玩家是否在出生点附近：用当前维度的共享出生点（与根之退同一个口径）。
+	 * 玩家是否在出生点附近：当前维度的<b>世界出生点</b>，或玩家自己设置的出生点
+	 * （床 / 重生锚 / {@code /spawnpoint}），任意一个在 100 格内都算。
 	 *
-	 * <p>客户端在 {@code TalentScreen} 里用同一份数据算一遍，决定按钮是否置灰；这里是服务端的
-	 * 最终判据——改包也绕不过去。
+	 * <p>用户 2026-10-22 报的 bug：之前只认世界生成时的出生点，玩家在床上设的重生点附近
+	 * 反而不满足条件。个人出生点只在服务端有（{@code ServerPlayer#getRespawnConfig}），
+	 * 所以客户端不能自己算——同步包里的 {@code nearSpawn} 由这里算好后推过去；
+	 * 服务端也用它做最终判据，改包绕不过去。
 	 */
 	public static boolean nearSpawn(ServerPlayer player) {
+		return nearSpawn(player, player.blockPosition());
+	}
+
+	/** 某个位置是否在玩家可用的出生点附近（世界出生点或个人出生点，且个人出生点要在同一维度）。 */
+	public static boolean nearSpawn(ServerPlayer player, BlockPos pos) {
 		if (!(player.level() instanceof ServerLevel level)) {
 			return false;
 		}
 
-		BlockPos spawn = level.getRespawnData().pos();
-		return player.blockPosition().distSqr(spawn) <= SPAWN_RANGE * SPAWN_RANGE;
+		if (isNear(pos, level.getRespawnData().pos())) {
+			return true;
+		}
+
+		ServerPlayer.RespawnConfig config = player.getRespawnConfig();
+
+		if (config == null) {
+			return false;
+		}
+
+		LevelData.RespawnData respawn = config.respawnData();
+		// 床 / 重生锚在别的维度时不算：根之退与天赋都是「当前维度的出生点」这个口径
+		return respawn.dimension().equals(level.dimension()) && isNear(pos, respawn.pos());
+	}
+
+	private static boolean isNear(BlockPos pos, BlockPos spawn) {
+		return pos.distSqr(spawn) <= SPAWN_RANGE * SPAWN_RANGE;
 	}
 
 	/**
@@ -422,13 +446,13 @@ public final class Talents {
 		com.sephiria.backpack.ArtifactBackpack.of(player).invalidateLevels();
 	}
 
-	/** 把天赋点推给客户端（进服与每次变更时各一次）。 */
+	/** 把天赋点与「能否修改」推给客户端（进服、每次变更与打开界面时各一次）。 */
 	public static void sync(ServerPlayer player) {
 		ServerPlayNetworking.send(player, new TalentSyncPayload(earned(player),
 				points(player, Talent.RAGE), points(player, Talent.SWIFT),
 				points(player, Talent.WILL), points(player, Talent.QUICK_WIT),
 				points(player, Talent.SURVIVAL), points(player, Talent.PATIENCE),
-				points(player, Talent.WISDOM)));
+				points(player, Talent.WISDOM), nearSpawn(player)));
 	}
 
 	// ------------------------------------------------------------------

@@ -25,7 +25,6 @@ public final class ModCreativeTabs {
 					.icon(() -> new ItemStack(ModItems.DEFAULT_SWORD_AND_SHIELD))
 					.displayItems((parameters, output) -> {
 						ModItems.BASE_WEAPONS.forEach(weapon -> output.accept(weapon.item()));
-						output.accept(ModItems.CROSSBOW_BOLT);
 					})
 					.build());
 

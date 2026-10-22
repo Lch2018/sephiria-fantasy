@@ -26,6 +26,7 @@ import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.network.SunSwordSyncPayload;
 import com.sephiria.network.TalentClickPayload;
 import com.sephiria.network.TalentSyncPayload;
+import com.sephiria.network.TalentSyncRequestPayload;
 import com.sephiria.potion.PotionTimers;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.debuff.Debuffs;
@@ -202,6 +203,8 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TalentClickPayload.TYPE, TalentClickPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(TalentSyncRequestPayload.TYPE,
+				TalentSyncRequestPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(TalentSyncPayload.TYPE, TalentSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.SlateImprintPayload.TYPE,
 				com.sephiria.network.SlateImprintPayload.STREAM_CODEC);
@@ -372,6 +375,11 @@ public class Sephiria implements ModInitializer {
 						menu.reroll(context.player());
 					}
 				});
+
+		// 打开天赋界面时客户端要一次最新状态：个人出生点（床 / 重生锚 / 指令）只有服务端知道，
+		// nearSpawn 必须由服务端算好，不能只靠进服时那一次同步（玩家会走动）
+		ServerPlayNetworking.registerGlobalReceiver(TalentSyncRequestPayload.TYPE,
+				(payload, context) -> com.sephiria.talent.Talents.sync(context.player()));
 
 		// 天赋界面的按钮：哪一页、加减多少、是不是重置。范围与剩余点数全部由 Talents 判，
 		// 客户端发 -5 但这一页只有 3 点时就只退 3 点（不会出现负加点）

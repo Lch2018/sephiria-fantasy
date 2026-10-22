@@ -43,6 +43,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -56,6 +57,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -295,7 +297,14 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				.build();
 	}
 
-	/** 服务端：切换状态、换掉属性并播放对应动画。 */
+	/**
+	 * 服务端：切换状态、换掉属性，并保证这把刀有一个 GeckoLib 动画实例 id。
+	 *
+	 * <p><b>动画不在这里播</b>（用户 2026-10-22 定的做法）：切换动画改由**每个客户端在渲染路径里
+	 * 按自己看到的视角**触发——第一人称播带动作的 {@code switch_to_*}，第三人称播静止版
+	 * {@code switch_to_*_third}（见 {@link #syncClientAnimation}）。服务端只改组件、分配实例 id，
+	 * 这样「谁在看、就按谁那一侧播」都能对上（服务端本来也不知道每个观察者的相机类型）。
+	 */
 	private static void toggle(ServerPlayer player, ItemStack stack) {
 		boolean sheathed = !isSheathed(stack);
 		stack.set(SHEATHED, sheathed);
@@ -308,10 +317,8 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 		SWITCH_GUARD_UNTIL.put(player.getUUID(), player.level().getGameTime() + BLOCK_TICKS);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.ARMOR_EQUIP_IRON, SoundSource.PLAYERS, 1.0F, sheathed ? 0.8F : 1.2F);
-		if (stack.getItem() instanceof SephiriaKatanaItem katana) {
-			katana.triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel) player.level()), "main",
-					sheathed ? "to_sheathed" : "to_unsheathed");
-		}
+		// 客户端要拿实例 id 找自己的动画管理器（老存档里的刀可能还没有这个组件）
+		GeoItem.getOrAssignId(stack, (ServerLevel) player.level());
 	}
 
 	@Override
@@ -324,6 +331,20 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 			toggle((ServerPlayer) player, stack);
 		}
 		return InteractionResult.CONSUME;
+	}
+
+	/**
+	 * 尽早给刀分配 GeckoLib 动画实例 id（客户端在渲染路径里靠它认「同一把刀」）。
+	 *
+	 * <p>⚠ 不能等第一次切换才分配：那一刻 id 会从「没有（客户端读出来是 0）」变成新值，
+	 * 客户端会把它当成「第一次看到这把刀」，走只对表、不播过渡动画的分支——表现就是
+	 * **第一次收刀 / 拔刀没有动画**（2026-10-22 用户报的 bug）。
+	 */
+	@Override
+	public void inventoryTick(ItemStack stack, ServerLevel level, Entity entity, EquipmentSlot slot) {
+		if (entity instanceof ServerPlayer) {
+			GeoItem.getOrAssignId(stack, level);
+		}
 	}
 
 	// ------------------------------------------------------------------ 格挡与横扫
@@ -611,6 +632,18 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 						RawAnimation.begin().thenPlay("animation.switch_to_sheathed").thenLoop("animation.idle_sheathed"))
 				.triggerableAnim("to_unsheathed",
 						RawAnimation.begin().thenPlay("animation.switch_to_unsheathed").thenLoop("animation.idle_unsheathed"))
+				// 第三人称用的「静止版」过渡：播 *_third（同一姿态的静止动画，没有动作）再进待机。
+				// 第一人称与第三人称的切换动画由此分开（用户 2026-10-22 定的第二种做法）。
+				.triggerableAnim("to_sheathed_third",
+						RawAnimation.begin().thenPlay("animation.switch_to_sheathed_third")
+								.thenLoop("animation.idle_sheathed"))
+				.triggerableAnim("to_unsheathed_third",
+						RawAnimation.begin().thenPlay("animation.switch_to_unsheathed_third")
+								.thenLoop("animation.idle_unsheathed"))
+				// 首次看到这把刀时只把待机对上（不播过渡）：进服时手里拿着一把入鞘的刀就是这个场景，
+				// 不然会停在默认的出鞘待机上（刀鞘会留在原地）
+				.triggerableAnim("sync_sheathed", RawAnimation.begin().thenLoop("animation.idle_sheathed"))
+				.triggerableAnim("sync_unsheathed", RawAnimation.begin().thenLoop("animation.idle_unsheathed"))
 				// 入鞘状态下的攻击动画：拔刀一击，播完回到入鞘待机。
 				.triggerableAnim("attack_sheathed",
 						RawAnimation.begin().thenPlay("animation.idle_sheathed2").thenLoop("animation.idle_sheathed")));
@@ -670,6 +703,119 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				return this.renderer;
 			}
 		});
+	}
+
+	// ------------------------------------------------------------------ 客户端动画同步
+
+	/** 客户端：每把刀「上一次看到的入鞘状态」（键是 GeckoLib 实例 id）。 */
+	private static final Map<Long, Boolean> CLIENT_SHEATHED = new ConcurrentHashMap<>();
+
+	/**
+	 * 客户端：每个「玩家的某只手」上一次对过账的物品栈，**只用来比引用**。
+	 *
+	 * <p>键 = 实体 id × 2 +（副手 1 / 主手 0）。服务端同步物品栏 / 装备时会换成一个新的
+	 * {@code ItemStack} 对象，所以「引用没变」就等于「这把刀没被动过」——每 tick 只花一次
+	 * {@code get} 比较，真正要读组件、查实例 id 的对账只在物品栈换对象那一下做。
+	 * 只在客户端 tick 线程访问，用普通 {@code HashMap} 即可。
+	 */
+	private static final Map<Integer, ItemStack> CLIENT_HAND_STACK = new HashMap<>();
+
+	/**
+	 * 客户端 tick 调用（见 {@code SephiriaClient}）：这只手的物品栈换了对象才去对账。
+	 *
+	 * @param firstPerson 这一侧看到的视角：自己的刀看相机，别人手里的刀永远是第三人称
+	 */
+	public static void syncClientHand(Player player, InteractionHand hand, boolean firstPerson) {
+		ItemStack stack = player.getItemInHand(hand);
+		int key = player.getId() * 2 + (hand == InteractionHand.OFF_HAND ? 1 : 0);
+
+		if (CLIENT_HAND_STACK.get(key) == stack) {
+			return;
+		}
+
+		CLIENT_HAND_STACK.put(key, stack);
+		syncClientAnimation(player, stack, firstPerson);
+	}
+
+	/**
+	 * 客户端：自己的刀在第一人称触发了「带动作的过渡」后，允许在这个客户端游戏刻之前被掐掉
+	 * （值 = 刻；见 {@link #cancelAnimatedSwitch}）。
+	 */
+	private static final Map<Long, Long> CLIENT_ANIMATED_UNTIL = new HashMap<>();
+
+	/**
+	 * 第三人称下调用：把<b>还在播</b>的「带动作过渡」掐成待机。
+	 *
+	 * <p>用户 2026-10-22 报的 bug：第一人称右键后立刻按 F5，还能看到那段过渡在第三人称播——
+	 * 因为动画状态是按实例 id 记的、两个视角共用一条，切视角本身不会重新触发。所以切到第三人称时
+	 * 在这里补一刀：如果上一条触发的是带动作的过渡、且还在它那 0.65 秒（{@link #SWITCH_TICKS}）内，
+	 * 就直接切到对应的待机（{@code sync_*}），姿态瞬间到位、不再有动作。
+	 */
+	public static void cancelAnimatedSwitch(Player player, ItemStack stack) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof SephiriaKatanaItem item)) {
+			return;
+		}
+
+		long id = GeoItem.getId(stack);
+		Long until = CLIENT_ANIMATED_UNTIL.remove(id);
+
+		if (until != null && player.level().getGameTime() <= until) {
+			triggerClientAnimation(item, id, isSheathed(stack) ? "sync_sheathed" : "sync_unsheathed");
+		}
+	}
+
+	/**
+	 * 客户端 tick 调用（见 {@code SephiriaClient}）：看这把刀的入鞘状态变没变，变了就按
+	 * {@code firstPerson} 触发对应动画。
+	 *
+	 * <p>用户 2026-10-22 定的做法：服务端只管改组件，动画由每个客户端自己触发——所以
+	 * 「自己第一人称看到的」播带动作的 {@code switch_to_*}，「第三人称（自己的和别人的）」播静止版
+	 * {@code switch_to_*_third}，每个观察者都按自己那一侧来。
+	 *
+	 * <p>第一次看到这把刀时只把待机对上（{@code sync_*}，不播过渡）：进服时手里拿着一把入鞘的刀
+	 * 就是这个场景。
+	 *
+	 * <p>⚠ **不能挂在渲染路径上**（试过 `addRenderData`）：26.3 第一人称那条渲染状态里的物品栈是
+	 * **旧副本**（{@code FirstPersonHandsAndItems} 只在「物品本身」变化时刷新，组件变了不刷新），
+	 * 于是同一次切换里第一人称那条路径一直读到旧状态、第三人称那条读到新状态，两边在同一 tick
+	 * 反复互相覆盖，动画就看不见了（2026-10-22 实测：一秒里 20 次 `to_sheathed_third` /
+	 * `to_unsheathed` 来回横跳）。改成每 tick 看**玩家身上真实的物品栈**就没这问题。
+	 */
+	private static void syncClientAnimation(Player player, ItemStack stack, boolean firstPerson) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof SephiriaKatanaItem item)) {
+			return;
+		}
+
+		long id = GeoItem.getId(stack);
+		boolean sheathed = isSheathed(stack);
+		Boolean last = CLIENT_SHEATHED.put(id, sheathed);
+
+		if (last == null) {
+			CLIENT_ANIMATED_UNTIL.remove(id);
+			triggerClientAnimation(item, id, sheathed ? "sync_sheathed" : "sync_unsheathed");
+			return;
+		}
+
+		if (last == sheathed) {
+			return;
+		}
+
+		String animation = sheathed
+				? (firstPerson ? "to_sheathed" : "to_sheathed_third")
+				: (firstPerson ? "to_unsheathed" : "to_unsheathed_third");
+
+		if (firstPerson) {
+			// 带动作的那版：记下窗口，切到第三人称时好在它播完前掐掉（见 cancelAnimatedSwitch）
+			CLIENT_ANIMATED_UNTIL.put(id, player.level().getGameTime() + SWITCH_TICKS);
+		} else {
+			CLIENT_ANIMATED_UNTIL.remove(id);
+		}
+
+		triggerClientAnimation(item, id, animation);
+	}
+
+	private static void triggerClientAnimation(SephiriaKatanaItem item, long id, String animation) {
+		item.getAnimatableInstanceCache().getManagerForId(id).tryTriggerAnimation("main", animation);
 	}
 
 	/** 供外部查询：某玩家此刻是否处于切换状态的格挡窗口。 */
