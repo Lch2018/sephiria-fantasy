@@ -596,11 +596,21 @@ public final class PlayerStats {
 	/**
 	 * 防御力（点）：面板值 + 天赋「耐心」每点 +1。
 	 *
-	 * <p>与敌人的「防御力」是同一个口径：在伤害入口里并进 {@code getArmorValue()}，
-	 * 所以吃护甲减伤公式与愤怒三阶段的防御穿透（见 {@code DamageReductionMixin}）。
+	 * <p>与敌人的「防御力」共用同一条减伤公式（{@link #defenseReduction}）；在伤害入口里作为
+	 * 一层独立减伤结算，吃愤怒三阶段的防御穿透（见 {@code DamageReductionMixin}）。
 	 */
 	public static double defenseTotal(ServerPlayer player) {
 		return of(player).defense + com.sephiria.talent.Talents.defensePoints(player);
+	}
+
+	/**
+	 * 防御力折算成的减伤比例（0..1）：{@code x / (x + 80)}——防御力 80 时减 50%。
+	 *
+	 * <p>玩家自己的防御力与根之退「防护铠甲」的敌人防御力**共用这一条公式**（用户 2026-10-23 定的；
+	 * 在这之前是并进 {@code getArmorValue()} 走原版护甲公式）。真实伤害与元素 / 减益伤害不吃这层。
+	 */
+	public static double defenseReduction(double defense) {
+		return defense <= 0.0D ? 0.0D : defense / (defense + 80.0D);
 	}
 
 	/** 永久 +防御力（药水 / 生存的随机属性用）。 */

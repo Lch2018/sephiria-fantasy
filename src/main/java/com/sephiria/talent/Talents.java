@@ -108,9 +108,9 @@ public final class Talents {
 
 	/** 耐心：每点 +1 防御力。 */
 	public static final double PATIENCE_DEFENSE_PER_POINT = 1.0D;
-	/** 耐心二阶段：血量低于 7 时每秒回 1。 */
+	/** 耐心二阶段：血量低于 7 时每秒回 0.5（用户 2026-10-23 从 1 点下调）。 */
 	public static final double PATIENCE_LOW_HP_THRESHOLD = 7.0D;
-	public static final double PATIENCE_LOW_HP_REGEN = 1.0D;
+	public static final double PATIENCE_LOW_HP_REGEN = 0.5D;
 	/** 耐心三阶段：60% 生命复活，10 个游戏日一次（1 个游戏日 = 24000 刻）。 */
 	public static final double PATIENCE_REVIVE_HEALTH_PERCENT = 60.0D;
 	public static final long PATIENCE_REVIVE_COOLDOWN_TICKS = 10L * 24000L;

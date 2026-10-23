@@ -21,7 +21,7 @@ import net.minecraft.world.item.ItemStack;
  * <ul>
  *   <li><b>一阶段：石板基础</b>——直接出现在赛菲莉娅背包里，不能移出 / 丢弃；第一阶段熄灭时
  *       从背包删掉。背包满时把第一格的东西丢在脚下再放进第一格（用户 2026-10-21 定的口径）。</li>
- *   <li><b>二阶段：低血回复</b>——生命值低于 7 时每秒回 1 点。</li>
+ *   <li><b>二阶段：低血回复</b>——生命值低于 7 时每秒回 0.5 点。</li>
  *   <li><b>三阶段：十日复活</b>——死亡时以 60% 最大生命值复活，10 个游戏日一次。
  *       不死图腾优先：图腾生效时玩家不会死亡，{@code ALLOW_DEATH} 根本不会触发。</li>
  * </ul>
@@ -51,7 +51,7 @@ public final class PatienceTalent {
 			WisdomTalent.onJoin(handler.player);
 		});
 
-		// 二阶段：低于 7 点生命时每秒回 1
+		// 二阶段：低于 7 点生命时每秒回 0.5
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % 20 != 0) {
 				return;

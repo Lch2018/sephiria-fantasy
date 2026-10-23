@@ -1,6 +1,6 @@
-下一版（`0.4.1-a`，**尚未发布**；本次仅上传留档）：从 `0.4.0-a` 之后的全部改动。
+版本 `0.4.1-a`：从 `0.4.0-a` 之后的全部改动。
 
-> 按约定，更新日志从**上一次上传的版本**（`0.4.0-a`）开始写；这一版还没发布，先随上传落档，发布时再定最终版本号。
+> 按约定，更新日志从**上一次上传并发布的版本**（`0.4.0-a`）开始写。
 
 ## 这一版有什么
 
@@ -30,6 +30,13 @@
 - 动画由**每个客户端**按自己看到的视角触发（服务端不再发包）：自己第一人称看到的是带动作那套，第三人称（自己的和别人的）看到的是静止版；第一人称右键后立刻切第三人称，那段过渡会被掐掉。
 - 顺带修复：进服时手里拿着一把入鞘的刀，现在直接是入鞘待机（以前会停在出鞘待机）。
 
+### 天赋与属性
+
+- **防御力公式改为 `x / (x + 80)`**（防御力 80 时减伤 50%）：不再并进护甲值，而是在护甲结算之后作为一层独立减伤；坠落 / 火焰 / 真实伤害这类绕过护甲的伤害不吃。
+- 属性页「防御力」那一行，鼠标悬停时显示换算出来的「减伤：x%」，只算防御力这一项。
+- 耐心二阶段「生命低于 7 点时每秒恢复 1 点」下调为**每秒 0.5 点**。
+- 根之退「防护铠甲」的敌人防御力改为 **+30/50/70/100/150**（1..5 级），并按同一条 `x / (x + 80)` 公式折算。
+
 ## 已知问题 / 未完成
 
 - 大部分内容仍未经充分实测，数值与手感还在调整。
@@ -48,9 +55,9 @@ Minecraft 26.3 + Fabric Loader 0.19.5 + Fabric API + GeckoLib（必需，客户�
 
 ## English
 
-Next version (`0.4.1-a`, **not released yet**; uploaded for archival): everything after `0.4.0-a`.
+Version `0.4.1-a`: everything after `0.4.0-a`.
 
-> By convention this changelog starts from the previously uploaded version (`0.4.0-a`). This build is not released yet, so it is recorded now and the final version number is fixed at release time.
+> By convention this changelog starts from the previously uploaded and released version (`0.4.0-a`).
 
 ### What's in this version
 
@@ -79,6 +86,13 @@ Next version (`0.4.1-a`, **not released yet**; uploaded for archival): everythin
 - The sheathe / unsheathe transition now has two variants: **first person** plays the animated `switch_to_sheathed` / `switch_to_unsheathed`, **third person** plays a still version `switch_to_*_third` (pose snaps into place, no motion) and then idles after 0.65 s.
 - Animations are triggered **by each client** according to the perspective it is rendering (the server no longer sends animation packets): your own first-person view gets the animated variant, third-person views (yours and other players') get the still one. Switching to third person right after toggling cuts the transition.
 - Also fixed: joining the game while holding a sheathed katana now shows the sheathed idle instead of the unsheathed one.
+
+#### Talents and attributes
+
+- **The Defense formula is now `x / (x + 80)`** (80 Defense = 50% reduction): it is no longer merged into the armor value but applied as a separate layer after armor absorption. Damage that bypasses armor (fall, fire, true damage) is unaffected.
+- Hovering the **Defense** row on the Attributes page shows the resulting "damage reduction: x%", counting only the Defense stat.
+- Patience stage 2 regenerates **0.5 health per second** below 7 health (was 1).
+- The Root Retreat's **Protective Armor** now gives enemies **+30/50/70/100/150** Defense (levels 1..5), converted with the same `x / (x + 80)` formula.
 
 ### Known issues / not done yet
 

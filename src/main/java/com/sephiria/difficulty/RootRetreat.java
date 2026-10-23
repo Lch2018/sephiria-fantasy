@@ -195,8 +195,8 @@ public final class RootRetreat {
 	 * <ul>
 	 *   <li><b>顽强之躯</b>是「最底层的减免」——作用在伤害的最后一步，所以
 	 *       <b>连真实伤害也照减</b>；</li>
-	 *   <li><b>防护铠甲</b>是「敌人的防御力」——按 k = R / (100 + R) 折算成减伤，
-	 *       而真实伤害绕开的正是防御，所以<b>真实伤害不吃这一层</b>。</li>
+		 *   <li><b>防护铠甲</b>是「敌人的防御力」——按 {@code x / (x + 80)} 折算成减伤（与玩家防御力
+		 *       同一条公式，x = 80 时减 50%），而真实伤害绕开的正是防御，所以<b>真实伤害不吃这一层</b>。</li>
 	 * </ul>
 	 *
 	 * <p>「敌人」= <b>非玩家的生物</b>：玩家打的（PVP）不吃这两项，生物互殴也不吃
@@ -216,7 +216,8 @@ public final class RootRetreat {
 		if (!trueDamage) {
 			double defence = DifficultyOption.PROTECTIVE_ARMOR.effectAt(
 					levelOf(attacker, DifficultyOption.PROTECTIVE_ARMOR));
-			armor = 1.0D - defence / (100.0D + defence);
+			// 与玩家「防御力」同一条公式：x / (x + 80)
+			armor = 1.0D - com.sephiria.stats.PlayerStats.defenseReduction(defence);
 		}
 
 		return (float) (tenacious * armor);

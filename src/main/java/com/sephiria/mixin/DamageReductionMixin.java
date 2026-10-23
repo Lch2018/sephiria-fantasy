@@ -46,16 +46,16 @@ public class DamageReductionMixin {
 			// 电属性伤害、火/冰减益伤害（灼伤、冰冻、蓝色灼伤）同样不吃减伤与黄金之手，但照掷暴击：
 			// 电属性那边是「通用 + 电属性攻击的暴击几率（麒麟的角）」，减益只用通用那一项
 			result = SephiriaDamage.applyCrit(self, source, amount);
-		} else {
-			float critted = SephiriaDamage.applyCrit(self, source, amount);
-			// 长棍的「回击后减免」是纯倍率；盾剑的防御要在这里先扣蓝（扣不起就防不住），
-			// 所以不能走 SephiriaDamage.damageMultiplier 那条不带伤害来源的纯查询
-			float multiplier = SephiriaStaffItem.damageMultiplier(self)
-					* SephiriaShieldItem.onIncomingDamage(self, source, amount);
-
-			// 黄金之手是攻击方的增益，接在减伤之后统一放大
-			result = SephiriaDamage.applyGoldenHands(source, multiplier >= 1.0F ? critted : critted * multiplier);
-		}
+			} else {
+				float critted = SephiriaDamage.applyCrit(self, source, amount);
+				// 长棍的「回击后减免」是纯倍率；盾剑的防御要在这里先扣蓝（扣不起就防不住），
+				// 所以不能走 SephiriaDamage.damageMultiplier 那条不带伤害来源的纯查询
+				float multiplier = SephiriaStaffItem.damageMultiplier(self)
+						* SephiriaShieldItem.onIncomingDamage(self, source, amount);
+				// 黄金之手是攻击方的增益，接在减伤之后统一放大
+				result = SephiriaDamage.applyGoldenHands(source,
+						multiplier >= 1.0F ? critted : critted * multiplier);
+			}
 
 		// 根之退（难度选项，见 difficulty.RootRetreat）——两件事都作用在伤害的最后一步：
 		// ① 凶猛的爪子：敌人打到自己身上的伤害放大（只作用于被打的人自己的设置，
@@ -78,21 +78,60 @@ public class DamageReductionMixin {
 	}
 
 	/**
-	 * 天赋「愤怒」二阶段的防御穿透：无视目标 20% 的防御力。
+	 * 玩家「防御力」的减伤：{@code x / (x + 80)}（防御力 80 → 50%），接在护甲结算之后。
+	 *
+	 * <p>只作用于**吃护甲**的伤害：{@code getDamageAfterArmorAbsorb} 开头对 {@code BYPASSES_ARMOR}
+	 * 的伤害会原样返回，那个 RETURN 也在注入范围内，所以显式排掉它——坠落、火焰、真实伤害这类
+	 * 绕过护甲的伤害不吃防御力，和以前「防御力并进护甲值」时的语义一致。
+	 * 吃攻击方的防御穿透（愤怒三阶段）。
+	 */
+	@Inject(method = "getDamageAfterArmorAbsorb", at = @At("RETURN"), cancellable = true)
+	private void sephiria$defenseReduction(DamageSource source, float amount, CallbackInfoReturnable<Float> callback) {
+		if (source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_ARMOR)) {
+			return;
+		}
+
+		float multiplier = defenseMultiplier((LivingEntity) (Object) this, source);
+
+		if (multiplier < 1.0F) {
+			callback.setReturnValue(callback.getReturnValueF() * multiplier);
+		}
+	}
+
+	/**
+	 * 玩家「防御力」的减伤倍率：{@code 1 - x/(x+80)}（防御力 80 → 50%）。
+	 *
+	 * <p>吃攻击方的防御穿透：愤怒三阶段的「无视目标 20% 防御力」＝把 x 乘 0.8 再折算。
+	 * 只对玩家目标生效——敌人的防御力走根之退那条（{@code RootRetreat.outgoingDamageMultiplier}），
+	 * 用的是同一个 {@link com.sephiria.stats.PlayerStats#defenseReduction(double)} 公式。
+	 */
+	private static float defenseMultiplier(LivingEntity victim, DamageSource source) {
+		if (!(victim instanceof ServerPlayer player)) {
+			return 1.0F;
+		}
+
+		double defense = com.sephiria.stats.PlayerStats.defenseTotal(player);
+		ServerPlayer attacker = Talents.attackerOf(source);
+
+		if (attacker != null) {
+			defense *= 1.0D - Talents.defensePenetrationPercent(attacker) / 100.0D;
+		}
+
+		return (float) (1.0D - com.sephiria.stats.PlayerStats.defenseReduction(defense));
+	}
+
+	/**
+	 * 天赋「愤怒」三阶段的防御穿透：无视目标 20% 的**护甲值**。
 	 *
 	 * <p>原版在 {@code getDamageAfterArmorAbsorb} 里把 {@code getArmorValue()} 的结果直接交给
-	 * 护甲减伤公式，所以这里只改<b>这一次结算</b>读到的护甲值——装备本身、护甲耐久、
-	 * 面板上的防御力都不变。护甲被削到 0 以下没有意义，夹在 0。
+	 * 护甲减伤公式，所以这里只改<b>这一次结算</b>读到的护甲值——装备本身、护甲耐久都不变。
+	 * 护甲被削到 0 以下没有意义，夹在 0。玩家自己的「防御力」不再并进这里（它有自己的
+	 * x/(x+80) 减伤，穿透在 {@link #defenseMultiplier} 里扣）。
 	 */
 	@Redirect(method = "getDamageAfterArmorAbsorb",
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getArmorValue()I"))
 	private int sephiria$talentArmorPenetration(LivingEntity instance, DamageSource source) {
 		int armor = instance.getArmorValue();
-
-		// 玩家自己的「防御力」属性与敌人的防御力同一口径：并进护甲值里一起走减伤公式
-		if (instance instanceof ServerPlayer victim) {
-			armor += (int) Math.round(com.sephiria.stats.PlayerStats.defenseTotal(victim));
-		}
 
 		ServerPlayer attacker = Talents.attackerOf(source);
 

@@ -32,6 +32,8 @@ public class StatsScreen extends Screen {
 	private int negotiationRowY;
 	/** 「幸运值」那一行的位置：悬停时显示换算出的「稀有及以上 +y%」。 */
 	private int luckRowY;
+	/** 「防御力」那一行的位置：悬停时显示换算出的「减伤 x%」。 */
+	private int defenseRowY;
 	/** 叶子那一行：图标 + 数值，画在最上面。 */
 	private int leafRowY;
 	private int rowsLeft;
@@ -88,7 +90,8 @@ public class StatsScreen extends Screen {
 		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.fire", format(ClientStats.fire()));
 		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.ice", format(ClientStats.ice()));
 		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.lightning", format(ClientStats.lightning()));
-		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.defense", format(ClientStats.defense()));
+		this.defenseRowY = y += ROW_HEIGHT;
+		row(left, this.defenseRowY, "screen.sephiria_fantasy.stats.defense", format(ClientStats.defense()));
 		row(left, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.mp_absorb", format(ClientStats.mpAbsorb()));
 		this.ampRowY = y += ROW_HEIGHT;
 		row(left, this.ampRowY, "screen.sephiria_fantasy.stats.physical_amp", format(ClientStats.physicalAmp()) + "%");
@@ -143,7 +146,8 @@ public class StatsScreen extends Screen {
 
 		// 悬停提示跟着行所在的那一列：物理强度与攻速在左列，闪避与谈判力在右列
 		// （先按行定列再查 x——谈判力在右列，用左列的 x 范围判断会永远判不中）
-		boolean leftRow = inRow(this.physicalRowY, mouseY) || inRow(this.attackSpeedRowY, mouseY);
+		boolean leftRow = inRow(this.physicalRowY, mouseY) || inRow(this.attackSpeedRowY, mouseY)
+				|| inRow(this.defenseRowY, mouseY);
 		boolean rightRow = inRow(this.dodgeRowY, mouseY) || inRow(this.negotiationRowY, mouseY)
 				|| inRow(this.luckRowY, mouseY);
 
@@ -161,6 +165,14 @@ public class StatsScreen extends Screen {
 			drawBreakdown(extractor, this.physicalRowY, ClientStats.physicalBreakdown());
 		} else if (inRow(this.attackSpeedRowY, mouseY)) {
 			drawBreakdown(extractor, this.attackSpeedRowY, ClientStats.attackSpeedBreakdown());
+		} else if (inRow(this.defenseRowY, mouseY)) {
+			// 防御力 x 的减伤 = x / (x + 80)（防御力 80 → 50%，用户 2026-10-23 定的公式）。
+			// 只算「防御力这一项」，不含玩家身上的装备护甲；数值与其它悬停结果一样用绿色
+			double reduction = PlayerStats.defenseReduction(ClientStats.defense()) * 100.0D;
+			extractor.text(this.font,
+					Component.translatable("screen.sephiria_fantasy.stats.defense_reduction",
+							Component.literal(formatPercent(reduction) + "%").withColor(0xFF55FF55)),
+					this.rowsLeft, this.defenseRowY + 10, 0xFFDDDDDD);
 		} else if (inRow(this.dodgeRowY, mouseY)) {
 			// 闪避率 = 0.8 × (1 − e^(−闪避 / 43.28))：把点数与结果一起写出来
 			extractor.text(this.font, Component.translatable("screen.sephiria_fantasy.stats.dodge_formula",
@@ -222,5 +234,10 @@ public class StatsScreen extends Screen {
 	/** 商店折扣是公式算出来的小数（y = 70×(1−e^(−谈判力/27.94))），保留 1 位小数显示，不四舍五入到整数。 */
 	private static String formatDecimal(double value) {
 		return String.format(java.util.Locale.ROOT, "%.1f", value);
+	}
+
+	/** 百分比：整数就写整数（50%），带小数时保留一位（33.3%）——防御力折算的减伤用。 */
+	private static String formatPercent(double value) {
+		return value == Math.rint(value) ? format(value) : formatDecimal(value);
 	}
 }
