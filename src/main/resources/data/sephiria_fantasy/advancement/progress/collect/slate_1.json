@@ -1,0 +1,27 @@
+{
+  "parent": "sephiria_fantasy:progress/collect",
+  "display": {
+    "icon": {
+      "id": "minecraft:chiseled_stone_bricks"
+    },
+    "title": {
+      "translate": "advancement.sephiria_fantasy.progress.collect.slate_1.title"
+    },
+    "description": {
+      "translate": "advancement.sephiria_fantasy.progress.collect.slate_1.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "impossible": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "impossible"
+    ]
+  ]
+}

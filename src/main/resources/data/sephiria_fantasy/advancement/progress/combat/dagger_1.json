@@ -1,0 +1,27 @@
+{
+  "parent": "sephiria_fantasy:progress/combat/slaughter_1",
+  "display": {
+    "icon": {
+      "id": "sephiria_fantasy:dagger"
+    },
+    "title": {
+      "translate": "advancement.sephiria_fantasy.progress.combat.dagger_1.title"
+    },
+    "description": {
+      "translate": "advancement.sephiria_fantasy.progress.combat.dagger_1.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "impossible": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "impossible"
+    ]
+  ]
+}

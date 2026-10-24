@@ -11,9 +11,12 @@ import com.sephiria.backpack.EnchantMenu;
 import com.sephiria.network.DashPayload;
 import com.sephiria.network.CloudSyncPayload;
 import com.sephiria.network.DebuffSyncPayload;
+import com.sephiria.network.FuseSlatesPayload;
 import com.sephiria.network.InvulnerablePayload;
 import com.sephiria.network.OpenBackpackPayload;
 import com.sephiria.network.OpenShopPayload;
+import com.sephiria.network.OpenSlateFusionPayload;
+import com.sephiria.network.RotateFusionSlatePayload;
 import com.sephiria.network.RotateSlatePayload;
 import com.sephiria.network.ScrollBackpackPayload;
 import com.sephiria.network.UpgradeArtifactPayload;
@@ -68,7 +71,9 @@ import com.sephiria.weapon.SephiriaShieldItem;
 import com.sephiria.weapon.SephiriaStaffItem;
 import com.sephiria.shop.ShopMenu;
 import com.sephiria.shop.ShopStock;
+import com.sephiria.slate.SlateFusionMenu;
 import com.sephiria.slate.SlateItem;
+import com.sephiria.trader.SephiriaTraderMenu;
 import com.sephiria.weapon.WeaponSweep;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.WeaponBranch;
@@ -105,6 +110,10 @@ public class Sephiria implements ModInitializer {
 		// 商人的刷怪器：机制照原版 WanderingTraderSpawner 抄一份但独立运行——原版那个照旧刷
 		// 原版商人，两个都刷（用户 2026-10-17 的口径）
 		SephiriaTraderSpawner.registerTicker();
+		// 「每个商人、每个玩家一次」的石板合成记录（持久化实体附件，先于任何商人加载注册）
+		com.sephiria.trader.TraderFusionUses.register();
+		// 进度树：击杀 / 收集 / 探索的计数与成就授予（玩家附件 + 服务端事件）
+		com.sephiria.progress.Progress.register();
 		ArtifactBackpack.register();
 		// 根之退的难度设置：每玩家一份的数据附件（方块本身不存东西）
 		com.sephiria.difficulty.RootRetreat.register();
@@ -185,6 +194,11 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.serverboundPlay().register(SellItemPayload.TYPE, SellItemPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RefreshShopPayload.TYPE, RefreshShopPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RotateSlatePayload.TYPE, RotateSlatePayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(OpenSlateFusionPayload.TYPE,
+				OpenSlateFusionPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(FuseSlatesPayload.TYPE, FuseSlatesPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(RotateFusionSlatePayload.TYPE,
+				RotateFusionSlatePayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ScrollBackpackPayload.TYPE, ScrollBackpackPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(OpenArtifactSkillsPayload.TYPE, OpenArtifactSkillsPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(CastArtifactSkillPayload.TYPE, CastArtifactSkillPayload.STREAM_CODEC);
@@ -248,6 +262,25 @@ public class Sephiria implements ModInitializer {
 		ServerPlayNetworking.registerGlobalReceiver(ScrollBackpackPayload.TYPE, (payload, context) -> {
 			if (context.player().containerMenu instanceof BackpackGridMenu grid) {
 				grid.scrollBackpack(payload.delta());
+			}
+		});
+		// 商人界面左下角的「石板合成」：只有正开着商人界面时才认，防止别处凭空打开
+		// 商人界面左下角的「石板合成」：只有正开着商人界面、且这个玩家还没在**这只商人**身上用过时才认
+		ServerPlayNetworking.registerGlobalReceiver(OpenSlateFusionPayload.TYPE, (payload, context) -> {
+			if (context.player().containerMenu instanceof SephiriaTraderMenu menu && menu.canOpenFusion()) {
+				SlateFusionMenu.open(context.player(), menu.trader());
+			}
+		});
+		// 合成界面里的「合成」与「按 R 旋转输入石板」：都只认当前开着的合成菜单，
+		// 物品内容由服务端自己看格子，客户端发来的数据只是动作意图
+		ServerPlayNetworking.registerGlobalReceiver(FuseSlatesPayload.TYPE, (payload, context) -> {
+			if (context.player().containerMenu instanceof SlateFusionMenu menu) {
+				menu.fuse(context.player());
+			}
+		});
+		ServerPlayNetworking.registerGlobalReceiver(RotateFusionSlatePayload.TYPE, (payload, context) -> {
+			if (context.player().containerMenu instanceof SlateFusionMenu menu) {
+				menu.rotateInput(payload.input());
 			}
 		});
 		// 商店也是容器菜单（货架在服务端），同样只能由服务端打开

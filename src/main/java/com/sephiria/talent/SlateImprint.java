@@ -21,7 +21,8 @@ import java.util.List;
  * 被记在这里；{@link ArtifactBackpack#effectiveLevels()} 在算完背包里还放着的石板之后，
  * 把这一份也按原格子累加一遍——所以周围格子的效果保留。
  *
- * <p>三阶段熄灭时 {@link #dropAll} 把它们全部丢在玩家脚下、清空存档，效果随之消失。
+ * <p><b>刻印是永久的</b>（用户 2026-10-24）：三阶段只决定「能不能刻」，刻下去之后效果一直保留，
+ * 阶段熄灭不会把石板掉出来、也不会让效果消失——所以这里没有任何回退逻辑。
  * 存档跟着玩家走（死亡也保留），所以「刻印后重登」不会丢。
  */
 public final class SlateImprint {
@@ -35,8 +36,6 @@ public final class SlateImprint {
 
 	/** 存档：刻印列表（旧存档没有这一项时按空表读）。 */
 	public record Saved(List<Entry> entries) {
-		static final Saved EMPTY = new Saved(List.of());
-
 		static final Codec<Saved> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Entry.CODEC.listOf().optionalFieldOf("entries", List.of()).forGetter(Saved::entries)
 		).apply(instance, Saved::new));
@@ -55,7 +54,8 @@ public final class SlateImprint {
 	public static void apply(ServerPlayer player, int[] levels) {
 		for (Entry entry : entries(player)) {
 			if (entry.stack().getItem() instanceof SlateItem slate) {
-				slate.apply(levels, entry.slot(), ArtifactBackpack.WIDTH, SlateItem.rotationOf(entry.stack()));
+				slate.apply(levels, entry.slot(), ArtifactBackpack.WIDTH, SlateItem.rotationOf(entry.stack()),
+						entry.stack());
 			}
 		}
 	}
@@ -69,38 +69,6 @@ public final class SlateImprint {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		backpack.invalidateLevels();
 		backpack.setChanged();
-	}
-
-	/** 三阶段熄灭：所有刻印石板从玩家身上掉出，效果一起消失。 */
-	public static void dropAll(ServerPlayer player) {
-		List<Entry> list = entries(player);
-
-		if (list.isEmpty()) {
-			return;
-		}
-
-		for (Entry entry : list) {
-			player.drop(entry.stack().copy(), false, net.minecraft.util.Prediction.SERVER_ONLY);
-		}
-
-		player.setAttached(SAVED, Saved.EMPTY);
-		ArtifactBackpack backpack = ArtifactBackpack.of(player);
-		backpack.invalidateLevels();
-		backpack.setChanged();
-	}
-
-	/** 阶段变化：三阶段熄灭时清空（点亮时没有额外动作）。 */
-	public static void onStageChanged(ServerPlayer player, int oldStage, int newStage) {
-		if (oldStage >= 3 && newStage < 3) {
-			dropAll(player);
-		}
-	}
-
-	/** 进服对账：三阶段没点亮却还有残留刻印（异常退出 / 老存档）时掉出来。 */
-	public static void dropIfInactive(ServerPlayer player) {
-		if (Talents.stage(player, Talent.SURVIVAL) < 3) {
-			dropAll(player);
-		}
 	}
 
 	public static List<Entry> entries(ServerPlayer player) {

@@ -250,10 +250,6 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 	 */
 	@Override
 	public void clicked(int slotId, int button, ContainerInput input, Player player) {
-		if (blocksProtectedMove(player, slotId, button, input)) {
-			return;
-		}
-
 		if (player instanceof ServerPlayer serverPlayer
 				&& slotId >= 2 && slotId < 2 + backpackSlotCount()) {
 			Slot slot = this.slots.get(slotId);
@@ -288,62 +284,6 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 
 	private boolean isBackpackSlotIndex(int index) {
 		return index >= 2 && index < 2 + backpackSlotCount();
-	}
-
-	/**
-	 * 石板基础 / 合并过的神器：允许在背包格之间拖，也允许合并过的神器拖进神器槽；
-	 * 不允许丢出、放进普通背包或换到快捷栏。返回 true 表示吞掉这次点击。
-	 */
-	private boolean blocksProtectedMove(Player player, int slotId, int button, ContainerInput input) {
-		if (!(player instanceof ServerPlayer serverPlayer)) {
-			return false;
-		}
-
-		ItemStack carried = this.getCarried();
-		Slot target = slotId >= 0 && slotId < this.slots.size() ? this.slots.get(slotId) : null;
-
-		if (input == ContainerInput.THROW) {
-			return (target != null && BackpackRules.isProtected(serverPlayer, target.getItem()))
-					|| (slotId < 0 && BackpackRules.isProtected(serverPlayer, carried));
-		}
-
-		if (slotId < 0 && BackpackRules.isProtected(serverPlayer, carried)) {
-			return true;
-		}
-
-		if (input == ContainerInput.PICKUP_ALL && target != null
-				&& BackpackRules.isProtected(serverPlayer, target.getItem())) {
-			return true;
-		}
-
-		if (target == null) {
-			return false;
-		}
-
-		if (input == ContainerInput.SWAP) {
-			// 物品在神器槽 / 背包格 / 玩家背包里都可能被数字键换到快捷栏
-			if (BackpackRules.isProtected(serverPlayer, target.getItem())) {
-				return true;
-			}
-
-			return slotId >= 2 + backpackSlotCount() && button >= 0 && button < 9
-					&& BackpackRules.isProtected(serverPlayer,
-							serverPlayer.getInventory().getItem(button));
-		}
-
-		// 神器槽（0）：只允许「合并过的神器」；石板基础不进来
-		if (slotId == 0) {
-			return BackpackRules.isProtected(serverPlayer, carried)
-					&& !BackpackRules.isLockedArtifact(serverPlayer, carried);
-		}
-
-		// 背包格区：允许
-		if (isBackpackSlotIndex(slotId)) {
-			return false;
-		}
-
-		// 附魔币槽与玩家背包：受保护物品一律拒绝
-		return BackpackRules.isProtected(serverPlayer, carried);
 	}
 
 	/**
@@ -483,27 +423,20 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 		int playerStart = 2 + backpackSlots;
 
 		if (index == 0) {
-			// 神器槽里的受保护神器只能回背包，不能进玩家背包
-			if (BackpackRules.isProtected(player, stack)) {
-				if (!moveItemStackTo(stack, 2, playerStart, false)) {
-					return ItemStack.EMPTY;
-				}
-			} else {
-				// 神器槽 → 背包前先试合并（否则会绕过「强制独特」在背包里造出重复）
-				if (player instanceof ServerPlayer serverPlayer
-						&& com.sephiria.talent.WisdomTalent.tryMerge(serverPlayer, stack)) {
-					if (stack.isEmpty()) {
-						slot.setByPlayer(ItemStack.EMPTY);
-					}
-
-					return ItemStack.EMPTY;
+			// 神器槽 → 背包前先试合并（否则会绕过「强制独特」在背包里造出重复）
+			if (player instanceof ServerPlayer serverPlayer
+					&& com.sephiria.talent.WisdomTalent.tryMerge(serverPlayer, stack)) {
+				if (stack.isEmpty()) {
+					slot.setByPlayer(ItemStack.EMPTY);
 				}
 
-				// 神器槽 → 先回赛菲莉娅背包（它平时的家），放不进去再去玩家背包
-				if (!moveItemStackTo(stack, 2, playerStart, false)
-						&& !moveItemStackTo(stack, playerStart, this.slots.size(), true)) {
-					return ItemStack.EMPTY;
-				}
+				return ItemStack.EMPTY;
+			}
+
+			// 神器槽 → 先回赛菲莉娅背包（它平时的家），放不进去再去玩家背包
+			if (!moveItemStackTo(stack, 2, playerStart, false)
+					&& !moveItemStackTo(stack, playerStart, this.slots.size(), true)) {
+				return ItemStack.EMPTY;
 			}
 		} else if (index == 1) {
 			// 附魔币槽 → 玩家背包
@@ -511,13 +444,7 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 				return ItemStack.EMPTY;
 			}
 		} else if (index < playerStart) {
-			if (index >= 2 && BackpackRules.isProtected(player, stack)) {
-				// 合并过的神器可以放进神器槽升级；石板基础只能在背包里换格
-				if (!BackpackRules.isLockedArtifact(player, stack)
-						|| !moveItemStackTo(stack, 0, 1, false)) {
-					return ItemStack.EMPTY;
-				}
-			} else if (stack.getItem() instanceof SephiriaArtifact) {
+			if (stack.getItem() instanceof SephiriaArtifact) {
 				// 背包里的神器 → 神器槽（这个界面的本意），占着就先回玩家背包
 				if (!moveItemStackTo(stack, 0, 1, false)
 						&& !moveItemStackTo(stack, playerStart, this.slots.size(), true)) {
@@ -584,24 +511,12 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 			return;
 		}
 
-		// 合并过的神器从神器槽出来时只能回赛菲莉娅背包（不能趁机塞进普通背包）
 		if (!artifactLeft.isEmpty()) {
-			if (BackpackRules.isProtected(serverPlayer, artifactLeft)) {
-				BackpackRules.returnToBackpack(serverPlayer, artifactLeft);
-			} else {
-				serverPlayer.getInventory().placeItemBackInInventory(artifactLeft, Prediction.SERVER_ONLY);
-			}
+			serverPlayer.getInventory().placeItemBackInInventory(artifactLeft, Prediction.SERVER_ONLY);
 		}
 
 		if (!coinsLeft.isEmpty()) {
 			serverPlayer.getInventory().placeItemBackInInventory(coinsLeft, Prediction.SERVER_ONLY);
-		}
-
-		// 光标上还拿着受保护物品：放回背包
-		if (!this.getCarried().isEmpty() && BackpackRules.isProtected(serverPlayer, this.getCarried())) {
-			ItemStack carried = this.getCarried();
-			this.setCarried(ItemStack.EMPTY);
-			BackpackRules.returnToBackpack(serverPlayer, carried);
 		}
 	}
 }

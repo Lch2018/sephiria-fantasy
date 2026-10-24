@@ -20,6 +20,10 @@ import java.util.List;
 public final class ArtifactTooltip {
 	/** 【唯一】标签的颜色（橙）。 */
 	private static final int COLOUR_TAG = 0xFFFFAA00;
+	/** 词条数值的颜色（绿），与其它界面里的数值一致。 */
+	private static final int COLOUR_BONUS = 0xFF55FF55;
+	/** 「增加连击数量」还是 0 时的颜色（灰）——这一行要一直在，但不该抢眼。 */
+	private static final int COLOUR_IDLE = 0xFFAAAAAA;
 	/** 鼠标下的格子等级；-1 表示不在背包界面里（按 0 算）。 */
 	private static int slotLevelHint = -1;
 
@@ -65,6 +69,19 @@ public final class ArtifactTooltip {
 
 		lines.addAll(artifact.affixLines(level));
 
+		// 「增加连击数量」：每条连击写一行「「坚固」+x」。
+		// 每件神器**默认就是 +1**（它自己就提供 1 级连击），合并过一次变 +2（封顶）——
+		// 所以这一行永远有，用户 2026-10-24 要的就是「所有神器都有这条属性」。
+		// +1 是常态（灰），+2 才是合并赚到的（绿）；「书」这类无连击神器没有这一行。
+		int comboCount = ArtifactItem.comboCountOf(stack);
+
+		for (com.sephiria.artifact.ArtifactCombo combo : artifact.combos()) {
+			lines.add(Component.translatable("artifact.sephiria_fantasy.affix.combo_count",
+					Component.translatable(combo.translationKey()),
+					Component.literal("+" + comboCount)
+							.withColor(comboCount > 1 ? COLOUR_BONUS : COLOUR_IDLE)));
+		}
+
 		// 「书」：附魔等级挂在物品栈上（铁砧合出来的），不在等级表里，所以要拿 stack 现读——
 		// 效果数字（点燃几秒 / 掉落加几级）跟着当前的附魔走
 		if (artifact instanceof com.sephiria.artifact.BookItem) {
@@ -97,13 +114,13 @@ public final class ArtifactTooltip {
 	/** 石板的提示行：效果（含自动生成的描述）+ 品质 + 当前朝向 + 背景描述。 */
 	private static List<Component> slateLines(ItemStack stack, com.sephiria.slate.SlateItem slate) {
 		List<Component> lines = new ArrayList<>();
-		lines.addAll(slate.effectLines());
+		lines.addAll(slate.effectLines(stack));
 		lines.add(Component.translatable("artifact.sephiria_fantasy.slate.rarity_line",
 						Component.translatable(slate.rarity().translationKey()).withColor(slate.rarity().color()))
 				.withStyle(ChatFormatting.GRAY));
 
 		// 不可旋转的石板没有朝向可言（永远是 0），这一行就不写了
-		if (slate.rotatable()) {
+		if (slate.rotatable(stack)) {
 			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.rotation",
 							Numbers.format(com.sephiria.slate.SlateItem.rotationOf(stack)))
 					.withStyle(ChatFormatting.DARK_GRAY));

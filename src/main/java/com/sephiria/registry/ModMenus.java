@@ -7,6 +7,8 @@ import com.sephiria.backpack.EnchantMenu;
 import com.sephiria.difficulty.RootRetreatMenu;
 import com.sephiria.wishpool.WishPoolMenu;
 import com.sephiria.shop.ShopMenu;
+import com.sephiria.slate.SlateFusionMenu;
+import com.sephiria.trader.SephiriaTraderMenu;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -69,6 +71,22 @@ public final class ModMenus {
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "shop"),
 			new ExtendedMenuType<ShopMenu, Unit>(
 					(id, inventory, data) -> new ShopMenu(id, inventory),
+					Unit.STREAM_CODEC));
+
+	/** 赛菲莉娅流浪商人的交易界面（右键商人打开；自定义，不再用原版交易页）。 */
+	public static final MenuType<SephiriaTraderMenu> TRADER = Registry.register(
+			BuiltInRegistries.MENU,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "trader"),
+			new ExtendedMenuType<SephiriaTraderMenu, Unit>(
+					(id, inventory, data) -> new SephiriaTraderMenu(id, inventory),
+					Unit.STREAM_CODEC));
+
+	/** 石板合成界面（商人界面左下角的按钮打开）。 */
+	public static final MenuType<SlateFusionMenu> SLATE_FUSION = Registry.register(
+			BuiltInRegistries.MENU,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_fusion"),
+			new ExtendedMenuType<SlateFusionMenu, Unit>(
+					(id, inventory, data) -> new SlateFusionMenu(id, inventory),
 					Unit.STREAM_CODEC));
 
 	private ModMenus() {

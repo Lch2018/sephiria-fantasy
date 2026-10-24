@@ -4,7 +4,10 @@ import com.sephiria.potion.SephiriaPotionItem;
 import com.sephiria.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
 import net.minecraft.world.item.Item;
@@ -13,6 +16,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -26,17 +30,24 @@ import java.util.List;
  * 孵出来的生物换成这一族），离场机制继承，**卖完不补货**（原版流浪商人没有补货这条路）
  * ——用户口径「与原版流浪商人的区别只有外观和商品」。
  *
- * <p>商品：9 个交易位全是「卖」的方向（玩家只付绿宝石、不收货），7 格道具 + 2 格药水。
- * 道具池是「神器附魔币 / 骰子 / 赛菲莉娅额外背包栏」三选一（每格独立等概率），药水池是
- * **全部**赛菲莉娅药水（按物品注册表现扫，以后新增的药水自动进来）。每格
- * {@value #PRICE} 绿宝石、{@value #STOCK} 件。
+ * <p>商品：9 格（7 格道具 + 2 格药水），**全部免费**（2026-10-24 用户定：这是一份礼物）。
+ * 交易走**自定义界面** {@link SephiriaTraderMenu}（右键商人打开，不再用原版交易页）：
+ * 点一格直接拿走一件，卖完不补货。道具池是「神器附魔币 / 骰子 / 赛菲莉娅额外背包栏」
+ * 三选一（每格独立等概率），药水池是**全部**赛菲莉娅药水（按物品注册表现扫，以后新增的
+ * 药水自动进来）。每格 {@value #STOCK} 件。
  */
 public class SephiriaWanderingTrader extends WanderingTrader {
 	/** 道具出售位数量。 */
 	public static final int GOOD_SLOTS = 7;
 	/** 药水出售位数量。 */
 	public static final int POTION_SLOTS = 2;
-	/** 每格售价（绿宝石）。 */
+	/** 交易界面的总格数（道具 7 + 药水 2）：界面按这个铺格子，别只数道具那 7 格。 */
+	public static final int TOTAL_SLOTS = GOOD_SLOTS + POTION_SLOTS;
+	/**
+	 * 报价里那份「花费」的数量（只是占位）。交易走自定义界面 {@link SephiriaTraderMenu}，
+	 * **实际不收任何东西**（2026-10-24 用户定：全部免费、一份礼物）；这里写 1 是因为
+	 * 原版 {@code MerchantOffer} 必须有花费，别的界面万一读到也不会显示成 0。
+	 */
 	public static final int PRICE = 1;
 	/** 每格库存：买一次就售罄，而且永不补货（与原版流浪商人一致）。 */
 	public static final int STOCK = 1;
@@ -91,12 +102,56 @@ public class SephiriaWanderingTrader extends WanderingTrader {
 	}
 
 	/**
-	 * 一条「卖」的报价：玩家付 {@value #PRICE} 绿宝石、拿 1 件。
+	 * 一条「卖」的报价：1 件货（自定义界面里免费领）。
 	 *
-	 * <p>只有 costA、没有 costB —— 原版就是靠「第二份花费为空」画成单方向的交易格；
-	 * 价格倍率给 0，需求/次数都不会把价格推上去，价格永远是 1。
+	 * <p>花费写 1 绿宝石只是占位（原版 {@code MerchantOffer} 必须有花费）；本模组自己打开的
+	 * 界面 {@link SephiriaTraderMenu} 不收钱，原版交易页也在 {@link #mobInteract} 里换掉了。
+	 * 价格倍率给 0，需求/次数都不会把价格推上去。
 	 */
 	private static MerchantOffer offer(Item item) {
 		return new MerchantOffer(new ItemCost(Items.EMERALD, PRICE), new ItemStack(item), STOCK, TRADE_XP, 0.0F);
+	}
+
+	/**
+	 * 右键打开自定义交易界面（2026-10-24 起不再用原版交易页）。
+	 *
+	 * <p>界面是 {@link SephiriaTraderMenu}：点一格免费拿走一件，库存仍记在这份 offers 上
+	 * （卖完不补货）。打开时 {@code setTradingPlayer} 会把商人定住，关界面时放开。
+	 */
+	@Override
+	public InteractionResult mobInteract(Player player, InteractionHand hand) {
+		if (!this.isAlive() || player.isSpectator()) {
+			return super.mobInteract(player, hand);
+		}
+
+		if (!this.level().isClientSide() && player instanceof ServerPlayer serverPlayer) {
+			SephiriaTraderMenu.open(serverPlayer, this);
+		}
+
+		return InteractionResult.SUCCESS;
+	}
+
+	/**
+	 * 拿走第 index 格：还有货就返回那件东西并标记售出（不补货）。
+	 *
+	 * <p>{@code offers} 是原版流浪商人那份数据（随存档走），每个 offer 的 {@code uses}
+	 * 就是这一格已卖出几件——{@code maxUses = STOCK}，所以拿一次就售罄。
+	 */
+	public ItemStack takeGood(int index) {
+		MerchantOffers offers = this.getOffers();
+
+		if (index < 0 || index >= offers.size()) {
+			return ItemStack.EMPTY;
+		}
+
+		MerchantOffer offer = offers.get(index);
+
+		if (offer.isOutOfStock()) {
+			return ItemStack.EMPTY;
+		}
+
+		ItemStack good = offer.getResult().copy();
+		offer.increaseUses();
+		return good;
 	}
 }

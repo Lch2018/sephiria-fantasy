@@ -86,6 +86,7 @@ import com.sephiria.potion.PotionEffect;
 import com.sephiria.potion.Potions;
 import com.sephiria.potion.SephiriaPotionItem;
 import com.sephiria.slate.HeavenSlateItem;
+import com.sephiria.slate.FusedSlateItem;
 import com.sephiria.slate.PatternSlateItem;
 import com.sephiria.slate.Slates;
 import com.sephiria.weapon.BaseWeapon;
@@ -456,6 +457,14 @@ public final class ModItems {
 	 */
 	public static final Item SLATE_BASE = register(key("slate_base"),
 			p -> new com.sephiria.slate.SlateBaseItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/**
+	 * 合成石板（红色品质）：效果由两块输入石板合并而来，存在物品组件里。
+	 * <b>只能通过商人界面的「石板合成」得到</b>——不进宝箱 / 商店 / 许愿池 / 挖矿掉落池。
+	 */
+	public static final Item SLATE_OF_FUSION = register(key("slate_of_fusion"),
+			FusedSlateItem::new,
 			new Item.Properties().stacksTo(1));
 
 	/** 石板统一走通用实现：范围与增量都在 Slates 里，这里只挑品质与风味文本。 */
@@ -950,6 +959,13 @@ public final class ModItems {
 			new Item.Properties());
 
 	public static final Item ARTIFACT_TAB_ICON = register(key("artifact_tab_icon"),
+			Item::new,
+			new Item.Properties());
+
+	/**
+	 * 进度（成就）标签页的根节点图标：用模组图标切成的 16×16 贴图，只用于成就树，不出现任何标签页。
+	 */
+	public static final Item PROGRESS_TAB_ICON = register(key("progress_tab_icon"),
 			Item::new,
 			new Item.Properties());
 

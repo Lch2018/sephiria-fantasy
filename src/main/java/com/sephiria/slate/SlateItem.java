@@ -72,9 +72,9 @@ public abstract class SlateItem extends Item implements BackpackStorable, Qualit
 		return Mth.clamp(stack.getOrDefault(ROTATION, 0), 0, ROTATIONS - 1);
 	}
 
-	/** 逆时针转 90°；不可旋转的石板（入口）什么都不做。 */
+	/** 逆时针转 90°；不可旋转的石板（入口、由不可旋转石板合成的合成石板）什么都不做。 */
 	public static void rotate(ItemStack stack) {
-		if (stack.getItem() instanceof SlateItem slate && !slate.rotatable()) {
+		if (stack.getItem() instanceof SlateItem slate && !slate.rotatable(stack)) {
 			return;
 		}
 
@@ -85,13 +85,23 @@ public abstract class SlateItem extends Item implements BackpackStorable, Qualit
 
 	public abstract String flavorKey();
 
-	/** 能不能按 R 旋转；固定石板（入口）返回 false。 */
-	public boolean rotatable() {
+	/**
+	 * 能不能按 R 旋转；固定石板（入口）返回 false。
+	 *
+	 * <p>带 {@code stack} 是因为「合成石板」的朝向规则按<b>参与合成的两块石板</b>决定
+	 * （任一输入不可旋转，结果也不可旋转），同一种物品不同物品栈可以不同。
+	 */
+	public boolean rotatable(ItemStack stack) {
 		return true;
 	}
 
-	/** 这个朝向下的影响范围说明（提示框用）。 */
-	public abstract java.util.List<Component> effectLines();
+	/**
+	 * 这个朝向下的影响范围说明（提示框用）。
+	 *
+	 * <p>带 {@code stack} 是因为「合成石板」的图案存在物品组件里，不同物品栈不一样；
+	 * 普通石板的实现直接忽略它。
+	 */
+	public abstract java.util.List<Component> effectLines(ItemStack stack);
 
 	/**
 	 * 把这块石板的效果加到 {@code levels} 上。
@@ -100,8 +110,9 @@ public abstract class SlateItem extends Item implements BackpackStorable, Qualit
 	 * @param slot     石板所在的格子编号
 	 * @param width    背包宽度（固定 6）
 	 * @param rotation 朝向
+	 * @param stack    石板本身（合成石板要从中读组件里的图案）
 	 */
-	public abstract void apply(int[] levels, int slot, int width, int rotation);
+	public abstract void apply(int[] levels, int slot, int width, int rotation, ItemStack stack);
 
 	/** 名字按品质上色。 */
 	@Override

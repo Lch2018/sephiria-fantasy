@@ -1,0 +1,27 @@
+{
+  "parent": "sephiria_fantasy:progress/root",
+  "display": {
+    "icon": {
+      "id": "sephiria_fantasy:mast_model"
+    },
+    "title": {
+      "translate": "advancement.sephiria_fantasy.progress.explore.title"
+    },
+    "description": {
+      "translate": "advancement.sephiria_fantasy.progress.explore.description"
+    },
+    "frame": "goal",
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "impossible": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "impossible"
+    ]
+  ]
+}

@@ -102,9 +102,8 @@ public final class Talents {
 
 	/** 生存：每点 +0.6 最大 HP。 */
 	public static final double SURVIVAL_MAX_HP_PER_POINT = 0.6D;
-	/** 生存二阶段：+3 格；三阶段：在二阶段之上再 -12 格。 */
+	/** 生存二阶段：+3 格（三阶段不再扣格，用户 2026-10-24 去掉了原来的 -12）。 */
 	public static final int SURVIVAL_STAGE2_BACKPACK_SLOTS = 3;
-	public static final int SURVIVAL_STAGE3_BACKPACK_PENALTY = 12;
 
 	/** 耐心：每点 +1 防御力。 */
 	public static final double PATIENCE_DEFENSE_PER_POINT = 1.0D;
@@ -417,32 +416,14 @@ public final class Talents {
 	}
 
 	/**
-	 * 加点变化后的副作用：三条新天赋页的阶段能力（石板基础、合并、刻印）与背包格子数的变化。
+	 * 加点变化后的副作用：重算背包格子等级缓存。
 	 *
-	 * <p>用加点的「旧值 / 新值」比较阶段，而不是只看新值：阶段熄灭时要执行清理（掉落石板 /
-	 * 还原合并），阶段点亮时要补发（石板基础）或整理重复神器。
+	 * <p>三条新天赋页的能力都不再需要「阶段熄灭」时的清理（2026-10-24 用户定的）：
+	 * 石板刻印是永久的、神器合并直接写在物品栈上、耐心一阶段的第一行等级是现算的——
+	 * 所以这里只剩缓存失效（背包格数会随急智 +2 / 生存 +3 变化）。
 	 */
 	private static void afterChange(ServerPlayer player, Saved before, Saved after) {
-		Talent[] checked = { Talent.SURVIVAL, Talent.PATIENCE, Talent.WISDOM };
-
-		for (Talent talent : checked) {
-			int oldStage = talent.stage(before.points(talent));
-			int newStage = talent.stage(after.points(talent));
-
-			if (oldStage == newStage) {
-				continue;
-			}
-
-			switch (talent) {
-				case SURVIVAL -> com.sephiria.talent.SlateImprint.onStageChanged(player, oldStage, newStage);
-				case PATIENCE -> com.sephiria.talent.PatienceTalent.onStageChanged(player, oldStage, newStage);
-				case WISDOM -> com.sephiria.talent.WisdomTalent.onStageChanged(player, oldStage, newStage);
-				default -> {
-				}
-			}
-		}
-
-		// 背包格数可能会变（急智 +2、生存 +3/-12），格子等级缓存与 HUD 都要跟着重算
+		// 背包格数可能会变（急智 +2、生存 +3），格子等级缓存与 HUD 都要跟着重算
 		com.sephiria.backpack.ArtifactBackpack.of(player).invalidateLevels();
 	}
 
@@ -545,10 +526,6 @@ public final class Talents {
 
 		if (stage(player, Talent.SURVIVAL) >= 2) {
 			bonus += SURVIVAL_STAGE2_BACKPACK_SLOTS;
-		}
-
-		if (stage(player, Talent.SURVIVAL) >= 3) {
-			bonus -= SURVIVAL_STAGE3_BACKPACK_PENALTY;
 		}
 
 		return bonus;

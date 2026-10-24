@@ -322,10 +322,6 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 	 */
 	@Override
 	public void clicked(int slotId, int button, ContainerInput input, Player player) {
-		if (blocksProtectedMove(player, slotId, button, input)) {
-			return;
-		}
-
 		if (player instanceof ServerPlayer serverPlayer
 				&& slotId >= 0 && slotId < backpackSlotCount()) {
 			Slot slot = this.slots.get(slotId);
@@ -360,57 +356,6 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 		super.clicked(slotId, button, input, player);
 	}
 
-	/**
-	 * 石板基础 / 合并过的神器：允许在背包格之间拖，但不允许丢出、放进普通背包或换到快捷栏。
-	 *
-	 * @return true 表示这次点击要整个吞掉
-	 */
-	private boolean blocksProtectedMove(Player player, int slotId, int button, ContainerInput input) {
-		if (!(player instanceof ServerPlayer serverPlayer)) {
-			return false;
-		}
-
-		ItemStack carried = this.getCarried();
-		Slot target = slotId >= 0 && slotId < this.slots.size() ? this.slots.get(slotId) : null;
-
-		// Q 丢出（鼠标下的格子 / 光标上的那件）
-		if (input == ContainerInput.THROW) {
-			return target != null && BackpackRules.isProtected(serverPlayer, target.getItem())
-					|| slotId < 0 && BackpackRules.isProtected(serverPlayer, carried);
-		}
-
-		// 点界面外 = 丢弃光标物品
-		if (slotId < 0 && BackpackRules.isProtected(serverPlayer, carried)) {
-			return true;
-		}
-
-		// 双击收集到光标上
-		if (input == ContainerInput.PICKUP_ALL && target != null
-				&& BackpackRules.isProtected(serverPlayer, target.getItem())) {
-			return true;
-		}
-
-		// 放到玩家背包（非背包格）
-		if (target != null && slotId >= backpackSlotCount()
-				&& BackpackRules.isProtected(serverPlayer, carried)) {
-			return true;
-		}
-
-		// 数字键：背包格里的受保护物品不能换到快捷栏；快捷栏里的受保护物品不能换进玩家背包
-		if (input == ContainerInput.SWAP && target != null) {
-			if (slotId < backpackSlotCount() && BackpackRules.isProtected(serverPlayer, target.getItem())) {
-				return true;
-			}
-
-			if (slotId >= backpackSlotCount() && button >= 0 && button < 9
-					&& BackpackRules.isProtected(serverPlayer, serverPlayer.getInventory().getItem(button))) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	@Override
 	public ItemStack quickMoveStack(Player player, int index) {
 		Slot slot = this.slots.get(index);
@@ -424,12 +369,6 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 		int backpackSlots = backpackSlotCount();
 
 		if (index < backpackSlots) {
-			// 石板基础 / 合并过的神器不能从背包移出
-			if (com.sephiria.talent.PatienceTalent.isBase(stack)
-					|| com.sephiria.talent.WisdomTalent.isLocked(player, stack)) {
-				return ItemStack.EMPTY;
-			}
-
 			// 赛菲莉娅背包 → 玩家背包
 			if (!moveItemStackTo(stack, backpackSlots, this.slots.size(), true)) {
 				return ItemStack.EMPTY;
@@ -469,14 +408,6 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 
 	@Override
 	public void removed(Player player) {
-		// 光标上拿着石板基础 / 合并过的神器：关界面时放回背包（不能带进普通背包）
-		if (player instanceof ServerPlayer serverPlayer && !this.getCarried().isEmpty()
-				&& BackpackRules.isProtected(serverPlayer, this.getCarried())) {
-			ItemStack carried = this.getCarried();
-			this.setCarried(ItemStack.EMPTY);
-			BackpackRules.returnToBackpack(serverPlayer, carried);
-		}
-
 		super.removed(player);
 		this.backpack.stopOpen(player);
 	}

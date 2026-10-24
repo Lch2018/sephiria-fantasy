@@ -443,10 +443,7 @@ public class TalentScreen extends Screen {
 				switch (stage) {
 					case 0 -> lines.add(greenLine("screen.sephiria_fantasy.talent.survival.stage1"));
 					case 1 -> lines.add(greenLine("screen.sephiria_fantasy.talent.survival.stage2"));
-					default -> {
-						lines.add(greenLine("screen.sephiria_fantasy.talent.survival.stage3.cost"));
-						lines.add(greenLine("screen.sephiria_fantasy.talent.survival.stage3.imprint"));
-					}
+					default -> lines.add(greenLine("screen.sephiria_fantasy.talent.survival.stage3.imprint"));
 				}
 			}
 			case PATIENCE -> {

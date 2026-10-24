@@ -678,8 +678,7 @@ public final class ArtifactEffects {
 	public static Map<ArtifactCombo, Integer> comboLevels(ServerPlayer player) {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		return comboLevels(backpack, backpack::slotLevel,
-				combo -> PlayerStats.comboBonus(player, combo)
-						+ com.sephiria.talent.WisdomTalent.comboBonus(player, combo),
+				combo -> PlayerStats.comboBonus(player, combo),
 				com.sephiria.talent.WisdomTalent.forceUnique(player));
 	}
 
@@ -707,9 +706,12 @@ public final class ArtifactEffects {
 				continue;
 			}
 
-			// 双连击神器：两种连击各记 1 级
+			// 双连击神器：两种连击各记一次；「增加连击数量」属性就是这个件数——
+			// 默认 1（神器自己提供的 1 级），天赋「智慧」合并过一次变 2（封顶）
+			int count = ArtifactItem.comboCountOf(stack);
+
 			for (ArtifactCombo combo : artifact.combos()) {
-				levels.merge(combo, 1, Integer::sum);
+				levels.merge(combo, count, Integer::sum);
 			}
 		}
 

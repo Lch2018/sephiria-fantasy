@@ -2,6 +2,7 @@ package com.sephiria.slate;
 
 import com.sephiria.artifact.ArtifactRarity;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
@@ -36,12 +37,12 @@ public class HeavenSlateItem extends SlateItem {
 	}
 
 	@Override
-	public boolean rotatable() {
+	public boolean rotatable(ItemStack stack) {
 		return false;
 	}
 
 	@Override
-	public List<Component> effectLines() {
+	public List<Component> effectLines(ItemStack stack) {
 		return List.of(
 				Component.translatable("artifact.sephiria_fantasy.slate.effect.all",
 						Component.literal("+" + BONUS).withColor(COLOUR_POSITIVE)),
@@ -50,7 +51,7 @@ public class HeavenSlateItem extends SlateItem {
 	}
 
 	@Override
-	public void apply(int[] levels, int slot, int width, int rotation) {
+	public void apply(int[] levels, int slot, int width, int rotation, ItemStack stack) {
 		for (int i = 0; i < levels.length; i++) {
 			levels[i] += BONUS;
 		}

@@ -1,18 +1,18 @@
 {
   "display": {
     "icon": {
-      "id": "sephiria_fantasy:default_sword_and_shield"
+      "id": "sephiria_fantasy:progress_tab_icon"
     },
     "title": {
-      "text": "SEPHIRIA"
+      "translate": "advancement.sephiria_fantasy.progress.root.title"
     },
     "description": {
-      "text": "武器合成表：把鼠标放在条目上"
+      "translate": "advancement.sephiria_fantasy.progress.root.description"
     },
-    "background": "sephiria_fantasy:gui/advancement_background",
     "frame": "task",
     "show_toast": false,
-    "announce_to_chat": false
+    "announce_to_chat": false,
+    "background": "sephiria_fantasy:gui/advancement_background"
   },
   "criteria": {
     "tick": {

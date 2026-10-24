@@ -1,8 +1,14 @@
 package com.sephiria.slate;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.util.Numbers;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -14,11 +20,27 @@ import java.util.Map;
  * （数值集中在 {@link Slates}，改平衡只动那一处）。
  *
  * <p>可旋转的石板按 R 会把整张表一起转；「入口」这类写着「不可旋转」的固定石板不参与旋转
- * （见 {@link SlateItem#rotatable()}）。
+ * （见 {@link SlateItem#rotatable(ItemStack)}）。
+ *
+ * <p>子类可以覆写 {@link #pattern(ItemStack)} 把图案改放到物品组件里——「合成石板」就是这么做的：
+ * 它的图案由两块输入石板合并而来，同一种物品不同物品栈的内容可以完全不同。
  */
 public class PatternSlateItem extends SlateItem {
 	/** 一格效果：相对石板的偏移（dx 右为正、dy 下为正）与增量（可以是负数）。 */
 	public record Cell(int dx, int dy, int delta) {
+		/** 存档 / 组件用的格式：字段名写全，改格式时旧存档还能读出错在哪。 */
+		public static final Codec<Cell> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+				Codec.INT.fieldOf("dx").forGetter(Cell::dx),
+				Codec.INT.fieldOf("dy").forGetter(Cell::dy),
+				Codec.INT.fieldOf("delta").forGetter(Cell::delta)
+		).apply(instance, Cell::new));
+
+		/** 网络同步：合成石板的图案要跟着物品一起发给客户端，界面才能画预览。 */
+		public static final StreamCodec<ByteBuf, Cell> STREAM_CODEC = StreamCodec.composite(
+				ByteBufCodecs.VAR_INT, Cell::dx,
+				ByteBufCodecs.VAR_INT, Cell::dy,
+				ByteBufCodecs.VAR_INT, Cell::delta,
+				Cell::new);
 	}
 
 	/** 增量文字的颜色：加绿、减红。 */
@@ -50,8 +72,17 @@ public class PatternSlateItem extends SlateItem {
 	}
 
 	@Override
-	public boolean rotatable() {
+	public boolean rotatable(ItemStack stack) {
 		return this.rotatable;
+	}
+
+	/**
+	 * 这块石板的基础图案（未按朝向旋转）。
+	 *
+	 * <p>普通石板返回构造时传进来的那张表；「合成石板」覆写成从物品组件里读。
+	 */
+	public List<Cell> pattern(ItemStack stack) {
+		return this.pattern;
 	}
 
 	/**
@@ -63,13 +94,13 @@ public class PatternSlateItem extends SlateItem {
 	 * ——省得玩家按 R 按不出反应。
 	 */
 	@Override
-	public List<Component> effectLines() {
+	public List<Component> effectLines(ItemStack stack) {
 		List<Component> lines = new ArrayList<>();
 		Map<Integer, Integer> counts = new LinkedHashMap<>();
 		boolean boosts = false;
 		boolean lowers = false;
 
-		for (Cell cell : this.pattern) {
+		for (Cell cell : pattern(stack)) {
 			counts.merge(cell.delta(), 1, Integer::sum);
 
 			if (cell.delta() > 0) {
@@ -99,7 +130,7 @@ public class PatternSlateItem extends SlateItem {
 			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.tag.reduce").withColor(COLOUR_NEGATIVE));
 		}
 
-		lines.add(this.rotatable
+		lines.add(rotatable(stack)
 				? Component.translatable("artifact.sephiria_fantasy.slate.effect.rotate")
 				: Component.translatable("artifact.sephiria_fantasy.slate.effect.fixed").withColor(COLOUR_NEGATIVE));
 
@@ -107,11 +138,11 @@ public class PatternSlateItem extends SlateItem {
 	}
 
 	@Override
-	public void apply(int[] levels, int slot, int width, int rotation) {
+	public void apply(int[] levels, int slot, int width, int rotation, ItemStack stack) {
 		int x = slot % width;
 		int y = slot / width;
 
-		for (Cell cell : this.pattern) {
+		for (Cell cell : pattern(stack)) {
 			// 不可旋转的石板朝向固定是 0，这里统一走旋转函数也不会有变化
 			int[] turned = rotateOffset(cell.dx(), cell.dy(), rotation);
 			int targetX = x + turned[0];

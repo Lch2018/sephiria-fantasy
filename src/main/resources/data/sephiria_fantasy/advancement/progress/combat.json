@@ -1,0 +1,27 @@
+{
+  "parent": "sephiria_fantasy:progress/root",
+  "display": {
+    "icon": {
+      "id": "sephiria_fantasy:default_sword_and_shield"
+    },
+    "title": {
+      "translate": "advancement.sephiria_fantasy.progress.combat.title"
+    },
+    "description": {
+      "translate": "advancement.sephiria_fantasy.progress.combat.description"
+    },
+    "frame": "goal",
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "impossible": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "impossible"
+    ]
+  ]
+}

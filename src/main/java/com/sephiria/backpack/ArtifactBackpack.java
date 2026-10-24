@@ -235,13 +235,20 @@ public final class ArtifactBackpack extends SimpleContainer {
 					ItemStack stack = getItem(slot);
 
 					if (stack.getItem() instanceof com.sephiria.slate.SlateItem slate) {
-						slate.apply(levels, slot, WIDTH, com.sephiria.slate.SlateItem.rotationOf(stack));
+						slate.apply(levels, slot, WIDTH, com.sephiria.slate.SlateItem.rotationOf(stack), stack);
 					}
 				}
 
 				// 已刻印（从格子里消耗掉、但效果保留）的石板：仍然按它原来的格子生效
 				if (this.owner != null) {
 					com.sephiria.talent.SlateImprint.apply(this.owner, levels);
+
+					// 天赋「耐心」一阶段：背包第一行（前 6 格）格子等级 +1（2026-10-24 取代石板基础）
+					if (com.sephiria.talent.Talents.stage(this.owner, com.sephiria.talent.Talent.PATIENCE) >= 1) {
+						for (int slot = 0; slot < WIDTH; slot++) {
+							levels[slot] += 1;
+						}
+					}
 				}
 
 				this.levelCache = levels;

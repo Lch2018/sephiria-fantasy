@@ -117,6 +117,8 @@ public class SephiriaClient implements ClientModInitializer {
 		MenuScreens.register(ModMenus.ARTIFACT_BACKPACK, ArtifactBackpackScreen::new);
 		MenuScreens.register(ModMenus.ARTIFACT_ENCHANT, EnchantScreen::new);
 		MenuScreens.register(ModMenus.CHEST, ChestScreen::new);
+		MenuScreens.register(ModMenus.TRADER, com.sephiria.client.trader.SephiriaTraderScreen::new);
+		MenuScreens.register(ModMenus.SLATE_FUSION, com.sephiria.client.slate.SlateFusionScreen::new);
 		MenuScreens.register(ModMenus.SHOP, ShopScreen::new);
 		MenuScreens.register(ModMenus.ROOT_RETREAT, RootRetreatScreen::new);
 		MenuScreens.register(ModMenus.WISH_POOL, WishPoolScreen::new);

@@ -1006,6 +1006,10 @@ $jobs = @(
     # slate batch (slate_of_courage): cut from the Slate Generator inbox reference
     @{ name = 'slate_of_courage'; root = 'slates'; source = 'slate_of_courage.png';
        target = 16; dir = 'item' }
+
+    # fusion slate (2026-10-24): the icon for the combined slate made at the trader's fusion screen
+    @{ name = 'slate_of_fusion'; root = 'slates'; source = 'slate_of_fusion.png';
+       target = 16; dir = 'item' }
 )
 
 $skipped = @()

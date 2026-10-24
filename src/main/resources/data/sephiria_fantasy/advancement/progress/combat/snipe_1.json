@@ -1,0 +1,27 @@
+{
+  "parent": "sephiria_fantasy:progress/combat",
+  "display": {
+    "icon": {
+      "id": "minecraft:bow"
+    },
+    "title": {
+      "translate": "advancement.sephiria_fantasy.progress.combat.snipe_1.title"
+    },
+    "description": {
+      "translate": "advancement.sephiria_fantasy.progress.combat.snipe_1.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "impossible": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "impossible"
+    ]
+  ]
+}

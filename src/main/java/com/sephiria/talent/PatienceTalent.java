@@ -2,11 +2,9 @@ package com.sephiria.talent;
 
 import com.mojang.serialization.Codec;
 import com.sephiria.Sephiria;
-import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -19,8 +17,9 @@ import net.minecraft.world.item.ItemStack;
  * 天赋「耐心」的三项阶段能力。
  *
  * <ul>
- *   <li><b>一阶段：石板基础</b>——直接出现在赛菲莉娅背包里，不能移出 / 丢弃；第一阶段熄灭时
- *       从背包删掉。背包满时把第一格的东西丢在脚下再放进第一格（用户 2026-10-21 定的口径）。</li>
+ *   <li><b>一阶段：第一行格子等级 +1</b>——赛菲莉娅背包第一行（前 6 格）的格子等级 +1，
+ *       随阶段现算、不落存档（2026-10-24 用户把原来的「石板基础」换成了这条）。
+ *       实现见 {@code ArtifactBackpack.effectiveLevels}。</li>
  *   <li><b>二阶段：低血回复</b>——生命值低于 7 时每秒回 0.5 点。</li>
  *   <li><b>三阶段：十日复活</b>——死亡时以 60% 最大生命值复活，10 个游戏日一次。
  *       不死图腾优先：图腾生效时玩家不会死亡，{@code ALLOW_DEATH} 根本不会触发。</li>
@@ -42,15 +41,6 @@ public final class PatienceTalent {
 	}
 
 	public static void register() {
-		// 进服时补一次石板基础（老存档 / 刚点上一阶段就退出重进的）
-		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-			ensure(handler.player);
-			// 生存三阶段如果没点亮（重置 / 退点后异常退出），把残留的刻印石板清掉
-			SlateImprint.dropIfInactive(handler.player);
-			// 智慧二阶段：整理重复神器 / 还原已经失效的合并
-			WisdomTalent.onJoin(handler.player);
-		});
-
 		// 二阶段：低于 7 点生命时每秒回 0.5
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % 20 != 0) {
@@ -99,83 +89,9 @@ public final class PatienceTalent {
 		});
 	}
 
-	/** 阶段变化：点亮一阶段发石板基础，熄灭一阶段删掉它。 */
-	public static void onStageChanged(ServerPlayer player, int oldStage, int newStage) {
-		if (newStage >= 1 && oldStage < 1) {
-			ensure(player);
-		} else if (newStage < 1 && oldStage >= 1) {
-			removeBase(player);
-		}
-	}
-
-	/** 一阶段点亮时保证背包里有一块石板基础；没点亮时保证没有。 */
-	public static void ensure(ServerPlayer player) {
-		ArtifactBackpack backpack = ArtifactBackpack.of(player);
-		boolean active = Talents.stage(player, Talent.PATIENCE) >= 1;
-
-		if (!active) {
-			removeBase(player);
-			return;
-		}
-
-		if (containsBase(backpack)) {
-			return;
-		}
-
-		int size = backpack.getContainerSize();
-		int target = -1;
-
-		for (int slot = 0; slot < size; slot++) {
-			if (backpack.getItem(slot).isEmpty()) {
-				target = slot;
-				break;
-			}
-		}
-
-		if (target < 0) {
-			// 背包满了：把第一格的东西丢在脚下，再把石板基础放进第一格（用户口径）
-			ItemStack first = backpack.getItem(0);
-
-			if (!first.isEmpty()) {
-				player.drop(first.copy(), false, net.minecraft.util.Prediction.SERVER_ONLY);
-			}
-
-			target = 0;
-		}
-
-		backpack.setItem(target, new ItemStack(ModItems.SLATE_BASE));
-		backpack.setChanged();
-	}
-
-	/** 是否是一阶段的「石板基础」（菜单锁格、刻印排除都用它）。 */
+	/** 是否是旧版一阶段的「石板基础」（刻印排除仍然认它，老存档里的还能用）。 */
 	public static boolean isBase(ItemStack stack) {
 		return stack.getItem() == ModItems.SLATE_BASE;
-	}
-
-	private static boolean containsBase(ArtifactBackpack backpack) {
-		for (int slot = 0; slot < ArtifactBackpack.MAX_SLOTS; slot++) {
-			if (isBase(backpack.getItem(slot))) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private static void removeBase(ServerPlayer player) {
-		ArtifactBackpack backpack = ArtifactBackpack.of(player);
-		boolean changed = false;
-
-		for (int slot = 0; slot < ArtifactBackpack.MAX_SLOTS; slot++) {
-			if (isBase(backpack.getItem(slot))) {
-				backpack.setItem(slot, ItemStack.EMPTY);
-				changed = true;
-			}
-		}
-
-		if (changed) {
-			backpack.setChanged();
-		}
 	}
 
 	private static long readyAt(ServerPlayer player) {

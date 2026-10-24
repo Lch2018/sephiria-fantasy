@@ -65,7 +65,8 @@ public final class ShopPrices {
 		Item item = stack.getItem();
 
 		// 天国只是「看起来是永恒」：不进经济系统，既不能买也不能卖
-		if (item == ModItems.SLATE_OF_HEAVEN) {
+		// 合成石板同理：它只从石板合成得到，不进商店（卖回商店会让它变相成为经济道具）
+		if (item == ModItems.SLATE_OF_HEAVEN || item == ModItems.SLATE_OF_FUSION) {
 			return 0;
 		}
 

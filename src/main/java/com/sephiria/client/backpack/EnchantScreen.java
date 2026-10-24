@@ -90,7 +90,8 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 		if (event.key() == InputConstants.KEY_R) {
 			Slot hovered = hoveredBackpackSlot();
 
-			if (hovered != null && hovered.getItem().getItem() instanceof SlateItem slate && slate.rotatable()) {
+			if (hovered != null && hovered.getItem().getItem() instanceof SlateItem slate
+					&& slate.rotatable(hovered.getItem())) {
 				ClientPlayNetworking.send(new RotateSlatePayload(this.menu.slots.indexOf(hovered)));
 				return true;
 			}
