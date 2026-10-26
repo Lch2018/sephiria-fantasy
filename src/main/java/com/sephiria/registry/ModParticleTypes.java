@@ -37,6 +37,19 @@ public final class ModParticleTypes {
 	/** 电蓝色电火花：触电（挂层/每刻光环/结算）与乌云雷击（闪电线/命中爆点）共用。 */
 	public static final SimpleParticleType BLUE_SPARK = register("blue_spark");
 
+	/**
+	 * 暴风雪云的雪：贴图直接从原版天气雪的 {@code environment/snow.png} 裁出来，
+	 * 外观与原版降雪一样（不是原版 {@code SNOWFLAKE} 那颗雪花图标）。
+	 */
+	public static final SimpleParticleType SNOWFALL = register("snowfall");
+
+	/**
+	 * 等离子体的菱形粒子：贴图是一颗白色菱形，颜色由客户端按 20% 粉 / 60% 白 / 20% 蓝随机染。
+	 *
+	 * <p>用户 2026-10-25 定：等离子体的特效粒子形状是菱形，颜色比例固定。
+	 */
+	public static final SimpleParticleType PLASMA = register("plasma");
+
 	/** 太阳剑的剑痕：一道笔直的发光划痕（贴图 textures/particle/sun_slash_0.png）。 */
 	public static final ParticleType<SunSlashOptions> SUN_SLASH = registerSunSlash();
 

@@ -29,48 +29,45 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 敌人身上的「减益效果」（负面 buff）：魔法科技连击的「触电」与余烬连击的「灼伤」。
+ * 敌人身上的「减益效果」（负面 buff）：魔法科技连击的「触电」、余烬连击的「灼伤」，
+ * 以及等离子头盔把两者合并后的「等离子体」。
  *
- * <p>与玩家侧的限时增益（TimedAttributes）不同，减益挂在<b>目标实体</b>上，两套各存一份
+ * <p>与玩家侧的限时增益（TimedAttributes）不同，减益挂在<b>目标实体</b>上，各存一份
  * 运行时附件，互不干扰——同一只怪可以同时触电又灼伤，脚下会排成两行标签。
  *
- * <p><b>触电</b>整段共享一份时间轴：持续 3 秒，期间每 1.5 秒造成一次周期伤害（第 0 秒不触发，
- * 默认两跳周期）；时间走完时消耗所有层数再补一记终结跳——默认整段一共三跳。
- * 层数（上限 2）不刷新持续时间，只作为乘数放大周期与终结伤害；伤害式里的 x
- * 随这段触电的存续时间成长（每 0.5 秒 +0.5，第 0 秒为 1）。
+ * <p><b>触电</b>整段共享一份时间轴：持续 2 秒，期间每 2 秒造成一次周期伤害（第 0 秒不触发，
+ * 默认只在 t=2s 结算一跳）；时间走完层数清空，没有终结跳。
+ * 层数（上限 2）不刷新持续时间，只作为乘数放大每跳伤害：每层 = 触发者电元素强度 × 40%。
  *
  * <p><b>灼伤</b>是另一套规矩：持续 4 秒，每 0.5 秒跳一次，层数（上限 2）既当乘数、叠加时还
  * 把持续时间刷回满 4 秒（触电不刷新），时间走完直接消失、没有终结跳。
  * 每跳伤害 = 触发者火元素强度 × 8%（余烬 10 档换成 18%）× 层数。
  *
+ * <p><b>等离子体</b>（等离子头盔）：灼伤与触电的层数上限相加、持续时间相加（4+2 秒），
+ * 但灼伤 / 触电两条倍率与周期仍分别结算，系数取「火 + 电」（蓝色灼伤再 +25 冰）。
+ * 结束像触电一样直接清空层数。
+ *
  * <p>两份减益都按「一份记账」存进目标实体的运行时附件——不值得进存档，目标死亡或重登时
  * 附件跟着实体一起消失（「减益效果若消失，则伤害增加效果也消失」）。
  */
 public final class Debuffs {
-	/** 触电默认持续时间（tick）：3 秒，结束时消耗所有层数打终结一跳。 */
-	private static final int SHOCK_DURATION_TICKS = 60;
+	/** 触电默认持续时间（tick）：2 秒，结束时层数直接清空（没有终结跳）。 */
+	private static final int SHOCK_DURATION_TICKS = 40;
 	/** 触电默认叠层上限（「默认」二字留给以后改上限的机制）。 */
 	private static final int SHOCK_MAX_STACKS = 2;
-	/** 周期伤害倍率：触发者电属性强度 × 5% × 层数 × x。 */
-	private static final double SHOCK_DAMAGE_RATIO = 0.05D;
-	/** 终结伤害倍率：触发者电属性强度 × 7.5% × 层数 × x。 */
-	private static final double SHOCK_END_RATIO = 0.075D;
-	/** 默认激活间隔（tick）：每 1.5 秒造成一次周期伤害；第 0 秒不触发。 */
-	private static final int SHOCK_INTERVAL_TICKS = 30;
-	/** x 的成长：触电每存续 0.5 秒 x +0.5，第 0 秒时 x = 1（10 tick = 0.5 秒）。 */
-	private static final double SHOCK_X_PER_HALF_SECOND = 0.5D;
+	/** 周期伤害倍率：触发者电属性强度 × 40% × 层数。 */
+	private static final double SHOCK_DAMAGE_RATIO = 0.40D;
+	/** 默认激活间隔（tick）：每 2 秒造成一次周期伤害；第 0 秒不触发。 */
+	private static final int SHOCK_INTERVAL_TICKS = 40;
 	/** 电击之触的冷却（tick）：2 秒。 */
 	private static final int ELECTRIC_TOUCH_COOLDOWN_TICKS = 40;
 	/** 持续电流特效：存续中每刻在目标身上撒几颗电流火花；结算的爆点在 {@link #activate} 里另放。 */
 	private static final int SHOCK_AURA_PARTICLES = 2;
 	/** 周期结算时的电流火花数量。 */
 	private static final int SHOCK_BURST_PARTICLES = 8;
-	/** 终结结算时的电流火花数量。 */
-	private static final int SHOCK_END_PARTICLES = 15;
 
 	/** 灼伤持续时间（tick）：4 秒；每次叠加都刷回这个值。 */
-	private static final int BURN_DURATION_TICKS = 80;
-	/** 灼伤的跳伤害间隔（tick）：每 0.5 秒一跳，4 秒一共八跳。 */
+	private static final int BURN_DURATION_TICKS = 80;	/** 灼伤的跳伤害间隔（tick）：每 0.5 秒一跳，4 秒一共八跳。 */
 	private static final int BURN_INTERVAL_TICKS = 10;
 	/** 灼伤叠层上限：基础 2 层，火焰虫与熔岩珠的「灼伤层」加成加在它上面。 */
 	private static final int BURN_MAX_STACKS = 2;
@@ -88,6 +85,15 @@ public final class Debuffs {
 	private static final double BURN_PARTICLE_LOW_FACTOR = 0.4D;
 	/** 浓度 100% 对应的层数：基准数量按这一层数写；再往上按同一斜率继续变浓。 */
 	private static final int BURN_PARTICLE_REFERENCE_STACKS = 6;
+
+	/** 等离子体持续时间（tick）：灼伤 4 秒 + 触电 2 秒。 */
+	private static final int PLASMA_DURATION_TICKS = BURN_DURATION_TICKS + SHOCK_DURATION_TICKS;
+	/** 蓝色灼伤并进等离子体时额外附加的冰属性伤害（点）：用户口径里的「25」。 */
+	private static final double PLASMA_BLUE_ICE_FLAT = 25.0D;
+	/** 等离子体每刻的电流 / 火焰粒子数。 */
+	private static final int PLASMA_AURA_PARTICLES = 2;
+	/** 等离子体结算时的粒子数。 */
+	private static final int PLASMA_BURST_PARTICLES = 10;
 
 	/** 冻伤持续时间（tick）：10 秒；每次叠加都刷回满（与灼伤同一套）。 */
 	private static final int FROSTBITE_DURATION_TICKS = 200;
@@ -120,15 +126,14 @@ public final class Debuffs {
 	/**
 	 * 目标身上的触电：一段共享的持续时间 + 一个周期计时器，层数是伤害乘数。
 	 *
-	 * @param remainingTicks       距持续时间结束的倒计时，归零时打终结一跳并整段消失
-	 * @param intervalTicks        周期伤害间隔（tick）
+	 * @param remainingTicks       距持续时间结束的倒计时，归零时清空所有层数
+	 * @param intervalTicks        周期伤害间隔（tick）：默认 40（2 秒）
 	 * @param ticksUntilActivation 距下一次周期伤害的倒计时
-	 * @param stacks               当前层数（1..上限），周期与终结伤害都乘它
-	 * @param elapsedTicks         已存续刻数——伤害式里的 x 随它成长
+	 * @param stacks               当前层数（1..上限），每跳伤害乘它
 	 * @param attackerId           触发者（最近一次附加的人）：结算时按他当前的电属性强度取数
 	 */
 	private record Shock(int remainingTicks, int intervalTicks, int ticksUntilActivation,
-			int stacks, int elapsedTicks, UUID attackerId) {
+			int stacks, UUID attackerId) {
 	}
 
 	/**
@@ -146,6 +151,25 @@ public final class Debuffs {
 	 */
 	private record Burn(int remainingTicks, int intervalTicks, int ticksUntilActivation,
 			int stacks, UUID attackerId, boolean blue) {
+	}
+
+	/**
+	 * 目标身上的等离子体：灼伤与触电合并后的共用层数 + 共用持续时间，但两条时间轴分开走。
+	 *
+	 * <p>层数上限 = 灼伤上限 + 触电上限；持续时间 = 灼伤 4 秒 + 触电 2 秒，结束像触电一样
+	 * 直接清空层数（不刷新、不终结跳）。
+	 *
+	 * @param remainingTicks       距整段结束的倒计时
+	 * @param burnInterval        灼伤那一路的跳伤害间隔（施加时按橡木炭定下）
+	 * @param burnUntil           距下一跳灼伤伤害的倒计时
+	 * @param shockInterval       触电那一路的激活间隔（施加时按魔法科技定下）
+	 * @param shockUntil          距下一跳触电伤害的倒计时
+	 * @param stacks              共用层数（1..灼伤上限 + 触电上限）
+	 * @param attackerId          触发者：结算时按他当前的火 / 电 / 冰面板值取数
+	 * @param blue                施加时是否带蓝色灼伤（等离子体的火那一路额外加冰）
+	 */
+	private record Plasma(int remainingTicks, int burnInterval, int burnUntil, int shockInterval,
+			int shockUntil, int stacks, UUID attackerId, boolean blue) {
 	}
 
 	/**
@@ -173,6 +197,9 @@ public final class Debuffs {
 	/** 灼伤的减益 id：与触电同一套用法（标签文案见 {@code ui.sephiria.debuff.burns}）。 */
 	public static final Identifier BURN_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "burns");
 
+	/** 等离子体的减益 id：灼伤与触电合并后的标签文案见 {@code ui.sephiria_fantasy.debuff.plasma}。 */
+	public static final Identifier PLASMA_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "plasma");
+
 	/** 冻伤的减益 id：标签文案见 {@code ui.sephiria_fantasy.debuff.frostbites}。 */
 	public static final Identifier FROSTBITE_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frostbites");
 
@@ -186,6 +213,10 @@ public final class Debuffs {
 	/** 灼伤挂在目标实体上的运行时附件（独立一份，与触电互不影响）。 */
 	private static final AttachmentType<Burn> BURNS = AttachmentRegistry.<Burn>builder()
 			.buildAndRegister(BURN_ID);
+
+	/** 等离子体：灼伤与触电合并后的那一份附件（与两份原减益互斥，施加时会清掉它们）。 */
+	private static final AttachmentType<Plasma> PLASMAS = AttachmentRegistry.<Plasma>builder()
+			.buildAndRegister(PLASMA_ID);
 
 	/** 冻伤（冰川）：独立一份，与触电 / 灼伤并行。 */
 	private static final AttachmentType<Frostbite> FROSTBITES = AttachmentRegistry.<Frostbite>builder()
@@ -237,8 +268,10 @@ public final class Debuffs {
 			// 冰冻自己的结算也是冰伤害，但它是减益伤害（Kind.ICE），进不来这里
 			boolean iceAttack = kind == SephiriaDamage.Kind.ICE_ATTACK
 					|| source.is(SephiriaDamage.ICE_SUN_SWORD);
+			// 酷寒断头台：冰 + 电双属性，两条之触都算
+			boolean cryoAttack = kind == SephiriaDamage.Kind.CRYO;
 
-			if (weaponOrArtifact || electricAttack) {
+			if (weaponOrArtifact || electricAttack || cryoAttack) {
 				tryApplyShock(entity, player);
 			}
 
@@ -246,7 +279,7 @@ public final class Debuffs {
 				tryApplyBurn(entity, player);
 			}
 
-			if (weaponOrArtifact || iceAttack) {
+			if (weaponOrArtifact || iceAttack || cryoAttack) {
 				tryApplyFrostbite(entity, player);
 			}
 		});
@@ -255,11 +288,13 @@ public final class Debuffs {
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			entity.removeAttached(SHOCKS);
 			entity.removeAttached(BURNS);
+			entity.removeAttached(PLASMAS);
 			entity.removeAttached(FROSTBITES);
 			entity.removeAttached(FROZEN);
 			clearSlows(entity);
 			syncStacks(SHOCK_ID, entity, 0);
 			syncStacks(BURN_ID, entity, 0);
+			syncStacks(PLASMA_ID, entity, 0);
 			syncStacks(FROSTBITE_ID, entity, 0);
 			syncStacks(FROZEN_ID, entity, 0);
 		});
@@ -360,11 +395,13 @@ public final class Debuffs {
 		if (!entity.isAlive()) {
 			entity.removeAttached(SHOCKS);
 			entity.removeAttached(BURNS);
+			entity.removeAttached(PLASMAS);
 			entity.removeAttached(FROSTBITES);
 			entity.removeAttached(FROZEN);
 			clearSlows(entity);
 			syncStacks(SHOCK_ID, entity, 0);
 			syncStacks(BURN_ID, entity, 0);
+			syncStacks(PLASMA_ID, entity, 0);
 			syncStacks(FROSTBITE_ID, entity, 0);
 			syncStacks(FROZEN_ID, entity, 0);
 			return;
@@ -372,6 +409,7 @@ public final class Debuffs {
 
 		tickShock(entity, level);
 		tickBurn(entity, level);
+		tickPlasma(entity, level);
 		tickFrostbite(entity, level);
 		tickFrozen(entity, level);
 	}
@@ -465,7 +503,7 @@ public final class Debuffs {
 				* (level - 1) / (FROSTBITE_MAX_STACKS - 1);
 	}
 
-	/** 触电：周期到点结算、时间走完补终结跳。 */
+	/** 触电：周期到点结算；时间走完清空层数（默认最后一跳正好落在结束那一刻）。 */
 	private static void tickShock(LivingEntity entity, ServerLevel level) {
 		Shock shock = entity.getAttached(SHOCKS);
 
@@ -475,30 +513,24 @@ public final class Debuffs {
 			return;
 		}
 
-		// 存续刻数每刻都在涨：x 与两跳结算都按「已存续的秒数」算
-		int elapsed = shock.elapsedTicks() + 1;
 		int lifetime = shock.remainingTicks() - 1;
 		int until = shock.ticksUntilActivation() - 1;
 
-		if (lifetime <= 0) {
-			// 时间走完：最后一跳周期照发，再消耗所有层数补终结跳，整段触电消失
-			if (until <= 0) {
-				activate(level, entity, shock.attackerId(), shock.stacks(), elapsed, false);
-			}
+		// 结算用当前层数：时间轴不动，叠层只影响之后（以及这一跳）的伤害
+		if (until <= 0) {
+			activate(level, entity, shock.attackerId(), shock.stacks());
+			until = shock.intervalTicks();
+		}
 
-			activate(level, entity, shock.attackerId(), shock.stacks(), elapsed, true);
+		if (lifetime <= 0) {
+			// 持续时间结束：不补终结跳，层数随整段触电一起清空
 			entity.removeAttached(SHOCKS);
 			syncStacks(SHOCK_ID, entity, 0);
 			return;
 		}
 
-		if (until <= 0) {
-			activate(level, entity, shock.attackerId(), shock.stacks(), elapsed, false);
-			until = shock.intervalTicks();
-		}
-
 		entity.setAttached(SHOCKS, new Shock(lifetime, shock.intervalTicks(), until,
-				shock.stacks(), elapsed, shock.attackerId()));
+				shock.stacks(), shock.attackerId()));
 		syncStacks(SHOCK_ID, entity, shock.stacks());
 
 		// 电流特效：身上挂着触电的目标每刻都有蓝白色电流火花；音效只在结算那一下放，避免一直响
@@ -558,6 +590,51 @@ public final class Debuffs {
 		level.sendParticles(burn.blue() ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME,
 				entity.getX(), entity.getY(0.5D), entity.getZ(),
 				burnParticleCount(BURN_AURA_PARTICLES, burnParticleFactor(burn.stacks()), level.getRandom()),
+				0.35D, 0.55D, 0.35D, 0.01D);
+	}
+
+	/**
+	 * 等离子体：两条时间轴分别走——灼伤按灼伤间隔跳、触电按触电间隔跳，共用层数与剩余时间；
+	 * 时间走完像触电一样直接清空层数（没有终结跳）。
+	 */
+	private static void tickPlasma(LivingEntity entity, ServerLevel level) {
+		Plasma plasma = entity.getAttached(PLASMAS);
+
+		if (plasma == null) {
+			syncStacks(PLASMA_ID, entity, 0);
+			return;
+		}
+
+		int lifetime = plasma.remainingTicks() - 1;
+		int burnUntil = plasma.burnUntil() - 1;
+		int shockUntil = plasma.shockUntil() - 1;
+
+		if (burnUntil <= 0) {
+			activatePlasmaBurn(level, entity, plasma);
+			burnUntil = plasma.burnInterval();
+		}
+
+		if (shockUntil <= 0) {
+			activatePlasmaShock(level, entity, plasma);
+			shockUntil = plasma.shockInterval();
+		}
+
+		if (lifetime <= 0) {
+			entity.removeAttached(PLASMAS);
+			syncStacks(PLASMA_ID, entity, 0);
+			return;
+		}
+
+		entity.setAttached(PLASMAS, new Plasma(lifetime, plasma.burnInterval(), burnUntil,
+				plasma.shockInterval(), shockUntil, plasma.stacks(), plasma.attackerId(), plasma.blue()));
+		syncStacks(PLASMA_ID, entity, plasma.stacks());
+
+		// 等离子体的菱形粒子：粉 20% / 白 60% / 蓝 20%（客户端逐颗染色），层数越高越密
+		double factor = burnParticleFactor(plasma.stacks());
+		RandomSource random = level.getRandom();
+		level.sendParticles(ModParticleTypes.PLASMA,
+				entity.getX(), entity.getY(0.5D), entity.getZ(),
+				burnParticleCount(PLASMA_AURA_PARTICLES * 2, factor, random),
 				0.35D, 0.55D, 0.35D, 0.01D);
 	}
 
@@ -625,7 +702,7 @@ public final class Debuffs {
 	/**
 	 * 给目标附加一层触电（电击之触与桑德耳环共用）；层满就不加，返回是否加上了。
 	 *
-	 * <p>叠加只 +1 层，时间轴（剩余时间 / 周期计时 / 存续刻数）原样保留——「叠加时不会刷新持续时间」；
+	 * <p>叠加只 +1 层，时间轴（剩余时间 / 周期计时）原样保留——「叠加时不会刷新持续时间」；
 	 * 上限 = 默认 2 层 + 电击虫的「触电层」加成。加层之后掷一次「强化触电」（雷云追踪指南针）：
 	 * 命中就立即额外结算一次触电伤害。
 	 */
@@ -634,6 +711,29 @@ public final class Debuffs {
 		// 返回 false 让调用方当「没加上」处理（冷却也不会被白白消耗）
 		if (target instanceof net.minecraft.world.entity.player.Player) {
 			return false;
+		}
+
+		// 等离子头盔：灼伤 / 触电都并进等离子体，层数与持续时间共用。
+		// 目标身上已经有等离子体时，后来者（哪怕没戴头盔）也只能往这一份上加，避免三份减益共存。
+		if (target.getAttached(PLASMAS) != null || ArtifactEffects.plasmaDebuff(player)) {
+			if (!applyPlasma(target, player, 1, false)) {
+				return false;
+			}
+
+			// 「强化触电」在等离子体上也生效：刚刚加上去的那一层立即补一次触电那一路的结算
+			if (target.level() instanceof ServerLevel level) {
+				double enhancedChance = ArtifactEffects.enhancedShockChance(player);
+
+				if (enhancedChance > 0.0D && level.getRandom().nextDouble() * 100.0D < enhancedChance) {
+					Plasma plasma = target.getAttached(PLASMAS);
+
+					if (plasma != null) {
+						activatePlasmaShock(level, target, plasma);
+					}
+				}
+			}
+
+			return true;
 		}
 
 		Shock shock = target.getAttached(SHOCKS);
@@ -646,9 +746,9 @@ public final class Debuffs {
 		int comboLevel = ArtifactEffects.comboLevels(player).getOrDefault(ArtifactCombo.MAGIC_TECH, 0);
 		int shockInterval = shockIntervalTicks(comboLevel);
 		Shock updated = shock == null
-				? new Shock(SHOCK_DURATION_TICKS, shockInterval, shockInterval, 1, 0, player.getUUID())
+				? new Shock(SHOCK_DURATION_TICKS, shockInterval, shockInterval, 1, player.getUUID())
 				: new Shock(shock.remainingTicks(), shock.intervalTicks(), shock.ticksUntilActivation(),
-						shock.stacks() + 1, shock.elapsedTicks(), player.getUUID());
+						shock.stacks() + 1, player.getUUID());
 		target.setAttached(SHOCKS, updated);
 		// 层数刚变：立刻推给附近玩家，脚下的层数标签当场跟着变（不必等下一刻的 tick）
 		syncStacks(SHOCK_ID, target, updated.stacks());
@@ -657,11 +757,11 @@ public final class Debuffs {
 			level.sendParticles(ModParticleTypes.BLUE_SPARK, target.getX(), target.getY(0.5D), target.getZ(),
 					5, 0.3D, 0.4D, 0.3D, 0.02D);
 
-			// 强化触电：用刚加上去的层数与存续刻数立即结算一次（与周期跳同式，不是终结跳）
+			// 强化触电：用刚加上去的层数立即结算一次（与周期跳同式）
 			double enhancedChance = ArtifactEffects.enhancedShockChance(player);
 
 			if (enhancedChance > 0.0D && level.getRandom().nextDouble() * 100.0D < enhancedChance) {
-				activate(level, target, player.getUUID(), updated.stacks(), updated.elapsedTicks(), false);
+				activate(level, target, player.getUUID(), updated.stacks());
 			}
 		}
 
@@ -680,6 +780,12 @@ public final class Debuffs {
 	public static boolean applyBurn(LivingEntity target, ServerPlayer player) {
 		if (target instanceof net.minecraft.world.entity.player.Player) {
 			return false;
+		}
+
+		// 等离子头盔：灼伤也并进等离子体；熔岩珠的「额外给予 N 次」照样多叠 N 层。
+		// 目标已经有等离子体时，没戴头盔的后来者也并进去。
+		if (target.getAttached(PLASMAS) != null || ArtifactEffects.plasmaDebuff(player)) {
+			return applyPlasma(target, player, 1 + ArtifactEffects.burnExtraApplications(player), true);
 		}
 
 		Burn burn = target.getAttached(BURNS);
@@ -703,6 +809,64 @@ public final class Debuffs {
 		if (target.level() instanceof ServerLevel level) {
 			level.sendParticles(blue ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME,
 					target.getX(), target.getY(0.5D), target.getZ(), 6, 0.3D, 0.4D, 0.3D, 0.02D);
+		}
+
+		return true;
+	}
+
+	/**
+	 * 等离子头盔的公共附加入口：把一次灼伤 / 触电并进等离子体。
+	 *
+	 * <p>层数上限 = 灼伤上限 + 触电上限；持续时间 = 4 秒 + 2 秒，只在新挂上时设定，
+	 * 之后叠层不刷新（与触电同口径）；结束直接清空层数。
+	 *
+	 * <p>第一次挂等离子体时会把目标身上原有的灼伤 / 触电层数折算进来，并移除那两份附件，
+	 * 免得同一只怪同时挂三份。灼伤、触电两条时间轴各自按原间隔继续走（新挂时从满间隔开始）。
+	 *
+	 * @param added           这次要加几层（灼伤带熔岩珠的额外次数）
+	 * @param burnApplication 这次是不是灼伤入口（决定蓝色灼伤标记是否跟着更新）
+	 */
+	private static boolean applyPlasma(LivingEntity target, ServerPlayer player, int added,
+			boolean burnApplication) {
+		Burn burn = target.getAttached(BURNS);
+		Shock shock = target.getAttached(SHOCKS);
+		Plasma plasma = target.getAttached(PLASMAS);
+		int burnCap = BURN_MAX_STACKS + ArtifactEffects.burnStackBonus(player);
+		int shockCap = SHOCK_MAX_STACKS + ArtifactEffects.shockStackBonus(player);
+		int cap = burnCap + shockCap;
+		int base = plasma != null ? plasma.stacks()
+				: (burn == null ? 0 : burn.stacks()) + (shock == null ? 0 : shock.stacks());
+
+		if (base >= cap) {
+			return false;
+		}
+
+		int stacks = Math.min(cap, base + added);
+		int comboLevel = ArtifactEffects.comboLevels(player).getOrDefault(ArtifactCombo.MAGIC_TECH, 0);
+		int burnInterval = plasma != null ? plasma.burnInterval()
+				: burn != null ? burn.intervalTicks() : burnIntervalTicks(player);
+		int shockInterval = plasma != null ? plasma.shockInterval() : shockIntervalTicks(comboLevel);
+		int remaining = plasma != null ? plasma.remainingTicks() : PLASMA_DURATION_TICKS;
+		int burnUntil = plasma != null ? plasma.burnUntil() : burnInterval;
+		int shockUntil = plasma != null ? plasma.shockUntil() : shockInterval;
+		// 灼伤入口每次赋予都重新判定蓝色灼伤（与普通灼伤同一套）；触电入口沿用当前状态
+		boolean blue = burnApplication ? ArtifactEffects.blueBurn(player)
+				: plasma != null ? plasma.blue() : burn != null && burn.blue();
+
+		if (plasma == null) {
+			target.removeAttached(BURNS);
+			target.removeAttached(SHOCKS);
+			syncStacks(BURN_ID, target, 0);
+			syncStacks(SHOCK_ID, target, 0);
+		}
+
+		target.setAttached(PLASMAS, new Plasma(remaining, burnInterval, burnUntil, shockInterval,
+				shockUntil, stacks, player.getUUID(), blue));
+		syncStacks(PLASMA_ID, target, stacks);
+
+		if (target.level() instanceof ServerLevel level) {
+			level.sendParticles(ModParticleTypes.PLASMA,
+					target.getX(), target.getY(0.5D), target.getZ(), 8, 0.3D, 0.4D, 0.3D, 0.02D);
 		}
 
 		return true;
@@ -846,25 +1010,23 @@ public final class Debuffs {
 		return Math.max(1, (int) Math.ceil(BURN_INTERVAL_TICKS / (1.0D + speed / 100.0D)));
 	}
 
-	/** 触电的激活间隔（tick）：默认 1.5 秒一跳，10 档「触电激活时间-1秒」缩到 0.5 秒一跳。 */
+	/** 触电的激活间隔（tick）：默认 2 秒一跳，10 档「触电激活时间-1秒」缩到 1 秒一跳。 */
 	private static int shockIntervalTicks(int comboLevel) {
 		return Math.max(1, SHOCK_INTERVAL_TICKS
 				+ (int) (ArtifactCombo.MAGIC_TECH.shockDurationDelta(comboLevel) * 20.0D));
 	}
 
 	/**
-	 * 一次结算：周期跳 = 触发者当前电属性强度 × 5% × 层数 × x；
-	 * 终结跳（持续时间走完那一下）= × 7.5%，随后整段触电消失。
+	 * 一次周期结算：触发者当前电属性强度 × 40% × 层数。
+	 *
+	 * <p>触电没有终结跳——持续时间走完只是清空层数（见 {@link #tickShock}）。
 	 */
-	private static void activate(ServerLevel level, LivingEntity target, UUID attackerId,
-			int stacks, int elapsedTicks, boolean finishing) {
+	private static void activate(ServerLevel level, LivingEntity target, UUID attackerId, int stacks) {
 		ServerPlayer player = level.getServer().getPlayerList().getPlayer(attackerId);
 		// 电属性强度在结算那一刻按触发者现查（面板值口径，与面板上显示的一致）——换装后跟着新的走
 		double element = player == null ? 0.0D
 				: PlayerStats.elementTotal(player, PlayerStats.Element.LIGHTNING);
-		// x 第 0 秒为 1，每存续 0.5 秒 +0.5（10 tick = 0.5 秒）
-		double x = 1.0D + SHOCK_X_PER_HALF_SECOND * (elapsedTicks / 10);
-		double damage = element * (finishing ? SHOCK_END_RATIO : SHOCK_DAMAGE_RATIO) * stacks * x;
+		double damage = element * SHOCK_DAMAGE_RATIO * stacks;
 
 		if (damage <= 0.0D) {
 			return;
@@ -873,6 +1035,12 @@ public final class Debuffs {
 		// 与真实伤害同理：额外的那一下不清无敌帧，就会被目标上一刻吃到的伤害顶掉
 		SephiriaDamage.clearDamageCooldown(target);
 		target.hurtServer(level, SephiriaDamage.electricShock(level, player), (float) damage);
+
+		// 酷寒断头台：对敌人造成触电伤害时，它的冷却缩短 1 秒
+		if (player != null) {
+			com.sephiria.artifact.CryoGuillotineItem.onShockDamage(player);
+		}
+
 		level.sendParticles(ModParticleTypes.BLUE_SPARK, target.getX(), target.getY(0.5D), target.getZ(),
 				SHOCK_BURST_PARTICLES, 0.4D, 0.6D, 0.4D, 0.08D);
 		// 短促的电流火花声，只在造成伤害的这一下响：音长约 0.3~0.4 秒，不会叠成持续嗡嗡
@@ -922,6 +1090,77 @@ public final class Debuffs {
 		level.playSound(null, target.getX(), target.getY(), target.getZ(),
 				SoundEvents.FURNACE_FIRE_CRACKLE, SoundSource.PLAYERS, 0.5F,
 				1.0F + level.getRandom().nextFloat() * 0.3F);
+	}
+
+	/**
+	 * 等离子体的灼伤那一路：火 + 电（蓝色时再加 25 点冰）之和 × 灼伤倍率 × 共用层数。
+	 *
+	 * <p>倍率仍按余烬档位现查（8%，10 档 18%），再乘灼伤的额外伤害与等离子体伤害量。
+	 */
+	private static void activatePlasmaBurn(ServerLevel level, LivingEntity target, Plasma plasma) {
+		ServerPlayer player = level.getServer().getPlayerList().getPlayer(plasma.attackerId());
+		double element = plasmaElement(player, plasma.blue());
+		double bonus = player == null ? 1.0D
+				: 1.0D + ArtifactEffects.burnDamagePercent(player) / 100.0D;
+		double plasmaBonus = player == null ? 1.0D
+				: 1.0D + ArtifactEffects.plasmaDamagePercent(player) / 100.0D;
+		double damage = element * burnPercent(player) / 100.0D * plasma.stacks() * bonus * plasmaBonus;
+
+		if (damage <= 0.0D) {
+			return;
+		}
+
+		SephiriaDamage.clearDamageCooldown(target);
+		target.hurtServer(level, SephiriaDamage.plasma(level, player), (float) damage);
+		double factor = burnParticleFactor(plasma.stacks());
+		RandomSource random = level.getRandom();
+		level.sendParticles(ModParticleTypes.PLASMA,
+				target.getX(), target.getY(0.5D), target.getZ(),
+				burnParticleCount(PLASMA_BURST_PARTICLES * 2, factor, random), 0.4D, 0.6D, 0.4D, 0.05D);
+		level.playSound(null, target.getX(), target.getY(), target.getZ(),
+				SoundEvents.FURNACE_FIRE_CRACKLE, SoundSource.PLAYERS, 0.5F,
+				1.0F + level.getRandom().nextFloat() * 0.3F);
+	}
+
+	/**
+	 * 等离子体的触电那一路：同一个「火 + 电（+25 冰）」系数 × 40% × 共用层数。
+	 *
+	 * <p>这一跳也吃「强化触电」的立即补结算，并算作触电伤害——酷寒断头台的冷却会因此缩短 1 秒。
+	 */
+	private static void activatePlasmaShock(ServerLevel level, LivingEntity target, Plasma plasma) {
+		ServerPlayer player = level.getServer().getPlayerList().getPlayer(plasma.attackerId());
+		double element = plasmaElement(player, plasma.blue());
+		double plasmaBonus = player == null ? 1.0D
+				: 1.0D + ArtifactEffects.plasmaDamagePercent(player) / 100.0D;
+		double damage = element * SHOCK_DAMAGE_RATIO * plasma.stacks() * plasmaBonus;
+
+		if (damage <= 0.0D) {
+			return;
+		}
+
+		SephiriaDamage.clearDamageCooldown(target);
+		target.hurtServer(level, SephiriaDamage.plasma(level, player), (float) damage);
+
+		if (player != null) {
+			com.sephiria.artifact.CryoGuillotineItem.onShockDamage(player);
+		}
+
+		level.sendParticles(ModParticleTypes.PLASMA, target.getX(), target.getY(0.5D), target.getZ(),
+				PLASMA_BURST_PARTICLES, 0.4D, 0.6D, 0.4D, 0.08D);
+		level.playSound(null, target.getX(), target.getY(), target.getZ(),
+				ModSounds.ELECTRIC_SPARK, SoundSource.PLAYERS, 0.6F,
+				1.0F + level.getRandom().nextFloat() * 0.3F);
+	}
+
+	/** 等离子体的共用系数：火 + 电，蓝色灼伤再额外加 25 点冰。 */
+	private static double plasmaElement(ServerPlayer player, boolean blue) {
+		if (player == null) {
+			return 0.0D;
+		}
+
+		return PlayerStats.elementTotal(player, PlayerStats.Element.FIRE)
+				+ PlayerStats.elementTotal(player, PlayerStats.Element.LIGHTNING)
+				+ (blue ? PLASMA_BLUE_ICE_FLAT : 0.0D);
 	}
 
 	/** 灼伤每跳的倍率（%）：默认 8，余烬 10 档换成 18（触发者掉线时用默认值）。 */

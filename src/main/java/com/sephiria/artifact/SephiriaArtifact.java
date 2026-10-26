@@ -455,10 +455,29 @@ public interface SephiriaArtifact extends Quality {
 	 * 该等级「乌云的消耗速度」固定加成（%）。
 	 *
 	 * <p>与 {@link #cloudSpeedPercentOfAttackSpeed} 不同：那个按<b>攻击速度的比例</b>往上加
-	 * （乐谱《台风》），这个是固定点数（桅杆模型），两者相加后一起算攻击间隔。
+	 * （乐谱《台风》），这个是固定点数（桅杆模型、雷霜蝶），两者相加后一起算攻击间隔。
 	 */
 	default double cloudSpeedBonus(int level) {
 		return 0.0D;
+	}
+
+	/**
+	 * 该等级是否让「乌云的闪电」给被击中的敌人施加灼伤（红宝石胸针）。
+	 *
+	 * <p>只对乌云雷击生效，与余烬的「火焰之触」独立；层数 / 间隔沿用 {@code Debuffs.applyBurn} 的规矩。
+	 */
+	default boolean cloudAppliesBurn(int level) {
+		return false;
+	}
+
+	/**
+	 * 该等级是否把「乌云」变成「暴风雪云」（雷霜蝶）。
+	 *
+	 * <p>暴风雪云本质上仍是乌云：容量、消耗速度、强化概率等都不变，只有雷击的伤害改为
+	 * 「较高元素 110% + 较低元素 15%」的雷电 + 冰双属性，并额外下雪。
+	 */
+	default boolean blizzardCloud(int level) {
+		return false;
 	}
 
 	/**
@@ -537,6 +556,64 @@ public interface SephiriaArtifact extends Quality {
 	 */
 	default double blueBurn(int level) {
 		return 0.0D;
+	}
+
+	/**
+	 * 该等级是否让「灼伤 / 触电」合并成<b>等离子体</b>（等离子头盔）。
+	 *
+	 * <p>等离子体共用一份层数与持续时间，但灼伤、触电两部分按各自的倍率与周期分别结算；
+	 * 详见 {@code Debuffs#applyPlasma}。
+	 */
+	default boolean plasmaDebuff(int level) {
+		return false;
+	}
+
+	/**
+	 * 该等级给的「等离子体伤害量」加成（%，可为负）：等离子体的灼伤跳与触电跳都乘 (1 + 加成)。
+	 *
+	 * <p>等离子头盔是唯一有它的（-15/-10/-5/0/+5）。
+	 */
+	default double plasmaDamagePercent(int level) {
+		return 0.0D;
+	}
+
+	/**
+	 * 该等级「永恒的冬日」普通攻击命中时触发额外伤害的概率（%）。
+	 *
+	 * <p>0 表示没有这个词条；额外伤害的物理 / 冰倍率见
+	 * {@link #eternalWinterPhysicalPercent} 与 {@link #eternalWinterIcePercent}。
+	 */
+	default double eternalWinterChance(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级「永恒的冬日」额外伤害里的物理部分（%）：物理强度 × 它。 */
+	default double eternalWinterPhysicalPercent(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级「永恒的冬日」额外伤害里的冰部分（%）：冰元素强度 × 它。 */
+	default double eternalWinterIcePercent(int level) {
+		return 0.0D;
+	}
+
+	/**
+	 * 该等级「酷寒断头台」那一下的伤害倍率（%）。
+	 *
+	 * <p>口径：(较高冰/电 + 较低冰/电 × 30%) × 它。0 表示没有这个词条。
+	 */
+	default int cryoGuillotinePercent(int level) {
+		return 0;
+	}
+
+	/**
+	 * 该等级是否提供「海市蜃楼」充能机制（闪烁的眼睛）。
+	 *
+	 * <p>它没有按等级变化的数值，等级只影响合并 / 连击；状态在
+	 * {@code FlickeringEyeItem} 的运行时表里。
+	 */
+	default boolean flickeringEye(int level) {
+		return false;
 	}
 
 	/**

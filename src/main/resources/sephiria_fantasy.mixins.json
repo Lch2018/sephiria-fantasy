@@ -13,6 +13,7 @@
 		"FurnaceHeavenSlateMixin",
 		"ItemCombinerMenuAccessor",
 		"LeafExperienceMixin",
+		"MirageDodgeMixin",
 		"MobStunMixin",
 		"PlayerAdvancementsMixin",
 		"RootRetreatDeathMixin",

@@ -8,6 +8,7 @@ import com.sephiria.client.SunSwordClientData;
 import com.sephiria.ability.DashSkill;
 import com.sephiria.client.InvulnClientData;
 import com.sephiria.client.SkillClientData;
+import com.sephiria.network.HudSyncPayload;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaDaggerItem;
 import com.sephiria.weapon.SephiriaGreatswordItem;
@@ -18,10 +19,16 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix3x2fStack;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +72,73 @@ public final class SephiriaHud implements HudElement {
 	private static final int FROST_COOLING_COLOR = 0xFF808080;
 	/** 冰霜武具那一行里两个字号之间的间距（像素）。 */
 	private static final int FROST_GAP = 3;
+	/** 技能 / 神器 HUD 的图标边长、间距与底衬。 */
+	private static final int HUD_ICON = 16;
+	private static final int HUD_GAP = 2;
+	private static final int HUD_PAD = 2;
+	/**
+	 * 两行的右对齐锚点（局部像素）：9 个图标满行时的宽度。
+	 *
+	 * <p>图标从右往左排，右边缘固定在这里——新增条目只往左长，老图标的位置不动。
+	 * 默认 HUD x 是 guiWidth - 174，锚点 166 正好让右边缘落在屏幕右侧 8 像素处。
+	 */
+	private static final int HUD_RIGHT_ANCHOR = 9 * HUD_ICON + 8 * HUD_GAP + HUD_PAD * 2;
+	private static final int HUD_PANEL_COLOR = 0x90101010;
+	/** 冷却未扫过的部分压暗（半透明黑）。 */
+	private static final int HUD_DARK_COLOR = 0xB0000000;
+	/** 冷却 / 充能完成那一下的白光。 */
+	private static final int HUD_FLASH_COLOR = 0x80FFFFFF;
+	private static final long HUD_FLASH_MILLIS = 260L;
+	/** 上一次进度（用来判断「刚完成」）与闪光结束时间。 */
+	private static final Map<String, Float> HUD_LAST_PROGRESS = new HashMap<>();
+	private static final Map<String, Long> HUD_FLASH_UNTIL = new HashMap<>();
+
+	/** 换世界 / 重连时清掉冷却闪光的记忆（HUD 镜像也会一起清）。 */
+	public static void resetFlash() {
+		HUD_LAST_PROGRESS.clear();
+		HUD_FLASH_UNTIL.clear();
+	}
+
+	/** HUD 模块贴哪条屏幕边：左侧模块保证不从左边出去，右侧模块保证不从右边出去。 */
+	private enum HudAnchor {
+		LEFT, RIGHT, CENTER
+	}
+
+	/**
+	 * 所有普通 HUD 模块共用的变换入口：套上 {@code config.scale}，再把整块面板夹在屏幕内。
+	 *
+	 * <p>缩放围绕模块的左上角进行（与原行为一致）；夹取按缩放后的实际宽高算，
+	 * 所以放大到 2 倍也不会让左 / 右 / 下边缘跑出屏幕。技能 / 神器两行有固定右锚点，
+	 * 走自己的 {@code renderIconRow}。
+	 */
+	private static Matrix3x2fStack beginHud(GuiGraphicsExtractor extractor, Minecraft client,
+			HudConfig.Element config, int width, int height, HudAnchor anchor) {
+		Matrix3x2fStack pose = extractor.pose();
+		pose.pushMatrix();
+
+		float scale = (float) config.scale;
+		float screenWidth = client.getWindow().getGuiScaledWidth();
+		float screenHeight = client.getWindow().getGuiScaledHeight();
+		float boxWidth = width * scale;
+		float boxHeight = height * scale;
+		float margin = 8.0F;
+		float maxX = Math.max(margin, screenWidth - margin - boxWidth);
+		float maxY = Math.max(margin, screenHeight - margin - boxHeight);
+		float x = (float) config.x;
+		float y = Math.clamp((float) config.y, margin, maxY);
+
+		x = switch (anchor) {
+			case LEFT -> Math.clamp(x, margin, maxX);
+			// 右侧模块：x 仍是左边缘，但整块面板的右边缘不能超过屏幕
+			case RIGHT -> Math.min(Math.max(margin, x), maxX);
+			// 居中模块：两边都夹
+			case CENTER -> Math.clamp(x, margin, maxX);
+		};
+
+		pose.translate(x, y);
+		pose.scale(scale, scale);
+		return pose;
+	}
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, DeltaTracker delta) {
@@ -75,6 +149,8 @@ public final class SephiriaHud implements HudElement {
 		}
 
 		// 开界面时不需要额外判断：HUD 层在那种情况下本来就不会被绘制
+		renderSkillHud(extractor, client);
+		renderArtifactHud(extractor, client);
 		renderWeapon(extractor, client);
 		renderDash(extractor, client);
 		renderMp(extractor, client);
@@ -84,13 +160,145 @@ public final class SephiriaHud implements HudElement {
 		renderInvuln(extractor, client);
 	}
 
+	/** 技能 HUD：6 个技能栏的图标；冷却按顺时针从暗到亮扫过，完成时闪一下。 */
+	private void renderSkillHud(GuiGraphicsExtractor extractor, Minecraft client) {
+		renderIconRow(extractor, client, HudConfig.SKILLS, HudClientData.skills(), "s");
+	}
+
+	/** 神器 HUD：有冷却 / 充能的神器图标；画法与技能 HUD 完全一致。 */
+	private void renderArtifactHud(GuiGraphicsExtractor extractor, Minecraft client) {
+		renderIconRow(extractor, client, HudConfig.ARTIFACTS, HudClientData.artifacts(), "a");
+	}
+
+	private void renderIconRow(GuiGraphicsExtractor extractor, Minecraft client, String module,
+			List<HudSyncPayload.Entry> entries, String keyPrefix) {
+		if (entries.isEmpty()) {
+			return;
+		}
+
+		int width = entries.size() * HUD_ICON + (entries.size() - 1) * HUD_GAP + HUD_PAD * 2;
+		int height = HUD_ICON + HUD_PAD * 2;
+		HudConfig.Element config = HudConfig.element(module);
+		Matrix3x2fStack pose = extractor.pose();
+		pose.pushMatrix();
+
+		// 右边缘固定：默认锚点落在屏幕右侧 8 像素；缩放后如果会超出右边界，就把整行往左推，
+		// 保证图标不会从右边跑出屏幕（老图标仍然只会在右侧，新图标向左长）。
+		float scale = (float) config.scale;
+		float originX = (float) config.x;
+		float maxRight = client.getWindow().getGuiScaledWidth() - 8.0F;
+		float anchoredRight = originX + HUD_RIGHT_ANCHOR * scale;
+
+		if (anchoredRight > maxRight) {
+			originX -= anchoredRight - maxRight;
+		}
+
+		pose.translate(originX, (float) config.y);
+		pose.scale(scale, scale);
+
+		int panelLeft = HUD_RIGHT_ANCHOR - width;
+		extractor.fill(panelLeft, 0, HUD_RIGHT_ANCHOR, height, HUD_PANEL_COLOR);
+
+		long now = System.currentTimeMillis();
+		int right = HUD_RIGHT_ANCHOR - HUD_PAD;
+
+		// 从右往左排：列表第一项钉在最右边，之后每加一项就放在前一项左边；
+		// 这样新增图标不会挤动已有图标，也不会占用上一个图标的位置。
+		for (HudSyncPayload.Entry entry : entries) {
+			Item item = HudClientData.itemOf(entry);
+			int iconX = right - HUD_ICON;
+
+			if (item != null) {
+				float progress = HudClientData.progress(entry);
+				String key = keyPrefix + ":" + entry.item();
+				Float last = HUD_LAST_PROGRESS.put(key, progress);
+
+				if (last != null && last < 0.999F && progress >= 0.999F) {
+					HUD_FLASH_UNTIL.put(key, now + HUD_FLASH_MILLIS);
+				}
+
+				extractor.blit(RenderPipelines.GUI_TEXTURED, HudClientData.iconOf(item),
+						iconX, HUD_PAD, 0.0F, 0.0F, HUD_ICON, HUD_ICON, 16, 16);
+				drawCooldownWedge(extractor, iconX, HUD_PAD, HUD_ICON, progress);
+
+				Long flash = HUD_FLASH_UNTIL.get(key);
+
+				if (flash != null) {
+					if (flash < now) {
+						HUD_FLASH_UNTIL.remove(key);
+					} else {
+						drawCircleOverlay(extractor, iconX, HUD_PAD, HUD_ICON, HUD_FLASH_COLOR);
+					}
+				}
+			}
+
+			right = iconX - HUD_GAP;
+		}
+
+		pose.popMatrix();
+	}
+
 	/**
-	 * 冰霜武具的状态行：{@code 冰霜武具：剑 锤 矛 弓x/7}——「剑」= 驱邪剑鞘、「锤」= 暴风雪之锤、
-	 * 「矛」= 沃尔斯帕、「弓」= 冰弓（后者带上剩几发 / 上限）。可用了用冰蓝
-	 * {@link #FROST_READY_COLOR}（前三个是攒满、弓是有弹药）、否则用灰 {@link #FROST_COOLING_COLOR}
-	 * （四件各自独立；只带其中几件就只画那几个字，一件都没带整行不画）。
+	 * 顺时针冷却罩：从正上方开始，按 {@code progress} 扫过；扫过的部分不再压暗。
+	 * 逐像素判断角度（16×16 一格，开销很小），所以圆形边缘也是圆滑的像素圆。
+	 */
+	private static void drawCooldownWedge(GuiGraphicsExtractor extractor, int x, int y, int size,
+			float progress) {
+		if (progress >= 0.999F) {
+			return;
+		}
+
+		double center = size / 2.0D;
+		double radius = size / 2.0D;
+		double sweep = Math.clamp(progress, 0.0F, 1.0F) * Math.PI * 2.0D;
+
+		for (int py = 0; py < size; py++) {
+			for (int px = 0; px < size; px++) {
+				double dx = px + 0.5D - center;
+				double dy = py + 0.5D - center;
+
+				if (dx * dx + dy * dy > radius * radius) {
+					continue;
+				}
+
+				double angle = Math.atan2(dx, -dy);
+
+				if (angle < 0.0D) {
+					angle += Math.PI * 2.0D;
+				}
+
+				if (angle >= sweep) {
+					extractor.fill(x + px, y + py, x + px + 1, y + py + 1, HUD_DARK_COLOR);
+				}
+			}
+		}
+	}
+
+	/** 圆形白色闪光（完成那一下）。 */
+	private static void drawCircleOverlay(GuiGraphicsExtractor extractor, int x, int y, int size, int colour) {
+		double center = size / 2.0D;
+		double radius = size / 2.0D;
+
+		for (int py = 0; py < size; py++) {
+			for (int px = 0; px < size; px++) {
+				double dx = px + 0.5D - center;
+				double dy = py + 0.5D - center;
+
+				if (dx * dx + dy * dy <= radius * radius) {
+					extractor.fill(x + px, y + py, x + px + 1, y + py + 1, colour);
+				}
+			}
+		}
+	}
+
+	/**
+	 * 冰霜武具的状态行：{@code 冰霜武具：剑 锤 矛 弓x/7 斩}——「剑」= 驱邪剑鞘、「锤」= 暴风雪之锤、
+	 * 「矛」= 沃尔斯帕、「弓」= 冰弓（后者带上剩几发 / 上限）、「斩」= 酷寒断头台。可用了用冰蓝
+	 * {@link #FROST_READY_COLOR}（前三个是攒满、弓是有弹药、斩是冷却转好）、否则用灰
+	 * {@link #FROST_COOLING_COLOR}（各自独立；只带其中几件就只画那几个字，一件都没带整行不画）。
 	 *
-	 * <p>状态只在服务端（充能表与弹药在 {@code frost.FrostArmament}），变化时服务端推
+	 * <p>状态只在服务端（充能表 / 弹药 / 斩冷却在 {@code frost.FrostArmament} 与
+	 * {@code CryoGuillotineItem}），变化时服务端推
 	 * {@code FrostSyncPayload}，这里读 {@link FrostClientData} 的镜像——与乌云 / 太阳剑同一套。
 	 */
 	private void renderFrost(GuiGraphicsExtractor extractor, Minecraft client) {
@@ -120,6 +328,11 @@ public final class SephiriaHud implements HudElement {
 					FrostClientData.bowAmmo(), FrostClientData.bowMax()), FrostClientData.bowAmmo() > 0));
 		}
 
+		if (FrostClientData.hasGuillotine()) {
+			parts.add(frostGlyph("ui.sephiria_fantasy.frost_armament.guillotine",
+					FrostClientData.guillotineReady()));
+		}
+
 		int textWidth = font.width(label);
 
 		for (Component part : parts) {
@@ -129,10 +342,7 @@ public final class SephiriaHud implements HudElement {
 		int width = textWidth + PAD * 2;
 		int height = LINE + PAD * 2;
 		HudConfig.Element config = HudConfig.element(HudConfig.FROST);
-		Matrix3x2fStack pose = extractor.pose();
-		pose.pushMatrix();
-		pose.translate((float) config.x, (float) config.y);
-		pose.scale((float) config.scale, (float) config.scale);
+		Matrix3x2fStack pose = beginHud(extractor, client, config, width, height, HudAnchor.LEFT);
 
 		extractor.fill(0, 0, width, height, PANEL_COLOR);
 		int x = PAD;
@@ -178,10 +388,7 @@ public final class SephiriaHud implements HudElement {
 		int width = textWidth + barWidth + PAD * 4;
 		int height = LINE + PAD * 2;
 		HudConfig.Element config = HudConfig.element(HudConfig.SUN_SWORD);
-		Matrix3x2fStack pose = extractor.pose();
-		pose.pushMatrix();
-		pose.translate((float) config.x, (float) config.y);
-		pose.scale((float) config.scale, (float) config.scale);
+		Matrix3x2fStack pose = beginHud(extractor, client, config, width, height, HudAnchor.LEFT);
 
 		extractor.fill(0, 0, width, height, PANEL_COLOR);
 		extractor.text(font, text, PAD, PAD, NAME_COLOR, true);
@@ -213,10 +420,7 @@ public final class SephiriaHud implements HudElement {
 		int width = textWidth + barWidth + PAD * 4;
 		int height = LINE + PAD * 2;
 		HudConfig.Element config = HudConfig.element(HudConfig.CLOUD);
-		Matrix3x2fStack pose = extractor.pose();
-		pose.pushMatrix();
-		pose.translate((float) config.x, (float) config.y);
-		pose.scale((float) config.scale, (float) config.scale);
+		Matrix3x2fStack pose = beginHud(extractor, client, config, width, height, HudAnchor.LEFT);
 
 		extractor.fill(0, 0, width, height, PANEL_COLOR);
 		extractor.text(font, text, PAD, PAD, NAME_COLOR, true);
@@ -249,10 +453,7 @@ public final class SephiriaHud implements HudElement {
 		int width = Math.max(1, Math.round(BAR_WIDTH * fraction));
 		int left = (BAR_WIDTH - width) / 2;
 		HudConfig.Element config = HudConfig.element(HudConfig.INVULN);
-		Matrix3x2fStack pose = extractor.pose();
-		pose.pushMatrix();
-		pose.translate((float) config.x, (float) config.y);
-		pose.scale((float) config.scale, (float) config.scale);
+		Matrix3x2fStack pose = beginHud(extractor, client, config, BAR_WIDTH, BAR_HEIGHT, HudAnchor.CENTER);
 
 		extractor.fill(left, 0, left + width, BAR_HEIGHT, BAR_COLOR);
 
@@ -285,10 +486,7 @@ public final class SephiriaHud implements HudElement {
 		int width = textWidth + PAD * 3 + ICON;
 		int height = Math.max(ICON, property == null ? LINE : LINE * 2) + PAD * 2;
 		HudConfig.Element config = HudConfig.element(HudConfig.WEAPON);
-		Matrix3x2fStack pose = extractor.pose();
-		pose.pushMatrix();
-		pose.translate((float) config.x, (float) config.y);
-		pose.scale((float) config.scale, (float) config.scale);
+		Matrix3x2fStack pose = beginHud(extractor, client, config, width, height, HudAnchor.RIGHT);
 
 		extractor.fill(0, 0, width, height, PANEL_COLOR);
 		// 图标贴最右侧
@@ -329,10 +527,7 @@ public final class SephiriaHud implements HudElement {
 		int width = textWidth + barWidth + PAD * 4;
 		int height = LINE + PAD * 2;
 		HudConfig.Element config = HudConfig.element(HudConfig.MP);
-		Matrix3x2fStack pose = extractor.pose();
-		pose.pushMatrix();
-		pose.translate((float) config.x, (float) config.y);
-		pose.scale((float) config.scale, (float) config.scale);
+		Matrix3x2fStack pose = beginHud(extractor, client, config, width, height, HudAnchor.LEFT);
 
 		extractor.fill(0, 0, width, height, PANEL_COLOR);
 		extractor.text(font, numbers, PAD, PAD, NAME_COLOR, true);
@@ -352,10 +547,7 @@ public final class SephiriaHud implements HudElement {
 		int width = font.width(text) + PAD * 2;
 		int height = LINE + PAD * 2;
 		HudConfig.Element config = HudConfig.element(HudConfig.DASH);
-		Matrix3x2fStack pose = extractor.pose();
-		pose.pushMatrix();
-		pose.translate((float) config.x, (float) config.y);
-		pose.scale((float) config.scale, (float) config.scale);
+		Matrix3x2fStack pose = beginHud(extractor, client, config, width, height, HudAnchor.LEFT);
 
 		extractor.fill(0, 0, width, height, PANEL_COLOR);
 		extractor.text(font, text, PAD, PAD, NAME_COLOR, true);

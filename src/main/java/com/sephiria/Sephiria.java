@@ -181,6 +181,12 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.artifact.ProshiumRingItem.register();
 		// 「冰霜武具」连击的两件充能神器：驱邪剑鞘（挥击发剑气）与暴风雪之锤（冲刺甩锤子）
 		com.sephiria.frost.FrostArmament.registerTicker();
+		// 永恒的冬日：普通攻击命中时按概率追加物理 + 冰属性伤害
+		com.sephiria.artifact.EternalWinterItem.register();
+		// 酷寒断头台：每 6 秒召唤冰雷巨剑；触电伤害会缩短它的冷却
+		com.sephiria.artifact.CryoGuillotineItem.registerTicker();
+		// 技能 HUD / 神器 HUD：每 10 刻把冷却与充能推给客户端
+		com.sephiria.artifact.ArtifactHud.registerTicker();
 		// 特别神器「书」：书上附了火焰附加时，神器 / 连击的伤害点燃目标（抢夺在掉落结算那一侧接入）
 		com.sephiria.artifact.BookItem.register();
 
@@ -204,6 +210,11 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.serverboundPlay().register(CastArtifactSkillPayload.TYPE, CastArtifactSkillPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(AssignArtifactSkillPayload.TYPE, AssignArtifactSkillPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(ArtifactSkillsPayload.TYPE, ArtifactSkillsPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(com.sephiria.network.HudSyncPayload.TYPE,
+				com.sephiria.network.HudSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(
+				com.sephiria.compat.torohealth.ToroHealthDamagePayload.TYPE,
+				com.sephiria.compat.torohealth.ToroHealthDamagePayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RootRetreatClickPayload.TYPE, RootRetreatClickPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(WishPoolClickPayload.TYPE, WishPoolClickPayload.STREAM_CODEC);
@@ -302,6 +313,7 @@ public class Sephiria implements ModInitializer {
 
 			SkillSlots.set(player, payload.slot(), entry);
 			syncArtifactSkills(player);
+			com.sephiria.artifact.ArtifactHud.send(player);
 		});
 
 		// 商店页面点「刷新」：吃掉骰子栏里的一颗骰子，重刷一批货
@@ -474,6 +486,7 @@ public class Sephiria implements ModInitializer {
 			com.sephiria.talent.Talents.sync(handler.player);
 			WeaponStats.refresh(handler.player);
 			StatAttributes.refresh(handler.player);
+			com.sephiria.artifact.ArtifactHud.send(handler.player);
 		});
 
 		// 退出时把背包与属性从缓存里放掉（附件里已经是最新状态，下次进来重新读）
@@ -488,6 +501,8 @@ public class Sephiria implements ModInitializer {
 			com.sephiria.artifact.SandeEarringsItem.forget(handler.player);
 			com.sephiria.artifact.RedSnakeEyeItem.forget(handler.player);
 			com.sephiria.artifact.ProshiumRingItem.forget(handler.player);
+			com.sephiria.artifact.CryoGuillotineItem.forget(handler.player);
+			com.sephiria.artifact.FlickeringEyeItem.forget(handler.player);
 			com.sephiria.frost.FrostArmament.forget(handler.player);
 			CombatState.forget(handler.player);
 			com.sephiria.cloud.DarkCloud.forget(handler.player);

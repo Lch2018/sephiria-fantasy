@@ -7,35 +7,37 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * 天赋「智慧」二阶段：所有神器强制【独特】，相同神器放进背包时合并。
+ * 天赋「智慧」二阶段：相同神器放进背包时合并。
  *
- * <p>合并规则（用户 2026-10-24 重做，取代之前那套「记在玩家附件里、熄灭时还原」的做法）：
+ * <p>合并规则（用户 2026-10-24 重做、2026-10-25 收窄）：
  * <ul>
- *   <li>把一件神器放进赛菲莉娅背包时，如果背包里已有同种神器，两件合并；</li>
+ *   <li>只有背包里存在<b>未满级</b>的同种神器时才合并；同种神器全部满级时，新放进去的那件
+ *       正常占格、不合并（例如背包里已有满级的 a1，再放 0 级的 a2 会正常放下；再放 a3 才与
+ *       a2 合并，a2 变成满级；之后的 a4 又正常放下）；</li>
  *   <li><b>等级低的那件被消耗</b>（等级相同时消耗放进去的那件，保留背包里原有的、位置不变）；</li>
  *   <li>留下的那件：<b>等级 += 被消耗那件的等级 + 1</b>（不超过该神器的最高等级），
  *       并且它提供的<b>连击数量 +1</b>——每件神器本来就有 1 级，合并一次变 2 级
  *       （{@link ArtifactItem#MAX_COMBO_COUNT} 封顶）；</li>
  *   <li>合并后的神器就是<b>普通神器</b>——可以移出赛菲莉娅背包、可以丢出，
  *       二阶段熄灭后也不还原、不失效（等级与连击都是物品栈自己的组件了）；</li>
- *   <li>二阶段点亮时<b>不再</b>把背包里的重复神器丢出去（以前会，用户 2026-10-24 去掉）。</li>
+ *   <li>二阶段点亮时不再把背包里的重复神器丢出去；也不再把这些重复神器强制按【独特】结算
+ *       （2026-10-25 去掉，重复神器恢复为各算一份）。</li>
  * </ul>
  */
 public final class WisdomTalent {
 	private WisdomTalent() {
 	}
 
-	/** 二阶段是否点亮（所有神器按【独特】结算）。 */
-	public static boolean forceUnique(ServerPlayer player) {
-		return Talents.forceArtifactUnique(player);
+	/** 二阶段是否点亮（相同神器放进背包时合并）。 */
+	public static boolean mergeActive(ServerPlayer player) {
+		return Talents.wisdomMergeActive(player);
 	}
 
 	/**
-	 * 尝试把 {@code incoming} 与背包里的同种神器合并。
+	 * 尝试把 {@code incoming} 与背包里未满级的同种神器合并。
 	 *
 	 * <p>返回 true 表示 {@code incoming} 已经被消耗（调用方不要再把它放进格子）；
 	 * 返回 false 表示按正常放置处理——注意「放进去的那件等级更高」时也返回 false，
@@ -43,13 +45,13 @@ public final class WisdomTalent {
 	 * 调用方照常把它放进目标格即可（位置就是玩家放它的位置）。
 	 */
 	public static boolean tryMerge(ServerPlayer player, ItemStack incoming) {
-		if (!forceUnique(player) || incoming.isEmpty()
+		if (!mergeActive(player) || incoming.isEmpty()
 				|| !(incoming.getItem() instanceof SephiriaArtifact artifact)) {
 			return false;
 		}
 
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
-		int slot = findSame(backpack, incoming.getItem());
+		int slot = findUnmaxed(backpack, incoming, artifact);
 
 		if (slot < 0) {
 			return false;
@@ -92,10 +94,14 @@ public final class WisdomTalent {
 		return !incomingWins;
 	}
 
-	/** 某件物品在背包里的格子（找不到返回 -1）。 */
-	private static int findSame(ArtifactBackpack backpack, Item item) {
+	/** 某件物品在背包里<b>未满级</b>的格子（找不到返回 -1；全部满级 = 不合并、正常放入）。 */
+	private static int findUnmaxed(ArtifactBackpack backpack, ItemStack incoming, SephiriaArtifact artifact) {
+		int max = artifact.maxLevel();
+
 		for (int slot = 0; slot < ArtifactBackpack.MAX_SLOTS; slot++) {
-			if (backpack.getItem(slot).getItem() == item) {
+			ItemStack stack = backpack.getItem(slot);
+
+			if (stack.getItem() == incoming.getItem() && ArtifactItem.levelOf(stack) < max) {
 				return slot;
 			}
 		}

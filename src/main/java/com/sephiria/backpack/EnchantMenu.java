@@ -423,7 +423,7 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 		int playerStart = 2 + backpackSlots;
 
 		if (index == 0) {
-			// 神器槽 → 背包前先试合并（否则会绕过「强制独特」在背包里造出重复）
+			// 神器槽 → 背包前先试合并（否则会绕过智慧二阶段的合并逻辑，在背包里造出重复）
 			if (player instanceof ServerPlayer serverPlayer
 					&& com.sephiria.talent.WisdomTalent.tryMerge(serverPlayer, stack)) {
 				if (stack.isEmpty()) {

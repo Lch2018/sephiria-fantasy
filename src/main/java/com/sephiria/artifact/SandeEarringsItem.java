@@ -147,7 +147,7 @@ public class SandeEarringsItem extends ArtifactItem {
 		AABB area = player.getBoundingBox().inflate(RADIUS, RADIUS, RADIUS);
 		// 自动攻击不打和平生物：只挑有威胁的（见 SephiriaDamage.strikeable），每次取最近的若干个
 		List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, area).stream()
-				.filter(victim -> SephiriaDamage.strikeable(victim, player))
+				.filter(victim -> SephiriaDamage.autoTargetable(victim, player))
 				.sorted(Comparator.comparingDouble(victim -> victim.distanceToSqr(player)))
 				.limit(targets)
 				.toList();
@@ -171,6 +171,21 @@ public class SandeEarringsItem extends ArtifactItem {
 	/** 玩家退出时清计时表。 */
 	public static void forget(ServerPlayer player) {
 		LAST_ATTACK.remove(player.getUUID());
+	}
+
+	/** HUD：距下一次闪电攻击的剩余 tick。 */
+	public static int cooldownLeft(ServerPlayer player) {
+		Long last = LAST_ATTACK.get(player.getUUID());
+
+		if (last == null) {
+			return INTERVAL_TICKS;
+		}
+
+		return (int) Math.max(0L, INTERVAL_TICKS - (player.level().getGameTime() - last));
+	}
+
+	public static int cooldownTicks() {
+		return INTERVAL_TICKS;
 	}
 
 	@Override

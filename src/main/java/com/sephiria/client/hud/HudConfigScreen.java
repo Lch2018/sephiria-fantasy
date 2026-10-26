@@ -21,25 +21,38 @@ public class HudConfigScreen extends Screen {
 
 	@Override
 	protected void init() {
-		int left = this.width / 2 - 100;
-		int y = 40;
+		// 模块多了以后单列在 240 高的 GUI 上放不下：超过 7 个就自动排两列
+		int columns = HudConfig.MODULES.size() > 7 ? 2 : 1;
+		int width = columns == 1 ? 200 : 150;
+		int gap = 8;
+		int left = Math.max(8, this.width / 2 - (columns * width + (columns - 1) * gap) / 2);
+		int y = 30;
 
-		for (String key : HudConfig.MODULES) {
+		for (int index = 0; index < HudConfig.MODULES.size(); index++) {
+			String key = HudConfig.MODULES.get(index);
+			int column = index % columns;
+			int row = index / columns;
+			int x = left + column * (width + gap);
+			int top = y + row * 24;
 			addRenderableWidget(Button.builder(Component.translatable("screen.sephiria_fantasy.hud." + key),
 							button -> Minecraft.getInstance().setScreenAndShow(new HudModuleScreen(this, key)))
-					.bounds(left, y, 200, 20)
+					.bounds(x, top, width, 20)
 					.build());
-			y += 24;
 		}
 
 		addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> onClose())
-				.bounds(left, this.height - 40, 200, 20)
+				.bounds(this.width / 2 - 100, this.height - 40, 200, 20)
 				.build());
 	}
 
 	@Override
 	public void onClose() {
 		HudConfig.save();
-		super.onClose();
+
+		if (this.parent != null) {
+			Minecraft.getInstance().setScreenAndShow(this.parent);
+		} else {
+			super.onClose();
+		}
 	}
 }

@@ -43,8 +43,15 @@ public final class HudConfig {
 	/** 无敌条（准星下方居中）。 */
 	public static final String INVULN = "invuln";
 
+	/** 技能 HUD（武器 UI 上方；6 个神器技能栏的图标与冷却）。 */
+	public static final String SKILLS = "skills";
+
+	/** 神器 HUD（技能 HUD 与武器 UI 之间；有冷却 / 充能的神器图标）。 */
+	public static final String ARTIFACTS = "artifacts";
+
 	/** 全部可调的 HUD 模块，顺序即设置界面里的顺序；新增模块在这里登记。 */
-	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, CLOUD, SUN_SWORD, FROST, INVULN);
+	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, CLOUD, SUN_SWORD, FROST, INVULN,
+			SKILLS, ARTIFACTS);
 
 	/** 一个界面元素的位置与缩放。 */
 	public static final class Element {
@@ -63,14 +70,22 @@ public final class HudConfig {
 				this.x = guiWidth / 2.0D - 30.0D;
 				this.y = guiHeight / 2.0D + 18.0D;
 			}
-		else {
-			this.x = "bottom_right".equals(corner) ? guiWidth - 150.0D : 8.0D;
-			// 左下角一列从下往上依次是：冲刺、MP、乌云、太阳剑、冰霜武具，各差一行高
-			this.y = guiHeight - ("bottom_left_highest2".equals(corner) ? 136.0D
-					: "bottom_left_highest".equals(corner) ? 112.0D
-					: "bottom_left_higher".equals(corner) ? 88.0D
-					: "bottom_left_high".equals(corner) ? 64.0D : 40.0D);
-		}
+			else {
+				// 右下两行（技能 / 神器）最多 9 个图标，比武器面板宽：默认再往左挪一点，免得贴出屏幕
+				this.x = switch (corner) {
+					case "bottom_right_high", "bottom_right_higher" -> guiWidth - 174.0D;
+					default -> corner.startsWith("bottom_right") ? guiWidth - 150.0D : 8.0D;
+				};
+				// 两列都从下往上排：武器 / 神器 / 技能各差一行高；左下角依次是冲刺、MP、乌云、
+				// 太阳剑、冰霜武具
+				this.y = guiHeight - (switch (corner) {
+					case "bottom_left_highest2" -> 136.0D;
+					case "bottom_left_highest" -> 112.0D;
+					case "bottom_right_higher", "bottom_left_higher" -> 88.0D;
+					case "bottom_right_high", "bottom_left_high" -> 64.0D;
+					default -> 40.0D;
+				});
+			}
 
 			this.placed = true;
 		}
@@ -84,6 +99,8 @@ public final class HudConfig {
 			CLOUD, "bottom_left_higher",
 			SUN_SWORD, "bottom_left_highest",
 			FROST, "bottom_left_highest2",
+			SKILLS, "bottom_right_higher",
+			ARTIFACTS, "bottom_right_high",
 			INVULN, "center");
 	private static final Map<String, Element> ELEMENTS = new LinkedHashMap<>();
 

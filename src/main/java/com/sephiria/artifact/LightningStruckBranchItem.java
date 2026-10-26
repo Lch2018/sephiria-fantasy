@@ -112,6 +112,25 @@ public class LightningStruckBranchItem extends ArtifactItem {
 		LAST_HIT.remove(player.getUUID());
 	}
 
+	/** HUD：距下一次附加闪电的剩余 tick；没带 / 没词条返回 -1。 */
+	public static int cooldownLeft(ServerPlayer player) {
+		if (ArtifactEffects.onHitLightningDamage(player) <= 0.0D) {
+			return -1;
+		}
+
+		Long last = LAST_HIT.get(player.getUUID());
+
+		if (last == null) {
+			return 0;
+		}
+
+		return (int) Math.max(0L, COOLDOWN_TICKS - (player.level().getGameTime() - last));
+	}
+
+	public static int cooldownTicks() {
+		return COOLDOWN_TICKS;
+	}
+
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.on_hit_lightning",

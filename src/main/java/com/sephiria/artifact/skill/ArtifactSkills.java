@@ -172,6 +172,8 @@ public final class ArtifactSkills {
 		resolved.skill().cast(player, resolved.level());
 		COOLDOWNS.computeIfAbsent(player.getUUID(), uuid -> new long[SkillSlots.COUNT])[slot] =
 				player.level().getGameTime() + resolved.skill().cooldownTicks();
+		// 冷却刚上：立刻推一次 HUD，别等下一个 10 刻周期
+		com.sephiria.artifact.ArtifactHud.send(player);
 	}
 
 	/** 玩家退出时清掉冷却表。 */

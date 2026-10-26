@@ -248,7 +248,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 
 		AABB area = player.getBoundingBox().inflate(RADIUS, RADIUS, RADIUS);
 		List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, area).stream()
-				.filter(victim -> SephiriaDamage.strikeable(victim, player))
+				.filter(victim -> SephiriaDamage.autoTargetable(victim, player))
 				.sorted(Comparator.comparingDouble(victim -> victim.distanceToSqr(player)))
 				.toList();
 
@@ -547,6 +547,21 @@ public class RedSnakeEyeItem extends ArtifactItem {
 	/** 玩家退出时清计时表。 */
 	public static void forget(ServerPlayer player) {
 		LAST_METEOR.remove(player.getUUID());
+	}
+
+	/** HUD：距下一轮陨石的剩余 tick（没记过时间 = 刚装上，按满冷却显示）。 */
+	public static int cooldownLeft(ServerPlayer player) {
+		Long last = LAST_METEOR.get(player.getUUID());
+
+		if (last == null) {
+			return INTERVAL_TICKS;
+		}
+
+		return (int) Math.max(0L, INTERVAL_TICKS - (player.level().getGameTime() - last));
+	}
+
+	public static int cooldownTicks() {
+		return INTERVAL_TICKS;
 	}
 
 	@Override

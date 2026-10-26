@@ -1,0 +1,17 @@
+{
+	"required": false,
+	"minVersion": "0.8",
+	"package": "com.sephiria.compat.torohealth.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"HealthChangeParticleMixin",
+		"HealthChangeFactoryMixin",
+		"TextParticleRendererMixin",
+		"LivingEntitySyncMixin",
+		"ToroHealthHudMixin",
+		"LevelRendererTextEarlyMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

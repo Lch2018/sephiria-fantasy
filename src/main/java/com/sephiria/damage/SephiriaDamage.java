@@ -22,6 +22,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
 import net.minecraft.world.phys.AABB;
 
 import java.util.HashMap;
@@ -82,6 +84,14 @@ public final class SephiriaDamage {
 	/** 蓝色灼伤那几跳里的冰属性那一路（封印的特加斯把灼伤改成蓝色灼伤后，
 	 * 冰元素强度高于火元素强度时用它结算；反过来的那几跳仍走 {@link #BURN}）。 */
 	public static final ResourceKey<DamageType> BLUE_BURN = typeKey("blue_burn");
+	/** 等离子体减益的每一跳（等离子头盔）：同时属于火与电（蓝色灼伤时再加冰）的减益伤害。 */
+	public static final ResourceKey<DamageType> PLASMA = typeKey("plasma");
+	/** 酷寒断头台的冰雷刀刃：冰 + 电双属性的神器攻击。 */
+	public static final ResourceKey<DamageType> CRYO_GUILLOTINE = typeKey("cryo_guillotine");
+	/** 闪烁的眼睛「海市蜃楼」的混沌伤害：视为物理 + 火 + 冰 + 电四属性。 */
+	public static final ResourceKey<DamageType> CHAOS = typeKey("chaos");
+	/** 永恒的冬日那一下额外伤害：按普通攻击口径结算（会触发普通攻击的暴击与其它 on-hit）。 */
+	public static final ResourceKey<DamageType> ETERNAL_WINTER = typeKey("eternal_winter");
 	/** 红色露水那类暴击溅射的范围（格）：以被暴击的目标为原点。 */
 	private static final double SPLASH_RANGE = 3.0D;
 	/** 黄金之手：每持有这么多叶子升一档。 */
@@ -145,12 +155,34 @@ public final class SephiriaDamage {
 		 * <p>与 {@link #FIRE_ATTACK} 对称：吃通用暴击、减伤与黄金之手，但既不算武器也不算神器伤害
 		 * ——只用来触发霜之触。
 		 */
-		ICE_ATTACK
+		ICE_ATTACK,
+		/**
+		 * 等离子体减益自己结算的伤害（sephiria:plasma）：同时按火 + 电（蓝色灼伤再加冰）结算。
+		 *
+		 * <p>按减益伤害处理：只吃暴击，不吃减伤与黄金之手，也不会再触发灼伤 / 触电（防链式）。
+		 * 暴击几率取「通用 + 电属性攻击的暴击几率」——它含电这一路。
+		 */
+		PLASMA,
+		/**
+		 * 酷寒断头台的冰雷刀刃（sephiria:cryo_guillotine）：冰 + 电双属性的神器攻击。
+		 *
+		 * <p>按神器攻击处理：吃通用暴击（再加电属性暴击）、减伤与黄金之手；守门只让它触发
+		 * 触电 / 冻伤两条，不触发火焰之触（它没有火）。
+		 */
+		CRYO,
+		/**
+		 * 闪烁的眼睛「海市蜃楼」的混沌伤害（sephiria:chaos）：视为物理 + 火 + 冰 + 电四属性。
+		 *
+		 * <p>按神器攻击处理（暴击、减伤、黄金之手）；它本身不再触发任何减益，免得一次闪避
+		 * 把三条减益全挂上。
+		 */
+		CHAOS
 	}
 
 	public static boolean fromSephiria(DamageSource source) {
 		// 「本模组造成的伤害」= kindOf 认得出来的那几类：模组的伤害类型（artifact_damage /
-		// sun_sword / burn / electric_* / fire_attack / true_damage）、实现 Source 标记的投掷物，
+		// sun_sword / burn / electric_* / fire_attack / plasma / cryo_guillotine / chaos /
+		// eternal_winter / true_damage）、实现 Source 标记的投掷物，
 		// 以及拿着本模组武器打人的那一下。其余一律 OTHER（原版武器、环境伤害……）。
 		return kindOf(source) != Kind.OTHER;
 	}
@@ -183,6 +215,22 @@ public final class SephiriaDamage {
 
 		if (source.is(ICE_ATTACK)) {
 			return Kind.ICE_ATTACK;
+		}
+
+		if (source.is(PLASMA)) {
+			return Kind.PLASMA;
+		}
+
+		if (source.is(CRYO_GUILLOTINE)) {
+			return Kind.CRYO;
+		}
+
+		if (source.is(CHAOS)) {
+			return Kind.CHAOS;
+		}
+
+		if (source.is(ETERNAL_WINTER)) {
+			return Kind.WEAPON;
 		}
 
 		// 冰冻与蓝色灼伤的冰那几跳：都是减益伤害，与灼伤 / 触电并列
@@ -322,13 +370,25 @@ public final class SephiriaDamage {
 
 		double chance = switch (kind) {
 			case WEAPON -> PlayerStats.weaponCritChanceTotal(player);
-			case ELECTRIC -> PlayerStats.critChanceTotal(player) + PlayerStats.electricCritChanceTotal(player);
+			case ELECTRIC, PLASMA, CRYO, CHAOS ->
+					PlayerStats.critChanceTotal(player) + PlayerStats.electricCritChanceTotal(player);
 			// 太阳剑那一下：通用之上再加「太阳剑暴击几率」（索利斯·德克里）
 			case SUN -> PlayerStats.critChanceTotal(player) + ArtifactEffects.sunSwordCritChanceBonus(player);
 			default -> PlayerStats.critChanceTotal(player);
 		};
 
-		if (!PseudoRandom.crit(player, chance)) {
+		boolean critical = PseudoRandom.crit(player, chance);
+		float result = critical
+				? (float) (amount * PlayerStats.critDamageTotal(player) / 100.0D)
+				: amount;
+		// ToroHealth 兼容：在生命值同步前告诉客户端这一下的元素 / 暴击 / 税前伤害
+		// 税前 = 暴击、黄金之手、天赋增伤之后，尚未扣目标护甲 / 减伤
+		float preTax = applyGoldenHands(source, result);
+		preTax *= com.sephiria.talent.Talents.bossDamageMultiplier(player, target);
+		preTax *= com.sephiria.talent.Talents.comboDamageMultiplier(player);
+		com.sephiria.compat.torohealth.ToroHealthCompat.send(player, target, source, critical, preTax);
+
+		if (!critical) {
 			return amount;
 		}
 
@@ -336,7 +396,13 @@ public final class SephiriaDamage {
 			critSplash(target, player);
 		}
 
-		return (float) (amount * PlayerStats.critDamageTotal(player) / 100.0D);
+		// 闪烁的眼睛：暴击给「海市蜃楼」充能。混沌伤害自己暴击不再回充，免得一次闪避
+		// 打进一堆敌人后瞬间又攒满、变成连环闪避。
+		if (kind != Kind.CHAOS) {
+			com.sephiria.artifact.FlickeringEyeItem.onCrit(player);
+		}
+
+		return result;
 	}
 
 	/**
@@ -388,6 +454,20 @@ public final class SephiriaDamage {
 				&& ignoresInvulnerableFrames(victim);
 	}
 
+	/**
+	 * 自动锁敌能不能选它：在 {@link #strikeable} 之上再排除<b>船 / 矿车上的单位</b>
+	 * （用户 2026-10-25 定：自动锁敌不该把躲在船 / 矿车里的怪当成目标）。
+	 *
+	 * <p>只用于「自动挑目标」的那几处（乌云、桑德耳环、红蛇之眼、冰霜武具的锤子 / 长矛）；
+	 * 玩家主动挥出的范围技能仍然走 {@link #strikeable}，不会因此打不到船上的单位。
+	 */
+	public static boolean autoTargetable(LivingEntity victim, ServerPlayer attacker) {
+		Entity vehicle = victim.getVehicle();
+		return strikeable(victim, attacker)
+				&& !(vehicle instanceof AbstractBoat)
+				&& !(vehicle instanceof AbstractMinecart);
+	}
+
 	// ------------------------------------------------------------------ 黄金之手
 
 	/**
@@ -400,9 +480,9 @@ public final class SephiriaDamage {
 	public static float applyGoldenHands(DamageSource source, float amount) {
 		Kind kind = kindOf(source);
 
-		// 减益伤害（触电 / 灼伤 / 冰冻）不吃黄金之手：它们是「数值定死」的那一类
+		// 减益伤害（触电 / 灼伤 / 冰冻 / 等离子体）不吃黄金之手：它们是「数值定死」的那一类
 		if (kind == Kind.OTHER || kind == Kind.ELECTRIC || kind == Kind.FIRE || kind == Kind.ICE
-				|| !(source.getEntity() instanceof ServerPlayer player)) {
+				|| kind == Kind.PLASMA || !(source.getEntity() instanceof ServerPlayer player)) {
 			return amount;
 		}
 
@@ -473,6 +553,17 @@ public final class SephiriaDamage {
 		SKILL_MARK.remove(player.getUUID());
 	}
 
+	/**
+	 * 这一 tick 的伤害是不是技能打出的（{@link #markSkill} 刚挂过标记）。
+	 *
+	 * <p>「普通攻击」类效果（永恒的冬日）要靠它把技能排除掉——技能与普攻用的是同一个
+	 * {@code playerAttack} 伤害类型。
+	 */
+	public static boolean isSkillAttack(ServerPlayer player) {
+		Mark mark = SKILL_MARK.get(player.getUUID());
+		return mark != null && mark.tick() == player.level().getGameTime();
+	}
+
 	/** 本 tick 有技能标记就用技能倍率，否则按普通攻击倍率算。 */
 	private static double attackMultiplier(ServerPlayer player) {
 		Mark mark = SKILL_MARK.get(player.getUUID());
@@ -505,7 +596,7 @@ public final class SephiriaDamage {
 	/**
 	 * 造一个触电结算的闪电属性伤害来源（数据包里的 sephiria:electric_shock）。
 	 *
-	 * <p>只给触电减益自己的周期/终结跳用：它是减益伤害，事件守门按类型把它挡在
+	 * <p>只给触电减益自己的周期跳用：它是减益伤害，事件守门按类型把它挡在
 	 * 电击之触之外（防链式自触）。攻击打出的电属性伤害走 {@link #electricAttack}。
 	 *
 	 * <p>触发者掉线后 {@code player} 传 null：伤害照样结算，只是没有归属（不触发吸血、不计击杀功劳）。
@@ -594,6 +685,31 @@ public final class SephiriaDamage {
 	 */
 	public static DamageSource blueBurn(ServerLevel level, ServerPlayer player) {
 		return new DamageSource(lookup(level, BLUE_BURN), player, player);
+	}
+
+	/**
+	 * 造一个等离子体减益的伤害来源（数据包里的 sephiria:plasma）。
+	 *
+	 * <p>只给等离子体的周期跳用：它同时是火 + 电（蓝色时再加冰）的减益伤害，走单独的类型，
+	 * 免得被当成灼伤 / 触电再触发一次对应之触。
+	 */
+	public static DamageSource plasma(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, PLASMA), player, player);
+	}
+
+	/** 造一个酷寒断头台的冰雷刀刃伤害来源（数据包里的 sephiria:cryo_guillotine）。 */
+	public static DamageSource cryoGuillotine(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, CRYO_GUILLOTINE), player, player);
+	}
+
+	/** 造一个闪烁的眼睛「海市蜃楼」的混沌伤害来源（数据包里的 sephiria:chaos）。 */
+	public static DamageSource chaos(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, CHAOS), player, player);
+	}
+
+	/** 造一个永恒的冬日额外一击的来源（数据包里的 sephiria:eternal_winter，按普通攻击口径）。 */
+	public static DamageSource eternalWinter(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, ETERNAL_WINTER), player, player);
 	}
 
 	private static Holder<DamageType> lookup(ServerLevel level, ResourceKey<DamageType> key) {

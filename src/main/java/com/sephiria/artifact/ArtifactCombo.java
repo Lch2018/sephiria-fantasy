@@ -186,7 +186,7 @@ public enum ArtifactCombo {
 	 * @param lightningElement 电元素强度（点）：并进触发者的电元素强度面板值，触电每次激活按它结算
 	 * @param fireElement   火元素强度（点）：并进触发者的火元素强度面板值，灼伤每跳按它结算
 	 * @param touchHaste    「之触冷却加速」（%）：电击之触 / 火焰之触共用，实际间隔 = 基础间隔 ÷ (1 + 加成)
-	 * @param shockDurationDelta 「触电激活时间」调整（秒，负数缩短默认的 2 秒）
+	 * @param shockDurationDelta 「触电激活时间」调整（秒，负数缩短默认的 2 秒激活间隔）
 	 * @param electricTouch 激活「电击之触」：造成伤害时给目标附加「触电」减益（到档即开）
 	 * @param goldenHands   黄金之手：每持有 200 叶子，对敌人造成的伤害 +1%（最大 +20%）
 	 * @param cloudCapacity 乌云容量加成（点）：加在基础容量 15 上（只有乌云用）
@@ -457,7 +457,7 @@ public enum ArtifactCombo {
 		return sum(comboLevel, Tier::burnBasePercent);
 	}
 
-	/** 「触电激活时间」调整（秒）：各档累加，负数缩短默认的 2 秒。 */
+	/** 「触电激活时间」调整（秒）：各档累加，负数缩短默认的 2 秒激活间隔。 */
 	public double shockDurationDelta(int comboLevel) {
 		return sum(comboLevel, Tier::shockDurationDelta);
 	}

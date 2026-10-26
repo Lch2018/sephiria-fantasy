@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "sephiria_fantasy:item/cryo_guillotine_blade_flame"
+  }
+}

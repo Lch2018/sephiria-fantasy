@@ -7,7 +7,6 @@ import com.sephiria.client.shop.ShopScreen;
 import com.sephiria.client.difficulty.RootRetreatScreen;
 import com.sephiria.client.wishpool.WishPoolScreen;
 import com.sephiria.client.backpack.EnchantScreen;
-import com.sephiria.client.hud.HudConfigScreen;
 import com.sephiria.artifact.skill.ArtifactSkills;
 import com.sephiria.artifact.skill.SkillSlots;
 import com.sephiria.client.hud.SephiriaHud;
@@ -113,6 +112,8 @@ public class SephiriaClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		// 伤害显示设置：ToroHealth 兼容层要在第一帧渲染前读到配置
+		com.sephiria.client.damage.DamageDisplayConfig.load();
 		// 容器菜单的界面：26.2 的 MenuScreens.register 是包私有的，走访问拓宽（sephiria.accesswidener）
 		MenuScreens.register(ModMenus.ARTIFACT_BACKPACK, ArtifactBackpackScreen::new);
 		MenuScreens.register(ModMenus.ARTIFACT_ENCHANT, EnchantScreen::new);
@@ -204,7 +205,17 @@ public class SephiriaClient implements ClientModInitializer {
 			ClientTalents.reset();
 			// 专注 / 剑意同样不跨世界：不清的话换世界后匕首与刀的微光会按上个世界的层数多亮一瞬
 			SkillClientData.reset();
+			com.sephiria.client.hud.HudClientData.reset();
+			com.sephiria.client.hud.SephiriaHud.resetFlash();
+			com.sephiria.compat.torohealth.ToroHealthCompatClient.reset();
 		});
+		// 技能 HUD / 神器 HUD 的冷却与充能
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.HudSyncPayload.TYPE,
+				(payload, context) -> com.sephiria.client.hud.HudClientData.accept(payload));
+		// ToroHealth 伤害数字的元素 / 暴击信息
+		ClientPlayNetworking.registerGlobalReceiver(
+				com.sephiria.compat.torohealth.ToroHealthDamagePayload.TYPE,
+				(payload, context) -> com.sephiria.compat.torohealth.ToroHealthCompatClient.accept(payload));
 		// 神器技能页的可用技能与 6 个栏位
 		ClientPlayNetworking.registerGlobalReceiver(ArtifactSkillsPayload.TYPE, (payload, context) -> {
 			ClientSkills.accept(payload);
@@ -314,7 +325,7 @@ public class SephiriaClient implements ClientModInitializer {
 			}
 
 			while (HUD_KEY.consumeClick()) {
-				client.setScreenAndShow(new HudConfigScreen(null));
+				client.setScreenAndShow(new com.sephiria.client.config.SephiriaSettingsScreen(null));
 			}
 
 			// 神器技能：按下第几号栏位就发第几号，冷却与蓝量由服务端判

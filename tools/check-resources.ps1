@@ -22,6 +22,10 @@ $items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_c
     'solis_fracto', 'solis_parvo', 'sun_sword',
     # batch 20 (glacier): the amulet / claw / ring / sealed tegas
     'wisdom_amulet', 'blue_claw', 'proshium_ring', 'sealed_tegas',
+    # cloud-bond batch (2026-10-25): ruby brooch / thunderfrost butterfly
+    'ruby_brooch', 'thunderfrost_butterfly',
+    # opposition batch (2026-10-25): plasma helmet / scales / eternal winter / cryo guillotine / flickering eye
+    'plasma_helmet', 'scales_of_opposition', 'eternal_winter', 'cryo_guillotine', 'flickering_eye',
     # batch 21 (frost armament): the scabbard / hammer / conch
     'exorcism_scabbard', 'blizzard_hammer', 'magic_conch',
     # batch 22 (frost armament, second wave): wings / heart / volspa / bow

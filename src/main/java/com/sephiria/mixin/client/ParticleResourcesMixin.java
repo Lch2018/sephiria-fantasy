@@ -2,6 +2,8 @@ package com.sephiria.mixin.client;
 
 import com.sephiria.client.particle.BlueSparkParticle;
 import com.sephiria.client.particle.FrostQiParticle;
+import com.sephiria.client.particle.PlasmaParticle;
+import com.sephiria.client.particle.SnowfallParticle;
 import com.sephiria.client.particle.SunSlashParticle;
 import com.sephiria.registry.ModParticleTypes;
 import net.minecraft.client.particle.ParticleProvider;
@@ -68,5 +70,17 @@ public abstract class ParticleResourcesMixin {
 		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.ICE_SLASH), iceSlash);
 		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.ICE_SLASH),
 				new SunSlashParticle.Provider(iceSlash));
+
+		// 暴风雪云的雪：行为直接复用原版 SnowflakeParticle，贴图换成原版天气雪裁出来的小雪花
+		MutableSpriteSet snowfall = new MutableSpriteSet();
+		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.SNOWFALL), snowfall);
+		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.SNOWFALL),
+				new SnowfallParticle.Provider(snowfall));
+
+		// 等离子体的菱形粒子：一颗白色菱形，颜色在客户端逐颗按 20/60/20 染色
+		MutableSpriteSet plasma = new MutableSpriteSet();
+		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.PLASMA), plasma);
+		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.PLASMA),
+				new PlasmaParticle.Provider(plasma));
 	}
 }

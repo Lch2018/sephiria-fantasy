@@ -546,8 +546,8 @@ public final class Talents {
 		return stage(player, Talent.WISDOM) >= 1 ? WISDOM_STAGE1_MP_ABSORB : 0.0D;
 	}
 
-	/** 智慧二阶段：所有神器强制按【独特】结算。 */
-	public static boolean forceArtifactUnique(ServerPlayer player) {
+	/** 智慧二阶段：相同神器放进背包时合并（只并入未满级的那件；全部满级时正常放入）。 */
+	public static boolean wisdomMergeActive(ServerPlayer player) {
 		return stage(player, Talent.WISDOM) >= 2;
 	}
 

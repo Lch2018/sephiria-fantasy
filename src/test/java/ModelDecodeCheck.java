@@ -42,7 +42,13 @@ public final class ModelDecodeCheck {
 			new String[] { "wish_pool", "sephiria_fantasy:wish_pool_side", "minecraft:damage" },
 			new String[] { "root_retreat", "sephiria_fantasy:root_retreat_side2", "minecraft:damage" },
 			// 「书」：最普通的一层定义（同样没有组件，原样解一遍，防止以后改贴图路径时写坏）
-			new String[] { "book", "sephiria_fantasy:book_marker", "minecraft:damage" });
+			new String[] { "book", "sephiria_fantasy:book_marker", "minecraft:damage" },
+			// 酷寒断头台的冰蓝剑：技术性模型定义，只借 ITEM_MODEL 组件显示，没有对应物品
+			new String[] { "cryo_guillotine_blade", "sephiria_fantasy:cryo_guillotine_blade_marker",
+					"minecraft:damage" },
+			// 永恒蚀左半边时「斩」的焰橙版
+			new String[] { "cryo_guillotine_blade_flame", "sephiria_fantasy:cryo_guillotine_blade_flame_marker",
+					"minecraft:damage" });
 
 	public static void main(String[] args) throws Exception {
 		SharedConstants.tryDetectVersion();

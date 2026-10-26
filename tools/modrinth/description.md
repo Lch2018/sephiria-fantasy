@@ -10,7 +10,7 @@
 
 Blade / Steel Greatsword / Dagger / Default Sword and Shield / Quarterstaff / Colossal Crossbow — each with its own normal-attack feel and weapon skills (sweeping, whirlwind, dash, area lunge, …). The blade-type weapons are animated with GeckoLib.
 
-### Twelve combo sets and 76 artifacts
+### Twelve combo sets and 83 artifacts
 
 Sturdy / Wind Song / Precision / Shadow / Negotiation / Element / Magitech / Dark Cloud / Sun Sword / Embers / Glacier / Frost Armament.
 
@@ -24,6 +24,7 @@ The Sephiria Backpack can also hold **slates** (58 in total: 15 Common / 22 Adva
 
 - **Shock** (Magitech), **Burn** (Embers) and **Frostbite / Freeze** (Glacier): periodic damage that scales with stacks, plus a freeze that locks a mob completely in place (no AI, no knockback, animation held on the spot) and turns it ice blue; affected mobs show a stack label under their feet. Debuff damage and true damage can crit as well.
 - **Artifact skills**: 6 skill slots with rebindable keys — Encouragement Banner, Haste, Keen Eye, Thunder Verdict.
+- **Optional ToroHealth-Continued integration**: this mod's floating damage numbers and the HUD health-change number use one color per hit, selected from the full element-combination table (Physical #C0C0C0 / Fire #EDB12E / Ice #6499E8 / Lightning #7EFAFF; Fire+Lightning #EE8AF8 / Ice+Physical #16417C / Ice+Lightning #3282F6 / Fire+Physical #F08784 / Lightning+Physical #5A879E / Fire+Ice #EF88BE / Ice+Fire+Lightning #7F82BB / Fire+Lightning+Physical #FFFD55 / Ice+Lightning+Physical #3282F6 / Fire+Ice+Physical #EA3FF7; Chaos #741B7C / True #FFFFFF), and critical hits are drawn at 2× size. Press **H** to open Sephiria Mod Settings, where Damage Display controls brightness, size and pre-tax numbers; ModMenu users can open the same screen from the mod list. ToroHealth and ModMenu are both optional.
 
 ### Attributes and progression
 
@@ -35,7 +36,7 @@ Seven talent pages (Wrath / Swiftness / Survival / Patience / Wisdom / Will / Qu
 
 - **Survival**: max HP per point; Advanced-or-better potions grant +1 to a random permanent attribute; extra backpack slots; stage 3 unlocks **Slate Imprint** (hover a slate in the Sephiria Backpack and hold **F** to consume it while keeping its effect on nearby slots).
 - **Patience**: Defense (the same stat enemies use), a Slate Base with the same effect as the Foundation slate, low-health regeneration, and a revival at 60% health once every 10 in-game days (totems take priority).
-- **Wisdom**: MP regeneration (combat: every 10 seconds; out of combat: 12.5% max MP every 0.5 seconds), MP Absorption, all artifacts forced to 【Unique】 with duplicate merging, dice from boss kills, and one free chest reroll per chest.
+- **Wisdom**: MP regeneration (combat: every 10 seconds; out of combat: 12.5% max MP every 0.5 seconds), MP Absorption, duplicate artifacts merging into unmaxed copies, dice from boss kills, and one free chest reroll per chest.
 
 ### Root Retreat
 
@@ -93,7 +94,7 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 刀 / 钢铁巨剑 / 匕首 / 标准剑盾 / 长棍 / 重型弩，各自有独立的普通攻击手感与武器技能（横扫、旋风、突刺、范围突进等）；刀类武器由 GeckoLib 驱动骨骼动画。
 
-### 十二套「连击」与 76 件神器
+### 十二套「连击」与 83 件神器
 
 坚固 / 风之歌 / 精密 / 影子 / 谈判 / 元素 / 魔法科技 / 乌云 / 太阳剑 / 余烬 / 冰川 / 冰霜武具。
 
@@ -107,6 +108,7 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 - **触电**（魔法科技）、**灼伤**（余烬）与**冻伤 / 冰冻**（冰川）：挂在敌人身上的周期伤害，按层数乘算；冻伤叠满会把敌人**完全冻住**（AI 停摆、被打也不动、动画定格、染成冰蓝）。敌人脚下会显示层数标签；减益伤害与真实伤害同样可以暴击。
 - **神器技能**：6 个技能栏 + 可自由绑定的按键 —— 鼓励旗帜 / 急速 / 锐利之眼 / 雷之裁决。
+- **可选 ToroHealth-Continued 兼容**：本模组的浮动伤害数字与 HUD 血量变化数字每一下只显示一种颜色，按完整元素组合表取色（物理 #C0C0C0 / 火 #EDB12E / 冰 #6499E8 / 电 #7EFAFF；火电 #EE8AF8 / 冰物理 #16417C / 冰电 #3282F6 / 火物理 #F08784 / 电物理 #5A879E / 火冰 #EF88BE / 冰火电 #7F82BB / 火电物理 #FFFD55 / 冰电物理 #3282F6 / 火冰物理 #EA3FF7；混沌 #741B7C / 真伤 #FFFFFF），暴击数字放大 2 倍；按 **H** 打开赛菲莉娅 Mod 设置，「伤害显示」里可调亮度、大小与税前伤害；装了 ModMenu 时也可以从模组列表的配置按钮打开同一个界面。ToroHealth 与 ModMenu 都不是必需依赖。
 
 ### 属性与成长
 
@@ -118,7 +120,7 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 - **生存**：每点最大 HP；喝高级及以上品质药水随机一项属性永久 +1；额外背包格；三阶段解锁**石板刻印**（鼠标指着赛菲莉娅背包里的石板、按住 **F** 消耗它并保留其对周围格子的效果）。
 - **耐心**：防御力（与敌人防御同口径）、与石板「基础」效果相同的石板基础、低血回复、每 10 个游戏日一次的 60% 复活（不死图腾优先）。
-- **智慧**：MP再生（战斗每 10 秒；脱战每 0.5 秒回 12.5% 最大 MP）、MP 吸收、所有神器强制【独特】与同种合并、BOSS 掉落骰子、每个宝箱一次免费刷新。
+- **智慧**：MP再生（战斗每 10 秒；脱战每 0.5 秒回 12.5% 最大 MP）、MP 吸收、同种未满级神器合并、BOSS 掉落骰子、每个宝箱一次免费刷新。
 
 ### 根之退
 

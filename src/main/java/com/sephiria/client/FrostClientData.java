@@ -19,6 +19,8 @@ public final class FrostClientData {
 	private static boolean hasBow;
 	private static int bowAmmo;
 	private static int bowMax;
+	private static boolean hasGuillotine;
+	private static boolean guillotineReady;
 
 	private FrostClientData() {
 	}
@@ -33,6 +35,8 @@ public final class FrostClientData {
 		hasBow = payload.hasBow();
 		bowAmmo = payload.bowAmmo();
 		bowMax = payload.bowMax();
+		hasGuillotine = payload.hasGuillotine();
+		guillotineReady = payload.guillotineReady();
 	}
 
 	/** 换世界 / 重连时清空（充能与弹药本来就不跨世界）。 */
@@ -46,11 +50,13 @@ public final class FrostClientData {
 		hasBow = false;
 		bowAmmo = 0;
 		bowMax = 0;
+		hasGuillotine = false;
+		guillotineReady = false;
 	}
 
-	/** UI 的显示开关：四件都没带就不画那一行。 */
+	/** UI 的显示开关：一件都没带就不画那一行。 */
 	public static boolean visible() {
-		return hasScabbard || hasHammer || hasSpear || hasBow;
+		return hasScabbard || hasHammer || hasSpear || hasBow || hasGuillotine;
 	}
 
 	public static boolean hasScabbard() {
@@ -87,5 +93,13 @@ public final class FrostClientData {
 
 	public static int bowMax() {
 		return bowMax;
+	}
+
+	public static boolean hasGuillotine() {
+		return hasGuillotine;
+	}
+
+	public static boolean guillotineReady() {
+		return guillotineReady;
 	}
 }

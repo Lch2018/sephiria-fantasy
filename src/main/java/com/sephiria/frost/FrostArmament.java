@@ -4,6 +4,7 @@ import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.artifact.BlizzardHammerItem;
+import com.sephiria.artifact.CryoGuillotineItem;
 import com.sephiria.artifact.EternalEclipseItem;
 import com.sephiria.artifact.ExorcismScabbardItem;
 import com.sephiria.artifact.IceBowItem;
@@ -96,8 +97,8 @@ import java.util.UUID;
  * {@code sephiria:fire_attack}，照常触发余烬的火焰之触。
  * 伤害都只打「有威胁的生物」（{@code SephiriaDamage.strikeable}，不打玩家、不误伤和平生物）。
  *
- * <p><b>冰霜武具的攻击也会触发太阳剑</b>（永恒蚀的词条）：四处结算各补一句
- * {@link SunSword#onFrostArmamentHit}——太阳剑那套系统的触发口径本来只认武器 / 魔法书伤害。
+ * <p><b>冰霜武具的攻击也会触发太阳剑</b>（永恒蚀的词条，必须带着永恒蚀）：四处结算各补一句
+ * {@link SunSword#onFrostArmamentHit}；没带永恒蚀时这个方法直接返回。
  */
 public final class FrostArmament {
 	/** 驱邪剑鞘的充能时间（tick）：6 秒。 */
@@ -474,8 +475,10 @@ public final class FrostArmament {
 			boolean hasHammer = ArtifactEffects.highestLevelOf(player, ModItems.BLIZZARD_HAMMER) >= 0;
 			boolean hasSpear = ArtifactEffects.highestLevelOf(player, ModItems.VOLSPA) >= 0;
 			boolean hasBow = ArtifactEffects.highestLevelOf(player, ModItems.ICE_BOW) >= 0;
+			// 「斩」也算冰霜武具的一员：HUD 与连击效果都跟剑 / 锤 / 矛 / 弓同一行
+			boolean hasGuillotine = ArtifactEffects.highestLevelOf(player, ModItems.CRYO_GUILLOTINE) >= 0;
 
-			if (!hasScabbard && !hasHammer && !hasSpear && !hasBow) {
+			if (!hasScabbard && !hasHammer && !hasSpear && !hasBow && !hasGuillotine) {
 				// 一件都没带：收起 HUD 那一行（推过一次才需要收，免得每次进服都白发一包）
 				State gone = STATES.remove(player.getUUID());
 
@@ -521,7 +524,7 @@ public final class FrostArmament {
 				state.bowBurst = 0;
 			}
 
-			sync(player, state, hasScabbard, hasHammer, hasSpear, hasBow);
+			sync(player, state, hasScabbard, hasHammer, hasSpear, hasBow, hasGuillotine);
 		}
 	}
 
@@ -531,10 +534,12 @@ public final class FrostArmament {
 	 * 所以这里只管对账、不用在触发口那边再补一句推送。
 	 */
 	private static void sync(ServerPlayer player, State state, boolean hasScabbard, boolean hasHammer,
-			boolean hasSpear, boolean hasBow) {
+			boolean hasSpear, boolean hasBow, boolean hasGuillotine) {
+		int guillotineLeft = hasGuillotine ? CryoGuillotineItem.cooldownLeft(player) : -1;
+		boolean guillotineReady = hasGuillotine && guillotineLeft == 0;
 		FrostSyncPayload payload = new FrostSyncPayload(hasScabbard, state.scabbardReady,
 				hasHammer, state.hammerReady, hasSpear, state.spearReady,
-				hasBow, state.bowAmmo, BOW_MAX_AMMO);
+				hasBow, state.bowAmmo, BOW_MAX_AMMO, hasGuillotine, guillotineReady);
 
 		if (payload.equals(state.synced)) {
 			return;
@@ -637,6 +642,42 @@ public final class FrostArmament {
 		double percent = ArtifactCombo.FROST_ARMAMENT.frostChargeSpeedPercent(comboLevel)
 				+ ArtifactEffects.frostChargeSpeedBonus(player);
 		return Math.max(1, (int) Math.round(base / (1.0D + percent / 100.0D)));
+	}
+
+	/**
+	 * 神器 HUD 的充能进度（0..1000）：剑鞘 / 锤子 / 长矛三件充能神器各一条。
+	 *
+	 * <p>没带、或者传进来的物品不是这三件时返回 -1（HUD 跳过这一条）。冰弓是弹药而不是充能，
+	 * 仍由原来的冰霜武具文字行显示。
+	 */
+	public static int chargeProgress(ServerPlayer player, Item item) {
+		State state = STATES.get(player.getUUID());
+
+		if (state == null) {
+			return -1;
+		}
+
+		int comboLevel = comboLevel(player);
+
+		if (item == com.sephiria.registry.ModItems.EXORCISM_SCABBARD) {
+			return state.scabbardReady ? 1000
+					: Math.min(1000, state.scabbardCharge * 1000
+							/ chargeTicks(SCABBARD_CHARGE_TICKS, comboLevel, player));
+		}
+
+		if (item == com.sephiria.registry.ModItems.BLIZZARD_HAMMER) {
+			return state.hammerReady ? 1000
+					: Math.min(1000, state.hammerCharge * 1000
+							/ chargeTicks(HAMMER_CHARGE_TICKS, comboLevel, player));
+		}
+
+		if (item == com.sephiria.registry.ModItems.VOLSPA) {
+			return state.spearReady ? 1000
+					: Math.min(1000, state.spearCharge * 1000
+							/ chargeTicks(SPEAR_CHARGE_TICKS, comboLevel, player));
+		}
+
+		return -1;
 	}
 
 	/**
@@ -1094,7 +1135,7 @@ public final class FrostArmament {
 	private static List<LivingEntity> nearbyTargets(ServerPlayer player, ServerLevel level, double range, int count) {
 		AABB area = player.getBoundingBox().inflate(range, range, range);
 		return level.getEntitiesOfClass(LivingEntity.class, area).stream()
-				.filter(victim -> SephiriaDamage.strikeable(victim, player))
+				.filter(victim -> SephiriaDamage.autoTargetable(victim, player))
 				.sorted(Comparator.comparingDouble(victim -> victim.distanceToSqr(player)))
 				.limit(count)
 				.toList();

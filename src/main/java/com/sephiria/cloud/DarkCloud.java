@@ -3,26 +3,44 @@ package com.sephiria.cloud;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.damage.SephiriaDamage;
+import com.sephiria.debuff.Debuffs;
 import com.sephiria.network.CloudSyncPayload;
 import com.sephiria.registry.ModParticleTypes;
 import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.Container;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CopperBulbBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -70,6 +88,48 @@ public final class DarkCloud {
 	private static final double BODY_SCALE_MAX = 3.0D;
 	/** 体型从 1 倍长到最大倍率跨过的连击等级数（2 档 → 10 档）。 */
 	private static final int BODY_SCALE_LEVELS = 8;
+	/** 暴风雪云的地面影响半径（格）。 */
+	private static final int BLIZZARD_RADIUS = 4;
+	/** 每轮地面效果：1 次找露天水源结冰，3 次找实心方块铺雪 / 叠高。 */
+	private static final int BLIZZARD_WATER_ATTEMPTS = 1;
+	private static final int BLIZZARD_SNOW_ATTEMPTS = 3;
+	/** 暴风雪云地面效果的间隔（tick）：5 秒。 */
+	private static final int BLIZZARD_GROUND_INTERVAL = 100;
+	/** 雪层最高叠到几层（与原版雪层上限一致）。 */
+	private static final int BLIZZARD_SNOW_MAX_LAYERS = 8;
+	/** 红石 / 容器检测半径（格）：附近有这些东西时，暴风雪云不改造地面。 */
+	private static final double BLIZZARD_PROTECTION_RADIUS = 20.0D;
+
+	/** 会被视为「红石 / 容器」的方块（按钮 / 压力板 / 铁轨 / 潜影盒 / 铜箱另有标签覆盖）。 */
+	private static final Set<Block> PROTECTED_BLOCKS = Set.of(
+			Blocks.REDSTONE_WIRE, Blocks.REDSTONE_TORCH, Blocks.REDSTONE_WALL_TORCH,
+			Blocks.REPEATER, Blocks.COMPARATOR, Blocks.LEVER,
+			Blocks.REDSTONE_BLOCK, Blocks.REDSTONE_LAMP, Blocks.DAYLIGHT_DETECTOR,
+			Blocks.TARGET, Blocks.TRIPWIRE, Blocks.TRIPWIRE_HOOK,
+			Blocks.OBSERVER, Blocks.PISTON, Blocks.STICKY_PISTON, Blocks.PISTON_HEAD, Blocks.MOVING_PISTON,
+			Blocks.DISPENSER, Blocks.DROPPER, Blocks.HOPPER, Blocks.CRAFTER,
+			Blocks.SCULK_SENSOR, Blocks.CALIBRATED_SCULK_SENSOR, Blocks.NOTE_BLOCK,
+			Blocks.REDSTONE_ORE, Blocks.DEEPSLATE_REDSTONE_ORE,
+			Blocks.CHEST, Blocks.TRAPPED_CHEST, Blocks.ENDER_CHEST, Blocks.BARREL,
+			Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER, Blocks.BREWING_STAND,
+			Blocks.LECTERN, Blocks.DECORATED_POT, Blocks.CHISELED_BOOKSHELF);
+
+	/** 会被视为「红石 / 容器」的掉落物 / 展示物（铁轨 / 木按钮 / 木压力板 / 潜影盒 / 箱船另有标签）。 */
+	private static final Set<Item> PROTECTED_ITEMS = Set.of(
+			Items.REDSTONE, Items.REDSTONE_TORCH, Items.REDSTONE_BLOCK,
+			Items.REPEATER, Items.COMPARATOR, Items.LEVER,
+			Items.REDSTONE_LAMP, Items.DAYLIGHT_DETECTOR, Items.TARGET,
+			Items.TRIPWIRE_HOOK, Items.OBSERVER, Items.PISTON, Items.STICKY_PISTON,
+			Items.DISPENSER, Items.DROPPER, Items.HOPPER, Items.CRAFTER,
+			Items.SCULK_SENSOR, Items.CALIBRATED_SCULK_SENSOR, Items.NOTE_BLOCK,
+			Items.REDSTONE_ORE, Items.DEEPSLATE_REDSTONE_ORE,
+			Items.CHEST, Items.TRAPPED_CHEST, Items.ENDER_CHEST, Items.BARREL,
+			Items.FURNACE, Items.BLAST_FURNACE, Items.SMOKER, Items.BREWING_STAND,
+			Items.LECTERN, Items.DECORATED_POT, Items.CHISELED_BOOKSHELF,
+			Items.CHEST_MINECART, Items.FURNACE_MINECART, Items.HOPPER_MINECART,
+			Items.STONE_BUTTON, Items.STONE_PRESSURE_PLATE,
+			Items.LIGHT_WEIGHTED_PRESSURE_PLATE, Items.HEAVY_WEIGHTED_PRESSURE_PLATE,
+			Items.POLISHED_BLACKSTONE_BUTTON, Items.POLISHED_BLACKSTONE_PRESSURE_PLATE);
 
 	/** 一名玩家的乌云状态（视觉改成了纯粒子，不再持有实体）。 */
 	private static final class Cloud {
@@ -128,7 +188,15 @@ public final class DarkCloud {
 			}
 
 			Vec3 pos = cloudPos(player, level.getGameTime());
-			emitSmoke(level, pos, level.getGameTime(), bodyScale(comboLevel));
+			boolean blizzard = ArtifactEffects.blizzardCloud(player);
+			emitSmoke(level, pos, level.getGameTime(), bodyScale(comboLevel), blizzard);
+
+			// 暴风雪云像原版降雪一样改造地面：水结冰、地面铺雪层（只在露天的目标上做）。
+			// 附近 20 格内有红石元件 / 容器 / 红石物品时整段跳过（用户 2026-10-25 定）。
+			if (blizzard && level.getGameTime() % BLIZZARD_GROUND_INTERVAL == 0L
+					&& !isBlizzardBlocked(level, player)) {
+				applyBlizzardGround(level, player);
+			}
 
 			regen(player, cloud, comboLevel);
 			tryStrike(level, player, cloud, comboLevel, pos);
@@ -179,7 +247,7 @@ public final class DarkCloud {
 	 * <p>云团大小随连击档位放大（见 {@link #bodyScale}）：铺开的范围按倍率放大，
 	 * 烟粒数量按面积（倍率的平方）跟着涨——云团变大但不会变稀。
 	 */
-	private static void emitSmoke(ServerLevel level, Vec3 pos, long now, double scale) {
+	private static void emitSmoke(ServerLevel level, Vec3 pos, long now, double scale, boolean blizzard) {
 		if (now % SMOKE_INTERVAL_TICKS != 0L) {
 			return;
 		}
@@ -189,6 +257,165 @@ public final class DarkCloud {
 				count, 0.35D * scale, 0.1D * scale, 0.35D * scale, 0.0D);
 		level.sendParticles(ParticleTypes.LARGE_SMOKE, pos.x, pos.y, pos.z,
 				count, 0.5D * scale, 0.15D * scale, 0.5D * scale, 0.0D);
+
+		if (blizzard) {
+			// 暴风雪：云下一直飘雪。雪是显式粒子，与群系 / 高度 / 天气无关，
+			// 任何情况下都是雪，不会像原版降雨那样在低温群系外变成雨。
+			// 数量比烟多一些，低档位也能看出「在下雪」。
+			level.sendParticles(ModParticleTypes.SNOWFALL, pos.x, pos.y - 0.4D, pos.z,
+					Math.max(4, count * 3), 1.1D * scale, 0.15D, 1.1D * scale, 0.01D);
+		}
+	}
+
+	/**
+	 * 玩家周围 {@value #BLIZZARD_PROTECTION_RADIUS} 格内有没有红石元件 / 容器 / 红石物品。
+	 *
+	 * <p>有的话暴风雪云这一轮不改造地面（雪粒子照常下），避免冻住红石农场的水、往箱子上积雪
+	 * 或把红石线路埋掉。方块扫一遍 20 格半径，外加掉落的红石物品、物品展示框、运输矿车 / 箱船。
+	 */
+	private static boolean isBlizzardBlocked(ServerLevel level, ServerPlayer player) {
+		AABB area = player.getBoundingBox().inflate(BLIZZARD_PROTECTION_RADIUS);
+
+		if (level.getBlockStates(area).anyMatch(DarkCloud::isProtectedBlock)) {
+			return true;
+		}
+
+		for (Entity entity : level.getEntitiesOfClass(Entity.class, area)) {
+			if (entity instanceof Container) {
+				return true;
+			}
+
+			if (entity instanceof ItemEntity item && isProtectedItem(item.getItem())) {
+				return true;
+			}
+
+			if (entity instanceof ItemFrame frame && isProtectedItem(frame.getItem())) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/** 红石元件 / 容器方块。 */
+	private static boolean isProtectedBlock(BlockState state) {
+		if (state.is(BlockTags.RAILS) || state.is(BlockTags.BUTTONS) || state.is(BlockTags.PRESSURE_PLATES)
+				|| state.is(BlockTags.SHULKER_BOXES) || state.is(BlockTags.COPPER_CHESTS)
+				|| state.getBlock() instanceof CopperBulbBlock) {
+			return true;
+		}
+
+		return PROTECTED_BLOCKS.contains(state.getBlock());
+	}
+
+	/** 红石相关物品 / 容器物品（掉落物或展示框里的那件）。 */
+	private static boolean isProtectedItem(ItemStack stack) {
+		if (stack.isEmpty()) {
+			return false;
+		}
+
+		if (stack.is(ItemTags.RAILS) || stack.is(ItemTags.WOODEN_BUTTONS)
+				|| stack.is(ItemTags.WOODEN_PRESSURE_PLATES) || stack.is(ItemTags.SHULKER_BOXES)
+				|| stack.is(ItemTags.CHEST_BOATS)) {
+			return true;
+		}
+
+		return PROTECTED_ITEMS.contains(stack.getItem());
+	}
+
+	/**
+	 * 暴风雪云的地面改造（每 5 秒一次）：
+	 * <ul>
+	 *   <li>随机挑 <b>1</b> 列：如果这一列的表面是露天水源，冻成冰；</li>
+	 *   <li>随机挑 <b>3</b> 列：如果表面是露天、上方是空气的实心方块，铺一层雪；
+	 *       已有雪层则叠高（最多 8 层）；</li>
+	 *   <li>植物 / 其它非实心方块：这一列跳过。</li>
+	 * </ul>
+	 * 只改<b>能看见天空</b>的目标，室内 / 洞穴 / 屋檐下不会凭空积雪或结冰。
+	 */
+	private static void applyBlizzardGround(ServerLevel level, ServerPlayer player) {
+		for (int attempt = 0; attempt < BLIZZARD_WATER_ATTEMPTS; attempt++) {
+			freezeBlizzardWater(level, player);
+		}
+
+		for (int attempt = 0; attempt < BLIZZARD_SNOW_ATTEMPTS; attempt++) {
+			snowBlizzardGround(level, player);
+		}
+	}
+
+	/** 随机一列：露天水源 → 冰。 */
+	private static void freezeBlizzardWater(ServerLevel level, ServerPlayer player) {
+		BlockPos pos = randomSurface(level, player);
+
+		if (pos == null) {
+			return;
+		}
+
+		BlockState state = level.getBlockState(pos);
+
+		if (state.is(Blocks.WATER) && state.getFluidState().isSource() && level.canSeeSky(pos.above())) {
+			level.setBlockAndUpdate(pos, Blocks.ICE.defaultBlockState());
+		}
+	}
+
+	/** 随机一列：露天实心方块上方铺雪；已有雪层则叠高。 */
+	private static void snowBlizzardGround(ServerLevel level, ServerPlayer player) {
+		BlockPos pos = randomSurface(level, player);
+
+		if (pos == null) {
+			return;
+		}
+
+		BlockState state = level.getBlockState(pos);
+
+		if (state.is(Blocks.SNOW)) {
+			int layers = state.getValue(SnowLayerBlock.LAYERS);
+
+			if (layers < BLIZZARD_SNOW_MAX_LAYERS && level.canSeeSky(pos)) {
+				level.setBlockAndUpdate(pos, state.setValue(SnowLayerBlock.LAYERS, layers + 1));
+			}
+
+			return;
+		}
+
+		if (state.isSolid()) {
+			BlockPos above = pos.above();
+
+			if (level.getBlockState(above).isAir() && level.canSeeSky(above)) {
+				level.setBlockAndUpdate(above, Blocks.SNOW.defaultBlockState());
+			}
+		}
+	}
+
+	/**
+	 * 在玩家周围半径 4 格里随机挑一列，从脚上一格往下找到第一块非空气方块；
+	 * 玩家自己那一列（dx = dz = 0）跳过，避免把玩家冻在水里或顶起来。
+	 */
+	private static BlockPos randomSurface(ServerLevel level, ServerPlayer player) {
+		BlockPos origin = player.blockPosition();
+		var random = level.getRandom();
+
+		for (int tries = 0; tries < 8; tries++) {
+			int dx = random.nextInt(BLIZZARD_RADIUS * 2 + 1) - BLIZZARD_RADIUS;
+			int dz = random.nextInt(BLIZZARD_RADIUS * 2 + 1) - BLIZZARD_RADIUS;
+
+			if (dx == 0 && dz == 0) {
+				continue;
+			}
+
+			int x = origin.getX() + dx;
+			int z = origin.getZ() + dz;
+
+			for (int y = origin.getY() + 1; y >= origin.getY() - 4; y--) {
+				BlockPos pos = new BlockPos(x, y, z);
+
+				if (!level.getBlockState(pos).isAir()) {
+					return pos;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	/** 云体大小倍率：连击档越高云团越大（2 档 1 倍、10 档 {@link #BODY_SCALE_MAX} 倍，中间线性）。 */
@@ -266,53 +493,135 @@ public final class DarkCloud {
 	/** 附近有威胁的生物：只打玩家 / 敌对 / 正在打玩家的生物，和平生物不误伤（SephiriaDamage.strikeable）。 */
 	private static List<LivingEntity> threateningNear(ServerLevel level, ServerPlayer player) {
 		return level.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(RANGE),
-				candidate -> SephiriaDamage.strikeable(candidate, player)).stream()
+				candidate -> SephiriaDamage.autoTargetable(candidate, player)).stream()
 				.sorted(Comparator.comparingDouble(candidate -> candidate.distanceToSqr(player)))
 				.toList();
 	}
 
-	/** 一记雷击：电元素强度 × {@link #DAMAGE_PERCENT}% 的电属性伤害 + 蓝白色闪电 + 雷声（半音量）。 */
+	/**
+	 * 一记攻击：普通乌云是「电元素强度 × {@link #DAMAGE_PERCENT}%」的电属性伤害；
+	 * 暴风雪云改成「闪电与冰里较高的一方 × {@link #DAMAGE_PERCENT}% × 110% +
+	 * 较低的一方 × {@link #DAMAGE_PERCENT}% × 15%」的两段双属性伤害
+	 * ——即两段都先按普通乌云的 20% 折算，再分别乘 110% / 15%。
+	 * 云种箭头的强化、雷石的额外伤害、容量 / 消耗速度等其余规则完全不变。
+	 *
+	 * <p>红宝石胸针：两段里只要有电属性那一段，命中后就 {@link Debuffs#applyBurn}；视觉上在原蓝白
+	 * 闪电之外加一层红色火焰。暴风雪云：云下持续飘雪，冰那一段命中时再加一层雪粒子。
+	 */
 	private static void strike(ServerLevel level, ServerPlayer player, Cloud cloud, LivingEntity target, Vec3 from) {
-		double damage = PlayerStats.elementTotal(player, PlayerStats.Element.LIGHTNING)
-				* DAMAGE_PERCENT / 100.0D
-				* (1.0D + ArtifactEffects.cloudDamagePercent(player) / 100.0D);
-
-		if (damage <= 0.0D) {
-			return;
-		}
+		boolean blizzard = ArtifactEffects.blizzardCloud(player);
+		double multiplier = 1.0D + ArtifactEffects.cloudDamagePercent(player) / 100.0D;
+		double normalPercent = DAMAGE_PERCENT / 100.0D;
 
 		// 云种箭头：这一记有概率被强化——伤害翻倍（落点也会炸得更开，一眼能看出是双倍）
 		boolean enhanced = level.getRandom().nextDouble() * 100.0D
 				< ArtifactEffects.cloudEnhancedChance(player);
 
 		if (enhanced) {
-			damage *= 2.0D;
+			multiplier *= 2.0D;
 		}
 
-		// 电属性攻击伤害：与武器 / 神器伤害一样能触发电击之触（守门见 Debuffs.register，
-		// 那里拦下的只有触电自己的结算）
-		DamageSource source = SephiriaDamage.electricAttack(level, player);
-		// 每记雷击都要落地：清掉无敌帧（与触电结算同一套手法）
-		SephiriaDamage.clearDamageCooldown(target);
-		target.hurtServer(level, source, (float) damage);
+		boolean hasElectric;
+		boolean hasIce;
+		boolean hit = false;
+
+		if (blizzard) {
+			double lightning = PlayerStats.elementTotal(player, PlayerStats.Element.LIGHTNING);
+			double ice = PlayerStats.elementTotal(player, PlayerStats.Element.ICE);
+			boolean lightningHigher = lightning >= ice;
+			double higher = Math.max(lightning, ice);
+			double lower = Math.min(lightning, ice);
+
+			hasElectric = lightning > 0.0D;
+			hasIce = ice > 0.0D;
+
+			// 两段都先按普通乌云的 20% 折算，再分别 ×110% / ×15%。
+			// 较高属性那一行走它自己的元素类型；较低属性走另一边的元素类型。
+			// 两段各自清无敌帧，所以都会落地；各自也会触发对应元素的减益守门。
+			hit |= hit(level, player, target,
+					higher * normalPercent * 1.10D * multiplier, lightningHigher);
+			hit |= hit(level, player, target,
+					lower * normalPercent * 0.15D * multiplier, !lightningHigher);
+		}
+		else {
+			hasElectric = true;
+			hasIce = false;
+
+			double damage = PlayerStats.elementTotal(player, PlayerStats.Element.LIGHTNING)
+					* normalPercent * multiplier;
+
+			if (damage > 0.0D) {
+				hit = hit(level, player, target, damage, true);
+			}
+		}
+
+		if (!hit) {
+			return;
+		}
 
 		Vec3 to = target.position().add(0.0D, target.getBbHeight() / 2.0D, 0.0D);
 		int steps = (int) Math.ceil(from.distanceTo(to) * 2.0D);
 
-		for (int step = 0; step <= steps; step++) {
-			Vec3 point = from.lerp(to, step / (double) Math.max(1, steps));
-			level.sendParticles(ModParticleTypes.BLUE_SPARK, point.x, point.y, point.z,
-					1, 0.05D, 0.05D, 0.05D, 0.0D);
+		// 原来的蓝白闪电：只有存在电属性那一段时才画
+		if (hasElectric) {
+			for (int step = 0; step <= steps; step++) {
+				Vec3 point = from.lerp(to, step / (double) Math.max(1, steps));
+				level.sendParticles(ModParticleTypes.BLUE_SPARK, point.x, point.y, point.z,
+						1, 0.05D, 0.05D, 0.05D, 0.0D);
+			}
+
+			if (enhanced) {
+				level.sendParticles(ModParticleTypes.BLUE_SPARK, to.x, to.y, to.z, 24, 0.6D, 0.6D, 0.6D, 0.12D);
+			}
+			else {
+				level.sendParticles(ModParticleTypes.BLUE_SPARK, to.x, to.y, to.z, 12, 0.3D, 0.4D, 0.3D, 0.08D);
+			}
 		}
 
-		if (enhanced) {
-			level.sendParticles(ModParticleTypes.BLUE_SPARK, to.x, to.y, to.z, 24, 0.6D, 0.6D, 0.6D, 0.12D);
+		// 红宝石胸针：原闪电特效不变，沿同一条线再加一层红色火焰
+		if (hasElectric && ArtifactEffects.cloudAppliesBurn(player)) {
+			for (int step = 0; step <= steps; step += 2) {
+				Vec3 point = from.lerp(to, step / (double) Math.max(1, steps));
+				level.sendParticles(ParticleTypes.FLAME, point.x, point.y, point.z,
+						1, 0.06D, 0.06D, 0.06D, 0.0D);
+			}
+
+			level.sendParticles(ParticleTypes.FLAME, to.x, to.y, to.z, 8, 0.35D, 0.35D, 0.35D, 0.03D);
 		}
-		else {
-			level.sendParticles(ModParticleTypes.BLUE_SPARK, to.x, to.y, to.z, 12, 0.3D, 0.4D, 0.3D, 0.08D);
+
+		// 暴风雪云：冰那一段命中时再加一层雪
+		if (hasIce) {
+			for (int step = 0; step <= steps; step += 2) {
+				Vec3 point = from.lerp(to, step / (double) Math.max(1, steps));
+				level.sendParticles(ModParticleTypes.SNOWFALL, point.x, point.y, point.z,
+						1, 0.06D, 0.06D, 0.06D, 0.0D);
+			}
+
+			level.sendParticles(ModParticleTypes.SNOWFALL, to.x, to.y, to.z, 10, 0.4D, 0.4D, 0.4D, 0.02D);
 		}
 
 		level.playSound(null, from.x, from.y, from.z,
 				SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, STRIKE_VOLUME, 1.4F);
+	}
+
+	/** 打一段伤害；{@code electric} 决定伤害类型与是否触发红宝石胸针的灼伤。 */
+	private static boolean hit(ServerLevel level, ServerPlayer player, LivingEntity target,
+			double damage, boolean electric) {
+		if (damage <= 0.0D || !target.isAlive()) {
+			return false;
+		}
+
+		DamageSource source = electric
+				? SephiriaDamage.electricAttack(level, player)
+				: SephiriaDamage.iceAttack(level, player);
+		// 每段都要落地：清掉无敌帧（与触电结算同一套手法）
+		SephiriaDamage.clearDamageCooldown(target);
+		target.hurtServer(level, source, (float) damage);
+
+		if (electric && ArtifactEffects.cloudAppliesBurn(player) && target.isAlive()) {
+			Debuffs.applyBurn(target, player);
+		}
+
+		return true;
 	}
 }

@@ -74,6 +74,13 @@ import com.sephiria.backpack.ExtraBackpackRowItem;
 import com.sephiria.artifact.ProshiumRingItem;
 import com.sephiria.artifact.SealedTegasItem;
 import com.sephiria.artifact.EternalEclipseItem;
+import com.sephiria.artifact.RubyBroochItem;
+import com.sephiria.artifact.ThunderfrostButterflyItem;
+import com.sephiria.artifact.PlasmaHelmetItem;
+import com.sephiria.artifact.ScalesOfOppositionItem;
+import com.sephiria.artifact.EternalWinterItem;
+import com.sephiria.artifact.CryoGuillotineItem;
+import com.sephiria.artifact.FlickeringEyeItem;
 import com.sephiria.artifact.ExorcismScabbardItem;
 import com.sephiria.artifact.BlizzardHammerItem;
 import com.sephiria.artifact.MagicConchItem;
@@ -798,6 +805,41 @@ public final class ModItems {
 	/** 封印的特加斯（余烬 + 冰川，羁绊）：【唯一】灼伤变更为蓝色灼伤、灼伤额外伤害 +3/6/9/12%。 */
 	public static final Item SEALED_TEGAS = register(key("sealed_tegas"),
 			p -> new SealedTegasItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 红宝石胸针（乌云 + 余烬，羁绊）：【唯一】乌云闪电施加灼伤、闪电 / 火焰属性伤害各 +3/5/7/10。 */
+	public static final Item RUBY_BROOCH = register(key("ruby_brooch"),
+			p -> new RubyBroochItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 雷霜蝶（乌云 + 冰川，羁绊）：【唯一】乌云变暴风雪云、冰属性伤害 +2/4/6/8、乌云消耗速度 +6/12/18/24%。 */
+	public static final Item THUNDERFROST_BUTTERFLY = register(key("thunderfrost_butterfly"),
+			p -> new ThunderfrostButterflyItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 等离子头盔（余烬 + 魔法科技，羁绊）：【唯一】灼伤 / 触电合并成等离子体、等离子体伤害量 -15..+5%。 */
+	public static final Item PLASMA_HELMET = register(key("plasma_helmet"),
+			p -> new PlasmaHelmetItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 对立之秤（冰川 + 余烬，羁绊）：【唯一】按背包左右半边给火 / 冰属性伤害 +2..15 / +0..5。 */
+	public static final Item SCALES_OF_OPPOSITION = register(key("scales_of_opposition"),
+			p -> new ScalesOfOppositionItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 永恒的冬日（冰川 + 坚固，羁绊）：【唯一】普攻 11/16.5/24.8% 概率追加物理 + 冰属性伤害。 */
+	public static final Item ETERNAL_WINTER = register(key("eternal_winter"),
+			p -> new EternalWinterItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 酷寒断头台（冰霜武具 + 魔法科技，羁绊）：【唯一】每 6 秒召唤 4 把冰雷巨剑，触电伤害缩短冷却。 */
+	public static final Item CRYO_GUILLOTINE = register(key("cryo_guillotine"),
+			p -> new CryoGuillotineItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 闪烁的眼睛（影子 + 精密，羁绊）：【唯一】暴击充能「海市蜃楼」，满层闪避并释放混沌伤害。 */
+	public static final Item FLICKERING_EYE = register(key("flickering_eye"),
+			p -> new FlickeringEyeItem(p),
 			new Item.Properties().stacksTo(1));
 
 	/**

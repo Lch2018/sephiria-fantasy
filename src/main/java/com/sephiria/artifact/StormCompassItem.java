@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
  * 触电施加时，有 15/30/45/60% 概率施加强化触电（0..3 级）。
  *
  * <p>「强化触电」= 施加触电时立即额外触发一次触电伤害：掷中就在挂层那一刻按周期跳的公式
- * 补结算一次（见 {@code Debuffs#applyShock}），不额外延长持续时间。
+ * 补结算一次（×40% × 层数，见 {@code Debuffs#applyShock}），不额外延长持续时间。
  */
 public class StormCompassItem extends ArtifactItem {
 	/** 各等级的电元素强度加成（点）。 */

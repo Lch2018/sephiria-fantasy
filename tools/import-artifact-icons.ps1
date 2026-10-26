@@ -77,6 +77,11 @@ $slatesRef = Join-Path $root 'tools\slate-generator\inbox'
 $potionBatchRef = Join-Path $root 'tools\artifact-ref\potion_batch'
 # the six-leaf clover artifact (2026-10-19): copied-in reference again.
 $cloverRef = Join-Path $root 'tools\artifact-ref\clover'
+# the cloud-bond batch (2026-10-25): Ruby Brooch / Thunderfrost Butterfly, copied-in references.
+$cloudBondRef = Join-Path $root 'tools\artifact-ref\cloud_bond'
+# the opposition batch (2026-10-25): Plasma Helmet / Scales / Eternal Winter / Cryo Guillotine /
+# Flickering Eye, copied-in references.
+$oppositionRef = Join-Path $root 'tools\artifact-ref\opposition_batch'
 
 foreach ($dir in @($texDir, $guiDir, $previewDir)) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -1009,7 +1014,29 @@ $jobs = @(
 
     # fusion slate (2026-10-24): the icon for the combined slate made at the trader's fusion screen
     @{ name = 'slate_of_fusion'; root = 'slates'; source = 'slate_of_fusion.png';
+       target = 16; dir = 'item' },
+
+    # cloud-bond batch (2026-10-25): Ruby Brooch / Thunderfrost Butterfly
+    @{ name = 'ruby_brooch'; root = 'cloud_bond'; source = 'ruby_brooch.png';
+       target = 16; dir = 'item' },
+    @{ name = 'thunderfrost_butterfly'; root = 'cloud_bond'; source = 'thunderfrost_butterfly.png';
+       target = 16; dir = 'item' },
+
+    # opposition batch (2026-10-25): Plasma Helmet / Scales of Opposition / Eternal Winter /
+    # Cryo Guillotine / Flickering Eye
+    @{ name = 'plasma_helmet'; root = 'opposition'; source = 'plasma_helmet.png';
+       target = 16; dir = 'item' },
+    @{ name = 'scales_of_opposition'; root = 'opposition'; source = 'scales_of_opposition.png';
+       target = 16; dir = 'item' },
+    @{ name = 'eternal_winter'; root = 'opposition'; source = 'eternal_winter.png';
+       target = 16; dir = 'item' },
+    @{ name = 'cryo_guillotine'; root = 'opposition'; source = 'cryo_guillotine.png';
        target = 16; dir = 'item' }
+    # flickering_eye is intentionally NOT in the job table: the generic plate cutter treated the
+    # eye's own #222034 outline as part of the plate and cut it away. Its icon was re-cut manually
+    # (keep the #222034 outline and everything inside it, drop only the background outside the
+    # outline) and is committed as textures/item/flickering_eye.png, so a full re-import must
+    # leave it alone.
 )
 
 $skipped = @()
@@ -1024,7 +1051,7 @@ foreach ($job in $jobs) {
     $outDir = if ($job.dir -eq 'gui') { $guiDir } else { $texDir }
     $outFile = Join-Path $outDir ($name + '.png')
 
-    $sourceRoot = if ($job.root -eq 'slates') { $slatesRef } elseif ($job.root -eq 'clover') { $cloverRef } elseif ($job.root -eq 'potion_batch') { $potionBatchRef } elseif ($job.root -eq 'eclipse') { $eclipseRef } elseif ($job.root -eq 'frost') { $frostRef } elseif ($job.root -eq 'glacier') { $glacierRef } elseif ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
+    $sourceRoot = if ($job.root -eq 'slates') { $slatesRef } elseif ($job.root -eq 'cloud_bond') { $cloudBondRef } elseif ($job.root -eq 'opposition') { $oppositionRef } elseif ($job.root -eq 'clover') { $cloverRef } elseif ($job.root -eq 'potion_batch') { $potionBatchRef } elseif ($job.root -eq 'eclipse') { $eclipseRef } elseif ($job.root -eq 'frost') { $frostRef } elseif ($job.root -eq 'glacier') { $glacierRef } elseif ($job.root -eq 'wechat2') { $wechat2 } elseif ($job.root -eq 'wechat') { $wechat } elseif ($job.root -eq 'cache4') { $cache4 } elseif ($job.root -eq 'cache5') { $cache5 } elseif ($job.root -eq 'cache3') { $cache3 } elseif ($job.root -eq 'cache2') { $cache2 } else { $cache }
 
     if (-not (Test-Path $sourceRoot)) {
         # the wechat temp folder is recycled by the chat client: once a whole batch's reference

@@ -38,8 +38,6 @@ public final class ArtifactEffects {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		double total = 0.0D;
 		Map<Item, Integer> bestPerKind = new HashMap<>();
-		// 天赋「智慧」二阶段：所有神器都按【独特】结算（同种只取等级最高的那件）
-		boolean forceUnique = com.sephiria.talent.WisdomTalent.forceUnique(player);
 
 		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
 			Slot slotData = read(backpack, slot);
@@ -48,7 +46,7 @@ public final class ArtifactEffects {
 				continue;
 			}
 
-			if (slotData.artifact().unique() || forceUnique) {
+			if (slotData.artifact().unique()) {
 				bestPerKind.merge(slotData.item(), slotData.level(), Math::max);
 			} else {
 				total += slotData.artifact().physicalBonus(slotData.level());
@@ -72,7 +70,6 @@ public final class ArtifactEffects {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		double total = 0.0D;
 		Map<Item, Integer> bestPerKind = new HashMap<>();
-		boolean forceUnique = com.sephiria.talent.WisdomTalent.forceUnique(player);
 
 		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
 			Slot slotData = read(backpack, slot);
@@ -81,7 +78,7 @@ public final class ArtifactEffects {
 				continue;
 			}
 
-			if (slotData.artifact().unique() || forceUnique) {
+			if (slotData.artifact().unique()) {
 				bestPerKind.merge(slotData.item(), slotData.level(), Math::max);
 			} else {
 				total += slotData.artifact().attackSpeedBonus(slotData.level());
@@ -326,9 +323,10 @@ public final class ArtifactEffects {
 		return total;
 	}
 
-	/** 神器给的「冰元素强度」加成总和（点，可为负——麒麟的角削冰）。 */
+	/** 神器给的「冰元素强度」加成总和（点，可为负）：麒麟的角削冰 + 对立之秤按左右半边给的差额。 */
 	public static double iceElementBonus(ServerPlayer player) {
-		return sumAffix(player, SephiriaArtifact::iceElementBonus);
+		return sumAffix(player, SephiriaArtifact::iceElementBonus)
+				+ ScalesOfOppositionItem.iceElementBonus(player);
 	}
 
 	/** 连击给的「冰元素强度」加成总和（点）：并进触发者的冰元素强度面板值，冰冻那一下按它结算。 */
@@ -399,9 +397,45 @@ public final class ArtifactEffects {
 		return sumAffix(player, SephiriaArtifact::blueBurn) > 0.0D;
 	}
 
-	/** 神器给的「火元素强度」加成总和（点）：索利斯那两枚徽章，太阳剑按它换算伤害。 */
+	/** 有没有「灼伤 / 触电合并成等离子体」（等离子头盔）。 */
+	public static boolean plasmaDebuff(ServerPlayer player) {
+		return sumAffix(player, (artifact, level) -> artifact.plasmaDebuff(level) ? 1.0D : 0.0D) > 0.0D;
+	}
+
+	/** 神器给的「等离子体伤害量」加成总和（%，可为负）：等离子体两路结算都乘 (1 + 加成)。 */
+	public static double plasmaDamagePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::plasmaDamagePercent);
+	}
+
+	/** 「永恒的冬日」普通攻击命中时触发额外伤害的概率（%）。 */
+	public static double eternalWinterChance(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::eternalWinterChance);
+	}
+
+	/** 「永恒的冬日」额外伤害里的物理部分（%）：物理强度 × 它。 */
+	public static double eternalWinterPhysicalPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::eternalWinterPhysicalPercent);
+	}
+
+	/** 「永恒的冬日」额外伤害里的冰部分（%）：冰元素强度 × 它。 */
+	public static double eternalWinterIcePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::eternalWinterIcePercent);
+	}
+
+	/** 「酷寒断头台」那一下的伤害倍率（%）；0 表示没带。 */
+	public static int cryoGuillotinePercent(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::cryoGuillotinePercent);
+	}
+
+	/** 有没有「海市蜃楼」充能机制（闪烁的眼睛）。 */
+	public static boolean flickeringEye(ServerPlayer player) {
+		return sumAffix(player, (artifact, level) -> artifact.flickeringEye(level) ? 1.0D : 0.0D) > 0.0D;
+	}
+
+	/** 神器给的「火元素强度」加成总和（点）：索利斯那两枚徽章 + 对立之秤按左右半边给的差额。 */
 	public static double fireElementBonus(ServerPlayer player) {
-		return sumAffix(player, SephiriaArtifact::fireElementBonus);
+		return sumAffix(player, SephiriaArtifact::fireElementBonus)
+				+ ScalesOfOppositionItem.fireElementBonus(player);
 	}
 
 	/** 神器给的「幸运值」加成总和（点）：影响稀有及以上物品的掉落概率（商店 / 宝箱 / 抽卡）。 */
@@ -549,9 +583,19 @@ public final class ArtifactEffects {
 		return sumAffix(player, SephiriaArtifact::cloudEnhancedChance);
 	}
 
-	/** 「乌云的消耗速度」固定加成总和（%）：桅杆模型，与台风那条按攻速的比例相加。 */
+	/** 「乌云的消耗速度」固定加成总和（%）：桅杆模型、雷霜蝶，与台风那条按攻速的比例相加。 */
 	public static double cloudSpeedBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::cloudSpeedBonus);
+	}
+
+	/** 是否带「乌云的闪电给目标施加灼伤」（红宝石胸针）；按【唯一】规则汇总。 */
+	public static boolean cloudAppliesBurn(ServerPlayer player) {
+		return sumAffix(player, (artifact, level) -> artifact.cloudAppliesBurn(level) ? 1.0D : 0.0D) > 0.0D;
+	}
+
+	/** 是否带「乌云变成暴风雪云」（雷霜蝶）；按【唯一】规则汇总。 */
+	public static boolean blizzardCloud(ServerPlayer player) {
+		return sumAffix(player, (artifact, level) -> artifact.blizzardCloud(level) ? 1.0D : 0.0D) > 0.0D;
 	}
 
 	/** 「乌云攻击不消耗容量」的概率总和（%）：雷文泥板。 */
@@ -612,7 +656,6 @@ public final class ArtifactEffects {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		double total = 0.0D;
 		Map<Item, Integer> bestPerKind = new HashMap<>();
-		boolean forceUnique = com.sephiria.talent.WisdomTalent.forceUnique(player);
 
 		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
 			Slot slotData = read(backpack, slot);
@@ -621,7 +664,7 @@ public final class ArtifactEffects {
 				continue;
 			}
 
-			if (slotData.artifact().unique() || forceUnique) {
+			if (slotData.artifact().unique()) {
 				bestPerKind.merge(slotData.item(), slotData.level(), Math::max);
 			} else {
 				total += affix.at(slotData.artifact(), slotData.level());
@@ -664,7 +707,7 @@ public final class ArtifactEffects {
 	 * 连击面板就能显示等级与颜色，不用再多发一个同步包。**不含药水加成**（那份在服务端）。
 	 */
 	public static Map<ArtifactCombo, Integer> comboLevels(Container backpack, java.util.function.IntUnaryOperator slotLevels) {
-		return comboLevels(backpack, slotLevels, combo -> 0, false);
+		return comboLevels(backpack, slotLevels, combo -> 0);
 	}
 
 	/**
@@ -678,14 +721,12 @@ public final class ArtifactEffects {
 	public static Map<ArtifactCombo, Integer> comboLevels(ServerPlayer player) {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		return comboLevels(backpack, backpack::slotLevel,
-				combo -> PlayerStats.comboBonus(player, combo),
-				com.sephiria.talent.WisdomTalent.forceUnique(player));
+				combo -> PlayerStats.comboBonus(player, combo));
 	}
 
 	/** 连击计数本体：背包里数一遍，最后把 {@code bonus} 那一份（药水 / 合并给的）加上。 */
 	private static Map<ArtifactCombo, Integer> comboLevels(Container backpack,
-			java.util.function.IntUnaryOperator slotLevels, java.util.function.ToIntFunction<ArtifactCombo> bonus,
-			boolean forceUnique) {
+			java.util.function.IntUnaryOperator slotLevels, java.util.function.ToIntFunction<ArtifactCombo> bonus) {
 		Map<ArtifactCombo, Integer> levels = new EnumMap<>(ArtifactCombo.class);
 		Set<Item> uniqueCounted = new HashSet<>();
 
@@ -701,8 +742,7 @@ public final class ArtifactEffects {
 			}
 
 			// 【唯一】的同种神器只记一次；没有【唯一】的每个副本都记，所以带三本就是 +3 级。
-			// 天赋「智慧」二阶段把所有神器都当【独特】处理
-			if ((artifact.unique() || forceUnique) && !uniqueCounted.add(stack.getItem())) {
+			if (artifact.unique() && !uniqueCounted.add(stack.getItem())) {
 				continue;
 			}
 

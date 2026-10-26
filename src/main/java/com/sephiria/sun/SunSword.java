@@ -23,6 +23,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Unit;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -34,11 +35,15 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 「太阳剑」连击：用武器攻击或魔法书造成伤害时投掷一支太阳剑——不是从玩家身上飞出去的实体，
- * 而是直接在被命中的敌人身上划一道<b>笔直的发光剑痕</b>（贴图粒子，见 {@link #slash}）
- * 并结算一次火属性伤害
+ * 「太阳剑」连击：<b>赛菲莉娅武器攻击</b>（普通攻击 / 横扫 / 弩矢 / 武器技能）造成伤害时
+ * 投掷一支太阳剑——不是从玩家身上飞出去的实体，而是直接在被命中的敌人身上划一道
+ * <b>笔直的发光剑痕</b>（贴图粒子，见 {@link #slash}）并结算一次火属性伤害
  * （火元素强度面板值 × 10%，再乘连击档位的「太阳剑伤害」加成）。没有攻击间隔，
- * 每一发符合条件的伤害都会投一支（有剑可投时）。
+ * 每一发符合条件的攻击都会投一支（有剑可投时）。
+ *
+ * <p>没有永恒蚀时，<b>只有上面这条武器攻击</b>能触发；神器 / 魔法书 / 真实伤害 / 减益 /
+ * 永恒冬日等其它伤害都不触发（2026-10-26 用户定）。永恒蚀的「冰霜武具的攻击也会触发太阳剑」
+ * 走 {@link #onFrostArmamentHit} 这条单独入口。
  *
  * <p>数量（支）是这套系统的资源（见 {@link #BASE_CAPACITY}）：投一支扣一支，
  * 投出去的那支<b>会掉在被命中者脚下</b>——走过去就能捡回来（每支 +1，不超过上限），
@@ -135,13 +140,31 @@ public final class SunSword {
 	}
 
 	private static final Map<UUID, State> STATES = new HashMap<>();
+	private static int triggerLogs;
 
 	private SunSword() {
 	}
 
+	/**
+	 * 这一发是不是「赛菲莉娅武器攻击」。
+	 *
+	 * <p>{@code Kind.WEAPON} 本身已经要求伤害来源是玩家、且主手或副手拿着本模组武器
+	 * （或者直接实体是带 {@link SephiriaDamage.Source} 标记的弩矢）；这里只需再排除
+	 * 永恒冬日的额外那一下——它虽然也被归到 WEAPON，但本质是神器伤害。
+	 *
+	 * <p>不要再按 {@code getDirectEntity()} 卡玩家本人：普通攻击 / 横扫 / 部分武器技能的
+	 * 直接实体并不总是玩家，上一版就是这样把全部触发卡没了。
+	 */
+	private static boolean isSephiriaWeaponAttack(DamageSource source) {
+		return SephiriaDamage.kindOf(source) == SephiriaDamage.Kind.WEAPON
+				&& !source.is(SephiriaDamage.ETERNAL_WINTER);
+	}
+
 	/** 注册触发器与推进器（由 {@link Sephiria#onInitialize()} 调用）。 */
 	public static void register() {
-		// 触发口与「被雷击中的树枝」同一套口径：武器 / 魔法书打出的伤害（Kind.WEAPON / ARTIFACT）。
+		// 没有永恒蚀时只认赛菲莉娅的武器攻击：普通攻击 / 横扫 / 弩矢 / 武器技能。
+		// 神器 / 魔法书 / 真实伤害 / 减益 / 永恒冬日这些 Kind.WEAPON 之外的伤害，
+		// 以及同属 Kind.WEAPON 但不是武器攻击的永恒冬日，都不再触发。
 		// 没有冷却——符合条件就投一支（有剑时）；打玩家不算（连击效果不做 PVP）
 		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, blockedDamage, damageTaken, blocked) -> {
 			if (damageTaken <= 0.0F || !(source.getEntity() instanceof ServerPlayer player) || entity == player) {
@@ -150,7 +173,15 @@ public final class SunSword {
 
 			SephiriaDamage.Kind kind = SephiriaDamage.kindOf(source);
 
-			if (kind != SephiriaDamage.Kind.WEAPON && kind != SephiriaDamage.Kind.ARTIFACT) {
+			if (kind == SephiriaDamage.Kind.WEAPON && triggerLogs < 10) {
+				triggerLogs++;
+				Sephiria.LOGGER.info("[SEPHIRIA] SunSword weapon hit: direct={}, main={}, off={}",
+						source.getDirectEntity() == null ? "null" : source.getDirectEntity().getType(),
+						player.getMainHandItem().getItem(),
+						player.getOffhandItem().getItem());
+			}
+
+			if (!isSephiriaWeaponAttack(source)) {
 				return;
 			}
 
@@ -161,11 +192,18 @@ public final class SunSword {
 			// 正午磨刀石：「造成武器伤害时太阳剑额外触发 N 次」——这一下连着投 N+1 支，
 			// 每一支照常扣一支、没剑就停（throwSword 返回 false 即结束）
 			int times = 1 + ArtifactEffects.sunSwordExtraTriggers(player);
+			boolean thrown = false;
 
 			for (int index = 0; index < times; index++) {
 				if (!throwSword(player, entity)) {
 					break;
 				}
+
+				thrown = true;
+			}
+
+			if (kind == SephiriaDamage.Kind.WEAPON && triggerLogs <= 10) {
+				Sephiria.LOGGER.info("[SEPHIRIA] SunSword result: thrown={}", thrown);
 			}
 		});
 	}
@@ -179,6 +217,11 @@ public final class SunSword {
 	 * 冰霜武具这四件不算武器伤害。
 	 */
 	public static void onFrostArmamentHit(ServerPlayer player, LivingEntity target) {
+		// 这是永恒蚀的词条：没带永恒蚀（或格子等级把它压失效）时冰霜武具不触发太阳剑。
+		if (EternalEclipseItem.sideOf(player) == EternalEclipseItem.Side.NONE) {
+			return;
+		}
+
 		// 这一下已经把人打死了就别再投了：剑痕与掉落物照样会出现、剑也照扣，纯浪费一支
 		if (target instanceof Player || !target.isAlive()) {
 			return;

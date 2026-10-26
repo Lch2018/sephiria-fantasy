@@ -42,20 +42,20 @@ public class DamageReductionMixin {
 		if (kind == SephiriaDamage.Kind.TRUE) {
 			result = SephiriaDamage.applyGoldenHands(source, SephiriaDamage.applyCrit(self, source, amount));
 		} else if (kind == SephiriaDamage.Kind.ELECTRIC || kind == SephiriaDamage.Kind.FIRE
-				|| kind == SephiriaDamage.Kind.ICE) {
-			// 电属性伤害、火/冰减益伤害（灼伤、冰冻、蓝色灼伤）同样不吃减伤与黄金之手，但照掷暴击：
-			// 电属性那边是「通用 + 电属性攻击的暴击几率（麒麟的角）」，减益只用通用那一项
+				|| kind == SephiriaDamage.Kind.ICE || kind == SephiriaDamage.Kind.PLASMA) {
+			// 电属性伤害、火/冰/等离子体减益伤害同样不吃减伤与黄金之手，但照掷暴击：
+			// 电属性与等离子体是「通用 + 电属性攻击的暴击几率（麒麟的角）」，火/冰减益只用通用那一项
 			result = SephiriaDamage.applyCrit(self, source, amount);
-			} else {
-				float critted = SephiriaDamage.applyCrit(self, source, amount);
-				// 长棍的「回击后减免」是纯倍率；盾剑的防御要在这里先扣蓝（扣不起就防不住），
-				// 所以不能走 SephiriaDamage.damageMultiplier 那条不带伤害来源的纯查询
-				float multiplier = SephiriaStaffItem.damageMultiplier(self)
-						* SephiriaShieldItem.onIncomingDamage(self, source, amount);
-				// 黄金之手是攻击方的增益，接在减伤之后统一放大
-				result = SephiriaDamage.applyGoldenHands(source,
-						multiplier >= 1.0F ? critted : critted * multiplier);
-			}
+		} else {
+			float critted = SephiriaDamage.applyCrit(self, source, amount);
+			// 长棍的「回击后减免」是纯倍率；盾剑的防御要在这里先扣蓝（扣不起就防不住），
+			// 所以不能走 SephiriaDamage.damageMultiplier 那条不带伤害来源的纯查询
+			float multiplier = SephiriaStaffItem.damageMultiplier(self)
+					* SephiriaShieldItem.onIncomingDamage(self, source, amount);
+			// 黄金之手是攻击方的增益，接在减伤之后统一放大
+			result = SephiriaDamage.applyGoldenHands(source,
+					multiplier >= 1.0F ? critted : critted * multiplier);
+		}
 
 		// 根之退（难度选项，见 difficulty.RootRetreat）——两件事都作用在伤害的最后一步：
 		// ① 凶猛的爪子：敌人打到自己身上的伤害放大（只作用于被打的人自己的设置，

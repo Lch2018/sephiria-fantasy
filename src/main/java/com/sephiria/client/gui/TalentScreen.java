@@ -460,7 +460,6 @@ public class TalentScreen extends Screen {
 						lines.add(greenLine("screen.sephiria_fantasy.talent.wisdom.stage1.mp"));
 					}
 					case 1 -> {
-						lines.add(greenLine("screen.sephiria_fantasy.talent.wisdom.stage2.unique"));
 						lines.add(greenLine("screen.sephiria_fantasy.talent.wisdom.stage2.merge"));
 						lines.add(greenLine("screen.sephiria_fantasy.talent.wisdom.stage2.dice"));
 					}

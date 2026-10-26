@@ -1,58 +1,65 @@
-版本 `0.4.2-a`：从 `0.4.1-a` 之后的全部改动。
+版本 `0.4.3-a`：从 `0.4.2-a` 之后的全部改动。
 
-> 按约定，更新日志从**上一次上传并发布的版本**（`0.4.1-a`）开始写。
+> 按约定，更新日志从**上一次上传并发布的版本**（`0.4.2-a`）开始写。
 
 ## 这一版有什么
 
-### 赛菲莉娅流浪商人
+### 七件新羁绊神器
 
-- 交易改成独立的自定义界面：一排 **9 格**（7 格道具 + 2 格药水），点一格直接拿走；全部免费，每格一件、卖完不补货。
-- 打开界面时商人会被定住，关掉后恢复走动；走开 8 格以上自动关闭。商品库存仍用原版 `MerchantOffer` 的 `uses`，随存档走。
-- 去掉「点一格免费领取…」那行提示，面板相应收紧；左下角新增「石板合成」按钮。
-- 每个商人、每个玩家只能**成功合成一次**石板：用掉后按钮置灰，服务端也会拒绝再次打开。
+- **红宝石胸针**（乌云 + 余烬，【唯一】）：乌云的闪电命中后附加灼伤；闪电 / 火焰属性伤害 +3/5/7/10。
+- **雷霜蝶**（乌云 + 冰川，【唯一】）：乌云变成**暴风雪云**——每次攻击拆成电 / 冰两段双属性伤害（较高一方按普通乌云 20% 折算后 ×110%，较低一方 ×15%），冰属性伤害 +2/4/6/8、乌云消耗速度 +6/12/18/24%。
+- **等离子头盔**（余烬 + 魔法科技，【唯一】）：把灼伤与触电合并成**等离子体**（层数 / 持续时间相加、叠层不刷新、结束清层），两路伤害按火 + 电结算；新伤害类型 `sephiria:plasma`。
+- **对立之秤**（冰川 + 余烬，【唯一】）：按赛菲莉娅背包左 / 右半边分配火 / 冰属性伤害加成。
+- **永恒的冬日**（冰川 + 坚固，【唯一】）：普通攻击命中时按概率追加「物理 + 冰」的额外伤害；新伤害类型 `sephiria:eternal_winter`。
+- **酷寒断头台**（冰霜武具 + 魔法科技，【唯一】）：定期召唤冰雷巨剑，冰 + 电双属性、触发触电与冻伤，触电伤害缩短冷却。
+- **闪烁的眼睛**（影子 + 精密，【唯一】）：暴击积攒「海市蜃楼」，满层后无条件闪避下一次伤害，并对周围造成该次税前伤害 ×150% 的混沌伤害。
 
-### 石板合成（新）
+### 冰霜武具与太阳剑
 
-- 新物品 **「合成石板」**（红色 / 传说品质）：效果由参与合成的两块石板决定，图案存在物品组件里，所以每块合成石板可以不同。
-- 界面：最上面标题，中间 **7×7** 预览（一屏画完、不滚动），下面一行「两个输入格 / 合成 / 输出格」，再下面是玩家背包。
-- 输入格只收普通石板：天国、石板基础、已经合成过的合成石板都不能放。
-- 两块输入按各自当前朝向展开，同一相对格子的增量**相加**，抵消成 0 的格子丢掉；鼠标指着输入石板按 **R** 可旋转。
-- 可旋转性随输入：两块输入都可旋转，结果才能按 R 旋转；**任一输入不可旋转，结果也不可旋转**。
-- 合成石板不能再参与合成；不进宝箱 / 商店 / 许愿池 / 挖矿掉落，卖回商店也不收。
-- 每个商人每个玩家只能成功合成一次；只打开界面看看、没合成就关掉不会消耗。
-- 关界面时输入 / 输出格里剩下的东西会还给玩家。
+- **酷寒断头台并入冰霜武具**：HUD 记作「斩」（同时保留原来的冷却图标），吃冰霜武具连击的伤害 / 额外触发 / 充能速度；冰之翼让它多落剑，冰封的心脏缩短冷却。
+- **永恒蚀会改变伤害类型**：
+  - 在背包左半边时，冰霜武具（剑 / 锤 / 矛 / 弓 / 斩）整套改成火属性，伤害类型换成 `sephiria:fire_attack`。
+  - 在背包右半边时，太阳剑改成冰属性，伤害类型换成 `sephiria:ice_sun_sword`。
+- **太阳剑触发收窄**：没有永恒蚀时，只有赛菲莉娅武器攻击（普通攻击 / 横扫 / 弩矢 / 武器技能）能触发；神器 / 魔法书 / 真实伤害 / 减益 / 永恒冬日不再触发。冰霜武具触发太阳剑必须带永恒蚀。
 
-### 神器与天赋
+### 减益与伤害
 
-- 新属性 **「增加连击数量」**：每件有连击的神器默认提供 1 级连击，提示框显示「连击名 +1」（灰色）；合并一次后变 **+2**（绿色）并封顶。
-- **智慧二阶段「神器合并」重做**：等级低的那件被消耗，留下的等级 **+= 被消耗的等级 + 1**（至少 +1，夹在神器上限）；连击 +1（封顶 2）；合并后的神器就是普通神器，可以移出背包，熄灭阶段不还原；点亮阶段不再把重复神器丢出来。
-- **生存三阶段**不再扣 12 格背包；石板刻印照旧。
-- **耐心一阶段**不再发「石板基础」，改成背包第一行（前 6 格）格子等级 +1。
-- 删掉 `BackpackRules`：两类受保护物品没了，背包 / 附魔菜单的拦截与关界面光标物品回收一起删掉。
-- **石板刻印改成永久**：生存三阶段熄灭后，已刻印石板的效果仍然保留，石板也不会掉出来；阶段只决定「能不能刻」。
+- **触电重做**：持续 2 秒，默认 t=2s 单跳（每层 40% 电元素强度）；魔法科技 10 档变为 t=1s、t=2s 两跳；叠层不刷新持续时间，结束时清层。
+- **混沌伤害**：闪烁的眼睛闪避后的范围伤害，视为物理 / 火 / 冰 / 电四属性，吃物理增幅与所有元素提升。
+- **伤害显示元素集合**：武器 / 神器 = 物理；持续减益 = 单元素；带固定值的元素攻击 = 元素 + 物理；酷寒断头台 = 冰 + 电；等离子体 = 火 + 电；永恒冬日 = 物理 + 冰。
 
-### 进度页
+### 暴风雪云
 
-- 「赛菲莉娅幻想」标签页整个重做，标签页图标改为**模组图标**；旧的武器展示条目删除，新根仍用 `minecraft:tick` 解锁全部 8 张合成表。
-- 三条线：战斗（剑盾）、收集（小麦）、探索（桅杆模型）。
-  - 战斗：杀戮1（任意击杀 10）→ 匕首1（匕首击杀僵尸 5）/ 刀1（刀击杀僵尸 5）；狙击1（10 格外击杀 5）→ 弩1（弩在 10 格外击杀骷髅 3）。
-  - 收集：神器收集1（5 种高级品质及以下神器）/ 石板收集1（5 种高级品质及以下石板）。
-  - 探索：观光客1（进入过地狱和末地）/ 旅行1（经过 2 个不同群系）。
-- 计数在服务端：击杀 / 距离 / 武器 / 收集（按物品种类去重）/ 维度 / 群系；匕首、刀、弩要等父节点完成才补发。
-- 任务节点完成会弹成就、送四叶草与天赋点；根和分类节点 `show_toast:false`，不送。
-- 说明：原版进度页**不显示实时 x/10**，只显示描述里的目标数；达到目标才完成。
+- 云下持续下自定义 `snowfall` 粒子（从原版天气雪贴图裁切，行为继承雪花粒子）。
+- 地面效果每 5 秒触发：玩家周围 4 格随机挑 1 个露天水源结冰、3 个露天实心方块上方铺雪 / 叠雪（最多 8 层），只处理能看到天空的方块。
+- **红石检测**：玩家周围 20 格内有红石元件、箱子等容器或红石物品时，地面效果整段跳过；自动索敌排除船 / 矿车上的单位。
+
+### HUD 与设置
+
+- 新增**技能 HUD**（6 个技能栏图标、顺时针冷却扫光、完成闪光）与**神器 HUD**（冷却 / 充能图标）。
+- 两个 HUD 都从右向左排列、右边缘固定，新图标加在左边不挤动旧图标；所有模块支持 0.5~2.0 缩放，并按缩放后尺寸夹在屏幕内。
+- **H 键**打开「赛菲莉娅 Mod 设置」：内含 HUD 布局设置与伤害显示设置。
+- 伤害显示：亮度、大小、税前伤害；「发光」已移除。
+- 装了 **ModMenu** 时，也可以从模组列表的「配置」按钮打开同一个设置界面。
+
+### ToroHealth-Continued 兼容（可选）
+
+- 浮动伤害数字按元素集合显示单色：物理 `#C0C0C0`、火 `#EDB12E`、冰 `#6499E8`、电 `#7EFAFF`、混沌 `#741B7C`、真伤 `#FFFFFF`；
+  组合色：火电 `#EE8AF8`、冰物理 `#16417C`、冰电 `#3282F6`、火物理 `#F08784`、电物理 `#5A879E`、火冰 `#EF88BE`、冰火电 `#7F82BB`、火电物理 `#FFFD55`、冰电物理 `#3282F6`、火冰物理 `#EA3FF7`。
+- 暴击数字放大 2 倍；左上角 HUD 的血量变化数字使用同一套颜色。
+- 修了 26.3 里 ToroHealth 文字提交过晚的问题（在 `prepareFrame` 之前消费它的 `TextRenderQueue`）。
+- 兼容层完全可选：没装 ToroHealth 时不会加载相关类，也不会影响正常游戏。
 
 ## 已知问题 / 未完成
 
-- 大部分内容仍未经充分实测，数值与手感还在调整。
-- 进度页不显示实时计数；要实时 `x/10` 需要另做 HUD 或自定义进度界面。
+- A 测阶段，大部分内容仍未充分实测，数值与手感还会调整。
+- 部分旧武器 / 神器只有手持 3D 模型，背包图标仍是 2D。
 - 石板升级、锻造、同伴系统尚未实现。
-- 四把武器只换了手持 3D 模型，背包 / 地面图标仍是旧的 2D 图。
-- 石板合成、进度页、商人一次限制都是本版新增，尚未进游戏验收。
+- ToroHealth 的数字渲染依赖它的内部类，升级 ToroHealth 大版本后可能需要重新核对。
 
 ## 运行环境
 
-Minecraft 26.3 + Fabric Loader 0.19.5 + Fabric API + GeckoLib（必需，客户端与服务端都要装）。
+Minecraft 26.3 + Fabric Loader 0.19.5+ + Fabric API + GeckoLib（必需，客户端与服务端都要装）。ModMenu 与 ToroHealth-Continued 都是可选。
 
 ## 声明
 
@@ -62,62 +69,67 @@ Minecraft 26.3 + Fabric Loader 0.19.5 + Fabric API + GeckoLib（必需，客户�
 
 ## English
 
-Version `0.4.2-a`: everything after `0.4.1-a`.
+Version `0.4.3-a`: everything after `0.4.2-a`.
 
-> By convention this changelog starts from the previously uploaded and released version (`0.4.1-a`).
+> By convention this changelog starts from the previously uploaded and released version (`0.4.2-a`).
 
-### What's in this version
+### Seven new bond artifacts
 
-#### Sephiria Wandering Trader
+- **Ruby Brooch** (Dark Cloud + Embers, Unique): Dark Cloud lightning applies Burn; Lightning / Fire damage +3/5/7/10.
+- **Thunderfrost Butterfly** (Dark Cloud + Glacier, Unique): the cloud becomes a **Blizzard Cloud** — each attack is split into Electric and Ice damage (the higher element at 110% of 20% of a normal cloud strike, the lower at 15%), Ice damage +2/4/6/8, cloud consumption speed +6/12/18/24%.
+- **Plasma Helmet** (Embers + Magitech, Unique): Burn and Shock merge into **Plasma** (stacks / duration add, restacking does not refresh, cleared at the end); both damage paths use Fire + Lightning; new damage type `sephiria:plasma`.
+- **Scales of Opposition** (Glacier + Embers, Unique): Fire / Ice damage bonuses are assigned by which half of the Sephiria Backpack the artifact occupies.
+- **Eternal Winter** (Glacier + Sturdy, Unique): normal attacks have a chance to add Physical + Ice damage; new damage type `sephiria:eternal_winter`.
+- **Cryo Guillotine** (Frost Armament + Magitech, Unique): periodically summons an ice-lightning greatsword; Ice + Lightning damage, triggers Shock and Frostbite, and Shock damage shortens its cooldown.
+- **Flickering Eye** (Shadow + Precision, Unique): crits build Mirage; at full charge the next damage taken is dodged unconditionally and deals 150% of that pre-tax damage as Chaos damage around the player.
 
-- Trading now uses a dedicated custom screen: a row of **9 slots** (7 goods + 2 potions), click a slot to take the item. Everything is free, one item per slot, never restocked.
-- The trader is held in place while the screen is open and resumes walking when it closes; walking more than 8 blocks away closes the screen. Stock still uses the vanilla `MerchantOffer` `uses`, saved with the world.
-- The "click a slot to take it for free" hint was removed and the panel tightened accordingly. A **Slate Fusion** button was added at the bottom-left.
-- **Each player can successfully fuse slates only once per trader**: after that the button is greyed out and the server rejects opening the fusion screen again.
+### Frost Armament and Sun Sword
 
-#### Slate Fusion (new)
+- **Cryo Guillotine now belongs to Frost Armament**: shown as "Slash" in the HUD (the original cooldown icon is kept), and it benefits from Frost Armament damage / extra triggers / charge speed; Ice Wings adds extra swords, Frozen Heart shortens the cooldown.
+- **Eternal Eclipse changes damage types**:
+  - In the left half of the backpack, Frost Armament (sword / hammer / spear / bow / slash) becomes Fire and uses `sephiria:fire_attack`.
+  - In the right half, the Sun Sword becomes Ice and uses `sephiria:ice_sun_sword`.
+- **Sun Sword trigger narrowed**: without Eternal Eclipse only Sephiria weapon attacks (normal attack / sweep / crossbow bolt / weapon skills) trigger it; artifacts, books, true damage, debuffs and Eternal Winter no longer trigger it. Frost Armament triggers the Sun Sword only while Eternal Eclipse is carried.
 
-- New item **Fusion Slate** (red / Legendary): its effect is decided by the two slates used in the fusion. The pattern is stored in an item component, so every Fusion Slate can be different.
-- Screen: title at the top, a **7×7** preview in the middle (fully visible, no scrolling), then a row with two input slots / Fuse button / output slot, and the player inventory below.
-- Input slots accept regular slates only: Heaven, Slate Base and already-fused slates are rejected.
-- Both inputs are expanded using their current rotation, and deltas on the same relative cell are **added**; cells that cancel to 0 are dropped. Hover an input slate and press **R** to rotate it.
-- Rotatability follows the inputs: the result can be rotated only if both inputs are rotatable; **if either input cannot rotate, the result cannot rotate either**.
-- Fusion Slates cannot be used in another fusion, are not in chests / shops / the wish pool / mining drops, and cannot be sold back to the shop.
-- Each player can successfully fuse only once per trader; merely opening the screen and closing it without fusing does not consume the chance.
-- Closing the screen returns anything left in the input / output slots to the player.
+### Debuffs and damage
 
-#### Artifacts and talents
+- **Shock reworked**: lasts 2 s, one tick at t=2s by default (40% Lightning element per stack); Magitech tier 10 changes it to ticks at t=1s and t=2s; restacking does not refresh duration and stacks clear at the end.
+- **Chaos damage**: the Flickering Eye's dodge retaliation counts as Physical / Fire / Ice / Lightning, benefiting from Physical amplification and all-element bonuses.
+- **Damage element sets**: weapons / artifacts = Physical; periodic debuffs = one element; flat elemental attacks = element + Physical; Cryo Guillotine = Ice + Lightning; Plasma = Fire + Lightning; Eternal Winter = Physical + Ice.
 
-- New property **Combo Count**: every artifact with a combo provides 1 combo level by default, shown as "combo +1" in grey; after one merge it becomes **+2** (green) and is capped there.
-- **Wisdom stage 2 "artifact merge" was reworked**: the lower-level artifact is consumed and the remaining one gains **the consumed artifact's level + 1** (at least +1, capped at the artifact's maximum); combo count +1 (capped at 2). The merged artifact is a normal artifact: it can be moved out of the backpack and toggling the talent stage off does not restore the consumed copy. Lighting the stage no longer throws duplicate artifacts out.
-- **Survival stage 3** no longer removes 12 backpack slots; slate imprinting is unchanged.
-- **Patience stage 1** no longer gives a Slate Base; instead the first backpack row (6 slots) gets +1 slot level.
-- `BackpackRules` was removed: the two protected item types are gone, and the menu blocking / cursor-item return logic was removed with them.
-- **Slate imprinting is now permanent**: turning Survival stage 3 off no longer reverts imprinted slate effects or drops the slates; the stage only decides whether imprinting is allowed.
+### Blizzard Cloud
 
-#### Progress tab
+- Custom `snowfall` particles fall under the cloud (cut from the vanilla weather snow texture, inheriting snowflake particle behavior).
+- Ground effects every 5 s: within 4 blocks of the player, freeze 1 exposed water source and place / stack snow on 3 exposed solid blocks (up to 8 layers), only on blocks that can see the sky.
+- **Redstone detection**: if any redstone component, chest-like container or redstone item is within 20 blocks, ground effects are skipped entirely; auto-targeting ignores entities in boats / minecarts.
 
-- The "Sephiria Fantasy" advancement tab was rebuilt; the tab icon is now the **mod icon**. The old weapon display entries were removed, and the new root still unlocks all 8 recipes with `minecraft:tick`.
-- Three lines: Combat (sword and shield), Collection (wheat), Exploration (mast model).
-  - Combat: Slaughter I (kill any mob 10) → Dagger I (kill 5 zombies with a Dagger) / Blade I (kill 5 zombies with a Blade); Snipe I (kill 5 from at least 10 blocks away) → Crossbow I (kill 3 skeletons with a Colossal Crossbow from at least 10 blocks away).
-  - Collection: Artifact Collection I (5 different artifacts of Advanced rarity or lower) / Slate Collection I (5 different slates of Advanced rarity or lower).
-  - Exploration: Tourist I (visit the Nether and the End) / Traveler I (visit 2 different biomes).
-- Counting is server-side: kills / distance / weapon / collection (deduplicated by item type) / dimensions / biomes. Dagger I, Blade I and Crossbow I are only granted after their parent advancement is done.
-- Task advancements show a toast and award a clover and a talent point when completed; the root and category nodes use `show_toast:false` and award nothing.
-- Note: the vanilla advancement screen does **not** show live `x/10` counters; it only shows the target in the description and completes when reached.
+### HUD and settings
+
+- New **skill HUD** (6 skill slots, clockwise cooldown sweep, completion flash) and **artifact HUD** (cooldown / charge icons).
+- Both HUDs are right-aligned and fill right-to-left: new icons appear to the left without moving existing ones. Every module supports 0.5–2.0 scaling and is clamped inside the screen after scaling.
+- **H** opens "Sephiria Mod Settings", containing HUD layout and Damage Display settings.
+- Damage Display: brightness, size, pre-tax damage; the "glow" option was removed.
+- With **ModMenu** installed, the same settings screen can be opened from the mod list's "Config" button.
+
+### ToroHealth-Continued compatibility (optional)
+
+- Floating damage numbers use a single color chosen from the element set: Physical `#C0C0C0`, Fire `#EDB12E`, Ice `#6499E8`, Lightning `#7EFAFF`, Chaos `#741B7C`, True `#FFFFFF`;
+  combinations: Fire+Lightning `#EE8AF8`, Ice+Physical `#16417C`, Ice+Lightning `#3282F6`, Fire+Physical `#F08784`, Lightning+Physical `#5A879E`, Fire+Ice `#EF88BE`, Ice+Fire+Lightning `#7F82BB`, Fire+Lightning+Physical `#FFFD55`, Ice+Lightning+Physical `#3282F6`, Fire+Ice+Physical `#EA3FF7`.
+- Critical hits are drawn at 2× size; the top-left HUD health-change number uses the same colors.
+- Fixed ToroHealth's text being submitted too late on 26.3 (its `TextRenderQueue` is now consumed before `prepareFrame`).
+- Completely optional: no ToroHealth classes are loaded when it is absent, and normal gameplay is unaffected.
 
 ### Known issues / not done yet
 
-- Most content has not been playtested thoroughly; numbers and feel are still being tuned.
-- The progress tab has no live counters; showing live `x/10` would need a HUD or a custom progress screen.
+- Alpha stage: most content has not been playtested thoroughly; numbers and feel are still being tuned.
+- Some older weapons / artifacts only have new in-hand 3D models; inventory icons are still 2D.
 - Slate upgrades, forging and the companion system are not implemented yet.
-- The four weapons only have new in-hand 3D models; the inventory / ground icons are still the old 2D art.
-- Slate fusion, the progress tab and the per-trader fusion limit are all new in this version and still need in-game acceptance testing.
+- Damage-number rendering depends on ToroHealth internals; a major ToroHealth update may require re-checking the hooks.
 
 ### Requirements
 
-Minecraft 26.3 + Fabric Loader 0.19.5 + Fabric API + GeckoLib (required on both client and server).
+Minecraft 26.3 + Fabric Loader 0.19.5+ + Fabric API + GeckoLib (required on both client and server). ModMenu and ToroHealth-Continued are optional.
 
-### Disclaimer
+### Notice
 
-A fan mod, not an official work; heavily AI-generated code; **any commercial use is forbidden** (see the project description and LICENSE).
+Unofficial fan mod; heavy use of AI-generated code; **commercial use is not allowed** (see the project description and LICENSE).

@@ -19,6 +19,11 @@ dependencies {
 	// GeckoLib（骨骼动画）从本地 libs\ 引入：刀的模型/动画由 Blockbench 的 GeckoLib
 	// 格式导出，游戏内播放需要它。文件同时也放在 PCL 的 mods 目录里。
 	implementation files('libs/geckolib-fabric-26.3-5.5.6.jar')
+
+	// 只有编译期需要：ModMenu / ToroHealth 在游戏里由玩家自行安装，
+	// 对应入口 / mixin 类也只在它们存在时才会被加载。跟 GeckoLib 一样从 libs\ 取。
+	compileOnly files('libs/modmenu-21.0.0.jar')
+	compileOnly files('libs/torohealth-continued-26.3-1.5.2.jar')
 }
 
 processResources {
