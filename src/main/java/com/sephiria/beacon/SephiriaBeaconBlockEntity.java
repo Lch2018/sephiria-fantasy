@@ -3,7 +3,6 @@ package com.sephiria.beacon;
 import com.sephiria.registry.ModBlockEntities;
 import com.sephiria.registry.ModItems;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -100,7 +99,6 @@ public class SephiriaBeaconBlockEntity extends BlockEntity implements Container 
 		return 3;
 	}
 
-	@Override
 	public int getMaxStackSize(ItemStack stack) {
 		return stack.is(ModItems.ENCHANT_COIN) ? 3 : 1;
 	}
@@ -126,19 +124,20 @@ public class SephiriaBeaconBlockEntity extends BlockEntity implements Container 
 	}
 
 	@Override
-	protected void saveAdditional(CompoundTag output, HolderLookup.Provider registries) {
-		super.saveAdditional(output, registries);
-		// ItemStack.CODEC 不允许空气（0 个物品）；空容器就不写这个字段，读的时候缺省为空
+	protected void saveAdditional(CompoundTag output) {
+		super.saveAdditional(output);
+		// 空容器就不写这个字段，读的时候缺省为空
 		if (!this.item.isEmpty()) {
-			output.put(KEY_ITEM, this.item.saveOptional(registries));
+			// 1.20.1 用 NBT 存物品：save 会把 id/Count/tag 一起写进去
+			output.put(KEY_ITEM, this.item.save(new CompoundTag()));
 		}
 	}
 
 	@Override
-	protected void loadAdditional(CompoundTag input, HolderLookup.Provider registries) {
-		super.loadAdditional(input, registries);
+	public void load(CompoundTag input) {
+		super.load(input);
 		this.item = input.contains(KEY_ITEM)
-				? ItemStack.parseOptional(registries, input.getCompound(KEY_ITEM))
+				? ItemStack.of(input.getCompound(KEY_ITEM))
 				: ItemStack.EMPTY;
 
 		if (!this.item.isEmpty()) {
@@ -147,8 +146,8 @@ public class SephiriaBeaconBlockEntity extends BlockEntity implements Container 
 	}
 
 	@Override
-	public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-		return this.saveCustomOnly(registries);
+	public CompoundTag getUpdateTag() {
+		return this.saveWithoutMetadata();
 	}
 
 	@Override

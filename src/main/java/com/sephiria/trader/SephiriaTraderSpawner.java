@@ -9,7 +9,8 @@ import net.minecraft.tags.BiomeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.SpawnPlacementTypes;
+import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.entity.ai.village.poi.PoiTypes;
 import net.minecraft.world.level.GameRules;
@@ -198,7 +199,7 @@ public final class SephiriaTraderSpawner {
 			int z = center.getZ() + this.random.nextInt(radius * 2 + 1) - radius;
 			candidate.set(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
 
-			if (SpawnPlacementTypes.ON_GROUND.isSpawnPositionOk(level, candidate,
+			if (NaturalSpawner.isSpawnPositionOk(SpawnPlacements.Type.ON_GROUND, level, candidate,
 					ModEntities.SEPHIRIA_WANDERING_TRADER)) {
 				return candidate.immutable();
 			}

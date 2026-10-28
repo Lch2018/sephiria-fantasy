@@ -63,8 +63,8 @@ public class MagicConchItem extends ArtifactItem {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.frost_armament_damage",
 						Component.literal(Numbers.format(this.frostArmamentDamagePercent(level)))
-								.withColor(COLOUR_BONUS)),
+								.withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.crit_damage",
-						Component.literal(Numbers.format(this.critDamageBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.critDamageBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

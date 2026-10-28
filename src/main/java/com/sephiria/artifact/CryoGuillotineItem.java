@@ -8,7 +8,6 @@ import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.util.Numbers;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -133,7 +132,7 @@ public class CryoGuillotineItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		Component percent = Component.literal(Numbers.format(this.cryoGuillotinePercent(level)))
-				.withColor(COLOUR_BONUS);
+				.withStyle(style -> style.withColor(COLOUR_BONUS));
 
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.cryo_guillotine", percent),
@@ -298,8 +297,8 @@ public class CryoGuillotineItem extends ArtifactItem {
 		data.set(Display.DATA_BRIGHTNESS_OVERRIDE_ID, BRIGHTNESS_OVERRIDE);
 		// 原版剑图标朝右上；顺时针 135° 后剑尖朝下（负角 = 从正面看的顺时针）
 		data.set(Display.DATA_LEFT_ROTATION_ID, new Quaternionf().rotateZ((float) Math.toRadians(-135.0D)));
-		data.set(Display.DATA_TRANSFORMATION_INTERPOLATION_DURATION_ID, 2);
-		data.set(Display.DATA_POS_ROT_INTERPOLATION_DURATION_ID, 2);
+		data.set(Display.DATA_INTERPOLATION_DURATION_ID, 2);
+		data.set(Display.DATA_INTERPOLATION_DURATION_ID, 2);
 		body.setPos(at.x, at.y, at.z);
 		body.setNoGravity(true);
 		body.setSilent(true);

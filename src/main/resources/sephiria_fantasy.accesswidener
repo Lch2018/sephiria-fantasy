@@ -1,0 +1,16 @@
+accessWidener v2 named
+
+# 26.3 的 Display 同步数据字段/设值方法是公开的，1.20.1 还是 private。
+# 特效实体（陨石、断头台、蛇眼等）要直接改展示实体的缩放/朝向/物品，这里按字段打开。
+accessible field net/minecraft/world/entity/Display DATA_INTERPOLATION_DURATION_ID Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible field net/minecraft/world/entity/Display DATA_TRANSLATION_ID Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible field net/minecraft/world/entity/Display DATA_SCALE_ID Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible field net/minecraft/world/entity/Display DATA_LEFT_ROTATION_ID Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible field net/minecraft/world/entity/Display DATA_RIGHT_ROTATION_ID Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible field net/minecraft/world/entity/Display DATA_BRIGHTNESS_OVERRIDE_ID Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible field net/minecraft/world/entity/Display$ItemDisplay DATA_ITEM_STACK_ID Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible field net/minecraft/world/entity/Display$ItemDisplay DATA_ITEM_DISPLAY_ID Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible field net/minecraft/world/entity/Display$BlockDisplay DATA_BLOCK_STATE_ID Lnet/minecraft/network/syncher/EntityDataAccessor;
+accessible method net/minecraft/world/entity/Display$ItemDisplay setItemStack (Lnet/minecraft/world/item/ItemStack;)V
+accessible method net/minecraft/world/entity/Display$ItemDisplay setItemTransform (Lnet/minecraft/world/item/ItemDisplayContext;)V
+accessible method net/minecraft/world/entity/Display$BlockDisplay setBlockState (Lnet/minecraft/world/level/block/state/BlockState;)V

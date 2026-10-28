@@ -1,15 +1,9 @@
 package com.sephiria.slate;
 
-import com.mojang.serialization.Codec;
-import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactRarity;
+import com.sephiria.compat.ItemData;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -30,22 +24,10 @@ import java.util.List;
  */
 public class FusedSlateItem extends PatternSlateItem {
 	/** 合并后的图案（相对坐标 + 增量）。网络同步是必须的：合成界面要在客户端画预览。 */
-	public static final DataComponentType<List<Cell>> PATTERN = Registry.register(
-			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "fused_slate_pattern"),
-			DataComponentType.<List<Cell>>builder()
-					.persistent(Cell.CODEC.listOf())
-					.networkSynchronized(Cell.STREAM_CODEC.apply(ByteBufCodecs.list()))
-					.build());
+	public static final String PATTERN = "fused_slate_pattern";
 
 	/** 合成结果能不能按 R 旋转：两块输入都可旋转才为 true。 */
-	public static final DataComponentType<Boolean> ROTATABLE = Registry.register(
-			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "fused_slate_rotatable"),
-			DataComponentType.<Boolean>builder()
-					.persistent(Codec.BOOL)
-					.networkSynchronized(ByteBufCodecs.BOOL)
-					.build());
+	public static final String ROTATABLE = "fused_slate_rotatable";
 
 	public FusedSlateItem(Properties properties) {
 		// 品质按用户口径是红色（传说）；图案与可旋转性都来自组件，构造时的默认值只是兜底
@@ -55,13 +37,13 @@ public class FusedSlateItem extends PatternSlateItem {
 
 	@Override
 	public List<Cell> pattern(ItemStack stack) {
-		return stack.getOrDefault(PATTERN, List.of());
+		return ItemData.getCells(stack, PATTERN);
 	}
 
 	@Override
 	public boolean rotatable(ItemStack stack) {
 		// 没有组件的合成石板（命令 / 旧数据）按不可旋转处理，免得绕过「输入有固定石板」的规则
-		return stack.getOrDefault(ROTATABLE, false);
+		return ItemData.getBoolean(stack, ROTATABLE, false);
 	}
 
 	/** 图案 +（空图案时的「无效果」）+ 自动生成的描述 +「获取方式」那一行。 */
@@ -73,7 +55,7 @@ public class FusedSlateItem extends PatternSlateItem {
 
 		if (pattern(stack).isEmpty()) {
 			lines.add(Component.translatable("artifact.sephiria_fantasy.slate_of_fusion.no_effect")
-					.withColor(0xFFFF5555));
+					.withStyle(style -> style.withColor(0xFFFF5555)));
 		}
 
 		lines.addAll(super.effectLines(stack));

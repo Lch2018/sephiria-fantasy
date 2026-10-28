@@ -297,10 +297,9 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 	 * 是故意抛异常的（必须走带开屏数据的那条路）。这里没有额外数据，用 {@code Unit} 占位。
 	 */
 	public static MenuProvider provider(ServerPlayer player) {
-		return new ExtendedScreenHandlerFactory<Unit>() {
+		return new ExtendedScreenHandlerFactory() {
 			@Override
-			public Unit getScreenOpeningData(ServerPlayer ignored) {
-				return Unit.INSTANCE;
+			public void writeScreenOpeningData(ServerPlayer ignored, net.minecraft.network.FriendlyByteBuf buf) {
 			}
 
 			@Override

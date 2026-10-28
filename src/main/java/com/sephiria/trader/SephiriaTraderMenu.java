@@ -135,10 +135,9 @@ public class SephiriaTraderMenu extends AbstractContainerMenu {
 		trader.setTradingPlayer(player);
 		// ⚠ 菜单是用 ExtendedScreenHandlerType 注册的，必须用 ExtendedScreenHandlerFactory 打开
 		// （SimpleMenuProvider 会直接抛「must be opened with an ExtendedScreenHandlerFactory!」）
-		player.openMenu(new ExtendedScreenHandlerFactory<Unit>() {
+		player.openMenu(new ExtendedScreenHandlerFactory() {
 			@Override
-			public Unit getScreenOpeningData(ServerPlayer ignored) {
-				return Unit.INSTANCE;
+			public void writeScreenOpeningData(ServerPlayer ignored, net.minecraft.network.FriendlyByteBuf buf) {
 			}
 
 			@Override

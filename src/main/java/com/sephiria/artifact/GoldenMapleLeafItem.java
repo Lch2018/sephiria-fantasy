@@ -51,6 +51,6 @@ public class GoldenMapleLeafItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.xp_drop",
-				Component.literal(Numbers.format(this.xpDropPercentBonus(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(this.xpDropPercentBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

@@ -1,5 +1,6 @@
 package com.sephiria.artifact;
 
+import com.sephiria.network.HudSyncPayload;
 import com.sephiria.artifact.skill.ArtifactSkills;
 import com.sephiria.artifact.skill.SkillSlots;
 import com.sephiria.registry.ModItems;
@@ -98,7 +99,7 @@ public final class ArtifactHud {
 
 		if (charge >= 0.0D) {
 			entries.add(new HudSyncPayload.Entry(BuiltInRegistries.ITEM.getKey(ModItems.FLICKERING_EYE),
-					-1, -1, (int) Math.round(Math.clamp(charge / 100.0D, 0.0D, 1.0D) * 1000.0D)));
+					-1, -1, (int) Math.round(net.minecraft.util.Mth.clamp(charge / 100.0D, 0.0D, 1.0D) * 1000.0D)));
 		}
 
 		return entries;

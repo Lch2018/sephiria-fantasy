@@ -14,7 +14,6 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Unit;
 import net.minecraft.world.inventory.MenuType;
 
 /**
@@ -29,74 +28,56 @@ import net.minecraft.world.inventory.MenuType;
 public final class ModMenus {
 	public static final MenuType<ArtifactBackpackMenu> ARTIFACT_BACKPACK = Registry.register(
 			BuiltInRegistries.MENU,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_backpack"),
-			new ExtendedScreenHandlerType<ArtifactBackpackMenu, Unit>(
-					(id, inventory, data) -> new ArtifactBackpackMenu(id, inventory),
-					net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+			new ResourceLocation(Sephiria.MOD_ID, "artifact_backpack"),
+			new ExtendedScreenHandlerType<ArtifactBackpackMenu>((id, inventory, data) -> new ArtifactBackpackMenu(id, inventory)));
 
 	/** 神器附魔面板（神器附魔币右键打开）。 */
 	public static final MenuType<EnchantMenu> ARTIFACT_ENCHANT = Registry.register(
 			BuiltInRegistries.MENU,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_enchant"),
-			new ExtendedScreenHandlerType<EnchantMenu, Unit>(
-					(id, inventory, data) -> new EnchantMenu(id, inventory),
-					net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+			new ResourceLocation(Sephiria.MOD_ID, "artifact_enchant"),
+			new ExtendedScreenHandlerType<EnchantMenu>((id, inventory, data) -> new EnchantMenu(id, inventory)));
 
 	/** 宝箱页面（神器 / 石板 / 升级宝箱右键打开）。 */
 	public static final MenuType<ChestMenu> CHEST = Registry.register(
 			BuiltInRegistries.MENU,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "chest"),
-			new ExtendedScreenHandlerType<ChestMenu, Unit>(
-					(id, inventory, data) -> new ChestMenu(id, inventory),
-					net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+			new ResourceLocation(Sephiria.MOD_ID, "chest"),
+			new ExtendedScreenHandlerType<ChestMenu>((id, inventory, data) -> new ChestMenu(id, inventory)));
 
 	/** 根之退界面（石碑方块右键打开）。 */
 	public static final MenuType<RootRetreatMenu> ROOT_RETREAT = Registry.register(
 			BuiltInRegistries.MENU,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat"),
-			new ExtendedScreenHandlerType<RootRetreatMenu, Unit>(
-					(id, inventory, data) -> new RootRetreatMenu(id, inventory),
-					net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+			new ResourceLocation(Sephiria.MOD_ID, "root_retreat"),
+			new ExtendedScreenHandlerType<RootRetreatMenu>((id, inventory, data) -> new RootRetreatMenu(id, inventory)));
 
 	/** 许愿池界面（水池方块右键打开）。 */
 	public static final MenuType<WishPoolMenu> WISH_POOL = Registry.register(
 			BuiltInRegistries.MENU,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool"),
-			new ExtendedScreenHandlerType<WishPoolMenu, Unit>(
-					(id, inventory, data) -> new WishPoolMenu(id, inventory),
-					net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+			new ResourceLocation(Sephiria.MOD_ID, "wish_pool"),
+			new ExtendedScreenHandlerType<WishPoolMenu>((id, inventory, data) -> new WishPoolMenu(id, inventory)));
 
 	/** 商店页面（原版背包里的「商店」标签页）。 */
 	public static final MenuType<ShopMenu> SHOP = Registry.register(
 			BuiltInRegistries.MENU,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "shop"),
-			new ExtendedScreenHandlerType<ShopMenu, Unit>(
-					(id, inventory, data) -> new ShopMenu(id, inventory),
-					net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+			new ResourceLocation(Sephiria.MOD_ID, "shop"),
+			new ExtendedScreenHandlerType<ShopMenu>((id, inventory, data) -> new ShopMenu(id, inventory)));
 
 	/** 赛菲莉娅流浪商人的交易界面（右键商人打开；自定义，不再用原版交易页）。 */
 	public static final MenuType<SephiriaTraderMenu> TRADER = Registry.register(
 			BuiltInRegistries.MENU,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "trader"),
-			new ExtendedScreenHandlerType<SephiriaTraderMenu, Unit>(
-					(id, inventory, data) -> new SephiriaTraderMenu(id, inventory),
-					net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+			new ResourceLocation(Sephiria.MOD_ID, "trader"),
+			new ExtendedScreenHandlerType<SephiriaTraderMenu>((id, inventory, data) -> new SephiriaTraderMenu(id, inventory)));
 
 	/** 石板合成界面（商人界面左下角的按钮打开）。 */
 	public static final MenuType<SlateFusionMenu> SLATE_FUSION = Registry.register(
 			BuiltInRegistries.MENU,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_fusion"),
-			new ExtendedScreenHandlerType<SlateFusionMenu, Unit>(
-					(id, inventory, data) -> new SlateFusionMenu(id, inventory),
-					net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+			new ResourceLocation(Sephiria.MOD_ID, "slate_fusion"),
+			new ExtendedScreenHandlerType<SlateFusionMenu>((id, inventory, data) -> new SlateFusionMenu(id, inventory)));
 
 	/** 赛菲莉娅信标的单格容器界面。 */
 	public static final MenuType<SephiriaBeaconMenu> SEPHIRIA_BEACON = Registry.register(
 			BuiltInRegistries.MENU,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_beacon"),
-			new ExtendedScreenHandlerType<SephiriaBeaconMenu, Unit>(
-					(id, inventory, data) -> new SephiriaBeaconMenu(id, inventory),
-					net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+			new ResourceLocation(Sephiria.MOD_ID, "sephiria_beacon"),
+			new ExtendedScreenHandlerType<SephiriaBeaconMenu>((id, inventory, data) -> new SephiriaBeaconMenu(id, inventory)));
 
 	private ModMenus() {
 	}

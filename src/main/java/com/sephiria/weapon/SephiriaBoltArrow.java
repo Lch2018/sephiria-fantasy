@@ -37,8 +37,8 @@ public class SephiriaBoltArrow extends Arrow implements SephiriaDamage.Source {
 	/** 已经命中过的目标 id：穿透时同一目标只结算一次。 */
 	private final Set<Integer> hitTargets = new HashSet<>();
 
-	public SephiriaBoltArrow(Level level, LivingEntity shooter, ItemStack weapon) {
-		super(level, shooter, new ItemStack(ModItems.CROSSBOW_BOLT), weapon);
+	public SephiriaBoltArrow(Level level, LivingEntity shooter) {
+		super(level, shooter);
 	}
 
 	@Override

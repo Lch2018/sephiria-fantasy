@@ -32,3 +32,7 @@ jar {
 	from("LICENSE") { rename { "${it}_$projectName" } }
 }
 tasks.named('test') { failOnNoDiscoveredTests = false }
+
+loom {
+	accessWidenerPath = file('src/main/resources/sephiria_fantasy.accesswidener')
+}

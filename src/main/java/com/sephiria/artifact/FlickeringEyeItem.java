@@ -4,7 +4,6 @@ import com.sephiria.util.ParticleColors;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.util.Numbers;
-import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -97,8 +96,8 @@ public class FlickeringEyeItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
-		Component charge = Component.literal(Numbers.format(FULL)).withColor(COLOUR_BONUS);
-		Component damage = Component.literal(Numbers.format(DAMAGE_PERCENT)).withColor(COLOUR_BONUS);
+		Component charge = Component.literal(Numbers.format(FULL)).withStyle(style -> style.withColor(COLOUR_BONUS));
+		Component damage = Component.literal(Numbers.format(DAMAGE_PERCENT)).withStyle(style -> style.withColor(COLOUR_BONUS));
 
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.flickering_eye_charge", charge),

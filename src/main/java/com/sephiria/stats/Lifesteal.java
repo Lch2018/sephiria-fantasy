@@ -20,7 +20,7 @@ public final class Lifesteal {
 	}
 
 	public static void register() {
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, blockedDamage, damageTaken, blocked) -> {
+		com.sephiria.compat.DamageEvents.registerAfterDamage((entity, source, blockedDamage, damageTaken, blocked) -> {
 			if (damageTaken <= 0.0F || !(source.getEntity() instanceof ServerPlayer player)) {
 				return;
 			}

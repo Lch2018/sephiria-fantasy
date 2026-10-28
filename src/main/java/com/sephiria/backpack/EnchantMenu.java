@@ -192,10 +192,9 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 
 	/** 把菜单打开给玩家（26.3 的菜单必须走 screenOpeningData 这条路，数据用 Unit 占位）。 */
 	public static MenuProvider provider(ServerPlayer player) {
-		return new ExtendedScreenHandlerFactory<Unit>() {
+		return new ExtendedScreenHandlerFactory() {
 			@Override
-			public Unit getScreenOpeningData(ServerPlayer ignored) {
-				return Unit.INSTANCE;
+			public void writeScreenOpeningData(ServerPlayer ignored, net.minecraft.network.FriendlyByteBuf buf) {
 			}
 
 			@Override

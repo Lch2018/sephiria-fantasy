@@ -48,7 +48,7 @@ public final class EncouragementBannerSkill implements ArtifactSkill {
 	private static final int BUFF_TICKS = 20;
 	/** 边缘粒子画多少个点。 */
 	private static final int RING_POINTS = 24;
-	private static final ResourceLocation BUFF_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "banner_attack_speed");
+	private static final ResourceLocation BUFF_ID = new ResourceLocation(Sephiria.MOD_ID, "banner_attack_speed");
 
 	/** 场上的旗子。 */
 	private static final List<Banner> BANNERS = new ArrayList<>();

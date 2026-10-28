@@ -28,9 +28,9 @@ public final class HasteSkill implements ArtifactSkill {
 	private static final double PERCENT = 15.0D;
 
 	private static final ResourceLocation ATTACK_SPEED_ID =
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "haste_attack_speed");
+			new ResourceLocation(Sephiria.MOD_ID, "haste_attack_speed");
 	private static final ResourceLocation MOVE_SPEED_ID =
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "haste_move_speed");
+			new ResourceLocation(Sephiria.MOD_ID, "haste_move_speed");
 
 	private HasteSkill() {
 	}

@@ -22,8 +22,8 @@ public class SephiriaBoltItem extends ArrowItem {
 	}
 
 	@Override
-	public AbstractArrow createArrow(Level level, ItemStack ammo, LivingEntity shooter, ItemStack weapon) {
-		Arrow arrow = new SephiriaBoltArrow(level, shooter, weapon);
+	public AbstractArrow createArrow(Level level, ItemStack ammo, LivingEntity shooter) {
+		Arrow arrow = new SephiriaBoltArrow(level, shooter);
 		// 与原版「无限」附魔射出的箭一样：不可拾取。
 		arrow.pickup = AbstractArrow.Pickup.DISALLOWED;
 		return arrow;

@@ -53,6 +53,6 @@ public class ElectricBugItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.shock_stacks",
-				Component.literal(Numbers.format(this.shockStackBonus(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(this.shockStackBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

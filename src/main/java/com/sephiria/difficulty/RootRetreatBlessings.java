@@ -2,7 +2,6 @@ package com.sephiria.difficulty;
 
 import com.sephiria.stats.CombatState;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -49,7 +48,7 @@ public final class RootRetreatBlessings {
 		}
 	}
 
-	private static void apply(ServerPlayer player, Holder<MobEffect> effect, int amplifier) {
+	private static void apply(ServerPlayer player, MobEffect effect, int amplifier) {
 		MobEffectInstance current = player.getEffect(effect);
 
 		// 自己身上有更强的 / 更长的同名效果时不动它（别把玩家自己的药水顶掉）

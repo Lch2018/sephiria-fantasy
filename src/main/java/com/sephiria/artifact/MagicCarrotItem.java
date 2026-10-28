@@ -59,8 +59,8 @@ public class MagicCarrotItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.highest_element",
-						Component.literal(Numbers.format(this.highestElementBonus(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.highestElementBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.move_speed",
-						Component.literal(Numbers.format(this.moveSpeedPercentBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.moveSpeedPercentBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

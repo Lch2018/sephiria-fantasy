@@ -61,8 +61,8 @@ public class LuckyMedalItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.potion_buy_leaves",
-						Component.literal(Numbers.format(this.potionBuyLeafBonus(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.potionBuyLeafBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.negotiation",
-						Component.literal(Numbers.format(this.negotiationBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.negotiationBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

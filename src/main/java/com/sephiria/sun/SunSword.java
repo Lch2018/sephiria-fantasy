@@ -1,5 +1,6 @@
 package com.sephiria.sun;
 
+import com.sephiria.compat.ItemData;
 import com.mojang.serialization.Codec;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
@@ -13,9 +14,7 @@ import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -102,13 +101,7 @@ public final class SunSword {
 	private static final double ENLARGE_SLASH_SCALE = 1.6D;
 
 	/** 掉落的太阳剑记着主人：只有本人走过去才会被拾取（也用它在重登后认领地上的剑）。 */
-	public static final DataComponentType<UUID> OWNER = Registry.register(
-			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_sword_owner"),
-			DataComponentType.<UUID>builder()
-					.persistent(Codec.STRING.xmap(UUID::fromString, UUID::toString))
-					.networkSynchronized(ByteBufCodecs.STRING_UTF8.map(UUID::fromString, UUID::toString))
-					.build());
+	public static final String OWNER = "sun_sword_owner";
 
 	/**
 	 * 「这一支掉落物是冰蓝版」的标记组件（永恒蚀在背包右半边时挂上）。
@@ -116,13 +109,7 @@ public final class SunSword {
 	 * <p>拾取判定只看物品是不是 {@code sun_sword}（不看这个标记），所以两种颜色都能收进数量里；
 	 * 模型定义按这个标记换贴图（见 {@code items/sun_sword.json}）。
 	 */
-	public static final DataComponentType<Unit> ICE_DROP = Registry.register(
-			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_sword_ice"),
-			DataComponentType.<Unit>builder()
-					.persistent(Unit.CODEC)
-					.networkSynchronized(net.minecraft.network.codec.StreamCodec.unit(Unit.INSTANCE))
-					.build());
+	public static final String ICE_DROP = "sun_sword_ice";
 
 	/** 一名玩家的太阳剑状态。 */
 	private static final class State {
@@ -164,7 +151,7 @@ public final class SunSword {
 		// 神器 / 魔法书 / 真实伤害 / 减益 / 永恒冬日这些 Kind.WEAPON 之外的伤害，
 		// 以及同属 Kind.WEAPON 但不是武器攻击的永恒冬日，都不再触发。
 		// 没有冷却——符合条件就投一支（有剑时）；打玩家不算（连击效果不做 PVP）
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, blockedDamage, damageTaken, blocked) -> {
+		com.sephiria.compat.DamageEvents.registerAfterDamage((entity, source, blockedDamage, damageTaken, blocked) -> {
 			if (damageTaken <= 0.0F || !(source.getEntity() instanceof ServerPlayer player) || entity == player) {
 				return;
 			}
@@ -360,7 +347,7 @@ public final class SunSword {
 	/** 这支掉落的剑是不是这个玩家丢的（主人记在物品栈的组件上）。 */
 	private static boolean isOurDrop(ItemEntity drop, ServerPlayer player) {
 		ItemStack stack = drop.getItem();
-		return stack.is(ModItems.SUN_SWORD) && player.getUUID().equals(stack.get(OWNER));
+		return stack.is(ModItems.SUN_SWORD) && player.getUUID().equals(ItemData.getUuid(stack, OWNER));
 	}
 
 	/** 数量 / 上限有变化才推给客户端（HUD 的太阳剑 UI 读它）。 */
@@ -507,10 +494,10 @@ public final class SunSword {
 	 */
 	private static void drop(ServerLevel level, ServerPlayer player, Vec3 pos, boolean ice) {
 		ItemStack stack = new ItemStack(ModItems.SUN_SWORD);
-		stack.set(OWNER, player.getUUID());
+		ItemData.setUuid(stack, OWNER, player.getUUID());
 
 		if (ice) {
-			stack.set(ICE_DROP, Unit.INSTANCE);
+			ItemData.setBoolean(stack, ICE_DROP, true);
 		}
 
 		ItemEntity drop = new ItemEntity(level, pos.x, pos.y + DROP_HEIGHT, pos.z, stack);

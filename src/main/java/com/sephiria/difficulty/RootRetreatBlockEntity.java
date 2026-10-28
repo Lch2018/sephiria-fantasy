@@ -95,15 +95,15 @@ public class RootRetreatBlockEntity extends BlockEntity {
 	}
 
 	@Override
-	protected void saveAdditional(net.minecraft.nbt.CompoundTag output, net.minecraft.core.HolderLookup.Provider registries) {
-		super.saveAdditional(output, registries);
+	protected void saveAdditional(net.minecraft.nbt.CompoundTag output) {
+		super.saveAdditional(output);
 		output.putIntArray(KEY_LEVELS, this.levels);
 		output.putLong(KEY_PLACED_AT, this.placedAt);
 	}
 
 	@Override
-	protected void loadAdditional(net.minecraft.nbt.CompoundTag input, net.minecraft.core.HolderLookup.Provider registries) {
-		super.loadAdditional(input, registries);
+	public void load(net.minecraft.nbt.CompoundTag input) {
+		super.load(input);
 		this.levels = clampAll(input.getIntArray(KEY_LEVELS));
 		// 老存档没有这个键 → 0（世界时间早就超过 24000，等同「早已放好」）
 		this.placedAt = input.getLong(KEY_PLACED_AT);

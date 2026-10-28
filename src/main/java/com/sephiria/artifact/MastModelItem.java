@@ -53,6 +53,6 @@ public class MastModelItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.cloud_speed_bonus",
-						Component.literal(Numbers.format(this.cloudSpeedBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.cloudSpeedBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

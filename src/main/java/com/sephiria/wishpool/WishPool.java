@@ -118,7 +118,7 @@ public final class WishPool {
 			.persistent(Saved.CODEC)
 			// 抽卡攒的能量与锚定是玩家自己的东西，死了不该清零
 			.copyOnDeath()
-			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool"));
+			.buildAndRegister(new ResourceLocation(Sephiria.MOD_ID, "wish_pool"));
 
 	private WishPool() {
 	}

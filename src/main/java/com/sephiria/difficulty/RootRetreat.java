@@ -43,7 +43,7 @@ public final class RootRetreat {
 			.persistent(Saved.CODEC)
 			// 难度设置是玩家自己的偏好，死了不该清零
 			.copyOnDeath()
-			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat"));
+			.buildAndRegister(new ResourceLocation(Sephiria.MOD_ID, "root_retreat"));
 
 	private RootRetreat() {
 	}

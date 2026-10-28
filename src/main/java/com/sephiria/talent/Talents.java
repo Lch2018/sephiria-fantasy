@@ -7,7 +7,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.tag.convention.v2.ConventionalEntityTypeTags;
+import net.fabricmc.fabric.api.tag.convention.v1.ConventionalEntityTypeTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -194,7 +194,7 @@ public final class Talents {
 			.persistent(Saved.CODEC)
 			// 天赋点是长期成长，死一次不该丢（与叶子、属性一样）
 			.copyOnDeath()
-			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "talents"));
+			.buildAndRegister(new ResourceLocation(Sephiria.MOD_ID, "talents"));
 
 	/**
 	 * 实体类 → 是否自带一条服务端 BOSS 血条。

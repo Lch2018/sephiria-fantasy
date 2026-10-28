@@ -53,11 +53,10 @@ public class SephiriaBeaconMenu extends AbstractContainerMenu {
 	}
 
 	/** 服务端使用：把菜单绑到方块实体那个真实容器上。 */
-	public static ExtendedScreenHandlerFactory<Unit> provider(ServerPlayer player, SephiriaBeaconBlockEntity beacon) {
-		return new ExtendedScreenHandlerFactory<Unit>() {
+	public static ExtendedScreenHandlerFactory provider(ServerPlayer player, SephiriaBeaconBlockEntity beacon) {
+		return new ExtendedScreenHandlerFactory() {
 			@Override
-			public Unit getScreenOpeningData(ServerPlayer ignored) {
-				return Unit.INSTANCE;
+			public void writeScreenOpeningData(ServerPlayer ignored, net.minecraft.network.FriendlyByteBuf buf) {
 			}
 
 			@Override

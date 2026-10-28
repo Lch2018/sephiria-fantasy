@@ -61,8 +61,8 @@ public class SilverPlateItem extends ArtifactItem {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.normal_attack_damage",
 						Component.literal(Numbers.format(this.normalAttackDamagePercentBonus(level)))
-								.withColor(COLOUR_BONUS)),
+								.withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.special_attack",
-						Component.literal(Numbers.format(this.specialAttackBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.specialAttackBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

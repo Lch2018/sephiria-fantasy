@@ -1,16 +1,10 @@
 package com.sephiria.slate;
 
-import com.mojang.serialization.Codec;
-import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.artifact.BackpackStorable;
 import com.sephiria.artifact.Quality;
-import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.registries.BuiltInRegistries;
+import com.sephiria.compat.ItemData;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -25,10 +19,7 @@ import net.minecraft.world.item.ItemStack;
  * 朝向存在物品的数据组件里。
  */
 public abstract class SlateItem extends Item implements BackpackStorable, Quality {
-	public static final DataComponentType<Integer> ROTATION = Registry.register(
-			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_rotation"),
-			DataComponentType.<Integer>builder().persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
+	public static final String ROTATION = "slate_rotation";
 
 	/** 四个朝向（0 = 默认，每次 +1 是逆时针 90°）。 */
 	public static final int ROTATIONS = 4;
@@ -39,10 +30,7 @@ public abstract class SlateItem extends Item implements BackpackStorable, Qualit
 	 * <p>不参与服务端结算（服务端只认 {@code SlateImprintPayload} 与格子里的真物品），
 	 * 所以同步组件只是为了让同一份 ItemStack 在客户端各处画法一致。
 	 */
-	public static final DataComponentType<Integer> IMPRINT = Registry.register(
-			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_imprint_progress"),
-			DataComponentType.<Integer>builder().persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
+	public static final String IMPRINT = "slate_imprint_progress";
 
 	/** 刻印进度条的颜色：天赋「生存」的颜色 #D49ED8。 */
 	private static final int IMPRINT_COLOUR = 0xFFD49ED8;
@@ -54,12 +42,12 @@ public abstract class SlateItem extends Item implements BackpackStorable, Qualit
 	/** 长按刻印时显示耐久条；平时不显示。 */
 	@Override
 	public boolean isBarVisible(ItemStack stack) {
-		return stack.getOrDefault(IMPRINT, 0) > 0;
+		return ItemData.getInt(stack, IMPRINT, 0) > 0;
 	}
 
 	@Override
 	public int getBarWidth(ItemStack stack) {
-		int progress = Mth.clamp(stack.getOrDefault(IMPRINT, 0), 0, 100);
+		int progress = Mth.clamp(ItemData.getInt(stack, IMPRINT, 0), 0, 100);
 		return Math.round(13.0F * progress / 100.0F);
 	}
 
@@ -69,7 +57,7 @@ public abstract class SlateItem extends Item implements BackpackStorable, Qualit
 	}
 
 	public static int rotationOf(ItemStack stack) {
-		return Mth.clamp(stack.getOrDefault(ROTATION, 0), 0, ROTATIONS - 1);
+		return Mth.clamp(ItemData.getInt(stack, ROTATION, 0), 0, ROTATIONS - 1);
 	}
 
 	/** 逆时针转 90°；不可旋转的石板（入口、由不可旋转石板合成的合成石板）什么都不做。 */
@@ -78,7 +66,7 @@ public abstract class SlateItem extends Item implements BackpackStorable, Qualit
 			return;
 		}
 
-		stack.set(ROTATION, (rotationOf(stack) + 1) % ROTATIONS);
+		ItemData.setInt(stack, ROTATION, (rotationOf(stack) + 1) % ROTATIONS);
 	}
 
 	public abstract ArtifactRarity rarity();

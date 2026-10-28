@@ -54,7 +54,7 @@ public class ExtraBackpackRowItem extends Item {
 		}
 
 		// consume 会自己判断创造模式（无限材料时不扣）
-		stack.consume(1, player);
+		stack.shrink(1);
 		serverPlayer.sendSystemMessage(Component.translatable(
 				"message.sephiria_fantasy.backpack_slot_added", backpack.getContainerSize(),
 				ArtifactBackpack.MAX_SLOTS), true);

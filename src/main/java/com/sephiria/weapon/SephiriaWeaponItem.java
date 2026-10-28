@@ -64,7 +64,7 @@ public class SephiriaWeaponItem extends Item implements SephiriaWeapon {
 	}
 
 	@Override
-	public int getUseDuration(ItemStack stack, LivingEntity entity) {
+	public int getUseDuration(ItemStack stack) {
 		if (this.blocks) {
 			return 72000;
 		}

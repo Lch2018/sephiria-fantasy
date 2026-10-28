@@ -45,9 +45,9 @@ public class HeavenSlateItem extends SlateItem {
 	public List<Component> effectLines(ItemStack stack) {
 		return List.of(
 				Component.translatable("artifact.sephiria_fantasy.slate.effect.all",
-						Component.literal("+" + BONUS).withColor(COLOUR_POSITIVE)),
-				Component.translatable("artifact.sephiria_fantasy.slate.tag.boost").withColor(COLOUR_POSITIVE),
-				Component.translatable("artifact.sephiria_fantasy.slate.effect.fixed").withColor(COLOUR_NEGATIVE));
+						Component.literal("+" + BONUS).withStyle(style -> style.withColor(COLOUR_POSITIVE))),
+				Component.translatable("artifact.sephiria_fantasy.slate.tag.boost").withStyle(style -> style.withColor(COLOUR_POSITIVE)),
+				Component.translatable("artifact.sephiria_fantasy.slate.effect.fixed").withStyle(style -> style.withColor(COLOUR_NEGATIVE)));
 	}
 
 	@Override

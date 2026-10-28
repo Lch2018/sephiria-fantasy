@@ -68,7 +68,7 @@ public class FireflyItem extends ArtifactItem {
 
 	/** 挂在伤害事件上：玩家挨打（实扣 > 0）就把萤火虫禁用 6 秒。 */
 	public static void register() {
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, blockedDamage, damageTaken, blocked) -> {
+		com.sephiria.compat.DamageEvents.registerAfterDamage((entity, source, blockedDamage, damageTaken, blocked) -> {
 			if (damageTaken > 0.0F && entity instanceof ServerPlayer player) {
 				SUPPRESSED_UNTIL.put(player.getUUID(), player.level().getGameTime() + SUPPRESS_TICKS);
 			}
@@ -83,6 +83,6 @@ public class FireflyItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.firefly_element",
-				Component.literal(Numbers.format(this.fireflyLightningElement(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(this.fireflyLightningElement(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

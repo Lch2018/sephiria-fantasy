@@ -25,7 +25,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 public final class ModBlockEntities {
 	public static final ResourceKey<BlockEntityType<?>> ROOT_RETREAT_KEY = ResourceKey.create(
 			Registries.BLOCK_ENTITY_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat"));
+			new ResourceLocation(Sephiria.MOD_ID, "root_retreat"));
 
 	/** 根之退的方块实体：存那个方块上的难度方案。 */
 	public static final BlockEntityType<RootRetreatBlockEntity> ROOT_RETREAT = Registry.register(
@@ -36,7 +36,7 @@ public final class ModBlockEntities {
 	/** 许愿池的方块实体（只负责吸升级宝箱，不存数据）。 */
 	public static final ResourceKey<BlockEntityType<?>> WISH_POOL_KEY = ResourceKey.create(
 			Registries.BLOCK_ENTITY_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool"));
+			new ResourceLocation(Sephiria.MOD_ID, "wish_pool"));
 
 	public static final BlockEntityType<WishPoolBlockEntity> WISH_POOL = Registry.register(
 			BuiltInRegistries.BLOCK_ENTITY_TYPE,
@@ -46,7 +46,7 @@ public final class ModBlockEntities {
 	/** 赛菲莉娅信标的方块实体：存那一件物品，并给原版信标渲染器提供光柱颜色。 */
 	public static final ResourceKey<BlockEntityType<?>> SEPHIRIA_BEACON_KEY = ResourceKey.create(
 			Registries.BLOCK_ENTITY_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_beacon"));
+			new ResourceLocation(Sephiria.MOD_ID, "sephiria_beacon"));
 
 	public static final BlockEntityType<SephiriaBeaconBlockEntity> SEPHIRIA_BEACON = Registry.register(
 			BuiltInRegistries.BLOCK_ENTITY_TYPE,

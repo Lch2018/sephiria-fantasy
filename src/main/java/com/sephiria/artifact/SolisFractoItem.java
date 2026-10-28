@@ -61,8 +61,8 @@ public class SolisFractoItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.fire_element",
-						Component.literal(Numbers.format(this.fireElementBonus(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.fireElementBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.max_hp",
-						Component.literal(Numbers.format(this.maxHpBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.maxHpBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

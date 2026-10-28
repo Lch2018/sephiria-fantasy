@@ -14,7 +14,7 @@ import net.minecraft.world.item.ItemStack;
 public final class ModCreativeTabs {
 	public static final ResourceKey<CreativeModeTab> WEAPONS_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "weapons"));
+			new ResourceLocation(Sephiria.MOD_ID, "weapons"));
 
 	public static final CreativeModeTab WEAPONS = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,
@@ -31,7 +31,7 @@ public final class ModCreativeTabs {
 	/** 神器标签页：标签页图标就是神器系统的那个袋子（用一个隐藏物品承载图标）。 */
 	public static final ResourceKey<CreativeModeTab> ARTIFACTS_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifacts"));
+			new ResourceLocation(Sephiria.MOD_ID, "artifacts"));
 
 	public static final CreativeModeTab ARTIFACTS = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,
@@ -129,7 +129,7 @@ public final class ModCreativeTabs {
 	/** Slates tab: slates are not artifacts, they get their own page. */
 	public static final ResourceKey<CreativeModeTab> SLATES_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "slates"));
+			new ResourceLocation(Sephiria.MOD_ID, "slates"));
 
 	public static final CreativeModeTab SLATES = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,
@@ -203,7 +203,7 @@ public final class ModCreativeTabs {
 	/** Items tab: the enchant coin, its own icon. */
 	public static final ResourceKey<CreativeModeTab> ITEMS_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "items"));
+			new ResourceLocation(Sephiria.MOD_ID, "items"));
 
 	public static final CreativeModeTab ITEMS = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,
@@ -230,7 +230,7 @@ public final class ModCreativeTabs {
 	/** Potions tab: the potions are their own category, icon is the regeneration potion (fig 1). */
 	public static final ResourceKey<CreativeModeTab> POTIONS_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "potions"));
+			new ResourceLocation(Sephiria.MOD_ID, "potions"));
 
 	public static final CreativeModeTab POTIONS = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,

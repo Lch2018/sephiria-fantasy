@@ -55,6 +55,6 @@ public class LongingAmuletItem extends ArtifactItem {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.weapon_crit_chance",
 						Component.literal(Numbers.format(this.weaponCritChanceBonus(level)))
-								.withColor(COLOUR_BONUS)));
+								.withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

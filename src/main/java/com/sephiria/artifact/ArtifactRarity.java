@@ -47,6 +47,6 @@ public enum ArtifactRarity {
 			return com.sephiria.util.Colours.rainbow(name);
 		}
 
-		return net.minecraft.network.chat.Component.literal(name).withColor(this.color);
+		return net.minecraft.network.chat.Component.literal(name).withStyle(style -> style.withColor(this.color));
 	}
 }

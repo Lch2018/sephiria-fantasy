@@ -67,7 +67,7 @@ public class PlasmaHelmetItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		double percent = this.plasmaDamagePercent(level);
 		Component value = Component.literal((percent >= 0.0D ? "+" : "") + Numbers.format(percent))
-				.withColor(COLOUR_BONUS);
+				.withStyle(style -> style.withColor(COLOUR_BONUS));
 
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.plasma_debuff"),

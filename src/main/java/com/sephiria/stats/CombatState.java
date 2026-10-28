@@ -27,7 +27,7 @@ public final class CombatState {
 
 	/** 挂在伤害事件上（与萤火虫的禁用钩子各自独立）。 */
 	public static void register() {
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, blockedDamage, damageTaken, blocked) -> {
+		com.sephiria.compat.DamageEvents.registerAfterDamage((entity, source, blockedDamage, damageTaken, blocked) -> {
 			if (damageTaken <= 0.0F) {
 				return;
 			}

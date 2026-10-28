@@ -1,5 +1,7 @@
 package com.sephiria.frost;
 
+import com.sephiria.network.FrostSyncPayload;
+import com.sephiria.compat.ItemData;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
@@ -17,8 +19,6 @@ import com.sephiria.stats.PlayerStats;
 import com.sephiria.sun.SunSword;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -235,13 +235,7 @@ public final class FrostArmament {
 	 * ——Display 的物品展示实体只能换物品，所以照永恒蚀图标那套做：模型定义按这个组件挑贴图
 	 * （{@code items/ice_hammer.json} 那三个是 {@code minecraft:condition} + {@code has_component}）。
 	 */
-	public static final DataComponentType<Unit> FLAME_TOOL = Registry.register(
-			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "flame_tool"),
-			DataComponentType.<Unit>builder()
-					.persistent(Unit.CODEC)
-					.networkSynchronized(net.minecraft.network.codec.StreamCodec.unit(Unit.INSTANCE))
-					.build());
+	public static final String FLAME_TOOL = "flame_tool";
 
 	private static final Map<UUID, State> STATES = new HashMap<>();
 	/** 飞行中的锤子：先拷一份再 clear 的推进方式与陨石同一套。 */
@@ -1178,7 +1172,7 @@ public final class FrostArmament {
 		ItemStack stack = new ItemStack(item);
 
 		if (flame) {
-			stack.set(FLAME_TOOL, Unit.INSTANCE);
+			ItemData.setBoolean(stack, FLAME_TOOL, true);
 		}
 
 		SynchedEntityData data = body.getEntityData();
@@ -1187,8 +1181,8 @@ public final class FrostArmament {
 		data.set(Display.ItemDisplay.DATA_ITEM_DISPLAY_ID, (byte) ItemDisplayContext.FIXED.getId());
 		data.set(Display.DATA_SCALE_ID, new Vector3f(scale));
 		data.set(Display.DATA_BRIGHTNESS_OVERRIDE_ID, BRIGHTNESS_OVERRIDE);
-		data.set(Display.DATA_TRANSFORMATION_INTERPOLATION_DURATION_ID, TRANSFORM_INTERPOLATION_TICKS);
-		data.set(Display.DATA_POS_ROT_INTERPOLATION_DURATION_ID, POS_INTERPOLATION_TICKS);
+		data.set(Display.DATA_INTERPOLATION_DURATION_ID, TRANSFORM_INTERPOLATION_TICKS);
+		data.set(Display.DATA_INTERPOLATION_DURATION_ID, POS_INTERPOLATION_TICKS);
 		body.setPos(at.x, at.y, at.z);
 		body.setNoGravity(true);
 		body.setSilent(true);

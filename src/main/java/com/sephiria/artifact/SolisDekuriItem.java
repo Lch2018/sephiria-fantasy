@@ -63,8 +63,8 @@ public class SolisDekuriItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.sun_sword_defense_ignore",
-						Component.literal(Numbers.format(this.sunSwordDefenseIgnorePercent(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.sunSwordDefenseIgnorePercent(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.sun_sword_crit_chance",
-						Component.literal(Numbers.format(this.sunSwordCritChanceBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.sunSwordCritChanceBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

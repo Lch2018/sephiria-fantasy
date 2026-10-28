@@ -45,8 +45,8 @@ public class WishPoolBlock extends Block implements EntityBlock {
 
 	/** 右键（空手也算）打开抽卡界面。 */
 	@Override
-	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
-			BlockHitResult hit) {
+	public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
+			net.minecraft.world.InteractionHand hand, BlockHitResult hit) {
 		if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
 			serverPlayer.openMenu(WishPoolMenu.provider(serverPlayer, pos));
 		}

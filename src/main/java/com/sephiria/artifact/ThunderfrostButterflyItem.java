@@ -77,9 +77,9 @@ public class ThunderfrostButterflyItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		// 冰属性那条的 lang 键本身没写「+」，这里把符号带进数值里（与闪电 / 火焰那条的写法对齐）
 		Component ice = Component.literal("+" + Numbers.format(this.iceElementBonus(level)))
-				.withColor(COLOUR_BONUS);
+				.withStyle(style -> style.withColor(COLOUR_BONUS));
 		Component speed = Component.literal(Numbers.format(this.cloudSpeedBonus(level)))
-				.withColor(COLOUR_BONUS);
+				.withStyle(style -> style.withColor(COLOUR_BONUS));
 
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.blizzard_cloud"),

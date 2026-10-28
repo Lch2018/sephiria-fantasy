@@ -1,5 +1,6 @@
 package com.sephiria.slate;
 
+import com.sephiria.compat.ItemData;
 import com.sephiria.util.MenuLayout;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
@@ -133,10 +134,9 @@ public class SlateFusionMenu extends AbstractContainerMenu {
 			return;
 		}
 
-		player.openMenu(new ExtendedScreenHandlerFactory<Unit>() {
+		player.openMenu(new ExtendedScreenHandlerFactory() {
 			@Override
-			public Unit getScreenOpeningData(ServerPlayer ignored) {
-				return Unit.INSTANCE;
+			public void writeScreenOpeningData(ServerPlayer ignored, net.minecraft.network.FriendlyByteBuf buf) {
 			}
 
 			@Override
@@ -221,9 +221,9 @@ public class SlateFusionMenu extends AbstractContainerMenu {
 		ItemStack second = this.inputs.getItem(INPUT_B);
 		List<PatternSlateItem.Cell> pattern = SlateFusion.combine(first, second);
 		ItemStack result = new ItemStack(ModItems.SLATE_OF_FUSION);
-		result.set(FusedSlateItem.PATTERN, pattern);
+		ItemData.setCells(result, FusedSlateItem.PATTERN, pattern);
 		// 任一输入不可旋转，结果也不可旋转（用户 2026-10-24 定）
-		result.set(FusedSlateItem.ROTATABLE, SlateFusion.resultRotatable(first, second));
+		ItemData.setBoolean(result, FusedSlateItem.ROTATABLE, SlateFusion.resultRotatable(first, second));
 
 		this.inputs.setItem(INPUT_A, ItemStack.EMPTY);
 		this.inputs.setItem(INPUT_B, ItemStack.EMPTY);

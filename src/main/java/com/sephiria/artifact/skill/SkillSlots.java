@@ -25,7 +25,7 @@ public final class SkillSlots {
 	private static final AttachmentType<List<String>> SAVED = AttachmentRegistry.<List<String>>builder()
 			.persistent(Codec.STRING.listOf())
 			.copyOnDeath()
-			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_skill_slots"));
+			.buildAndRegister(new ResourceLocation(Sephiria.MOD_ID, "artifact_skill_slots"));
 
 	private SkillSlots() {
 	}

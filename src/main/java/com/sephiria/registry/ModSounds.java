@@ -21,7 +21,7 @@ public final class ModSounds {
 	}
 
 	private static SoundEvent register(String name) {
-		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, name);
+		ResourceLocation id = new ResourceLocation(Sephiria.MOD_ID, name);
 		return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createVariableRangeEvent(id));
 	}
 

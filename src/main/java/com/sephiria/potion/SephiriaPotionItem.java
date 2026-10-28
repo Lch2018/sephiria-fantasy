@@ -80,7 +80,7 @@ public class SephiriaPotionItem extends Item implements Quality {
 	}
 
 	@Override
-	public int getUseDuration(ItemStack stack, LivingEntity entity) {
+	public int getUseDuration(ItemStack stack) {
 		return DRINK_TICKS;
 	}
 

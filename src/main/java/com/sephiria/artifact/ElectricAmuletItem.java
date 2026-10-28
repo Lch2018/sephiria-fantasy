@@ -52,6 +52,6 @@ public class ElectricAmuletItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.lightning_element",
-				Component.literal(Numbers.format(this.lightningElementBonus(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(this.lightningElementBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

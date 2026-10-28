@@ -45,7 +45,7 @@ public final class SlateImprint {
 			.persistent(Saved.CODEC)
 			// 刻印的石板相当于「存在背包里」，死亡不掉
 			.copyOnDeath()
-			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_imprints"));
+			.buildAndRegister(new ResourceLocation(Sephiria.MOD_ID, "slate_imprints"));
 
 	private SlateImprint() {
 	}

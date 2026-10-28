@@ -188,7 +188,7 @@ public interface SephiriaWeapon {
 		}
 
 		private static MutableComponent number(double value, int color) {
-			return Component.literal(number(value)).withColor(color);
+			return Component.literal(number(value)).withStyle(style -> style.withColor(color));
 		}
 
 		/** 数值格式化：整数不带小数点，小数最多两位并去掉末尾的 0（0.80 → 0.8、10.25 保留）。 */

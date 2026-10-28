@@ -49,6 +49,6 @@ public class WindScoreItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.melee_range",
-				Component.literal(Numbers.format(this.meleeRangePercentBonus(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(this.meleeRangePercentBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

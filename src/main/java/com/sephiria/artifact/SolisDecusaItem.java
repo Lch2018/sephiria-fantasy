@@ -62,8 +62,8 @@ public class SolisDecusaItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.sun_sword_damage",
-						Component.literal(Numbers.format(this.sunSwordDamagePercentBonus(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.sunSwordDamagePercentBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.crit_damage",
-						Component.literal(Numbers.format(this.critDamageBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.critDamageBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

@@ -53,6 +53,6 @@ public class CloudseedArrowItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.cloud_enhanced",
-						Component.literal(Numbers.format(this.cloudEnhancedChance(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.cloudEnhancedChance(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

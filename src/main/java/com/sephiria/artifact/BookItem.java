@@ -3,19 +3,15 @@ package com.sephiria.artifact;
 import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.util.Numbers;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,22 +93,11 @@ public class BookItem extends ArtifactItem {
 	// ------------------------------------------------------------------ 读附魔
 
 	/** 单件物品上某个附魔的等级（0 = 没有这本附魔；只认火焰附加 / 抢夺，别的不读）。 */
-	private static int levelOf(ItemStack stack, ResourceKey<Enchantment> wanted) {
-		ItemEnchantments enchantments = stack.get(DataComponents.ENCHANTMENTS);
-
-		if (enchantments == null) {
-			return 0;
-		}
-
-		for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchantments.entrySet()) {
-			if (entry.getKey().unwrapKey().filter(wanted::equals).isPresent()) {
-				// 上限按附魔自己那张表来：万一有旧存档合过了头（当时还没封顶），
-				// 读出来也按上限算——「不能超过原版的附魔等级」这条在新老数据上一致
-				return Math.min(entry.getIntValue(), entry.getKey().value().getMaxLevel());
-			}
-		}
-
-		return 0;
+	private static int levelOf(ItemStack stack, Enchantment wanted) {
+		int level = EnchantmentHelper.getEnchantments(stack).getOrDefault(wanted, 0);
+		// 上限按附魔自己那张表来：万一有旧存档合过了头（当时还没封顶），
+		// 读出来也按上限算——「不能超过原版的附魔等级」这条在新老数据上一致
+		return Math.min(level, wanted.getMaxLevel());
 	}
 
 	/** 这件物品是不是「书」。 */
@@ -127,11 +112,11 @@ public class BookItem extends ArtifactItem {
 
 	/** 背包里「书」的抢夺等级（0 = 没有；掉落结算那一步用）。 */
 	public static int lootingLevel(ServerPlayer player) {
-		return backpackLevel(player, Enchantments.LOOTING);
+		return backpackLevel(player, Enchantments.MOB_LOOTING);
 	}
 
 	/** 取背包里「书」身上某个附魔的最高等级（【唯一】：多本书也只取最高那级）。 */
-	private static int backpackLevel(ServerPlayer player, ResourceKey<Enchantment> wanted) {
+	private static int backpackLevel(ServerPlayer player, Enchantment wanted) {
 		int best = 0;
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 
@@ -153,71 +138,21 @@ public class BookItem extends ArtifactItem {
 
 		if (fire > 0) {
 			lines.add(Component.translatable("artifact.sephiria_fantasy.affix.book_fire_aspect",
-					Component.literal(Numbers.format(fire)).withColor(COLOUR_BONUS),
-					Component.literal(Numbers.format(fire * FIRE_TICKS_PER_LEVEL / 20.0D)).withColor(COLOUR_BONUS)));
+					Component.literal(Numbers.format(fire)).withStyle(style -> style.withColor(COLOUR_BONUS)),
+					Component.literal(Numbers.format(fire * FIRE_TICKS_PER_LEVEL / 20.0D)).withStyle(style -> style.withColor(COLOUR_BONUS))));
 		}
 
-		int looting = levelOf(stack, Enchantments.LOOTING);
+		int looting = levelOf(stack, Enchantments.MOB_LOOTING);
 
 		if (looting > 0) {
 			lines.add(Component.translatable("artifact.sephiria_fantasy.affix.book_looting",
-					Component.literal(Numbers.format(looting)).withColor(COLOUR_BONUS)));
+					Component.literal(Numbers.format(looting)).withStyle(style -> style.withColor(COLOUR_BONUS))));
 		}
 
 		return lines;
 	}
 
 	// ------------------------------------------------------------------ 铁砧合并
-
-	/** 一次合并的结果：合好的附魔表 + 这一手要的经验等级。 */
-	public record Merge(ItemEnchantments enchantments, int cost) {
-	}
-
-	/**
-	 * 第二格那本附魔书能不能合上去：至少要有一个附魔，且<b>只带</b>火焰附加 / 抢夺。
-	 *
-	 * <p>带了别的附魔就不合——这本书不认识那些附魔，合上去会凭空丢掉（原版也走不到这条路，
-	 * 所以那种组合在铁砧里保持「出不来结果」）。
-	 */
-	public static boolean canMerge(ItemEnchantments addition) {
-		if (addition.isEmpty()) {
-			return false;
-		}
-
-		for (Holder<Enchantment> enchantment : addition.keySet()) {
-			boolean known = enchantment.unwrapKey()
-					.filter(key -> key.equals(Enchantments.FIRE_ASPECT) || key.equals(Enchantments.LOOTING))
-					.isPresent();
-
-			if (!known) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * 合并后的附魔表：同一种附魔的等级<b>相加</b>，但**不超过这种附魔在原版里的等级上限**
-	 * （火焰附加 2、抢夺 3——上限从附魔自己身上读，跟着数据包走，不是写死的表）。
-	 *
-	 * <p>经验等级 = 这一手真正加上去的等级数（刚好到顶那一手就是 0）；最低 {@link #MIN_MERGE_COST}。
-	 * 一级都加不上去时合并前后完全一样，{@code AnvilMenuMixin} 会看出这一刻不接管、让铁砧出空结果。
-	 */
-	public static Merge merge(ItemEnchantments current, ItemEnchantments addition) {
-		ItemEnchantments.Mutable merged = new ItemEnchantments.Mutable(current);
-		int cost = 0;
-
-		for (Object2IntMap.Entry<Holder<Enchantment>> entry : addition.entrySet()) {
-			Holder<Enchantment> enchantment = entry.getKey();
-			int before = merged.getLevel(enchantment);
-			int after = Math.min(before + entry.getIntValue(), enchantment.value().getMaxLevel());
-			merged.set(enchantment, after);
-			cost += after - before;
-		}
-
-		return new Merge(merged.toImmutable(), Math.max(MIN_MERGE_COST, cost));
-	}
 
 	// ------------------------------------------------------------------ 效果
 
@@ -231,7 +166,7 @@ public class BookItem extends ArtifactItem {
 	 * 这些减益自己的结算。
 	 */
 	public static void register() {
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, blockedDamage, damageTaken, blocked) -> {
+		com.sephiria.compat.DamageEvents.registerAfterDamage((entity, source, blockedDamage, damageTaken, blocked) -> {
 			if (damageTaken <= 0.0F || !(source.getEntity() instanceof ServerPlayer player) || entity == player) {
 				return;
 			}
@@ -247,7 +182,7 @@ public class BookItem extends ArtifactItem {
 			}
 
 			// 与原版火焰附加同款：4 秒 × 等级
-			entity.igniteForTicks(FIRE_TICKS_PER_LEVEL * level);
+			entity.setSecondsOnFire(FIRE_TICKS_PER_LEVEL * level / 20);
 		});
 	}
 

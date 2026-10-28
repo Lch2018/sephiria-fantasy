@@ -13,7 +13,6 @@ import net.minecraft.world.entity.npc.WanderingTrader;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.entity.player.Player;
@@ -108,7 +107,7 @@ public class SephiriaWanderingTrader extends WanderingTrader {
 	 * 价格倍率给 0，需求/次数都不会把价格推上去。
 	 */
 	private static MerchantOffer offer(Item item) {
-		return new MerchantOffer(new ItemCost(Items.EMERALD, PRICE), new ItemStack(item), STOCK, TRADE_XP, 0.0F);
+		return new MerchantOffer(new ItemStack(Items.EMERALD, PRICE), new ItemStack(item), STOCK, TRADE_XP, 0.0F);
 	}
 
 	/**

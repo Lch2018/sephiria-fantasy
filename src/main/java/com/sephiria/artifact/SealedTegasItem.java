@@ -73,6 +73,6 @@ public class SealedTegasItem extends ArtifactItem {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.blue_burn"),
 				Component.translatable("artifact.sephiria_fantasy.affix.burn_damage",
-						Component.literal(Numbers.format(this.burnDamagePercent(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.burnDamagePercent(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

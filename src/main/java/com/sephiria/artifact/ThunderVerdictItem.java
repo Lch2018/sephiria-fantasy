@@ -68,7 +68,7 @@ public class ThunderVerdictItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.thunder_verdict_skill",
-				Component.literal(Numbers.format(damagePercent(level))).withColor(COLOUR_BONUS),
-				Component.literal(Numbers.format(thunderMpCost(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(damagePercent(level))).withStyle(style -> style.withColor(COLOUR_BONUS)),
+				Component.literal(Numbers.format(thunderMpCost(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

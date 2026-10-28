@@ -35,8 +35,8 @@ public class SephiriaBeaconBlock extends Block implements EntityBlock {
 
 	/** 右键打开单格容器界面（空手或拿着东西都行，和根之退 / 许愿池一致）。 */
 	@Override
-	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
-			BlockHitResult hit) {
+	public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
+			net.minecraft.world.InteractionHand hand, BlockHitResult hit) {
 		if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer
 				&& level.getBlockEntity(pos) instanceof SephiriaBeaconBlockEntity beacon) {
 			serverPlayer.openMenu(SephiriaBeaconMenu.provider(serverPlayer, beacon));
@@ -52,7 +52,7 @@ public class SephiriaBeaconBlock extends Block implements EntityBlock {
 	 * 容器内容不能靠那张表，因为它不知道方块实体里装了什么。
 	 */
 	@Override
-	public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+	public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
 		if (!level.isClientSide() && level.getBlockEntity(pos) instanceof SephiriaBeaconBlockEntity beacon) {
 			ItemStack held = beacon.removeItemNoUpdate(0);
 
@@ -61,7 +61,7 @@ public class SephiriaBeaconBlock extends Block implements EntityBlock {
 			}
 		}
 
-		return super.playerWillDestroy(level, pos, state, player);
+		super.playerWillDestroy(level, pos, state, player);
 	}
 
 	/** 被爆炸炸掉时同样把内容物吐出来。 */

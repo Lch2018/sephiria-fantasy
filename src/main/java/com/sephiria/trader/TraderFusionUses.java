@@ -32,7 +32,7 @@ public final class TraderFusionUses {
 
 	private static final AttachmentType<Saved> USED = AttachmentRegistry.<Saved>builder()
 			.persistent(Saved.CODEC)
-			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "trader_fusion_uses"));
+			.buildAndRegister(new ResourceLocation(Sephiria.MOD_ID, "trader_fusion_uses"));
 
 	private TraderFusionUses() {
 	}

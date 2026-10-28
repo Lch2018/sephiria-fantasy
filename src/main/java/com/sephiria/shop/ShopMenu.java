@@ -142,10 +142,9 @@ public class ShopMenu extends AbstractContainerMenu {
 	}
 
 	public static MenuProvider provider(ServerPlayer player) {
-		return new ExtendedScreenHandlerFactory<Unit>() {
+		return new ExtendedScreenHandlerFactory() {
 			@Override
-			public Unit getScreenOpeningData(ServerPlayer ignored) {
-				return Unit.INSTANCE;
+			public void writeScreenOpeningData(ServerPlayer ignored, net.minecraft.network.FriendlyByteBuf buf) {
 			}
 
 			@Override
@@ -218,7 +217,7 @@ public class ShopMenu extends AbstractContainerMenu {
 		this.dice.setChanged();
 		shopStock.refresh(player.getRandom(), PlayerStats.luckTotal(player));
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-				SoundEvents.NOTE_BLOCK_BELL, SoundSource.PLAYERS, 0.7F, 0.9F);
+				SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 0.7F, 0.9F);
 		broadcastChanges();
 		return true;
 	}

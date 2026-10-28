@@ -67,7 +67,7 @@ public class LightningStruckBranchItem extends ArtifactItem {
 
 	/** 挂在伤害事件上：武器 / 魔法书打出的伤害触发附加闪电（冷却 2 秒）。 */
 	public static void register() {
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, blockedDamage, damageTaken, blocked) -> {
+		com.sephiria.compat.DamageEvents.registerAfterDamage((entity, source, blockedDamage, damageTaken, blocked) -> {
 			if (damageTaken <= 0.0F || !(source.getEntity() instanceof ServerPlayer player) || entity == player) {
 				return;
 			}
@@ -134,6 +134,6 @@ public class LightningStruckBranchItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.on_hit_lightning",
-				Component.literal(Numbers.format(this.onHitLightningDamage(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(this.onHitLightningDamage(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

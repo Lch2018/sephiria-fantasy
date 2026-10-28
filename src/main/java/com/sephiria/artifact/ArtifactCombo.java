@@ -573,7 +573,7 @@ public enum ArtifactCombo {
 			net.minecraft.network.chat.MutableComponent line = Component.translatable("artifact.sephiria_fantasy.combo.line",
 					Component.literal(String.valueOf(tier.level())),
 					tier.line());
-			lines.add(unlocked ? line.withColor(0xFFFFFFFF) : line.withColor(0xFF808080));
+			lines.add(unlocked ? line.withStyle(style -> style.withColor(0xFFFFFFFF)) : line.withStyle(style -> style.withColor(0xFF808080)));
 		}
 
 		return lines;

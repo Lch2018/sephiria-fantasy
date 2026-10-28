@@ -1,11 +1,12 @@
 package com.sephiria.weapon;
 
+import com.sephiria.compat.WeaponAttributes;
 import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.SkillStorage;
+import com.sephiria.compat.ItemData;
 import com.sephiria.registry.ModItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -19,10 +20,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ArrowItem;
 import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import com.google.common.collect.Multimap;
 import net.minecraft.world.item.Item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -52,7 +56,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon {
 	/** 弹药在技能存储里的 id（HUD 也读它）。 */
-	public static final ResourceLocation STORAGE = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "crossbow");
+	public static final ResourceLocation STORAGE = new ResourceLocation(Sephiria.MOD_ID, "crossbow");
+	private static final String AMMO_KEY = "sephiria_crossbow_ammo";
 
 	/** 弹匣容量，同时是存储总量。 */
 	public static final int MAGAZINE_SIZE = 10;
@@ -76,6 +81,13 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 	public SephiriaCrossbowItem(WeaponBranch branch, Item.Properties properties) {
 		super(properties);
 		this.branch = branch;
+	}
+
+	@Override
+	public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlot slot) {
+		return slot == EquipmentSlot.MAINHAND
+				? WeaponAttributes.speedOnly(3.0F)
+				: super.getDefaultAttributeModifiers(slot);
 	}
 
 	@Override
@@ -206,7 +218,7 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 		if (!(projectileStack.getItem() instanceof ArrowItem arrowItem)) {
 			return;
 		}
-		AbstractArrow arrow = arrowItem.createArrow(level, projectileStack, player, crossbow);
+		AbstractArrow arrow = arrowItem.createArrow(level, projectileStack, player);
 		arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, ARROW_SPEED, 1.0F);
 		arrow.setCritArrow(true);
 		level.addFreshEntity(arrow);
@@ -230,14 +242,9 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 	 * 同时也是耐久条（弹匣条）读的数据。
 	 */
 	private static void syncDisplay(ItemStack crossbow, int count) {
-		List<ItemStack> ammo = new ArrayList<>(count);
-
-		for (int i = 0; i < count; i++) {
-			ammo.add(new ItemStack(ModItems.CROSSBOW_BOLT));
-		}
-
-		crossbow.set(DataComponents.CHARGED_PROJECTILES,
-				ammo.isEmpty() ? ChargedProjectiles.EMPTY : ChargedProjectiles.of(ammo));
+		// 1.20.1 没有 charged_projectiles 组件；只把「几发」写进 NBT，供耐久条和提示框读取。
+		// 真正的弹药仍以技能存储为准，这个数字纯粹是显示。
+		ItemData.setInt(crossbow, AMMO_KEY, count);
 	}
 
 	// ------------------------------------------------------------------ 耐久条 = 弹匣条
@@ -267,6 +274,6 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 
 	/** 视觉上的弩矢数（供提示框、耐久条等只读用途）。 */
 	public static int visualAmmoCount(ItemStack crossbow) {
-		return crossbow.getOrDefault(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.EMPTY).getItems().size();
+		return ItemData.getInt(crossbow, AMMO_KEY, 0);
 	}
 }

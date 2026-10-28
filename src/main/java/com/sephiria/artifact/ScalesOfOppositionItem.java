@@ -62,9 +62,9 @@ public class ScalesOfOppositionItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		Component more = Component.literal("+" + Numbers.format(valueAt(MORE_BY_LEVEL, level)))
-				.withColor(COLOUR_BONUS);
+				.withStyle(style -> style.withColor(COLOUR_BONUS));
 		Component less = Component.literal("+" + Numbers.format(valueAt(LESS_BY_LEVEL, level)))
-				.withColor(COLOUR_BONUS);
+				.withStyle(style -> style.withColor(COLOUR_BONUS));
 
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.scales_sides"),

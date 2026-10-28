@@ -163,15 +163,15 @@ public enum DifficultyOption {
 	public List<Component> tooltip(int level) {
 		int clamped = Mth.clamp(level, 0, this.maxLevel());
 		Component layers = Component.translatable("screen.sephiria_fantasy.root_retreat.layers",
-				Numbers.format(this.stagesAt(clamped))).withColor(COLOUR_BOUND);
+				Numbers.format(this.stagesAt(clamped))).withStyle(style -> style.withColor(COLOUR_BOUND));
 		List<Component> lines = new ArrayList<>(3);
 		lines.add(Component.translatable("screen.sephiria_fantasy.root_retreat.effect." + this.id,
-				Component.literal(Numbers.format(this.effectAt(clamped))).withColor(COLOUR_VALUE)));
+				Component.literal(Numbers.format(this.effectAt(clamped))).withStyle(style -> style.withColor(COLOUR_VALUE))));
 		lines.add(Component.translatable("screen.sephiria_fantasy.root_retreat.bound", layers));
 
 		if (this.noteKey != null) {
 			lines.add(Component.translatable("screen.sephiria_fantasy.root_retreat." + this.noteKey)
-					.withColor(COLOUR_NOTE));
+					.withStyle(style -> style.withColor(COLOUR_NOTE)));
 		}
 
 		return lines;

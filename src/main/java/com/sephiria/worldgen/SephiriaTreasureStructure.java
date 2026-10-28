@@ -18,7 +18,7 @@ import java.util.Optional;
  * {@link SephiriaTreasurePiece#postProcess} 的地面高度与露天检查。
  */
 public class SephiriaTreasureStructure extends Structure {
-	public static final MapCodec<SephiriaTreasureStructure> CODEC =
+	public static final com.mojang.serialization.Codec<SephiriaTreasureStructure> CODEC =
 			Structure.simpleCodec(SephiriaTreasureStructure::new);
 
 	public SephiriaTreasureStructure(StructureSettings settings) {

@@ -29,9 +29,9 @@ public class SephiriaTraderLlama extends TraderLlama {
 
 	@Override
 	public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-			MobSpawnType reason, SpawnGroupData groupData) {
-		SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, groupData);
-		this.setItemSlot(EquipmentSlot.BODY, new ItemStack(Items.RED_CARPET));
+			MobSpawnType reason, SpawnGroupData groupData, net.minecraft.nbt.CompoundTag tag) {
+		SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, groupData, tag);
+		this.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.RED_CARPET));
 		return data;
 	}
 }

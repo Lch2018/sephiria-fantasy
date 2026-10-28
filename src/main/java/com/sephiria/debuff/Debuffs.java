@@ -1,6 +1,8 @@
 package com.sephiria.debuff;
 
 import com.sephiria.Sephiria;
+import com.sephiria.compat.AttributeIds;
+import com.sephiria.compat.Modifiers;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.damage.SephiriaDamage;
@@ -115,11 +117,11 @@ public final class Debuffs {
 	private static final int FROZEN_BURST_PARTICLES = 18;
 
 	/** 冻伤减速挂在移动速度上的修饰符名（要能在解除时按名字摘掉）。 */
-	private static final ResourceLocation FROSTBITE_SLOW_ID =
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frostbite_slow");
+	private static final UUID FROSTBITE_SLOW_ID = AttributeIds.of("frostbite_slow");
+	private static final String FROSTBITE_SLOW_NAME = "sephiria:frostbite_slow";
 	/** 冰冻的「定身」修饰符名：移动速度乘 0，等于定在原地。 */
-	private static final ResourceLocation FROZEN_STUN_ID =
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frozen_stun");
+	private static final UUID FROZEN_STUN_ID = AttributeIds.of("frozen_stun");
+	private static final String FROZEN_STUN_NAME = "sephiria:frozen_stun";
 
 	/**
 	 * 目标身上的触电：一段共享的持续时间 + 一个周期计时器，层数是伤害乘数。
@@ -190,19 +192,19 @@ public final class Debuffs {
 	}
 
 	/** 触电的减益 id：附件名与脚下层数标签的同步 id 共用（客户端按它找标签文案）。 */
-	public static final ResourceLocation SHOCK_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "electric_shocks");
+	public static final ResourceLocation SHOCK_ID = new ResourceLocation(Sephiria.MOD_ID, "electric_shocks");
 
 	/** 灼伤的减益 id：与触电同一套用法（标签文案见 {@code ui.sephiria.debuff.burns}）。 */
-	public static final ResourceLocation BURN_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "burns");
+	public static final ResourceLocation BURN_ID = new ResourceLocation(Sephiria.MOD_ID, "burns");
 
 	/** 等离子体的减益 id：灼伤与触电合并后的标签文案见 {@code ui.sephiria_fantasy.debuff.plasma}。 */
-	public static final ResourceLocation PLASMA_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "plasma");
+	public static final ResourceLocation PLASMA_ID = new ResourceLocation(Sephiria.MOD_ID, "plasma");
 
 	/** 冻伤的减益 id：标签文案见 {@code ui.sephiria_fantasy.debuff.frostbites}。 */
-	public static final ResourceLocation FROSTBITE_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frostbites");
+	public static final ResourceLocation FROSTBITE_ID = new ResourceLocation(Sephiria.MOD_ID, "frostbites");
 
 	/** 冰冻（眩晕）的减益 id：客户端按它把被冻住的敌人染成冰蓝（见 FrozenTintMixin）。 */
-	public static final ResourceLocation FROZEN_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frozen");
+	public static final ResourceLocation FROZEN_ID = new ResourceLocation(Sephiria.MOD_ID, "frozen");
 
 	/** 触电挂在目标实体上的运行时附件（一份记账：整段共享时间轴与层数）。 */
 	private static final AttachmentType<Shock> SHOCKS = AttachmentRegistry.<Shock>builder()
@@ -243,7 +245,7 @@ public final class Debuffs {
 	}
 
 	public static void register() {
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, blockedDamage, damageTaken, blocked) -> {
+		com.sephiria.compat.DamageEvents.registerAfterDamage((entity, source, blockedDamage, damageTaken, blocked) -> {
 			// 挂在 AFTER_DAMAGE 上与吸血同理：只有扣完护甲、减伤之后真正打掉的那一下才算触发
 			if (damageTaken <= 0.0F || !(source.getEntity() instanceof ServerPlayer player) || entity == player) {
 				return;
@@ -320,7 +322,7 @@ public final class Debuffs {
 	 * 的（原版源码里是 {@code if_acmpne}），每刻都塞一个新对象进去会把属性标脏、
 	 * 每刻同步一次属性包；查过再决定要不要写，就只在真的变了那一次同步。
 	 */
-	private static void applySlow(LivingEntity entity, ResourceLocation id, double amount) {
+	private static void applySlow(LivingEntity entity, UUID id, String name, double amount) {
 		AttributeInstance instance = entity.getAttribute(Attributes.MOVEMENT_SPEED);
 
 		if (instance == null) {
@@ -329,12 +331,11 @@ public final class Debuffs {
 
 		AttributeModifier existing = instance.getModifier(id);
 
-		if (existing != null && existing.amount() == amount) {
+		if (existing != null && existing.getAmount() == amount) {
 			return;
 		}
 
-		instance.addOrUpdateTransientModifier(
-				new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+		Modifiers.setTransient(instance, id, name, amount, AttributeModifier.Operation.MULTIPLY_TOTAL);
 	}
 
 	/**
@@ -439,7 +440,7 @@ public final class Debuffs {
 
 		entity.setAttached(FROSTBITES, new Frostbite(lifetime, frostbite.stacks(), frostbite.attackerId()));
 		syncStacks(FROSTBITE_ID, entity, frostbite.stacks());
-		applySlow(entity, FROSTBITE_SLOW_ID, -FROSTBITE_SLOW_PERCENT / 100.0D);
+		applySlow(entity, FROSTBITE_SLOW_ID, FROSTBITE_SLOW_NAME, -FROSTBITE_SLOW_PERCENT / 100.0D);
 
 		// 冰霜特效：贴着目标撒雪（原版雪片粒子），浓度随层数
 		level.sendParticles(ParticleTypes.SNOWFLAKE, entity.getX(), entity.getY(0.5D), entity.getZ(),
@@ -474,7 +475,7 @@ public final class Debuffs {
 		entity.setAttached(FROZEN, new Frozen(lifetime, frozen.attackerId()));
 		syncStacks(FROZEN_ID, entity, 1);
 		// 定身：移动速度乘 0（原版属性下限也是 0）——只是保险，真正拦住位移的是 FrozenMotionMixin
-		applySlow(entity, FROZEN_STUN_ID, -1.0D);
+		applySlow(entity, FROZEN_STUN_ID, FROZEN_STUN_NAME, -1.0D);
 		// 「把那一刻的动画定格」：走路动画的速度按住不放，四肢就停在冰冻那一刻的姿势上
 		// （不按住的话它会自己收回到站姿——那也是「动」）
 		entity.walkAnimation.setSpeed(0.0F);
@@ -486,7 +487,7 @@ public final class Debuffs {
 	}
 
 	/** 摘掉某一条减速修饰符（不碰另一条）。 */
-	private static void clearSlow(LivingEntity entity, ResourceLocation id) {
+	private static void clearSlow(LivingEntity entity, UUID id) {
 		AttributeInstance instance = entity.getAttribute(Attributes.MOVEMENT_SPEED);
 
 		if (instance != null) {
@@ -953,7 +954,7 @@ public final class Debuffs {
 		target.setAttached(FROSTBITES, new Frostbite(FROSTBITE_DURATION_TICKS, stacks, player.getUUID()));
 		// 层数刚变：立刻推给附近玩家，脚下的层数标签当场跟着变
 		syncStacks(FROSTBITE_ID, target, stacks);
-		applySlow(target, FROSTBITE_SLOW_ID, -FROSTBITE_SLOW_PERCENT / 100.0D);
+		applySlow(target, FROSTBITE_SLOW_ID, FROSTBITE_SLOW_NAME, -FROSTBITE_SLOW_PERCENT / 100.0D);
 		return true;
 	}
 

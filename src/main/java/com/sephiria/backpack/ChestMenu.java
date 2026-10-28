@@ -172,10 +172,9 @@ public class ChestMenu extends AbstractContainerMenu {
 		// 已经抽过的箱子沿用存着的那一批（长度可能是 5 或 6），界面按它的实际格数显示
 		int rewardCount = Math.max(1, Math.min(ChestItem.MAX_REWARDS, rolled.size()));
 
-		return new ExtendedScreenHandlerFactory<Unit>() {
+		return new ExtendedScreenHandlerFactory() {
 			@Override
-			public Unit getScreenOpeningData(ServerPlayer ignored) {
-				return Unit.INSTANCE;
+			public void writeScreenOpeningData(ServerPlayer ignored, net.minecraft.network.FriendlyByteBuf buf) {
 			}
 
 			@Override
@@ -260,7 +259,7 @@ public class ChestMenu extends AbstractContainerMenu {
 		}
 
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-				SoundEvents.NOTE_BLOCK_BELL, SoundSource.PLAYERS, 0.7F, 0.9F);
+				SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 0.7F, 0.9F);
 		this.broadcastChanges();
 		return true;
 	}

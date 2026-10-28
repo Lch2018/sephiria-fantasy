@@ -31,7 +31,8 @@ public final class Colours {
 
 		for (int i = 0; i < text.length(); i++) {
 			String character = String.valueOf(text.charAt(i));
-			result.append(Component.literal(character).withColor(RAINBOW[index % RAINBOW.length]));
+			int color = RAINBOW[i % RAINBOW.length];
+			result.append(Component.literal(character).withStyle(style -> style.withColor(color)));
 			index++;
 		}
 

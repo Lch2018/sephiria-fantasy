@@ -74,8 +74,8 @@ public class KeenEyeItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.keen_eye_skill",
-						Component.literal(Numbers.format(this.critBonusPercent(level))).withColor(COLOUR_BONUS),
+						Component.literal(Numbers.format(this.critBonusPercent(level))).withStyle(style -> style.withColor(COLOUR_BONUS)),
 						Component.literal(String.valueOf(durationSeconds(level))),
-						Component.literal(Numbers.format(keenMpCost(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(keenMpCost(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

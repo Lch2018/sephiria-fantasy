@@ -26,7 +26,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 public final class ModBlocks {
 	/** 方块 id（{@code sephiria_fantasy:root_retreat}）。 */
 	public static final ResourceLocation ROOT_RETREAT_ID =
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat");
+			new ResourceLocation(Sephiria.MOD_ID, "root_retreat");
 	/** 方块的注册键：{@code Properties.setId} 与默认掉落表都用它。 */
 	public static final ResourceKey<Block> ROOT_RETREAT_KEY = ResourceKey.create(Registries.BLOCK, ROOT_RETREAT_ID);
 
@@ -47,7 +47,7 @@ public final class ModBlocks {
 
 	/** 许愿池 id（{@code sephiria_fantasy:wish_pool}）。 */
 	public static final ResourceLocation WISH_POOL_ID =
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool");
+			new ResourceLocation(Sephiria.MOD_ID, "wish_pool");
 	/** 许愿池的注册键。 */
 	public static final ResourceKey<Block> WISH_POOL_KEY = ResourceKey.create(Registries.BLOCK, WISH_POOL_ID);
 
@@ -67,7 +67,7 @@ public final class ModBlocks {
 
 	/** 赛菲莉娅信标 id（{@code sephiria_fantasy:sephiria_beacon}）。 */
 	public static final ResourceLocation SEPHIRIA_BEACON_ID =
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_beacon");
+			new ResourceLocation(Sephiria.MOD_ID, "sephiria_beacon");
 	/** 赛菲莉娅信标的注册键。 */
 	public static final ResourceKey<Block> SEPHIRIA_BEACON_KEY =
 			ResourceKey.create(Registries.BLOCK, SEPHIRIA_BEACON_ID);

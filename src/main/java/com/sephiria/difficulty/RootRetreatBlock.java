@@ -1,6 +1,5 @@
 package com.sephiria.difficulty;
 
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -29,17 +28,8 @@ import net.minecraft.world.phys.BlockHitResult;
  * 相对默认多转了 180°（见 blockstates/root_retreat.json 的注释）。
  */
 public class RootRetreatBlock extends HorizontalDirectionalBlock implements EntityBlock {
-	/** 1.21.1 的 HorizontalDirectionalBlock 要求子类提供 codec；这里只用于注册/数据生成。 */
-	public static final MapCodec<RootRetreatBlock> CODEC = MapCodec.unit(
-			() -> new RootRetreatBlock(Properties.of()));
-
 	public RootRetreatBlock(Properties properties) {
 		super(properties);
-	}
-
-	@Override
-	protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
-		return CODEC;
 	}
 
 	@Override
@@ -82,8 +72,8 @@ public class RootRetreatBlock extends HorizontalDirectionalBlock implements Enti
 	 * {@code /spawnpoint} 设的那一份。没激活时右键只弹一行红字，不打开界面。
 	 */
 	@Override
-	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
-			BlockHitResult hit) {
+	public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
+			net.minecraft.world.InteractionHand hand, BlockHitResult hit) {
 		if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
 			BlockEntity entity = level.getBlockEntity(pos);
 
@@ -91,7 +81,7 @@ public class RootRetreatBlock extends HorizontalDirectionalBlock implements Enti
 				if (!root.isActive(serverPlayer)) {
 					serverPlayer.sendSystemMessage(
 							Component.translatable("screen.sephiria_fantasy.root_retreat.inactive")
-									.withColor(0xFFFF5555));
+									.withStyle(style -> style.withColor(0xFFFF5555)));
 					return InteractionResult.SUCCESS;
 				}
 

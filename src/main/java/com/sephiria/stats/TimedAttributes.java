@@ -1,8 +1,9 @@
 package com.sephiria.stats;
 
 import com.sephiria.Sephiria;
+import com.sephiria.compat.AttributeIds;
+import com.sephiria.compat.Modifiers;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -30,7 +31,7 @@ public final class TimedAttributes {
 	private static final List<Entry> ACTIVE = new ArrayList<>();
 
 	/** 一条限时修饰符：挂在谁身上、改哪条属性、什么数值、什么时候到期。 */
-	private record Entry(LivingEntity target, Holder<Attribute> attribute, ResourceLocation id, double amount, long until) {
+	private record Entry(LivingEntity target, Attribute attribute, ResourceLocation id, double amount, long until) {
 	}
 
 	private TimedAttributes() {
@@ -46,7 +47,7 @@ public final class TimedAttributes {
 	 *
 	 * @param ticks 持续多少 tick（从这一刻算起）
 	 */
-	public static void grant(LivingEntity entity, Holder<Attribute> attribute, ResourceLocation id, double amount,
+	public static void grant(LivingEntity entity, Attribute attribute, ResourceLocation id, double amount,
 			int ticks) {
 		// 同一个来源重复给：刷新时间与数值，不叠上去
 		ACTIVE.removeIf(entry -> entry.target() == entity && entry.id().equals(id));
@@ -55,8 +56,8 @@ public final class TimedAttributes {
 		AttributeInstance instance = entity.getAttribute(attribute);
 
 		if (instance != null) {
-			instance.addOrUpdateTransientModifier(
-					new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_VALUE));
+			Modifiers.setTransient(instance, AttributeIds.of(id), id.toString(), amount,
+					AttributeModifier.Operation.ADDITION);
 		}
 	}
 
@@ -81,7 +82,7 @@ public final class TimedAttributes {
 	 * <p>面板要显示「当前实际值」，而限时加成是直接挂在原版属性上的修饰符、不在面板数值里，
 	 * 所以面板把这些加回去（机械结算那边不加，免得重复计算）。
 	 */
-	public static double bonusOf(LivingEntity entity, Holder<Attribute> attribute) {
+	public static double bonusOf(LivingEntity entity, Attribute attribute) {
 		double total = 0.0D;
 
 		for (Entry entry : ACTIVE) {
@@ -127,7 +128,7 @@ public final class TimedAttributes {
 	}
 
 	/** 立刻摘掉某一条（技能提前结束、玩家换装时用）。 */
-	public static void revoke(LivingEntity entity, Holder<Attribute> attribute, ResourceLocation id) {
+	public static void revoke(LivingEntity entity, Attribute attribute, ResourceLocation id) {
 		ACTIVE.removeIf(entry -> entry.target() == entity && entry.id().equals(id));
 		remove(entity, attribute, id);
 		sync(entity);
@@ -154,7 +155,7 @@ public final class TimedAttributes {
 		}
 	}
 
-	private static void remove(LivingEntity entity, Holder<Attribute> attribute, ResourceLocation id) {
+	private static void remove(LivingEntity entity, Attribute attribute, ResourceLocation id) {
 		// 自定义加成（attribute 为 null）没挂在原版属性上，摘除就是从表里删掉（tick 里已做）
 		if (attribute == null) {
 			return;
@@ -163,7 +164,7 @@ public final class TimedAttributes {
 		AttributeInstance instance = entity.getAttribute(attribute);
 
 		if (instance != null) {
-			instance.removeModifier(id);
+			instance.removeModifier(AttributeIds.of(id));
 		}
 	}
 }

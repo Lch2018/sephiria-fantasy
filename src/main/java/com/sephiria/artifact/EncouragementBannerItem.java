@@ -66,7 +66,7 @@ public class EncouragementBannerItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.banner_skill",
-						Component.literal(Numbers.format(bannerAttackSpeed(level))).withColor(COLOUR_BONUS),
-						Component.literal(Numbers.format(bannerRange(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(bannerAttackSpeed(level))).withStyle(style -> style.withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(bannerRange(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

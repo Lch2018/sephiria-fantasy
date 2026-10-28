@@ -68,10 +68,10 @@ public class LightningRodItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.cloud_capacity",
-						Component.literal(Numbers.format(this.cloudCapacityBonus(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.cloudCapacityBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.cloud_combat_regen",
-						Component.literal(Numbers.format(this.cloudCombatRegenPercent(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.cloudCombatRegenPercent(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.lightning_element",
-						Component.literal(Numbers.format(this.lightningElementBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.lightningElementBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

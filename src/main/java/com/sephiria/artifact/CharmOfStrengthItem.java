@@ -52,6 +52,6 @@ public class CharmOfStrengthItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.physical",
-				Component.literal(Numbers.format(this.physicalBonus(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(this.physicalBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

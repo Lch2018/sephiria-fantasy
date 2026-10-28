@@ -313,7 +313,7 @@ public final class SephiriaDamage {
 	 * 只有 10 刻的计时器，不用进存档，所以是内存附件（不 persistent、不 sync）。
 	 */
 	private static final AttachmentType<Integer> LAST_KNOCKBACK = AttachmentRegistry.create(
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "last_knockback"));
+			new ResourceLocation(Sephiria.MOD_ID, "last_knockback"));
 
 	/**
 	 * 这一下能不能真的把目标推出去——由 {@code mixin/SephiriaDamageFramesMixin} 挂在
@@ -716,6 +716,6 @@ public final class SephiriaDamage {
 	}
 
 	private static ResourceKey<DamageType> typeKey(String name) {
-		return ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, name));
+		return ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation(Sephiria.MOD_ID, name));
 	}
 }

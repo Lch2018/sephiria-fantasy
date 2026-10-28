@@ -53,6 +53,6 @@ public class ThunderStoneItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.cloud_damage",
-						Component.literal(Numbers.format(this.cloudDamagePercent(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.cloudDamagePercent(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

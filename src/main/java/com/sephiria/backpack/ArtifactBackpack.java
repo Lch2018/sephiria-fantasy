@@ -56,7 +56,7 @@ public final class ArtifactBackpack extends SimpleContainer {
 	 */
 	public record Saved(List<ItemStack> items, List<Integer> slotLevels, int slots, int height) {
 		public static final Codec<Saved> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-				ItemStack.OPTIONAL_CODEC.listOf().fieldOf("items").forGetter(Saved::items),
+				ItemStack.CODEC.listOf().fieldOf("items").forGetter(Saved::items),
 				Codec.INT.listOf().fieldOf("slot_levels").forGetter(Saved::slotLevels),
 				Codec.INT.optionalFieldOf("slots", 0).forGetter(Saved::slots),
 				Codec.INT.optionalFieldOf("height", 0).forGetter(Saved::height)
@@ -81,7 +81,7 @@ public final class ArtifactBackpack extends SimpleContainer {
 			.persistent(Saved.CODEC)
 			// 神器是收集品：死亡不掉落，背包跟着玩家走。要改成掉落去掉这一行即可。
 			.copyOnDeath()
-			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_backpack"));
+			.buildAndRegister(new ResourceLocation(Sephiria.MOD_ID, "artifact_backpack"));
 
 	/** 每个玩家一份：菜单与效果统计必须看到同一个对象，所以缓存起来。 */
 	private static final Map<UUID, ArtifactBackpack> CACHE = new HashMap<>();

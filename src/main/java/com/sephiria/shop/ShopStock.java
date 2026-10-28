@@ -56,7 +56,7 @@ public final class ShopStock extends SimpleContainer {
 	/** 存档用的数据：十格物品 + 每格已买次数。 */
 	public record Saved(List<ItemStack> slots, List<Integer> bought) {
 		public static final Codec<Saved> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-				ItemStack.OPTIONAL_CODEC.listOf().fieldOf("slots").forGetter(Saved::slots),
+				ItemStack.CODEC.listOf().fieldOf("slots").forGetter(Saved::slots),
 				Codec.INT.listOf().fieldOf("bought").forGetter(Saved::bought)
 		).apply(instance, Saved::new));
 	}
@@ -65,7 +65,7 @@ public final class ShopStock extends SimpleContainer {
 			.persistent(Saved.CODEC)
 			// 货架是商店的状态、不是身上的东西：死亡（换实体）也要跟着走，不然一死就换一批货
 			.copyOnDeath()
-			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "shop_stock"));
+			.buildAndRegister(new ResourceLocation(Sephiria.MOD_ID, "shop_stock"));
 
 	private static final Map<UUID, ShopStock> STOCKS = new HashMap<>();
 

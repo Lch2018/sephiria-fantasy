@@ -61,9 +61,9 @@ public class SapoteFruitItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.cloud_capacity",
-						Component.literal(Numbers.format(this.cloudCapacityBonus(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.cloudCapacityBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				// 属性页的 MP再生 是「每 10 秒」的值，词条也按同一口径显示（内部每秒值 ×10）
 				Component.translatable("artifact.sephiria_fantasy.affix.mp_regen",
-						Component.literal(Numbers.format(this.mpRegenBonus(level) * 10.0D)).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.mpRegenBonus(level) * 10.0D)).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

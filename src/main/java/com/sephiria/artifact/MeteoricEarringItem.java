@@ -63,6 +63,6 @@ public class MeteoricEarringItem extends ArtifactItem {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.sun_sword_drop_near"),
 				Component.translatable("artifact.sephiria_fantasy.affix.fire_element",
-						Component.literal(Numbers.format(this.fireElementBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.fireElementBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

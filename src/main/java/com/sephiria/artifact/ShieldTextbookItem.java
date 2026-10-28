@@ -52,6 +52,6 @@ public class ShieldTextbookItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.special_attack",
-				Component.literal(Numbers.format(this.specialAttackBonus(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(this.specialAttackBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

@@ -56,6 +56,6 @@ public class CrimsonSunsetItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.sun_sword_enlarge",
-						Component.literal(Numbers.format(this.sunSwordEnlargeChance(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.sunSwordEnlargeChance(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

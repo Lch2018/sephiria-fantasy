@@ -54,8 +54,8 @@ public class GoldenCloakItem extends ArtifactItem {
 		// 数值本身不带「+」——加号在语言文件里，和别的词条保持一致
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.dash_charges",
-						Component.literal(Numbers.format(this.dashChargesBonus(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.dashChargesBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.attack_speed",
-						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

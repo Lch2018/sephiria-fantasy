@@ -24,7 +24,7 @@ public final class KeenEyeSkill implements ArtifactSkill {
 	private static final int COOLDOWN_TICKS = 600;
 	/** 限时加成的来源 id：战斗与面板按它查当前加成。 */
 	public static final ResourceLocation CRIT_BONUS_ID =
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "keen_eye_crit");
+			new ResourceLocation(Sephiria.MOD_ID, "keen_eye_crit");
 
 	private KeenEyeSkill() {
 	}

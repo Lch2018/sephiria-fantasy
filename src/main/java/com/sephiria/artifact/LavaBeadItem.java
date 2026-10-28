@@ -61,8 +61,8 @@ public class LavaBeadItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.burn_extra",
-						Component.literal(Numbers.format(this.burnExtraApplications(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.burnExtraApplications(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.burn_stack",
-						Component.literal(Numbers.format(this.burnStackBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.burnStackBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

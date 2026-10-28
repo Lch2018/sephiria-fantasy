@@ -8,7 +8,6 @@ import com.sephiria.stats.PlayerStats;
 import com.sephiria.util.Numbers;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.BlockParticleOption;
-import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -297,8 +296,8 @@ public class RedSnakeEyeItem extends ArtifactItem {
 		data.set(Display.DATA_TRANSLATION_ID, new Vector3f(-0.5F, -0.5F, -0.5F));
 		data.set(Display.DATA_SCALE_ID, new Vector3f(BODY_SCALE_MIN));
 		data.set(Display.DATA_BRIGHTNESS_OVERRIDE_ID, BRIGHTNESS_OVERRIDE);
-		data.set(Display.DATA_TRANSFORMATION_INTERPOLATION_DURATION_ID, TRANSFORM_INTERPOLATION_TICKS);
-		data.set(Display.DATA_POS_ROT_INTERPOLATION_DURATION_ID, POS_INTERPOLATION_TICKS);
+		data.set(Display.DATA_INTERPOLATION_DURATION_ID, TRANSFORM_INTERPOLATION_TICKS);
+		data.set(Display.DATA_INTERPOLATION_DURATION_ID, POS_INTERPOLATION_TICKS);
 		data.set(Display.BlockDisplay.DATA_BLOCK_STATE_ID, Blocks.MAGMA_BLOCK.defaultBlockState());
 		body.setPos(at.x, at.y, at.z);
 		body.setNoGravity(true);
@@ -477,7 +476,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 	/** 转入消失：本体定死在落点（位移插值归零，免得还悬在插值半路上），配一声岩浆嘶响。 */
 	private static void startVanish(Meteor meteor) {
 		if (meteor.body() != null) {
-			meteor.body().getEntityData().set(Display.DATA_POS_ROT_INTERPOLATION_DURATION_ID, 0);
+			meteor.body().getEntityData().set(Display.DATA_INTERPOLATION_DURATION_ID, 0);
 			meteor.body().setPos(meteor.impact().x, meteor.impact().y, meteor.impact().z);
 		}
 
@@ -568,7 +567,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.meteor",
-						Component.literal(Numbers.format(this.meteorCount(level))).withColor(COLOUR_BONUS),
-						Component.literal(Numbers.format(this.meteorDamagePercent(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.meteorCount(level))).withStyle(style -> style.withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.meteorDamagePercent(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

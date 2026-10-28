@@ -1,5 +1,6 @@
 package com.sephiria.artifact;
 
+import com.sephiria.compat.ItemData;
 import net.minecraft.world.level.Level;
 
 import com.mojang.serialization.Codec;
@@ -7,10 +8,8 @@ import com.sephiria.Sephiria;
 import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.util.Numbers;
 import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -82,13 +81,7 @@ public class EternalEclipseItem extends ArtifactItem {
 	 * <p>只有<b>装饰性</b>的用途——玩法判定一律现查背包格子（{@link #sideOf}），
 	 * 免得有人用指令给一份带组件的物品就把效果骗到手。
 	 */
-	public static final DataComponentType<Integer> SIDE = Registry.register(
-			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "eternal_eclipse_side"),
-			DataComponentType.<Integer>builder()
-					.persistent(Codec.INT)
-					.networkSynchronized(ByteBufCodecs.VAR_INT)
-					.build());
+	public static final String SIDE = "eternal_eclipse_side";
 
 	public EternalEclipseItem(Properties properties) {
 		super(properties);
@@ -138,7 +131,7 @@ public class EternalEclipseItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		Component value = Component.literal(Numbers.format(this.frostArmamentDamagePercent(level)))
-				.withColor(COLOUR_BONUS);
+				.withStyle(style -> style.withColor(COLOUR_BONUS));
 
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.eclipse_sides"),
@@ -198,7 +191,7 @@ public class EternalEclipseItem extends ArtifactItem {
 			ItemStack stack = backpack.getItem(slot);
 
 			if (stack.getItem() instanceof EternalEclipseItem) {
-				stack.set(SIDE, sideOfSlot(slot).id());
+				ItemData.setInt(stack, SIDE, sideOfSlot(slot).id());
 			}
 		}
 	}
@@ -206,7 +199,7 @@ public class EternalEclipseItem extends ArtifactItem {
 	/** 离开背包的那一份清掉组件（图标回到默认那张）。 */
 	public static void clear(ItemStack stack) {
 		if (stack != null && stack.getItem() instanceof EternalEclipseItem) {
-			stack.remove(SIDE);
+			ItemData.remove(stack, SIDE);
 		}
 	}
 
@@ -218,8 +211,8 @@ public class EternalEclipseItem extends ArtifactItem {
 	 */
 	@Override
 	public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean selected) {
-		if (stack.has(SIDE)) {
-			stack.remove(SIDE);
+		if (ItemData.has(stack, SIDE)) {
+			ItemData.remove(stack, SIDE);
 		}
 	}
 }

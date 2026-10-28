@@ -53,6 +53,6 @@ public class OakCharcoalItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.burn_tick_speed",
-						Component.literal(Numbers.format(this.burnTickSpeedPercent(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.burnTickSpeedPercent(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

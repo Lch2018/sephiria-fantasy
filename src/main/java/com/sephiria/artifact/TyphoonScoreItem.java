@@ -81,7 +81,7 @@ public class TyphoonScoreItem extends ArtifactItem {
 
 	/** 挂在伤害事件上：武器攻击命中时附加闪电属性伤害（无冷却，只有武器触发）。 */
 	public static void register() {
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, blockedDamage, damageTaken, blocked) -> {
+		com.sephiria.compat.DamageEvents.registerAfterDamage((entity, source, blockedDamage, damageTaken, blocked) -> {
 			if (damageTaken <= 0.0F || !(source.getEntity() instanceof ServerPlayer player) || entity == player) {
 				return;
 			}
@@ -114,10 +114,10 @@ public class TyphoonScoreItem extends ArtifactItem {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.cloud_speed",
 						Component.literal(Numbers.format(this.cloudSpeedPercentOfAttackSpeed(level)))
-								.withColor(COLOUR_BONUS)),
+								.withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.weapon_lightning",
-						Component.literal(Numbers.format(this.weaponLightningDamage(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.weaponLightningDamage(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.attack_speed",
-						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

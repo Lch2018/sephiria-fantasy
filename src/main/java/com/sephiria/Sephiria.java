@@ -1,5 +1,6 @@
 package com.sephiria;
 
+import com.sephiria.network.ArtifactSkillsPayload;
 import com.sephiria.ability.Dash;
 import com.sephiria.ability.DashSkill;
 import com.sephiria.ability.Invulnerability;

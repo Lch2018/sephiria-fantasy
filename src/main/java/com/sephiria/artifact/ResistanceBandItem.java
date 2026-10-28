@@ -69,10 +69,10 @@ public class ResistanceBandItem extends ArtifactItem {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.dodge_restore",
 						Component.literal(Numbers.format(this.dodgeRestoreDashCharges(level)))
-								.withColor(COLOUR_BONUS)),
+								.withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.crit_damage",
-						Component.literal(Numbers.format(this.critDamageBonus(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.critDamageBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.dodge",
-						Component.literal(Numbers.format(this.dodgeBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.dodgeBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

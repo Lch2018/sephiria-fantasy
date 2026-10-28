@@ -1,6 +1,8 @@
 package com.sephiria.stats;
 
 import com.sephiria.Sephiria;
+import com.sephiria.compat.AttributeIds;
+import com.sephiria.compat.Modifiers;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -21,10 +23,10 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
  * 那部分血要自己回满——和原版加血量上限的观感一致。
  */
 public final class StatAttributes {
-	private static final ResourceLocation MOVE_SPEED_MODIFIER =
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_move_speed");
-	private static final ResourceLocation MAX_HP_MODIFIER =
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_max_hp");
+	private static final java.util.UUID MOVE_SPEED_MODIFIER = AttributeIds.of("attr_move_speed");
+	private static final java.util.UUID MAX_HP_MODIFIER = AttributeIds.of("attr_max_hp");
+	private static final String MOVE_SPEED_MODIFIER_NAME = "sephiria:attr_move_speed";
+	private static final String MAX_HP_MODIFIER_NAME = "sephiria:attr_max_hp";
 	/** 检查间隔（tick）：属性变化后最多等这么久就会重算。 */
 	private static final int CHECK_INTERVAL = 4;
 	/** 原版「幸运」buff 每次续多久（刻）：每 4 刻对账一次，时长比它大就不会闪断。 */
@@ -106,9 +108,9 @@ public final class StatAttributes {
 			return;
 		}
 
-		if (current == null || current.amount() != amount) {
-			instance.addOrUpdateTransientModifier(
-					new AttributeModifier(MOVE_SPEED_MODIFIER, amount, AttributeModifier.Operation.ADD_VALUE));
+		if (current == null || current.getAmount() != amount) {
+			Modifiers.setTransient(instance, MOVE_SPEED_MODIFIER, MOVE_SPEED_MODIFIER_NAME, amount,
+					AttributeModifier.Operation.ADDITION);
 		}
 	}
 
@@ -132,9 +134,9 @@ public final class StatAttributes {
 			return;
 		}
 
-		if (current == null || current.amount() != amount) {
-			instance.addOrUpdateTransientModifier(
-					new AttributeModifier(MAX_HP_MODIFIER, amount, AttributeModifier.Operation.ADD_VALUE));
+		if (current == null || current.getAmount() != amount) {
+			Modifiers.setTransient(instance, MAX_HP_MODIFIER, MAX_HP_MODIFIER_NAME, amount,
+					AttributeModifier.Operation.ADDITION);
 		}
 	}
 }

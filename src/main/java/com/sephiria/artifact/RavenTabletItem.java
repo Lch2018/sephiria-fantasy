@@ -53,6 +53,6 @@ public class RavenTabletItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.cloud_free_shot",
-						Component.literal(Numbers.format(this.cloudFreeShotChance(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.cloudFreeShotChance(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

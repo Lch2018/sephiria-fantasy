@@ -21,23 +21,18 @@ import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceType;
 public final class ModStructures {
 	public static final StructureType<SephiriaTreasureStructure> SEPHIRIA_TREASURE =
 			Registry.register(BuiltInRegistries.STRUCTURE_TYPE,
-					ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_treasure"),
+					new ResourceLocation(Sephiria.MOD_ID, "sephiria_treasure"),
 					new StructureType<SephiriaTreasureStructure>() {
 						@Override
-						public MapCodec<SephiriaTreasureStructure> codec() {
+						public com.mojang.serialization.Codec<SephiriaTreasureStructure> codec() {
 							return SephiriaTreasureStructure.CODEC;
 						}
 					});
 
 	public static final StructurePieceType SEPHIRIA_TREASURE_PIECE =
 			Registry.register(BuiltInRegistries.STRUCTURE_PIECE,
-					ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_treasure_piece"),
-					new StructurePieceType.ContextlessType() {
-						@Override
-						public StructurePiece load(CompoundTag tag) {
-							return new SephiriaTreasurePiece(tag);
-						}
-					});
+					new ResourceLocation(Sephiria.MOD_ID, "sephiria_treasure_piece"),
+					(context, tag) -> new SephiriaTreasurePiece(tag));
 
 	private ModStructures() {
 	}

@@ -1,5 +1,6 @@
 package com.sephiria.weapon;
 
+import com.sephiria.compat.WeaponAttributes;
 import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.Dash;
@@ -21,6 +22,10 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import com.google.common.collect.Multimap;
 import net.minecraft.world.item.Item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -56,7 +61,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	/** 专注在技能存储里的 id（HUD 也读它）。 */
-	public static final ResourceLocation FOCUS = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "focus");
+	public static final ResourceLocation FOCUS = new ResourceLocation(Sephiria.MOD_ID, "focus");
 
 	/** 专注上限：默认 1 层。 */
 	public static final double FOCUS_MAX = 1.0D;
@@ -109,6 +114,13 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	public SephiriaDaggerItem(WeaponBranch branch, Item.Properties properties) {
 		super(properties);
 		this.branch = branch;
+	}
+
+	@Override
+	public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlot slot) {
+		return slot == EquipmentSlot.MAINHAND
+				? WeaponAttributes.of(ATTACK_DAMAGE, ATTACK_SPEED)
+				: super.getDefaultAttributeModifiers(slot);
 	}
 
 	@Override

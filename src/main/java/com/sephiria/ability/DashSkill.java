@@ -22,7 +22,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class DashSkill {
 	/** 技能存储 id。 */
-	public static final ResourceLocation STORAGE = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "dash");
+	public static final ResourceLocation STORAGE = new ResourceLocation(Sephiria.MOD_ID, "dash");
 
 	/** 存储总量：3 次。 */
 	public static final double MAX_CHARGES = 3.0D;

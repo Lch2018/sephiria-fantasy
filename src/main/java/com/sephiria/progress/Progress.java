@@ -12,7 +12,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.Advancement;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -118,7 +118,7 @@ public final class Progress {
 	private static final AttachmentType<Saved> SAVED = AttachmentRegistry.<Saved>builder()
 			.persistent(Saved.CODEC)
 			.copyOnDeath()
-			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "progress"));
+			.buildAndRegister(new ResourceLocation(Sephiria.MOD_ID, "progress"));
 
 	private static int tickCounter;
 
@@ -161,14 +161,13 @@ public final class Progress {
 			saved.snipeKills++;
 		}
 
-		// 弩矢这类投射物的 DamageSource 也会带着发射它的武器；没有就退回主手
-		ItemStack weapon = source.getWeaponItem();
+		// 1.20.1 的 DamageSource 不记武器；弩矢击杀时退回主手也够用（主手通常就是那把弩）
+		ItemStack weapon = player.getMainHandItem();
 
-		if (weapon.isEmpty()) {
-			weapon = player.getMainHandItem();
-		}
-
-		boolean zombie = victim.getType().builtInRegistryHolder().is(EntityTypeTags.ZOMBIES);
+		boolean zombie = victim.getType() == net.minecraft.world.entity.EntityType.ZOMBIE
+				|| victim.getType() == net.minecraft.world.entity.EntityType.HUSK
+				|| victim.getType() == net.minecraft.world.entity.EntityType.DROWNED
+				|| victim.getType() == net.minecraft.world.entity.EntityType.ZOMBIE_VILLAGER;
 		boolean skeleton = victim.getType().builtInRegistryHolder().is(EntityTypeTags.SKELETONS);
 
 		if (zombie && weapon.is(ModItems.DAGGER)) {
@@ -208,7 +207,8 @@ public final class Progress {
 			changed = true;
 		}
 
-		String biome = player.level().getBiome(player.blockPosition()).getRegisteredName();
+		String biome = player.level().getBiome(player.blockPosition()).unwrapKey()
+				.map(key -> key.location().toString()).orElse("");
 
 		if (!saved.biomes.contains(biome)) {
 			saved.biomes.add(biome);
@@ -314,19 +314,19 @@ public final class Progress {
 		}
 	}
 
-	private static AdvancementHolder holder(ServerPlayer player, String path) {
+	private static Advancement holder(ServerPlayer player, String path) {
 		MinecraftServer server = player.level().getServer();
 		return server == null ? null
-				: server.getAdvancements().get(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, path));
+				: server.getAdvancements().getAdvancement(new ResourceLocation(Sephiria.MOD_ID, path));
 	}
 
 	private static boolean isDone(ServerPlayer player, String path) {
-		AdvancementHolder holder = holder(player, path);
+		Advancement holder = holder(player, path);
 		return holder != null && player.getAdvancements().getOrStartProgress(holder).isDone();
 	}
 
 	private static void grant(ServerPlayer player, String path) {
-		AdvancementHolder holder = holder(player, path);
+		Advancement holder = holder(player, path);
 
 		if (holder == null || player.getAdvancements().getOrStartProgress(holder).isDone()) {
 			return;

@@ -85,11 +85,11 @@ public class EternalWinterItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		Component chance = Component.literal(Numbers.format(this.eternalWinterChance(level)))
-				.withColor(COLOUR_BONUS);
+				.withStyle(style -> style.withColor(COLOUR_BONUS));
 		Component physical = Component.literal(Numbers.format(this.eternalWinterPhysicalPercent(level)))
-				.withColor(COLOUR_BONUS);
+				.withStyle(style -> style.withColor(COLOUR_BONUS));
 		Component ice = Component.literal(Numbers.format(this.eternalWinterIcePercent(level)))
-				.withColor(COLOUR_BONUS);
+				.withStyle(style -> style.withColor(COLOUR_BONUS));
 
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.eternal_winter", chance, physical, ice));
@@ -97,7 +97,7 @@ public class EternalWinterItem extends ArtifactItem {
 
 	/** 挂在伤害事件上：普通攻击命中后按概率补一段冰霜伤害。 */
 	public static void register() {
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, blockedDamage, damageTaken, blocked) -> {
+		com.sephiria.compat.DamageEvents.registerAfterDamage((entity, source, blockedDamage, damageTaken, blocked) -> {
 			if (damageTaken <= 0.0F || !(source.getEntity() instanceof ServerPlayer player) || entity == player) {
 				return;
 			}

@@ -64,7 +64,7 @@ public final class SurvivalTalent {
 		// 「生存」两个字用生存天赋色；属性名用一份不带 %s 的纯名称键
 		// （原来直接拿属性页的「防御力：%s」当参数，会显示成「生存：防御力：%s +1」）
 		Component talentName = Component.translatable("screen.sephiria_fantasy.talent.survival")
-				.withColor(Talent.SURVIVAL.colour());
+				.withStyle(style -> style.withColor(Talent.SURVIVAL.colour()));
 		player.sendSystemMessage(Component.translatable("message.sephiria_fantasy.survival_bonus",
 				talentName, Component.translatable(picked.key)), true);
 	}

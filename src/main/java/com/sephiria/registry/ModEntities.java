@@ -46,7 +46,7 @@ public final class ModEntities {
 
 	private static <T extends Entity> EntityType<T> register(String name, EntityType.Builder<T> builder) {
 		ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE,
-				ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, name));
+				new ResourceLocation(Sephiria.MOD_ID, name));
 		return Registry.register(BuiltInRegistries.ENTITY_TYPE, key, builder.build(key.location().toString()));
 	}
 }

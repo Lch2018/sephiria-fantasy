@@ -52,6 +52,6 @@ public class RedYarnBallItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.burn_damage",
-						Component.literal(Numbers.format(this.burnDamagePercent(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.burnDamagePercent(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

@@ -4,10 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.util.Numbers;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -34,13 +31,6 @@ public class PatternSlateItem extends SlateItem {
 				Codec.INT.fieldOf("dy").forGetter(Cell::dy),
 				Codec.INT.fieldOf("delta").forGetter(Cell::delta)
 		).apply(instance, Cell::new));
-
-		/** 网络同步：合成石板的图案要跟着物品一起发给客户端，界面才能画预览。 */
-		public static final StreamCodec<ByteBuf, Cell> STREAM_CODEC = StreamCodec.composite(
-				ByteBufCodecs.VAR_INT, Cell::dx,
-				ByteBufCodecs.VAR_INT, Cell::dy,
-				ByteBufCodecs.VAR_INT, Cell::delta,
-				Cell::new);
 	}
 
 	/** 增量文字的颜色：加绿、减红。 */
@@ -118,21 +108,21 @@ public class PatternSlateItem extends SlateItem {
 		for (int delta : deltas) {
 			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.effect.cells",
 					Component.literal((delta > 0 ? "+" : "") + Numbers.format(delta))
-							.withColor(delta > 0 ? COLOUR_POSITIVE : COLOUR_NEGATIVE),
-					Component.literal(String.valueOf(counts.get(delta))).withColor(COLOUR_POSITIVE)));
+							.withStyle(style -> style.withColor(delta > 0 ? COLOUR_POSITIVE : COLOUR_NEGATIVE)),
+					Component.literal(String.valueOf(counts.get(delta))).withStyle(style -> style.withColor(COLOUR_POSITIVE))));
 		}
 
 		if (boosts) {
-			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.tag.boost").withColor(COLOUR_POSITIVE));
+			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.tag.boost").withStyle(style -> style.withColor(COLOUR_POSITIVE)));
 		}
 
 		if (lowers) {
-			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.tag.reduce").withColor(COLOUR_NEGATIVE));
+			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.tag.reduce").withStyle(style -> style.withColor(COLOUR_NEGATIVE)));
 		}
 
 		lines.add(rotatable(stack)
 				? Component.translatable("artifact.sephiria_fantasy.slate.effect.rotate")
-				: Component.translatable("artifact.sephiria_fantasy.slate.effect.fixed").withColor(COLOUR_NEGATIVE));
+				: Component.translatable("artifact.sephiria_fantasy.slate.effect.fixed").withStyle(style -> style.withColor(COLOUR_NEGATIVE)));
 
 		return lines;
 	}

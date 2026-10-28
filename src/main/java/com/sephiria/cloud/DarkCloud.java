@@ -24,11 +24,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CopperBulbBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -105,7 +105,7 @@ public final class DarkCloud {
 			Blocks.REDSTONE_BLOCK, Blocks.REDSTONE_LAMP, Blocks.DAYLIGHT_DETECTOR,
 			Blocks.TARGET, Blocks.TRIPWIRE, Blocks.TRIPWIRE_HOOK,
 			Blocks.OBSERVER, Blocks.PISTON, Blocks.STICKY_PISTON, Blocks.PISTON_HEAD, Blocks.MOVING_PISTON,
-			Blocks.DISPENSER, Blocks.DROPPER, Blocks.HOPPER, Blocks.CRAFTER,
+			Blocks.DISPENSER, Blocks.DROPPER, Blocks.HOPPER,
 			Blocks.SCULK_SENSOR, Blocks.CALIBRATED_SCULK_SENSOR, Blocks.NOTE_BLOCK,
 			Blocks.REDSTONE_ORE, Blocks.DEEPSLATE_REDSTONE_ORE,
 			Blocks.CHEST, Blocks.TRAPPED_CHEST, Blocks.ENDER_CHEST, Blocks.BARREL,
@@ -118,7 +118,7 @@ public final class DarkCloud {
 			Items.REPEATER, Items.COMPARATOR, Items.LEVER,
 			Items.REDSTONE_LAMP, Items.DAYLIGHT_DETECTOR, Items.TARGET,
 			Items.TRIPWIRE_HOOK, Items.OBSERVER, Items.PISTON, Items.STICKY_PISTON,
-			Items.DISPENSER, Items.DROPPER, Items.HOPPER, Items.CRAFTER,
+			Items.DISPENSER, Items.DROPPER, Items.HOPPER,
 			Items.SCULK_SENSOR, Items.CALIBRATED_SCULK_SENSOR, Items.NOTE_BLOCK,
 			Items.REDSTONE_ORE, Items.DEEPSLATE_REDSTONE_ORE,
 			Items.CHEST, Items.TRAPPED_CHEST, Items.ENDER_CHEST, Items.BARREL,
@@ -298,8 +298,7 @@ public final class DarkCloud {
 	/** 红石元件 / 容器方块。 */
 	private static boolean isProtectedBlock(BlockState state) {
 		if (state.is(BlockTags.RAILS) || state.is(BlockTags.BUTTONS) || state.is(BlockTags.PRESSURE_PLATES)
-				|| state.is(BlockTags.SHULKER_BOXES)
-				|| state.getBlock() instanceof CopperBulbBlock) {
+				|| state.is(BlockTags.SHULKER_BOXES)) {
 			return true;
 		}
 
@@ -418,7 +417,7 @@ public final class DarkCloud {
 
 	/** 云体大小倍率：连击档越高云团越大（2 档 1 倍、10 档 {@link #BODY_SCALE_MAX} 倍，中间线性）。 */
 	private static double bodyScale(int comboLevel) {
-		int steps = Math.clamp(comboLevel - 2, 0, BODY_SCALE_LEVELS);
+		int steps = Mth.clamp(comboLevel - 2, 0, BODY_SCALE_LEVELS);
 		return 1.0D + steps * (BODY_SCALE_MAX - 1.0D) / BODY_SCALE_LEVELS;
 	}
 

@@ -67,7 +67,7 @@ public class ExorcismScabbardItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.frost_qi",
-				Component.literal(Numbers.format(flatDamageAt(level))).withColor(COLOUR_BONUS),
-				Component.literal(Numbers.format(icePercentAt(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(flatDamageAt(level))).withStyle(style -> style.withColor(COLOUR_BONUS)),
+				Component.literal(Numbers.format(icePercentAt(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

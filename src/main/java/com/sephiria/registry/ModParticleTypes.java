@@ -1,18 +1,13 @@
 package com.sephiria.registry;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
-import io.netty.buffer.ByteBuf;
 import net.fabricmc.fabric.api.particle.v1.FabricParticleTypes;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -28,10 +23,9 @@ import net.minecraft.resources.ResourceLocation;
  * 长度随粒子包一起发给客户端（{@link SunSlashOptions}），渲染在
  * {@code com.sephiria.client.particle.SunSlashParticle}。
  *
- * <p>必须在 {@code Sephiria#onInitialize()} 里 {@link #initialize()} 一次——粒子类型
- * 要赶在原版注册表冻结之前注册；客户端侧的粒子渲染器由 mixin 在
- * {@code ParticleResources#registerProviders()} 末尾挂进来（Fabric 在 26.3 已经没有
- * 粒子工厂注册 API 可用了）。
+ * <p>1.20.1 的粒子参数没有 StreamCodec，走 {@code ParticleOptions#writeToNetwork} /
+ * {@code ParticleOptions.Deserializer#fromNetwork} 这一对老接口；命名字段只用于命令，
+ * 这里给默认值即可（模组自己从不通过命令生成这些粒子）。
  */
 public final class ModParticleTypes {
 	/** 电蓝色电火花：触电（挂层/每刻光环/结算）与乌云雷击（闪电线/命中爆点）共用。 */
@@ -75,32 +69,78 @@ public final class ModParticleTypes {
 	}
 
 	private static SimpleParticleType register(String name) {
-		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, name);
+		ResourceLocation id = new ResourceLocation(Sephiria.MOD_ID, name);
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id, FabricParticleTypes.simple());
 	}
 
 	private static ParticleType<SunSlashOptions> registerSunSlash() {
-		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_slash");
-		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
-				FabricParticleTypes.complex(SunSlashOptions.CODEC, SunSlashOptions.STREAM_CODEC));
+		ResourceLocation id = new ResourceLocation(Sephiria.MOD_ID, "sun_slash");
+		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id, FabricParticleTypes.complex(
+				new ParticleOptions.Deserializer<SunSlashOptions>() {
+					@Override
+					public SunSlashOptions fromCommand(ParticleType<SunSlashOptions> type,
+							com.mojang.brigadier.StringReader reader) {
+						return new SunSlashOptions(1.0F, 0.0F);
+					}
+
+					@Override
+					public SunSlashOptions fromNetwork(ParticleType<SunSlashOptions> type, FriendlyByteBuf buf) {
+						return new SunSlashOptions(buf.readFloat(), buf.readFloat());
+					}
+				}));
 	}
 
 	private static ParticleType<FrostQiOptions> registerFrostQi() {
-		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frost_qi");
-		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
-				FabricParticleTypes.complex(FrostQiOptions.CODEC, FrostQiOptions.STREAM_CODEC));
+		ResourceLocation id = new ResourceLocation(Sephiria.MOD_ID, "frost_qi");
+		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id, FabricParticleTypes.complex(
+				new ParticleOptions.Deserializer<FrostQiOptions>() {
+					@Override
+					public FrostQiOptions fromCommand(ParticleType<FrostQiOptions> type,
+							com.mojang.brigadier.StringReader reader) {
+						return new FrostQiOptions(1.0F, 0.0F, 1.0F, 0.0F, 0.0F);
+					}
+
+					@Override
+					public FrostQiOptions fromNetwork(ParticleType<FrostQiOptions> type, FriendlyByteBuf buf) {
+						return new FrostQiOptions(buf.readFloat(), buf.readFloat(), buf.readFloat(),
+								buf.readFloat(), buf.readFloat());
+					}
+				}));
 	}
 
 	private static ParticleType<FlameQiOptions> registerFlameQi() {
-		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "flame_qi");
-		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
-				FabricParticleTypes.complex(FlameQiOptions.CODEC, FlameQiOptions.STREAM_CODEC));
+		ResourceLocation id = new ResourceLocation(Sephiria.MOD_ID, "flame_qi");
+		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id, FabricParticleTypes.complex(
+				new ParticleOptions.Deserializer<FlameQiOptions>() {
+					@Override
+					public FlameQiOptions fromCommand(ParticleType<FlameQiOptions> type,
+							com.mojang.brigadier.StringReader reader) {
+						return new FlameQiOptions(1.0F, 0.0F, 1.0F, 0.0F, 0.0F);
+					}
+
+					@Override
+					public FlameQiOptions fromNetwork(ParticleType<FlameQiOptions> type, FriendlyByteBuf buf) {
+						return new FlameQiOptions(buf.readFloat(), buf.readFloat(), buf.readFloat(),
+								buf.readFloat(), buf.readFloat());
+					}
+				}));
 	}
 
 	private static ParticleType<IceSlashOptions> registerIceSlash() {
-		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "ice_slash");
-		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
-				FabricParticleTypes.complex(IceSlashOptions.CODEC, IceSlashOptions.STREAM_CODEC));
+		ResourceLocation id = new ResourceLocation(Sephiria.MOD_ID, "ice_slash");
+		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id, FabricParticleTypes.complex(
+				new ParticleOptions.Deserializer<IceSlashOptions>() {
+					@Override
+					public IceSlashOptions fromCommand(ParticleType<IceSlashOptions> type,
+							com.mojang.brigadier.StringReader reader) {
+						return new IceSlashOptions(1.0F, 0.0F);
+					}
+
+					@Override
+					public IceSlashOptions fromNetwork(ParticleType<IceSlashOptions> type, FriendlyByteBuf buf) {
+						return new IceSlashOptions(buf.readFloat(), buf.readFloat());
+					}
+				}));
 	}
 
 	/** 由 {@code Sephiria#onInitialize()} 调用：引用一次本类即触发静态字段的注册。 */
@@ -137,105 +177,89 @@ public final class ModParticleTypes {
 	/**
 	 * 太阳剑剑痕的粒子参数：一个「尺寸」（格，正方形的边长，也就是那道剑痕的长度）
 	 * 与一个「倾角」（弧度，在屏幕面内旋转，见 {@code SunSlashParticle}）。
-	 *
-	 * <p>这两个值都必须跟着数据走、不能写死在客户端：长度是服务端算的
-	 * （目前只有火红的夕阳的「增大」会把它拉到 1.6 倍）、倾角是服务端掷的三个方向之一
-	 * （连击打出去的那一刀朝哪边偏），随粒子包一起发给客户端。
-	 * 之所以用带参数的粒子类型、而不是原版横扫那种「把尺寸塞进速度字段」的写法：
-	 * 那条路要靠 {@code count = 0} 分支里 {@code 散布 × 速度} 的巧合，读代码的人看不出来是在传尺寸。
 	 */
 	public record SunSlashOptions(float size, float roll) implements SlashOptions {
-		public static final MapCodec<SunSlashOptions> CODEC = RecordCodecBuilder.mapCodec(
-				instance -> instance.group(
-						Codec.FLOAT.fieldOf("size").forGetter(SunSlashOptions::size),
-						Codec.FLOAT.optionalFieldOf("roll", 0.0F).forGetter(SunSlashOptions::roll)
-				).apply(instance, SunSlashOptions::new));
-
-		public static final StreamCodec<ByteBuf, SunSlashOptions> STREAM_CODEC = StreamCodec.composite(
-				ByteBufCodecs.FLOAT, SunSlashOptions::size,
-				ByteBufCodecs.FLOAT, SunSlashOptions::roll,
-				SunSlashOptions::new);
-
 		@Override
 		public ParticleType<?> getType() {
 			return SUN_SLASH;
+		}
+
+		@Override
+		public void writeToNetwork(FriendlyByteBuf buf) {
+			buf.writeFloat(this.size);
+			buf.writeFloat(this.roll);
+		}
+
+		@Override
+		public String writeToString() {
+			return "sephiria:sun_slash[" + this.size + "," + this.roll + "]";
 		}
 	}
 
 	/** 剑痕的冰蓝版（永恒蚀在右半边时太阳剑用它）：字段与 {@link SunSlashOptions} 相同。 */
 	public record IceSlashOptions(float size, float roll) implements SlashOptions {
-		public static final MapCodec<IceSlashOptions> CODEC = RecordCodecBuilder.mapCodec(
-				instance -> instance.group(
-						Codec.FLOAT.fieldOf("size").forGetter(IceSlashOptions::size),
-						Codec.FLOAT.optionalFieldOf("roll", 0.0F).forGetter(IceSlashOptions::roll)
-				).apply(instance, IceSlashOptions::new));
-
-		public static final StreamCodec<ByteBuf, IceSlashOptions> STREAM_CODEC = StreamCodec.composite(
-				ByteBufCodecs.FLOAT, IceSlashOptions::size,
-				ByteBufCodecs.FLOAT, IceSlashOptions::roll,
-				IceSlashOptions::new);
-
 		@Override
 		public ParticleType<?> getType() {
 			return ICE_SLASH;
+		}
+
+		@Override
+		public void writeToNetwork(FriendlyByteBuf buf) {
+			buf.writeFloat(this.size);
+			buf.writeFloat(this.roll);
+		}
+
+		@Override
+		public String writeToString() {
+			return "sephiria:ice_slash[" + this.size + "," + this.roll + "]";
 		}
 	}
 
 	/**
 	 * 冰霜武具那道弧状剑气的粒子参数：边长（格）、面内倾角（弧度）与<b>飞行方向</b>。
-	 *
-	 * <p>方向是 2026-10-13 加的（用户要求「弧面朝飞行方向，而不是朝上」）：方片不再整张朝摄像机，
-	 * 而是摆成一面<b>垂直于飞行方向</b>的刀墙（法线 = 飞行方向），贴图的「上」取世界竖直方向在面内的投影
-	 * ——见 {@code client.particle.FrostQiParticle}。倾角仍是那张面内的旋转（多道之间错开）。
 	 */
 	public record FrostQiOptions(float size, float roll, float dirX, float dirY, float dirZ)
 			implements QiOptions {
-		public static final MapCodec<FrostQiOptions> CODEC = RecordCodecBuilder.mapCodec(
-				instance -> instance.group(
-						Codec.FLOAT.fieldOf("size").forGetter(FrostQiOptions::size),
-						Codec.FLOAT.optionalFieldOf("roll", 0.0F).forGetter(FrostQiOptions::roll),
-						Codec.FLOAT.fieldOf("dir_x").forGetter(FrostQiOptions::dirX),
-						Codec.FLOAT.fieldOf("dir_y").forGetter(FrostQiOptions::dirY),
-						Codec.FLOAT.fieldOf("dir_z").forGetter(FrostQiOptions::dirZ)
-				).apply(instance, FrostQiOptions::new));
-
-		public static final StreamCodec<ByteBuf, FrostQiOptions> STREAM_CODEC = StreamCodec.composite(
-				ByteBufCodecs.FLOAT, FrostQiOptions::size,
-				ByteBufCodecs.FLOAT, FrostQiOptions::roll,
-				ByteBufCodecs.FLOAT, FrostQiOptions::dirX,
-				ByteBufCodecs.FLOAT, FrostQiOptions::dirY,
-				ByteBufCodecs.FLOAT, FrostQiOptions::dirZ,
-				FrostQiOptions::new);
-
 		@Override
 		public ParticleType<?> getType() {
 			return FROST_QI;
+		}
+
+		@Override
+		public void writeToNetwork(FriendlyByteBuf buf) {
+			buf.writeFloat(this.size);
+			buf.writeFloat(this.roll);
+			buf.writeFloat(this.dirX);
+			buf.writeFloat(this.dirY);
+			buf.writeFloat(this.dirZ);
+		}
+
+		@Override
+		public String writeToString() {
+			return "sephiria:frost_qi[" + this.size + "," + this.roll + "]";
 		}
 	}
 
 	/** 剑气的焰黄版（永恒蚀在左半边时冰霜武具用它）：字段与 {@link FrostQiOptions} 相同。 */
 	public record FlameQiOptions(float size, float roll, float dirX, float dirY, float dirZ)
 			implements QiOptions {
-		public static final MapCodec<FlameQiOptions> CODEC = RecordCodecBuilder.mapCodec(
-				instance -> instance.group(
-						Codec.FLOAT.fieldOf("size").forGetter(FlameQiOptions::size),
-						Codec.FLOAT.optionalFieldOf("roll", 0.0F).forGetter(FlameQiOptions::roll),
-						Codec.FLOAT.fieldOf("dir_x").forGetter(FlameQiOptions::dirX),
-						Codec.FLOAT.fieldOf("dir_y").forGetter(FlameQiOptions::dirY),
-						Codec.FLOAT.fieldOf("dir_z").forGetter(FlameQiOptions::dirZ)
-				).apply(instance, FlameQiOptions::new));
-
-		public static final StreamCodec<ByteBuf, FlameQiOptions> STREAM_CODEC = StreamCodec.composite(
-				ByteBufCodecs.FLOAT, FlameQiOptions::size,
-				ByteBufCodecs.FLOAT, FlameQiOptions::roll,
-				ByteBufCodecs.FLOAT, FlameQiOptions::dirX,
-				ByteBufCodecs.FLOAT, FlameQiOptions::dirY,
-				ByteBufCodecs.FLOAT, FlameQiOptions::dirZ,
-				FlameQiOptions::new);
-
 		@Override
 		public ParticleType<?> getType() {
 			return FLAME_QI;
+		}
+
+		@Override
+		public void writeToNetwork(FriendlyByteBuf buf) {
+			buf.writeFloat(this.size);
+			buf.writeFloat(this.roll);
+			buf.writeFloat(this.dirX);
+			buf.writeFloat(this.dirY);
+			buf.writeFloat(this.dirZ);
+		}
+
+		@Override
+		public String writeToString() {
+			return "sephiria:flame_qi[" + this.size + "," + this.roll + "]";
 		}
 	}
 }

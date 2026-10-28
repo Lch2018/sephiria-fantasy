@@ -56,8 +56,8 @@ public class WandererNecklaceItem extends ArtifactItem {
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.attack_speed",
-						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withColor(COLOUR_BONUS)),
+						Component.literal(Numbers.format(this.attackSpeedBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))),
 				Component.translatable("artifact.sephiria_fantasy.affix.highest_element",
-						Component.literal(Numbers.format(this.highestElementBonus(level))).withColor(COLOUR_BONUS)));
+						Component.literal(Numbers.format(this.highestElementBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }

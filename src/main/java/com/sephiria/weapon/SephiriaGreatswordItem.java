@@ -1,5 +1,6 @@
 package com.sephiria.weapon;
 
+import com.sephiria.compat.WeaponAttributes;
 import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.Dash;
@@ -19,6 +20,10 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import com.google.common.collect.Multimap;
 import net.minecraft.world.item.Item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -90,6 +95,13 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	public SephiriaGreatswordItem(WeaponBranch branch, Item.Properties properties) {
 		super(properties);
 		this.branch = branch;
+	}
+
+	@Override
+	public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlot slot) {
+		return slot == EquipmentSlot.MAINHAND
+				? WeaponAttributes.of(ATTACK_DAMAGE, ATTACK_SPEED)
+				: super.getDefaultAttributeModifiers(slot);
 	}
 
 	@Override
@@ -171,7 +183,7 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	}
 
 	@Override
-	public int getUseDuration(ItemStack stack, LivingEntity entity) {
+	public int getUseDuration(ItemStack stack) {
 		return 72000;
 	}
 
@@ -237,7 +249,7 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	 * 两端都是客户端已知的量，所以进度条不需要任何同步包。
 	 */
 	public static int chargeTicks(ItemStack stack, LivingEntity entity, int timeLeft) {
-		return Math.max(0, stack.getUseDuration(entity) - timeLeft);
+		return Math.max(0, stack.getUseDuration() - timeLeft);
 	}
 
 	private static void tick(MinecraftServer server) {

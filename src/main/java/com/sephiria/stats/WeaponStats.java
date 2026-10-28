@@ -1,10 +1,9 @@
 package com.sephiria.stats;
 
 import com.sephiria.Sephiria;
+import com.sephiria.compat.Modifiers;
 import com.sephiria.weapon.SephiriaWeapon;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -12,8 +11,10 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
+
+import java.util.UUID;
 
 /**
  * 把属性系统接到武器的普通攻击上（伤害与攻速；技能另算，攻速不影响技能）。
@@ -36,8 +37,10 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
  * 所以正常运行时这里只是一次读取。
  */
 public final class WeaponStats {
-	private static final ResourceLocation DAMAGE_MODIFIER = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_weapon_damage");
-	private static final ResourceLocation SPEED_MODIFIER = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_weapon_speed");
+	private static final UUID DAMAGE_MODIFIER = UUID.nameUUIDFromBytes("sephiria:attr_weapon_damage".getBytes());
+	private static final UUID SPEED_MODIFIER = UUID.nameUUIDFromBytes("sephiria:attr_weapon_speed".getBytes());
+	private static final String DAMAGE_MODIFIER_NAME = "sephiria:attr_weapon_damage";
+	private static final String SPEED_MODIFIER_NAME = "sephiria:attr_weapon_speed";
 	/** 检查间隔（tick）：换武器或属性变化后最多等这么久就会重算。 */
 	private static final int CHECK_INTERVAL = 4;
 
@@ -76,14 +79,14 @@ public final class WeaponStats {
 		double damage = 0.0D;
 		double speed = 0.0D;
 
-		for (ItemAttributeModifiers.Entry entry : stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).modifiers()) {
-			Holder<Attribute> attribute = entry.attribute();
+		for (var entry : stack.getAttributeModifiers(EquipmentSlot.MAINHAND).entries()) {
+			Attribute attribute = entry.getKey();
 
-			if (attribute.is(Attributes.ATTACK_DAMAGE)) {
-				damage = 1.0D + entry.modifier().amount();
+			if (attribute == Attributes.ATTACK_DAMAGE) {
+				damage = 1.0D + entry.getValue().getAmount();
 			}
-			else if (attribute.is(Attributes.ATTACK_SPEED)) {
-				speed = 4.0D + entry.modifier().amount();
+			else if (attribute == Attributes.ATTACK_SPEED) {
+				speed = 4.0D + entry.getValue().getAmount();
 			}
 		}
 
@@ -98,8 +101,8 @@ public final class WeaponStats {
 	}
 
 	private static void apply(ServerPlayer player, double[] deltas) {
-		write(player, Attributes.ATTACK_DAMAGE, DAMAGE_MODIFIER, deltas[0]);
-		write(player, Attributes.ATTACK_SPEED, SPEED_MODIFIER, deltas[1]);
+		write(player, Attributes.ATTACK_DAMAGE, DAMAGE_MODIFIER, DAMAGE_MODIFIER_NAME, deltas[0]);
+		write(player, Attributes.ATTACK_SPEED, SPEED_MODIFIER, SPEED_MODIFIER_NAME, deltas[1]);
 	}
 
 	/**
@@ -109,7 +112,7 @@ public final class WeaponStats {
 	 * 而属性表只继承永久修饰符——这里挂的临时修饰符会随旧实体一起消失。只比对自家缓存的话，
 	 * 复活后每一轮都会以为"已经写过了"而跳过，普通攻击就悄悄退回基础伤害。
 	 */
-	private static void write(ServerPlayer player, Holder<Attribute> attribute, ResourceLocation id, double amount) {
+	private static void write(ServerPlayer player, Attribute attribute, UUID id, String name, double amount) {
 		AttributeInstance instance = player.getAttribute(attribute);
 
 		if (instance == null) {
@@ -127,9 +130,8 @@ public final class WeaponStats {
 		}
 
 		// 数值没变就什么都不做——绝大多数 tick 走的是这条路，不重建修饰符
-		if (current == null || current.amount() != amount) {
-			instance.addOrUpdateTransientModifier(
-					new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_VALUE));
+		if (current == null || current.getAmount() != amount) {
+			Modifiers.setTransient(instance, id, name, amount, AttributeModifier.Operation.ADDITION);
 		}
 	}
 }

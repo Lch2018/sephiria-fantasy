@@ -1,15 +1,9 @@
 package com.sephiria.artifact;
 
 import net.minecraft.world.InteractionResultHolder;
-import com.mojang.serialization.Codec;
-import com.sephiria.Sephiria;
 import com.sephiria.backpack.ChestMenu;
-import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.registries.BuiltInRegistries;
+import com.sephiria.compat.ItemData;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -44,23 +38,14 @@ public class ChestItem extends Item {
 	}
 
 	/** 这一箱抽到的奖励（第一次打开时写入）。 */
-	public static final DataComponentType<List<ItemStack>> ROLLED = Registry.register(
-			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "chest_rewards"),
-			DataComponentType.<List<ItemStack>>builder()
-					.persistent(ItemStack.CODEC.listOf())
-					.networkSynchronized(ItemStack.STREAM_CODEC.apply(ByteBufCodecs.list()))
-					.build());
+	public static final String ROLLED = "chest_rewards";
 
 	/**
 	 * 这一箱的「免费刷新」用过了没有（天赋「智慧」三阶段每个宝箱免费刷新 1 次）。
 	 *
 	 * <p>存在宝箱物品上而不是菜单里：关掉界面再打开不能把免费次数刷回来。
 	 */
-	public static final DataComponentType<Boolean> FREE_REROLL_USED = Registry.register(
-			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "chest_free_reroll_used"),
-			DataComponentType.<Boolean>builder().persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL).build());
+	public static final String FREE_REROLL_USED = "chest_free_reroll_used";
 
 	/**
 	 * 箱子种类：决定奖池，以及「混着出」时石板占几成。
@@ -134,10 +119,8 @@ public class ChestItem extends Item {
 	 */
 	public static List<ItemStack> rewardsOf(ItemStack chest, RandomSource random, Kind kind, double luck,
 			int choices) {
-		List<ItemStack> stored = chest.get(ROLLED);
-
-		if (stored != null) {
-			return stored;
+		if (ItemData.has(chest, ROLLED)) {
+			return ItemData.getItems(chest, ROLLED);
 		}
 
 		// 幸运值：稀有及以上的概率按曲线放大（用户 2026-10-18 的「幸运值」口径）
@@ -149,7 +132,7 @@ public class ChestItem extends Item {
 				? List.copyOf(ArtifactLoot.rollFrom(random, count,
 						ArtifactLoot.rarePool(kind == Kind.RARE_SLATE), weights))
 				: List.copyOf(ArtifactLoot.rollMixed(random, count, kind.slatePercent(), weights));
-		chest.set(ROLLED, rolled);
+		ItemData.setItems(chest, ROLLED, rolled);
 		return rolled;
 	}
 
@@ -160,17 +143,17 @@ public class ChestItem extends Item {
 	 */
 	public static List<ItemStack> reroll(ItemStack chest, RandomSource random, Kind kind, double luck,
 			int choices) {
-		chest.remove(ROLLED);
+		ItemData.remove(chest, ROLLED);
 		return rewardsOf(chest, random, kind, luck, choices);
 	}
 
 	/** 这一箱的免费刷新用过了吗。 */
 	public static boolean freeRerollUsed(ItemStack chest) {
-		return Boolean.TRUE.equals(chest.get(FREE_REROLL_USED));
+		return ItemData.getBoolean(chest, FREE_REROLL_USED, false);
 	}
 
 	/** 标成「免费刷新已用」。 */
 	public static void markFreeRerollUsed(ItemStack chest) {
-		chest.set(FREE_REROLL_USED, true);
+		ItemData.setBoolean(chest, FREE_REROLL_USED, true);
 	}
 }

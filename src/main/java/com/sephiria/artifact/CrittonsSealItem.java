@@ -52,6 +52,6 @@ public class CrittonsSealItem extends ArtifactItem {
 	@Override
 	public java.util.List<Component> affixLines(int level) {
 		return java.util.List.of(Component.translatable("artifact.sephiria_fantasy.affix.leaf_gain",
-				Component.literal(Numbers.format(this.leafGainPercentBonus(level))).withColor(COLOUR_BONUS)));
+				Component.literal(Numbers.format(this.leafGainPercentBonus(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
 	}
 }
