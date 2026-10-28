@@ -1,5 +1,12 @@
 package com.sephiria.weapon;
 
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.util.GeckoLibUtil;
+import software.bernie.geckolib.animatable.client.RenderProvider;
 import com.sephiria.compat.WeaponAttributes;
 import com.sephiria.compat.ItemData;
 import net.minecraft.world.InteractionResultHolder;
@@ -28,7 +35,8 @@ import net.minecraft.world.level.Level;
  * <p>26.3 依赖 GeckoLib 5 的渲染/动画 API；1.21.1 的 GeckoLib 4 接口完全不同，
  * 先把核心战斗数值和状态切换迁过来，动画后续再接。
  */
-public class SephiriaKatanaItem extends Item implements SephiriaWeapon {
+public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon {
+	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 	public static final int SWITCH_TICKS = 13;
 	public static final int BLOCK_TICKS = 6;
 
@@ -59,6 +67,40 @@ public class SephiriaKatanaItem extends Item implements SephiriaWeapon {
 		return slot == EquipmentSlot.MAINHAND
 				? WeaponAttributes.of(UNSHEATHED_DAMAGE, VANILLA_SWORD_ATTACK_SPEED * UNSHEATHED_CHARGE_SCALE)
 				: super.getDefaultAttributeModifiers(slot);
+	}
+
+	@Override
+	public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+		controllers.add(new AnimationController<>(this, "main", 0,
+				state -> state.setAndContinue(RawAnimation.begin().thenLoop("animation.idle_unsheathed"))));
+	}
+
+	@Override
+	public AnimatableInstanceCache getAnimatableInstanceCache() {
+		return this.cache;
+	}
+
+	private RenderProvider renderProvider;
+
+	@Override
+	public void createRenderer(java.util.function.Consumer<Object> consumer) {
+		consumer.accept(this.getRenderProvider().get());
+	}
+
+	@Override
+	public java.util.function.Supplier<Object> getRenderProvider() {
+		return () -> {
+			if (this.renderProvider == null) {
+				this.renderProvider = new RenderProvider() {
+					@Override
+					public net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer getCustomRenderer() {
+						return new com.sephiria.client.render.KatanaRenderer();
+					}
+				};
+			}
+
+			return this.renderProvider;
+		};
 	}
 
 	@Override
