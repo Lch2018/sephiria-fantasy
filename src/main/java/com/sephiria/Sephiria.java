@@ -265,6 +265,11 @@ public class Sephiria implements ModInitializer {
 				(server, player, handler, buffer, sender) -> server.execute(() -> DashSkill.perform(player)));
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.ReloadPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> server.execute(() -> SephiriaCrossbowItem.tryReload(player)));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.CastArtifactSkillPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					int slot = com.sephiria.network.CastArtifactSkillPayload.read(buffer).slot();
+					server.execute(() -> ArtifactSkills.cast(player, slot));
+				});
 
 		// 进服时把各技能的存储量推给客户端，HUD 才有初始值
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

@@ -45,6 +45,18 @@ public final class SephiriaClient implements ClientModInitializer {
 	private static final KeyMapping RELOAD_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.reload", InputConstants.Type.KEYSYM, InputConstants.KEY_R, CATEGORY));
 
+	/** 神器技能 6 个栏位：默认不绑键，玩家自己去控制里设置。 */
+	private static final KeyMapping[] SKILL_KEYS = new KeyMapping[
+			com.sephiria.artifact.skill.SkillSlots.COUNT];
+
+	static {
+		for (int slot = 0; slot < SKILL_KEYS.length; slot++) {
+			SKILL_KEYS[slot] = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+					"key.sephiria_fantasy.artifact_skill_" + (slot + 1),
+					InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY));
+		}
+	}
+
 	@Override
 	public void onInitializeClient() {
 		MenuScreens.<ArtifactBackpackMenu, SephiriaMenuScreen<ArtifactBackpackMenu>>register(
@@ -96,6 +108,17 @@ public final class SephiriaClient implements ClientModInitializer {
 			while (RELOAD_KEY.consumeClick()) {
 				if (client.player != null) {
 					sendEmpty(com.sephiria.network.ReloadPayload.CHANNEL);
+				}
+			}
+
+			for (int slot = 0; slot < SKILL_KEYS.length; slot++) {
+				while (SKILL_KEYS[slot].consumeClick()) {
+					if (client.player != null) {
+						FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+						com.sephiria.network.CastArtifactSkillPayload.write(buffer,
+								new com.sephiria.network.CastArtifactSkillPayload(slot));
+						ClientPlayNetworking.send(com.sephiria.network.CastArtifactSkillPayload.CHANNEL, buffer);
+					}
 				}
 			}
 		});
