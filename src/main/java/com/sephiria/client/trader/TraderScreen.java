@@ -4,9 +4,11 @@ import com.sephiria.client.menu.SephiriaMenuScreen;
 import com.sephiria.network.OpenSlateFusionPayload;
 import com.sephiria.trader.SephiriaTraderMenu;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
 /** 商人界面：通用面板 + 左下角石板合成按钮。 */
 public class TraderScreen extends SephiriaMenuScreen<SephiriaTraderMenu> {
@@ -23,5 +25,20 @@ public class TraderScreen extends SephiriaMenuScreen<SephiriaTraderMenu> {
 				.bounds(this.leftPos + SephiriaTraderMenu.FUSION_BUTTON_X,
 						this.topPos + SephiriaTraderMenu.fusionButtonY(),
 						SephiriaTraderMenu.FUSION_BUTTON_WIDTH, SephiriaTraderMenu.FUSION_BUTTON_HEIGHT).build());
+	}
+
+	@Override
+	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+		super.renderLabels(graphics, mouseX, mouseY);
+
+		for (int index = 0; index < SephiriaTraderMenu.SLOTS; index++) {
+			ItemStack stack = this.menu.getSlot(index).getItem();
+
+			if (!stack.isEmpty()) {
+				graphics.drawString(this.font, stack.getHoverName(),
+						SephiriaTraderMenu.SLOT_X + index * 18, SephiriaTraderMenu.SLOT_Y + 18,
+						0xFFD0D0D0, false);
+			}
+		}
 	}
 }
