@@ -148,6 +148,15 @@ public final class SephiriaClient implements ClientModInitializer {
 		HudRenderCallback.EVENT.register(new SephiriaHud());
 
 		// 神器 / 石板 / 药水的提示行：名称由原版画，这里补连击、唯一、词条、稀有度与描述
+		net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
+				(player, level, hand, entity, hitResult) -> {
+					if (level.isClientSide()) {
+						ToroHealthColor.mark(player.getItemInHand(hand));
+					}
+
+					return net.minecraft.world.InteractionResult.PASS;
+				});
+
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (DASH_KEY.consumeClick()) {
 				if (client.player != null) {
