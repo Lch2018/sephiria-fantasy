@@ -277,6 +277,48 @@ public class Sephiria implements ModInitializer {
 						shop.refresh(player);
 					}
 				}));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.RotateSlatePayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					int slotId = com.sephiria.network.RotateSlatePayload.read(buffer).slot();
+					server.execute(() -> {
+						net.minecraft.world.inventory.AbstractContainerMenu menu = player.containerMenu;
+
+						if (!(menu instanceof com.sephiria.backpack.BackpackGridMenu grid)
+								|| slotId < 0 || slotId >= menu.slots.size()) {
+							return;
+						}
+
+						net.minecraft.world.inventory.Slot slot = menu.getSlot(slotId);
+
+						if (grid.isBackpackSlot(slot)
+								&& slot.getItem().getItem() instanceof com.sephiria.slate.SlateItem) {
+							com.sephiria.slate.SlateItem.rotate(slot.getItem());
+							slot.setChanged();
+							menu.broadcastChanges();
+						}
+					});
+				});
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.OpenSlateFusionPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(() -> {
+					if (player.containerMenu instanceof SephiriaTraderMenu menu && menu.canOpenFusion()) {
+						com.sephiria.slate.SlateFusionMenu.open(player, menu.trader());
+					}
+				}));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.FuseSlatesPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(() -> {
+					if (player.containerMenu instanceof com.sephiria.slate.SlateFusionMenu menu) {
+						menu.fuse(player);
+					}
+				}));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.RotateFusionSlatePayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					int input = com.sephiria.network.RotateFusionSlatePayload.read(buffer).input();
+					server.execute(() -> {
+						if (player.containerMenu instanceof com.sephiria.slate.SlateFusionMenu menu) {
+							menu.rotateInput(input);
+						}
+					});
+				});
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.ScrollBackpackPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> {
 					int delta = com.sephiria.network.ScrollBackpackPayload.read(buffer).deltaRows();
