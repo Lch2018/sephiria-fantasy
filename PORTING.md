@@ -10,8 +10,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.116.17+1.21.1`。
 - 核心 `compileJava` 通过；临时无头服务端启动通过（注册、BE、资源、配方可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1121461 B，
-  sha256 `328f8ad258c420970f2f93ce3a89db9f80bbe353552a251627674ab24813467a`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1130620 B，
+  sha256 `8e58e684c9e6b2dc8587bac3494212554887c5b0050fe3ba1d14b2916dcbd082`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.21.1-Fabric 0.20.1\mods`。
 - 客户端已有入口 `com.sephiria.client.SephiriaClient`：注册 9 个容器菜单的通用界面
   （深色面板 + 槽位底 + 标题），并接回冲刺（鼠标侧键）与装填（R）按键。
@@ -20,7 +20,9 @@
   数据来自服务端 `HudSyncPayload`，两包之间按客户端刻数平滑。
 - 提示行已接：`ArtifactTooltip` 显示连击、唯一、词条、稀有度、等级与描述，`ClientStats`
   接收 `StatsSyncPayload` 供数值换算。流浪商人 / 羊驼先用原版渲染器保证可见。
-- 信标界面已换回专属绘制：单格 + 品质色外框，其余菜单仍是通用面板。
+- 信标界面已换回专属绘制：单格 + 品质色外框。
+- 第 2 轮已补：背包/附魔滚轮与 R 旋转、附魔升级按钮、宝箱刷新、商店刷新/出售、
+  商人石板合成按钮、合成界面合成与输入格 R 旋转。其余菜单仍是通用面板。
 - **暂缺**：26.3 的模块化 HUD 布局/缩放/拖拽、ToroHealth/ModMenu 兼容、GeckoLib 刀动画、
   原版 mixin、各界面专属绘制与按钮。当前是「能打开容器、能操作槽位、有基础 HUD」的客户端，
   不是完整可玩版。
