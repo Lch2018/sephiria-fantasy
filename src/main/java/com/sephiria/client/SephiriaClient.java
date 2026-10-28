@@ -12,6 +12,7 @@ import com.sephiria.slate.SlateFusionMenu;
 import com.sephiria.trader.SephiriaTraderMenu;
 import com.sephiria.wishpool.WishPoolMenu;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.client.gui.screens.MenuScreens;
 
 /**
@@ -57,5 +58,16 @@ public final class SephiriaClient implements ClientModInitializer {
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
 						com.sephiria.beacon.SephiriaBeaconMenu.IMAGE_WIDTH,
 						com.sephiria.beacon.SephiriaBeaconMenu.IMAGE_HEIGHT, true));
+
+		// 神器 / 石板 / 药水的提示行：名称由原版画，这里补连击、唯一、词条、稀有度与描述
+		ItemTooltipCallback.EVENT.register((stack, flag, lines) -> {
+			java.util.List<net.minecraft.network.chat.Component> artifactLines =
+					com.sephiria.client.artifact.ArtifactTooltip.lines(stack);
+
+			if (!artifactLines.isEmpty()) {
+				lines.add(net.minecraft.network.chat.Component.empty());
+				lines.addAll(artifactLines);
+			}
+		});
 	}
 }
