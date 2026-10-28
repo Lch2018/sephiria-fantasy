@@ -52,6 +52,9 @@ public final class SephiriaClient implements ClientModInitializer {
 	private static final KeyMapping RELOAD_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.reload", InputConstants.Type.KEYSYM, InputConstants.KEY_R, CATEGORY));
 
+	private static final KeyMapping HUD_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+			"key.sephiria_fantasy.hud", InputConstants.Type.KEYSYM, InputConstants.KEY_H, CATEGORY));
+
 	private static final KeyMapping SKILL_PAGE_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.skill_page", InputConstants.Type.KEYSYM, InputConstants.KEY_L,
 			"key.categories.gameplay"));
@@ -67,6 +70,7 @@ public final class SephiriaClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		com.sephiria.client.particle.SephiriaParticles.register();
+		com.sephiria.client.hud.HudConfig.load();
 		com.sephiria.client.render.KatanaRenderer katanaRenderer = new com.sephiria.client.render.KatanaRenderer();
 		BuiltinItemRendererRegistry.INSTANCE.register(com.sephiria.registry.ModItems.BLADE,
 				(stack, context, pose, buffers, light, overlay) -> katanaRenderer.renderByItem(

@@ -572,6 +572,8 @@
     "screen.sephiria_fantasy.damage_display.on":  "On",
     "screen.sephiria_fantasy.damage_display.off":  "Off",
     "screen.sephiria_fantasy.hud":  "HUD Layout",
+    "screen.sephiria_fantasy.hud.visible":  "HUD visible: %s",
+    "screen.sephiria_fantasy.hud.scale":  "HUD scale: %s",
     "screen.sephiria_fantasy.hud.weapon":  "Weapon UI",
     "screen.sephiria_fantasy.hud.dash":  "Dash UI",
     "screen.sephiria_fantasy.hud.mp":  "MP Bar",
