@@ -56,21 +56,16 @@ public final class SephiriaClient implements ClientModInitializer {
 		MenuScreens.<ArtifactBackpackMenu, SephiriaMenuScreen<ArtifactBackpackMenu>>register(ModMenus.ARTIFACT_BACKPACK,
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title, ArtifactBackpackMenu.IMAGE_WIDTH, ArtifactBackpackMenu.imageHeight(BackpackWindow.ROWS),
 						true));
-		MenuScreens.<EnchantMenu, SephiriaMenuScreen<EnchantMenu>>register(ModMenus.ARTIFACT_ENCHANT,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						EnchantMenu.IMAGE_WIDTH, EnchantMenu.imageHeight(), true));
-		MenuScreens.<ChestMenu, SephiriaMenuScreen<ChestMenu>>register(ModMenus.CHEST,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						ChestMenu.IMAGE_WIDTH, ChestMenu.imageHeight(), true));
-		MenuScreens.<ShopMenu, SephiriaMenuScreen<ShopMenu>>register(ModMenus.SHOP,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						ShopMenu.IMAGE_WIDTH, ShopMenu.imageHeight(), true));
-		MenuScreens.<SlateFusionMenu, SephiriaMenuScreen<SlateFusionMenu>>register(ModMenus.SLATE_FUSION,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						SlateFusionMenu.IMAGE_WIDTH, SlateFusionMenu.imageHeight(), true));
-		MenuScreens.<SephiriaTraderMenu, SephiriaMenuScreen<SephiriaTraderMenu>>register(ModMenus.TRADER,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						SephiriaTraderMenu.IMAGE_WIDTH, SephiriaTraderMenu.imageHeight(), true));
+		MenuScreens.<EnchantMenu, com.sephiria.client.backpack.EnchantScreen>register(
+				ModMenus.ARTIFACT_ENCHANT, com.sephiria.client.backpack.EnchantScreen::new);
+		MenuScreens.<ChestMenu, com.sephiria.client.backpack.ChestScreen>register(ModMenus.CHEST,
+				com.sephiria.client.backpack.ChestScreen::new);
+		MenuScreens.<ShopMenu, com.sephiria.client.shop.ShopScreen>register(ModMenus.SHOP,
+				com.sephiria.client.shop.ShopScreen::new);
+		MenuScreens.<SlateFusionMenu, com.sephiria.client.slate.SlateFusionScreen>register(
+				ModMenus.SLATE_FUSION, com.sephiria.client.slate.SlateFusionScreen::new);
+		MenuScreens.<SephiriaTraderMenu, com.sephiria.client.trader.TraderScreen>register(ModMenus.TRADER,
+				com.sephiria.client.trader.TraderScreen::new);
 		MenuScreens.<RootRetreatMenu, SephiriaMenuScreen<RootRetreatMenu>>register(ModMenus.ROOT_RETREAT,
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
 						RootRetreatMenu.IMAGE_WIDTH, 220, false));
