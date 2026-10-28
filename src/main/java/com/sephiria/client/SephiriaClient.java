@@ -1,8 +1,10 @@
 package com.sephiria.client;
 
+import com.sephiria.beacon.SephiriaBeaconBlockEntity;
 import com.sephiria.client.artifact.ArtifactTooltip;
 import com.sephiria.client.backpack.ArtifactBackpackScreen;
 import com.sephiria.client.backpack.ChestScreen;
+import com.sephiria.client.beacon.SephiriaBeaconScreen;
 import com.sephiria.client.shop.ShopScreen;
 import com.sephiria.client.difficulty.RootRetreatScreen;
 import com.sephiria.client.wishpool.WishPoolScreen;
@@ -26,6 +28,7 @@ import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.SunSwordSyncPayload;
 import com.sephiria.client.trader.SephiriaTraderRenderer;
+import com.sephiria.registry.ModBlockEntities;
 import com.sephiria.registry.ModEntities;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
@@ -52,6 +55,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.blockentity.BeaconRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.LlamaRenderer;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
@@ -123,6 +128,11 @@ public class SephiriaClient implements ClientModInitializer {
 		MenuScreens.register(ModMenus.SHOP, ShopScreen::new);
 		MenuScreens.register(ModMenus.ROOT_RETREAT, RootRetreatScreen::new);
 		MenuScreens.register(ModMenus.WISH_POOL, WishPoolScreen::new);
+		MenuScreens.register(ModMenus.SEPHIRIA_BEACON, SephiriaBeaconScreen::new);
+
+		// 赛菲莉娅信标的光柱直接复用原版 BeaconRenderer：方块实体负责给颜色
+		BlockEntityRenderers.register(ModBlockEntities.SEPHIRIA_BEACON,
+				context -> new BeaconRenderer<SephiriaBeaconBlockEntity>());
 
 		// 许愿池抽卡 / 神铸的结果：交给客户端镜像，界面取走播动画
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.WishPoolResultPayload.TYPE,

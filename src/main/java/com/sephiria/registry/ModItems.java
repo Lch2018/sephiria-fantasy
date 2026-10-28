@@ -459,14 +459,6 @@ public final class ModItems {
 			new Item.Properties().stacksTo(1));
 
 	/**
-	 * 石板基础（天赋「耐心」第一阶段）：空效果、占一格且不可移出背包；
-	 * 第一阶段熄灭时由 {@code PatienceTalent} 直接删掉。
-	 */
-	public static final Item SLATE_BASE = register(key("slate_base"),
-			p -> new com.sephiria.slate.SlateBaseItem(p),
-			new Item.Properties().stacksTo(1));
-
-	/**
 	 * 合成石板（红色品质）：效果由两块输入石板合并而来，存在物品组件里。
 	 * <b>只能通过商人界面的「石板合成」得到</b>——不进宝箱 / 商店 / 许愿池 / 挖矿掉落池。
 	 */
@@ -963,6 +955,11 @@ public final class ModItems {
 			p -> new BlockItem(ModBlocks.ROOT_RETREAT, p),
 			// useBlockDescriptionPrefix：名字走方块的名字键（block.sephiria_fantasy.root_retreat），
 			// 不加这一行会去找 item.sephiria_fantasy.root_retreat，界面里显示成一串原始键名
+			new Item.Properties().useBlockDescriptionPrefix());
+
+	/** 赛菲莉娅信标（赛菲莉娅道具）：单格容器方块，有物品时发光柱。 */
+	public static final Item SEPHIRIA_BEACON = register(key("sephiria_beacon"),
+			p -> new BlockItem(ModBlocks.SEPHIRIA_BEACON, p),
 			new Item.Properties().useBlockDescriptionPrefix());
 
 	/** 神器宝箱（赛菲莉娅道具）：右键开出 5 件随机神器，选一件拿走。 */

@@ -1,7 +1,6 @@
 package com.sephiria.artifact;
 
 import com.sephiria.backpack.EnchantMenu;
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -32,9 +31,9 @@ public class EnchantCoinItem extends Item {
 		return InteractionResult.CONSUME;
 	}
 
-	/** 附魔币的名字也用道具品质色（普通）。 */
+	/** 附魔币是传说道具，名字跟品质色。 */
 	@Override
 	public Component getName(ItemStack stack) {
-		return Component.translatable(this.getDescriptionId()).withStyle(ChatFormatting.WHITE);
+		return ItemQualities.nameOf(this);
 	}
 }

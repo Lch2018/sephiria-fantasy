@@ -19,7 +19,7 @@ import java.util.Map;
  *   <li>结果是新石板的图案，存进 {@link FusedSlateItem#PATTERN}，之后放进背包就按这张表生效。</li>
  * </ul>
  *
- * <p>只接受<b>普通石板</b>：天国是全局效果、石板基础是天赋给的保护道具，两者都不参与合成；
+ * <p>只接受<b>普通石板</b>：天国是全局效果，不参与合成；
  * 已经合成过的「合成石板」也不能再当输入（用户 2026-10-24 定）。朝向另外有一条：
  * 两块输入里只要有一块不可旋转，结果也不可旋转（见 {@link #resultRotatable}）。
  */
@@ -38,7 +38,6 @@ public final class SlateFusion {
 	 */
 	public static boolean accepts(ItemStack stack) {
 		return stack.getItem() instanceof PatternSlateItem
-				&& !(stack.getItem() instanceof SlateBaseItem)
 				&& !(stack.getItem() instanceof FusedSlateItem);
 	}
 

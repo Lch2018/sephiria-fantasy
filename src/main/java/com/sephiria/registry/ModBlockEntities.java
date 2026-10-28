@@ -1,6 +1,7 @@
 package com.sephiria.registry;
 
 import com.sephiria.Sephiria;
+import com.sephiria.beacon.SephiriaBeaconBlockEntity;
 import com.sephiria.difficulty.RootRetreatBlockEntity;
 import com.sephiria.wishpool.WishPoolBlockEntity;
 import net.minecraft.core.Registry;
@@ -15,8 +16,8 @@ import java.util.Set;
 /**
  * 方块实体注册表。
  *
- * <p>目前只有根之退一个：它要<b>跟着方块存自己的方案</b>（放两个根之退可以各存一套难度设置，
- * 见 {@code difficulty.RootRetreatBlockEntity}）。
+ * <p>目前有三个：根之退（存方块自己的难度方案）、许愿池（ticker 吸升级宝箱）与
+ * 赛菲莉娅信标（单格物品 + 光柱颜色）。
  *
  * <p>26.3 的 {@link BlockEntityType} 构造函数是公开的、也没有 Builder（原版自己也是
  * {@code Registry.register(..., new BlockEntityType<>(factory, Set.of(blocks)))}），
@@ -42,6 +43,16 @@ public final class ModBlockEntities {
 			BuiltInRegistries.BLOCK_ENTITY_TYPE,
 			WISH_POOL_KEY,
 			new BlockEntityType<>(WishPoolBlockEntity::new, Set.of(ModBlocks.WISH_POOL)));
+
+	/** 赛菲莉娅信标的方块实体：存那一件物品，并给原版信标渲染器提供光柱颜色。 */
+	public static final ResourceKey<BlockEntityType<?>> SEPHIRIA_BEACON_KEY = ResourceKey.create(
+			Registries.BLOCK_ENTITY_TYPE,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_beacon"));
+
+	public static final BlockEntityType<SephiriaBeaconBlockEntity> SEPHIRIA_BEACON = Registry.register(
+			BuiltInRegistries.BLOCK_ENTITY_TYPE,
+			SEPHIRIA_BEACON_KEY,
+			new BlockEntityType<>(SephiriaBeaconBlockEntity::new, Set.of(ModBlocks.SEPHIRIA_BEACON)));
 
 	private ModBlockEntities() {
 	}

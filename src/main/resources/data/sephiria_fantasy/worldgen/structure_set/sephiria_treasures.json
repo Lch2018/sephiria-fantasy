@@ -1,0 +1,14 @@
+{
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 20261027,
+    "separation": 8,
+    "spacing": 20
+  },
+  "structures": [
+    {
+      "structure": "sephiria_fantasy:sephiria_treasure",
+      "weight": 1
+    }
+  ]
+}

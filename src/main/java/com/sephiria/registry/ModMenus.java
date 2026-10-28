@@ -2,6 +2,7 @@ package com.sephiria.registry;
 
 import com.sephiria.Sephiria;
 import com.sephiria.backpack.ArtifactBackpackMenu;
+import com.sephiria.beacon.SephiriaBeaconMenu;
 import com.sephiria.backpack.ChestMenu;
 import com.sephiria.backpack.EnchantMenu;
 import com.sephiria.difficulty.RootRetreatMenu;
@@ -87,6 +88,14 @@ public final class ModMenus {
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_fusion"),
 			new ExtendedMenuType<SlateFusionMenu, Unit>(
 					(id, inventory, data) -> new SlateFusionMenu(id, inventory),
+					Unit.STREAM_CODEC));
+
+	/** 赛菲莉娅信标的单格容器界面。 */
+	public static final MenuType<SephiriaBeaconMenu> SEPHIRIA_BEACON = Registry.register(
+			BuiltInRegistries.MENU,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_beacon"),
+			new ExtendedMenuType<SephiriaBeaconMenu, Unit>(
+					(id, inventory, data) -> new SephiriaBeaconMenu(id, inventory),
 					Unit.STREAM_CODEC));
 
 	private ModMenus() {

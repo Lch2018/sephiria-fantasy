@@ -39,7 +39,7 @@ $items = @('default_sword_and_shield', 'steel_greatsword', 'dagger', 'colossal_c
 
 # 方块：每个都要有 blockstates/<id>.json → models/block/<model>.json、贴图齐全、方块物品的定义文件，
 # 以及中英各一条 block.sephiria_fantasy.<id> 名字键（见 1c 那一段）
-$blocks = @('root_retreat', 'wish_pool')
+$blocks = @('root_retreat', 'wish_pool', 'sephiria_beacon')
 
 # Extra MODELS that no item definition is named after: the eternal-eclipse batch recolours existing
 # art instead of adding items (the carriers' definitions switch to them by component, the eclipse's

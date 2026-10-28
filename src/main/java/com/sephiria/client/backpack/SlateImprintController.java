@@ -3,9 +3,7 @@ package com.sephiria.client.backpack;
 import com.sephiria.backpack.BackpackGridMenu;
 import com.sephiria.client.ClientTalents;
 import com.sephiria.network.SlateImprintPayload;
-import com.sephiria.slate.SlateBaseItem;
 import com.sephiria.slate.SlateItem;
-import com.sephiria.talent.PatienceTalent;
 import com.sephiria.talent.Talent;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.world.inventory.Slot;
@@ -95,9 +93,7 @@ public final class SlateImprintController {
 			return false;
 		}
 
-		if (!(hovered.getItem().getItem() instanceof SlateItem)
-				|| hovered.getItem().getItem() instanceof SlateBaseItem
-				|| PatienceTalent.isBase(hovered.getItem())) {
+		if (!(hovered.getItem().getItem() instanceof SlateItem)) {
 			return false;
 		}
 

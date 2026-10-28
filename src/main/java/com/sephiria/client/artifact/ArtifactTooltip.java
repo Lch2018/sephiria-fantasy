@@ -1,6 +1,8 @@
 package com.sephiria.client.artifact;
 
 import com.sephiria.artifact.ArtifactItem;
+import com.sephiria.artifact.ArtifactRarity;
+import com.sephiria.artifact.ItemQualities;
 import com.sephiria.artifact.SephiriaArtifact;
 import com.sephiria.util.Numbers;
 import net.minecraft.ChatFormatting;
@@ -50,7 +52,8 @@ public final class ArtifactTooltip {
 		}
 
 		if (!(stack.getItem() instanceof SephiriaArtifact artifact)) {
-			return List.of();
+			ArtifactRarity quality = ItemQualities.of(stack.getItem());
+			return quality == null ? List.of() : qualityItemLines(quality);
 		}
 
 		int level = Math.min(ArtifactItem.levelOf(stack) + Math.max(0, slotLevelHint), artifact.maxLevel());
@@ -62,8 +65,9 @@ public final class ArtifactTooltip {
 			lines.add(Component.translatable(combo.translationKey()).withStyle(ChatFormatting.GREEN));
 		}
 
-		if (artifact.unique()
-				|| com.sephiria.client.ClientTalents.stage(com.sephiria.talent.Talent.WISDOM) >= 2) {
+		// 只有神器自身带【唯一】才显示这一行。智慧二阶段不再强制所有神器按【唯一】结算
+		// （2026-10-26 用户确认），这里也不能因为天赋点亮就给每件神器都挂上标签。
+		if (artifact.unique()) {
 			lines.add(Component.translatable("artifact.sephiria_fantasy.tag.unique").withColor(COLOUR_TAG));
 		}
 
@@ -137,11 +141,19 @@ public final class ArtifactTooltip {
 		return lines;
 	}
 
+	/** 道具的「稀有 / 传说 道具」一行。 */
+	private static List<Component> qualityItemLines(ArtifactRarity rarity) {
+		return List.of(Component.translatable("artifact.sephiria_fantasy.item.rarity_line",
+						Component.translatable(rarity.translationKey()).withColor(rarity.color()))
+				.withStyle(ChatFormatting.GRAY));
+	}
+
 	/** 药水的提示行：效果 + 品质（大部分药水没有风味，有才画那行斜体灰字）。 */
 	private static List<Component> potionLines(com.sephiria.potion.SephiriaPotionItem potion) {
 		List<Component> lines = new ArrayList<>();
 		lines.add(potion.effect().describe());
-		lines.add(Component.translatable("artifact.sephiria_fantasy.rarity_line",
+		// 药水是「稀有 药水」，不能复用神器的「稀有 神器」那一行
+		lines.add(Component.translatable("artifact.sephiria_fantasy.potion.rarity_line",
 						Component.translatable(potion.rarity().translationKey()).withColor(potion.rarity().color()))
 				.withStyle(ChatFormatting.GRAY));
 		// 风味可以为空（大部分药水没写）：空字符串就不写这一行，免得留一条空白斜体行

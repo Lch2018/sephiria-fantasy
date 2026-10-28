@@ -13,7 +13,7 @@ public enum Talent {
 	SWIFT("swift", 0xACD9C3),
 	/** 生存：每点 +0.6 最大 HP，阶段给药水随机属性、背包格与石板刻印。 */
 	SURVIVAL("survival", 0xD49ED8),
-	/** 耐心：每点 +1 防御力，阶段给石板基础、低血回复与十日一次复活。 */
+	/** 耐心：每点 +1 防御力，阶段给第一行格子等级、低血回复与十日一次复活。 */
 	PATIENCE("patience", 0xD4D7DD),
 	/** 智慧：每点 +1 战斗 MP 再生，阶段给 MP 吸收 / 最大 MP、神器合并与宝箱重掷。 */
 	WISDOM("wisdom", 0xA6DFDE),

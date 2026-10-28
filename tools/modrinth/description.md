@@ -20,6 +20,12 @@ Equipping artifacts of the same set in the Sephiria Backpack raises that combo's
 
 The Sephiria Backpack can also hold **slates** (58 in total: 15 Common / 22 Advanced / 11 Rare / 8 Legendary / 2 Eternal). Most slates change the level of surrounding slots and can be rotated with **R**; **Heaven** is the exception — +9 to every slot, no rotation, and only obtainable at 0.01% per ancient debris smelted. Bosses drop a **Rare Artifact Chest** and a **Rare Slate Chest**; these only contain Rare-or-better rewards.
 
+### Sephiria Treasure and Beacons
+
+A new surface structure, **Sephiria Treasure**, generates in 42 Overworld biomes (random-spread spacing 20 / separation 8). It is a single **Sephiria Beacon** block under open sky. The beacon cannot be crafted: right-click it to open a one-slot container; while it holds an item it projects a vanilla-style beacon beam colored by that item's rarity, and the beam disappears when the item is removed. Breaking the beacon also drops its contents.
+
+The single reward is biome-dependent: artifact 8 / slate 2 / Enchant Coin 2 / potion 1 / Extra Backpack Row 1. The type is rolled first; only artifacts and slates then roll rarity (Rare or Legendary at roughly 1:1). The Enchant Coin result is a stack of 3, and potions follow the biome's element preference — the listed element(s) take 60% in total, other element potions are excluded, and the remaining 40% goes to non-element potions.
+
 ### Debuffs and artifact skills
 
 - **Shock** (Magitech), **Burn** (Embers) and **Frostbite / Freeze** (Glacier): periodic damage that scales with stacks, plus a freeze that locks a mob completely in place (no AI, no knockback, animation held on the spot) and turns it ice blue; affected mobs show a stack label under their feet. Debuff damage and true damage can crit as well.
@@ -35,8 +41,8 @@ Physical Power, Fire / Ice / Lightning element strength, crit chance and crit da
 Seven talent pages (Wrath / Swiftness / Survival / Patience / Wisdom / Will / Quick Wit), each with three stages at 5 / 10 / 20 points. Talent points come from achievements, boss kills and leveling up. Highlights:
 
 - **Survival**: max HP per point; Advanced-or-better potions grant +1 to a random permanent attribute; extra backpack slots; stage 3 unlocks **Slate Imprint** (hover a slate in the Sephiria Backpack and hold **F** to consume it while keeping its effect on nearby slots).
-- **Patience**: Defense (the same stat enemies use), a Slate Base with the same effect as the Foundation slate, low-health regeneration, and a revival at 60% health once every 10 in-game days (totems take priority).
-- **Wisdom**: MP regeneration (combat: every 10 seconds; out of combat: 12.5% max MP every 0.5 seconds), MP Absorption, duplicate artifacts merging into unmaxed copies, dice from boss kills, and one free chest reroll per chest.
+- **Patience**: Defense (the same stat enemies use), +1 slot level for the first backpack row, low-health regeneration, and a revival at 60% health once every 10 in-game days (totems take priority).
+- **Wisdom**: MP regeneration (combat: every 10 seconds; out of combat: 12.5% max MP every 0.5 seconds), MP Absorption, duplicate artifact merging (a copy already at max level and +2 combo is never consumed), dice from boss kills, and one free chest reroll per chest.
 
 ### Root Retreat
 
@@ -104,6 +110,12 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 
 赛菲莉娅背包里还能放**石板**（共 58 块：普通 15 / 高级 22 / 稀有 11 / 传说 8 / 永恒 2）。大多数石板会改变周围格子的等级，可按 **R** 旋转；**天国**例外——所有格子 +9、不可旋转，只能在烧炼远古残骸时以每份 0.01% 的概率获得。击败 BOSS 会固定掉一个**稀有神器宝箱**和一个**稀有石板宝箱**，只出稀有及以上品质。
 
+### 赛菲莉娅宝藏与信标
+
+新增地表结构 **赛菲莉娅宝藏**：在 42 个主世界群系生成（random-spread spacing 20 / separation 8），结构只有一个方块——**赛菲莉娅信标**，且只放在露天地表。信标无法合成：右键打开单格容器；容器里有物品时会像原版信标一样向天空发光柱，颜色取该物品的品质色；拿走后光柱立即消失。挖掉信标时容器里的物品也会掉出来。
+
+信标里只有一件奖励，按群系抽：先掷类型（神器 8 / 石板 2 / 神器附魔币 2 / 药水 1 / 赛菲莉娅额外背包栏 1），只有神器与石板再掷品质（稀有 / 传说各约一半）；附魔币那一档给堆叠 3 个。药水按群系元素偏好抽：指定元素合计 60%，其他元素药水不出现，剩下 40% 给非元素药水。
+
 ### 减益与神器技能
 
 - **触电**（魔法科技）、**灼伤**（余烬）与**冻伤 / 冰冻**（冰川）：挂在敌人身上的周期伤害，按层数乘算；冻伤叠满会把敌人**完全冻住**（AI 停摆、被打也不动、动画定格、染成冰蓝）。敌人脚下会显示层数标签；减益伤害与真实伤害同样可以暴击。
@@ -119,8 +131,8 @@ Red Snake Eye meteors play a four-stage show (appear / fall / impact / vanish); 
 七条天赋页（愤怒 / 迅捷 / 生存 / 耐心 / 智慧 / 意志 / 急智），每条 5 / 10 / 20 点解锁三个阶段；天赋点来自成就、击杀 BOSS 与升级。要点：
 
 - **生存**：每点最大 HP；喝高级及以上品质药水随机一项属性永久 +1；额外背包格；三阶段解锁**石板刻印**（鼠标指着赛菲莉娅背包里的石板、按住 **F** 消耗它并保留其对周围格子的效果）。
-- **耐心**：防御力（与敌人防御同口径）、与石板「基础」效果相同的石板基础、低血回复、每 10 个游戏日一次的 60% 复活（不死图腾优先）。
-- **智慧**：MP再生（战斗每 10 秒；脱战每 0.5 秒回 12.5% 最大 MP）、MP 吸收、同种未满级神器合并、BOSS 掉落骰子、每个宝箱一次免费刷新。
+- **耐心**：防御力（与敌人防御同口径）、背包第一行格子等级 +1、低血回复、每 10 个游戏日一次的 60% 复活（不死图腾优先）。
+- **智慧**：MP再生（战斗每 10 秒；脱战每 0.5 秒回 12.5% 最大 MP）、MP 吸收、同种神器合并（放进来的那件已经满级且连击 +2 时不会参与）、BOSS 掉落骰子、每个宝箱一次免费刷新。
 
 ### 根之退
 

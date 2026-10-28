@@ -12,11 +12,13 @@ import net.minecraft.world.item.ItemStack;
 /**
  * 天赋「智慧」二阶段：相同神器放进背包时合并。
  *
- * <p>合并规则（用户 2026-10-24 重做、2026-10-25 收窄）：
+ * <p>合并规则（用户 2026-10-24 重做、2026-10-25 收窄、2026-10-27 改目标规则）：
  * <ul>
- *   <li>只有背包里存在<b>未满级</b>的同种神器时才合并；同种神器全部满级时，新放进去的那件
- *       正常占格、不合并（例如背包里已有满级的 a1，再放 0 级的 a2 会正常放下；再放 a3 才与
- *       a2 合并，a2 变成满级；之后的 a4 又正常放下）；</li>
+ *   <li>只有背包里存在<b>还有成长空间</b>的同种神器时才合并：等级未满，<b>或者</b>连击还不是 +2。
+ *       等级与连击都满了才算“没有成长空间”，不再参与合并（2026-10-27 用户改的口径：
+ *       之前是“等级满就不合并”，会把满级但连击 +1 的那件也排除掉）；</li>
+ *   <li><b>放进去的那件如果等级已满、连击也已是 +2</b>，也直接正常放入背包、不参与合并——
+ *       否则会消耗背包里那件却什么都涨不了；</li>
  *   <li><b>等级低的那件被消耗</b>（等级相同时消耗放进去的那件，保留背包里原有的、位置不变）；</li>
  *   <li>留下的那件：<b>等级 += 被消耗那件的等级 + 1</b>（不超过该神器的最高等级），
  *       并且它提供的<b>连击数量 +1</b>——每件神器本来就有 1 级，合并一次变 2 级
@@ -24,7 +26,7 @@ import net.minecraft.world.item.ItemStack;
  *   <li>合并后的神器就是<b>普通神器</b>——可以移出赛菲莉娅背包、可以丢出，
  *       二阶段熄灭后也不还原、不失效（等级与连击都是物品栈自己的组件了）；</li>
  *   <li>二阶段点亮时不再把背包里的重复神器丢出去；也不再把这些重复神器强制按【独特】结算
- *       （2026-10-25 去掉，重复神器恢复为各算一份）。</li>
+ *       （2026-10-26 用户再次确认：重复神器恢复为各算一份）。</li>
  * </ul>
  */
 public final class WisdomTalent {
@@ -37,12 +39,13 @@ public final class WisdomTalent {
 	}
 
 	/**
-	 * 尝试把 {@code incoming} 与背包里未满级的同种神器合并。
+	 * 尝试把 {@code incoming} 与背包里还有成长空间的同种神器合并。
 	 *
-	 * <p>返回 true 表示 {@code incoming} 已经被消耗（调用方不要再把它放进格子）；
-	 * 返回 false 表示按正常放置处理——注意「放进去的那件等级更高」时也返回 false，
-	 * 但那时背包里原有的那件已经被消耗、{@code incoming} 的等级 / 连击已经加过了，
-	 * 调用方照常把它放进目标格即可（位置就是玩家放它的位置）。
+	 * <p>返回 true 表示 {@code incoming} 已经被消耗（调用方不要再把它放进格子）。
+	 * 返回 false 表示调用方按正常放置处理：通常是没找到可合并的目标（包括放进去的这件
+	 * 已经满级 +2，见上面的限制）；例外是「放进去的那件等级更高」——那时背包里原有的那件
+	 * 已经被消耗、{@code incoming} 的等级 / 连击已经加过了，调用方照常把它放进目标格即可，
+	 * 位置就是玩家放它的位置。
 	 */
 	public static boolean tryMerge(ServerPlayer player, ItemStack incoming) {
 		if (!mergeActive(player) || incoming.isEmpty()
@@ -50,8 +53,14 @@ public final class WisdomTalent {
 			return false;
 		}
 
+		// 放进去的这件已经没有任何成长空间：等级满、连击也满。
+		// 此时再合并只会消耗背包里的同种神器，留下的还是这件满级 +2，纯亏一件，所以按普通放置处理。
+		if (isFullyMaxed(incoming, artifact)) {
+			return false;
+		}
+
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
-		int slot = findUnmaxed(backpack, incoming, artifact);
+		int slot = findMergeable(backpack, incoming, artifact);
 
 		if (slot < 0) {
 			return false;
@@ -94,14 +103,21 @@ public final class WisdomTalent {
 		return !incomingWins;
 	}
 
-	/** 某件物品在背包里<b>未满级</b>的格子（找不到返回 -1；全部满级 = 不合并、正常放入）。 */
-	private static int findUnmaxed(ArtifactBackpack backpack, ItemStack incoming, SephiriaArtifact artifact) {
-		int max = artifact.maxLevel();
+	/** 等级与连击都到顶：这件物品已经没有任何成长空间（不能再当合并目标，放进去也不该再合并）。 */
+	private static boolean isFullyMaxed(ItemStack stack, SephiriaArtifact artifact) {
+		return ArtifactItem.levelOf(stack) >= artifact.maxLevel()
+				&& ArtifactItem.comboCountOf(stack) >= ArtifactItem.MAX_COMBO_COUNT;
+	}
 
+	/**
+	 * 某件物品在背包里还有成长空间的格子：等级未满，或连击还不是 +2。
+	 * 找不到返回 -1（同种神器都满级 +2 = 不合并、正常放入）。
+	 */
+	private static int findMergeable(ArtifactBackpack backpack, ItemStack incoming, SephiriaArtifact artifact) {
 		for (int slot = 0; slot < ArtifactBackpack.MAX_SLOTS; slot++) {
 			ItemStack stack = backpack.getItem(slot);
 
-			if (stack.getItem() == incoming.getItem() && ArtifactItem.levelOf(stack) < max) {
+			if (stack.getItem() == incoming.getItem() && !isFullyMaxed(stack, artifact)) {
 				return slot;
 			}
 		}

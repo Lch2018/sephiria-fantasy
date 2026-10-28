@@ -64,6 +64,7 @@ import com.sephiria.trader.SephiriaTraderSpawner;
 import com.sephiria.registry.ModRecipeBookCategories;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
+import com.sephiria.registry.ModStructures;
 import com.sephiria.weapon.SephiriaCrossbowItem;
 import com.sephiria.weapon.SephiriaDaggerItem;
 import com.sephiria.weapon.SephiriaGreatswordItem;
@@ -99,6 +100,8 @@ public class Sephiria implements ModInitializer {
 		ModItems.initialize();
 		ModBlocks.initialize();
 		ModBlockEntities.initialize();
+		// 赛菲莉娅宝藏：结构类型与结构片段类型（内容由 worldgen JSON 驱动）
+		ModStructures.initialize();
 		// 配方书多一页「赛菲莉娅」：分类登记（配方 JSON 的 category 指向它）
 		ModRecipeBookCategories.initialize();
 		ModCreativeTabs.initialize();
@@ -123,7 +126,7 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.wishpool.WishPool.register();
 		// 天赋：成就是四叶草之外再 +1 天赋点，击杀 BOSS 也 +1（见 talent/Talents）
 		com.sephiria.talent.Talents.register();
-		// 天赋「耐心」：石板基础、低血回复、十日复活
+		// 天赋「耐心」：第一行格子等级、低血回复、十日复活
 		com.sephiria.talent.PatienceTalent.register();
 		// 稀有宝箱：击败 BOSS（玩家补刀）固定掉一个稀有神器宝箱 + 一个稀有石板宝箱
 		com.sephiria.artifact.BossChestDrops.register();
@@ -395,8 +398,7 @@ public class Sephiria implements ModInitializer {
 
 					ItemStack stack = slot.getItem();
 
-					if (!(stack.getItem() instanceof com.sephiria.slate.SlateItem)
-							|| com.sephiria.talent.PatienceTalent.isBase(stack)) {
+					if (!(stack.getItem() instanceof com.sephiria.slate.SlateItem)) {
 						return;
 					}
 

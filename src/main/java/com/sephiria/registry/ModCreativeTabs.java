@@ -195,8 +195,6 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.SLATE_OF_THORNS);
 						output.accept(ModItems.SLATE_OF_RADIANCE);
 						output.accept(ModItems.SLATE_OF_COURAGE);
-						// 石板基础只由「耐心」一阶段发放；创造页留一件方便测试
-						output.accept(ModItems.SLATE_BASE);
 						// 天国不进掉落池：创造页留一件，只用于测试（正常游戏只能烧远古残骸碰运气）
 						output.accept(ModItems.SLATE_OF_HEAVEN);
 					})
@@ -225,6 +223,7 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.RARE_SLATE_CHEST);
 						output.accept(ModItems.ROOT_RETREAT);
 						output.accept(ModItems.WISH_POOL);
+						output.accept(ModItems.SEPHIRIA_BEACON);
 					})
 					.build());
 

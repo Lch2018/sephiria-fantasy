@@ -2,7 +2,6 @@ package com.sephiria.talent;
 
 import com.mojang.serialization.Codec;
 import com.sephiria.Sephiria;
-import com.sephiria.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.ParticleTypes;
@@ -11,15 +10,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.item.ItemStack;
 
 /**
  * 天赋「耐心」的三项阶段能力。
  *
  * <ul>
  *   <li><b>一阶段：第一行格子等级 +1</b>——赛菲莉娅背包第一行（前 6 格）的格子等级 +1，
- *       随阶段现算、不落存档（2026-10-24 用户把原来的「石板基础」换成了这条）。
- *       实现见 {@code ArtifactBackpack.effectiveLevels}。</li>
+ *       随阶段现算、不落存档。实现见 {@code ArtifactBackpack.effectiveLevels}。
+ *       （旧版的「石板基础」道具已在 2026-10-26 移除。）</li>
  *   <li><b>二阶段：低血回复</b>——生命值低于 7 时每秒回 0.5 点。</li>
  *   <li><b>三阶段：十日复活</b>——死亡时以 60% 最大生命值复活，10 个游戏日一次。
  *       不死图腾优先：图腾生效时玩家不会死亡，{@code ALLOW_DEATH} 根本不会触发。</li>
@@ -87,11 +85,6 @@ public final class PatienceTalent {
 			player.sendSystemMessage(Component.translatable("message.sephiria_fantasy.patience_revive"), true);
 			return false;
 		});
-	}
-
-	/** 是否是旧版一阶段的「石板基础」（刻印排除仍然认它，老存档里的还能用）。 */
-	public static boolean isBase(ItemStack stack) {
-		return stack.getItem() == ModItems.SLATE_BASE;
 	}
 
 	private static long readyAt(ServerPlayer player) {

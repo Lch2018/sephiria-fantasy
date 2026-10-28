@@ -97,7 +97,7 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 					return backpackSlotExists(getContainerSlot())
 							&& stack.getItem() instanceof BackpackStorable;
 				}
-				// mayPickup 保持默认 true：石板基础 / 合并过的神器也要能在背包格之间拖动，
+				// mayPickup 保持默认 true：合并过的神器也要能在背包格之间拖动，
 				// 「不能带出背包」由 clicked / quickMoveStack / removed 在「放到哪里」那一步拦。
 			});
 		}

@@ -1,6 +1,5 @@
 package com.sephiria.artifact;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -16,8 +15,9 @@ public class DiceItem extends Item {
 		super(properties);
 	}
 
+	/** 骰子是稀有道具，名字跟品质色。 */
 	@Override
 	public Component getName(ItemStack stack) {
-		return Component.translatable(this.getDescriptionId()).withStyle(ChatFormatting.WHITE);
+		return ItemQualities.nameOf(this);
 	}
 }

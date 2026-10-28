@@ -1,0 +1,6 @@
+{
+  "type": "sephiria_fantasy:sephiria_treasure",
+  "biomes": "#sephiria_fantasy:has_structure/sephiria_treasure",
+  "spawn_overrides": {},
+  "step": "surface_structures"
+}

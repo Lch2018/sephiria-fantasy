@@ -3,7 +3,6 @@ package com.sephiria.artifact;
 import com.mojang.serialization.Codec;
 import com.sephiria.Sephiria;
 import com.sephiria.backpack.ChestMenu;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -118,10 +117,10 @@ public class ChestItem extends Item {
 		return InteractionResult.CONSUME;
 	}
 
-	/** 箱子名字按品质上色（道具都是普通）。 */
+	/** 箱子名字按品质上色：普通箱稀有（黄），稀有箱传说（红）。 */
 	@Override
 	public Component getName(ItemStack stack) {
-		return Component.translatable(this.getDescriptionId()).withStyle(ChatFormatting.WHITE);
+		return ItemQualities.nameOf(this);
 	}
 
 	/**

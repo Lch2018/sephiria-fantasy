@@ -1,5 +1,6 @@
 package com.sephiria.backpack;
 
+import com.sephiria.artifact.ItemQualities;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -24,6 +25,12 @@ import net.minecraft.world.level.Level;
 public class ExtraBackpackRowItem extends Item {
 	public ExtraBackpackRowItem(Properties properties) {
 		super(properties);
+	}
+
+	/** 额外背包栏是传说道具，名字跟品质色。 */
+	@Override
+	public Component getName(ItemStack stack) {
+		return ItemQualities.nameOf(this);
 	}
 
 	@Override

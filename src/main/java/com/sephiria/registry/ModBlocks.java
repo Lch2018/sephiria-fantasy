@@ -1,6 +1,7 @@
 package com.sephiria.registry;
 
 import com.sephiria.Sephiria;
+import com.sephiria.beacon.SephiriaBeaconBlock;
 import com.sephiria.difficulty.RootRetreatBlock;
 import com.sephiria.wishpool.WishPoolBlock;
 import net.minecraft.core.Registry;
@@ -15,8 +16,8 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 /**
  * 方块注册表。
  *
- * <p>目前只有一个：<b>根之退</b>（{@code difficulty.RootRetreatBlock}）——石碑状的功能方块，
- * 右键打开调难度的界面。
+ * <p>目前有三个：<b>根之退</b>（石碑状，右键开难度界面）、<b>许愿池</b>（右键开抽卡界面）
+ * 与<b>赛菲莉娅信标</b>（单格容器，有物品时发光柱）。
  *
  * <p>两件事容易漏：① 1.21.2 起 {@code Properties} 必须 {@code setId(...)}（原版用它算默认掉落表
  * 与一些报错信息，不设会在构造方块时抛异常）；② 方块物品要在 {@link ModItems} 里注册
@@ -64,6 +65,29 @@ public final class ModBlocks {
 					.setId(WISH_POOL_KEY)
 					.strength(2.0F, 6.0F)
 					.sound(SoundType.STONE)
+					.noOcclusion()));
+
+	/** 赛菲莉娅信标 id（{@code sephiria_fantasy:sephiria_beacon}）。 */
+	public static final Identifier SEPHIRIA_BEACON_ID =
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_beacon");
+	/** 赛菲莉娅信标的注册键。 */
+	public static final ResourceKey<Block> SEPHIRIA_BEACON_KEY =
+			ResourceKey.create(Registries.BLOCK, SEPHIRIA_BEACON_ID);
+
+	/**
+	 * 赛菲莉娅信标：单格容器，容器有物品时向天空发光柱（颜色由物品品质决定）。
+	 *
+	 * <p>模型不是整块（玻璃罩 + 底座），所以 {@code noOcclusion()}；常亮 15 级光，
+	 * 掉落表在 {@code data/sephiria_fantasy/loot_table/blocks/sephiria_beacon.json}。
+	 */
+	public static final Block SEPHIRIA_BEACON = Registry.register(
+			BuiltInRegistries.BLOCK,
+			SEPHIRIA_BEACON_ID,
+			new SephiriaBeaconBlock(BlockBehaviour.Properties.of()
+					.setId(SEPHIRIA_BEACON_KEY)
+					.strength(3.0F, 6.0F)
+					.sound(SoundType.GLASS)
+					.lightLevel(state -> 15)
 					.noOcclusion()));
 
 	private ModBlocks() {
