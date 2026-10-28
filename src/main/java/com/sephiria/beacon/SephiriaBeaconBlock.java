@@ -66,7 +66,7 @@ public class SephiriaBeaconBlock extends Block implements EntityBlock {
 
 	/** 被爆炸炸掉时同样把内容物吐出来。 */
 	@Override
-	public void wasExploded(ServerLevel level, BlockPos pos, Explosion explosion) {
+	public void wasExploded(Level level, BlockPos pos, Explosion explosion) {
 		if (level.getBlockEntity(pos) instanceof SephiriaBeaconBlockEntity beacon) {
 			ItemStack held = beacon.removeItemNoUpdate(0);
 

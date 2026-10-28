@@ -9,7 +9,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class FusedSlateItem extends PatternSlateItem {
 	/** 合并后的图案（相对坐标 + 增量）。网络同步是必须的：合成界面要在客户端画预览。 */
 	public static final DataComponentType<List<Cell>> PATTERN = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "fused_slate_pattern"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "fused_slate_pattern"),
 			DataComponentType.<List<Cell>>builder()
 					.persistent(Cell.CODEC.listOf())
 					.networkSynchronized(Cell.STREAM_CODEC.apply(ByteBufCodecs.list()))
@@ -41,7 +41,7 @@ public class FusedSlateItem extends PatternSlateItem {
 	/** 合成结果能不能按 R 旋转：两块输入都可旋转才为 true。 */
 	public static final DataComponentType<Boolean> ROTATABLE = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "fused_slate_rotatable"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "fused_slate_rotatable"),
 			DataComponentType.<Boolean>builder()
 					.persistent(Codec.BOOL)
 					.networkSynchronized(ByteBufCodecs.BOOL)

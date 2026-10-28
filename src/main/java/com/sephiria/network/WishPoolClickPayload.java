@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：许愿池界面里点的按钮。
@@ -30,7 +30,7 @@ public record WishPoolClickPayload(int action, boolean slatePool, int itemId) im
 	public static final int ACTION_CLEAR_ANCHOR_SLOT = 5;
 
 	public static final CustomPacketPayload.Type<WishPoolClickPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool_click"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool_click"));
 
 	public static final StreamCodec<FriendlyByteBuf, WishPoolClickPayload> STREAM_CODEC = StreamCodec.of(
 			(FriendlyByteBuf buffer, WishPoolClickPayload payload) -> {

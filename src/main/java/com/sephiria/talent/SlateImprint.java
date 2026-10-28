@@ -7,7 +7,7 @@ import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.slate.SlateItem;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
@@ -45,7 +45,7 @@ public final class SlateImprint {
 			.persistent(Saved.CODEC)
 			// 刻印的石板相当于「存在背包里」，死亡不掉
 			.copyOnDeath()
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_imprints"));
+			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_imprints"));
 
 	private SlateImprint() {
 	}

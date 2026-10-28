@@ -1,7 +1,7 @@
 package com.sephiria.difficulty;
 
 import com.sephiria.registry.ModMenus;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Unit;
@@ -116,7 +116,7 @@ public class RootRetreatMenu extends AbstractContainerMenu {
 
 	/** 把菜单打开给玩家（26.3 的菜单必须走 screenOpeningData 这条路，数据用 Unit 占位）。 */
 	public static MenuProvider provider(ServerPlayer player, RootRetreatBlockEntity block) {
-		return new ExtendedMenuProvider<Unit>() {
+		return new ExtendedScreenHandlerFactory<Unit>() {
 			@Override
 			public Unit getScreenOpeningData(ServerPlayer ignored) {
 				return Unit.INSTANCE;

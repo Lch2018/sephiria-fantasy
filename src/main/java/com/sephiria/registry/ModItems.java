@@ -111,7 +111,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.util.Unit;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -119,11 +119,10 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ToolMaterial;
-import net.minecraft.world.item.component.BlocksAttacks;
+import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.component.UseEffects;
+import net.minecraft.world.item.component.Unbreakable;
 
 import java.util.List;
 import java.util.Optional;
@@ -147,59 +146,50 @@ public final class ModItems {
 	public static final Item DEFAULT_SWORD_AND_SHIELD = register(key("default_sword_and_shield"),
 			p -> new SephiriaShieldItem(WeaponBranch.SWORD_AND_SHIELD, p),
 			new Item.Properties()
-					.sword(ToolMaterial.IRON,
-							SephiriaShieldItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
-							SephiriaShieldItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
+					.attributes(weaponAttributes(SephiriaShieldItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - Tiers.IRON.getAttackDamageBonus(),
+							SephiriaShieldItem.ATTACK_SPEED - (float) 4.0D))
 					.durability(250)
-					// 原版使用物品期间会把人拖到 20% 移速（UseEffects.DEFAULT 的 speed_multiplier=0.2）。
-					// 防御是持续按住的姿态，被拖慢会让"举盾走位"完全没法玩，所以这里显式改成不减速、
-					// 也允许疾跑——这是原版给的开关，不用去 mixin 里改移动逻辑。
-					.component(DataComponents.USE_EFFECTS, new UseEffects(true, true, 1.0F))
-					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
+					.component(DataComponents.UNBREAKABLE, new Unbreakable(true)));
 	/** 钢铁巨剑：左键横扫 + 右键蓄力「旋风」（见 {@link SephiriaGreatswordItem}）。 */
 	public static final Item STEEL_GREATSWORD = register(key("steel_greatsword"),
 			p -> new SephiriaGreatswordItem(WeaponBranch.GREATSWORD, p),
 			new Item.Properties()
-					.sword(ToolMaterial.IRON,
-							SephiriaGreatswordItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
-							SephiriaGreatswordItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
+					.attributes(weaponAttributes(SephiriaGreatswordItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - Tiers.IRON.getAttackDamageBonus(),
+							SephiriaGreatswordItem.ATTACK_SPEED - (float) 4.0D))
 					.durability(600)
-					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
+					.component(DataComponents.UNBREAKABLE, new Unbreakable(true)));
 	/** 匕首：右键是招架/狂怒两段技能（见 {@link SephiriaDaggerItem}）。 */
 	public static final Item DAGGER = register(key("dagger"),
 			p -> new SephiriaDaggerItem(WeaponBranch.DAGGER, p),
 			new Item.Properties()
-					.sword(ToolMaterial.IRON,
-							SephiriaDaggerItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
-							SephiriaDaggerItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
+					.attributes(weaponAttributes(SephiriaDaggerItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - Tiers.IRON.getAttackDamageBonus(),
+							SephiriaDaggerItem.ATTACK_SPEED - (float) 4.0D))
 					.durability(160)
-					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
+					.component(DataComponents.UNBREAKABLE, new Unbreakable(true)));
 	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, SephiriaCrossbowItem.MAGAZINE_SIZE);
 	/** 重型弩的专用弹药：弩矢。弩不消耗、也不需要背包里有原版箭矢。 */
 	public static final Item CROSSBOW_BOLT = Registry.register(
 			BuiltInRegistries.ITEM,
 			key("crossbow_bolt"),
-			new SephiriaBoltItem(new Item.Properties().stacksTo(64).setId(key("crossbow_bolt"))));
+			new SephiriaBoltItem(new Item.Properties().stacksTo(64)));
 	/** 刀：GeckoLib 骨骼模型 + 出鞘/入鞘两态（见 {@link SephiriaKatanaItem}）。 */
 	public static final Item BLADE = register(key("blade"),
 			p -> new SephiriaKatanaItem(WeaponBranch.KATANA, p),
 			new Item.Properties()
 					// sword() 只是为了拿到 Tool 组件（切蛛网、剑类方块加速）和通用属性；
 					// 它写的攻击力/攻速随后被下面按状态的修饰符覆盖，所以这里传 0。
-					.sword(ToolMaterial.IRON, 0.0F, 0.0F)
 					.durability(320)
-					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+					.component(DataComponents.UNBREAKABLE, new Unbreakable(true))
 					.component(DataComponents.ATTRIBUTE_MODIFIERS, SephiriaKatanaItem.attributeModifiers(false))
 					.component(SephiriaKatanaItem.SHEATHED, Boolean.FALSE));
 	/** 长棍：左键横扫 + 右键两段「回击」（见 {@link SephiriaStaffItem}）。 */
 	public static final Item QUARTERSTAFF = register(key("quarterstaff"),
 			p -> new SephiriaStaffItem(WeaponBranch.STAFF, p),
 			new Item.Properties()
-					.sword(ToolMaterial.IRON,
-							SephiriaStaffItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
-							SephiriaStaffItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
+					.attributes(weaponAttributes(SephiriaStaffItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - Tiers.IRON.getAttackDamageBonus(),
+							SephiriaStaffItem.ATTACK_SPEED - (float) 4.0D))
 					.durability(300)
-					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
+					.component(DataComponents.UNBREAKABLE, new Unbreakable(true)));
 
 	/** 全部基础武器，顺序即创造模式标签页里的顺序。 */
 	public static final List<BaseWeapon> BASE_WEAPONS = List.of(
@@ -949,18 +939,18 @@ public final class ModItems {
 	/** 许愿池（赛菲莉娅道具）：水池方块，右键打开抽卡界面，并吸走扔进来的升级宝箱。 */
 	public static final Item WISH_POOL = register(key("wish_pool"),
 			p -> new BlockItem(ModBlocks.WISH_POOL, p),
-			new Item.Properties().useBlockDescriptionPrefix());
+			new Item.Properties());
 
 	public static final Item ROOT_RETREAT = register(key("root_retreat"),
 			p -> new BlockItem(ModBlocks.ROOT_RETREAT, p),
 			// useBlockDescriptionPrefix：名字走方块的名字键（block.sephiria_fantasy.root_retreat），
 			// 不加这一行会去找 item.sephiria_fantasy.root_retreat，界面里显示成一串原始键名
-			new Item.Properties().useBlockDescriptionPrefix());
+			new Item.Properties());
 
 	/** 赛菲莉娅信标（赛菲莉娅道具）：单格容器方块，有物品时发光柱。 */
 	public static final Item SEPHIRIA_BEACON = register(key("sephiria_beacon"),
 			p -> new BlockItem(ModBlocks.SEPHIRIA_BEACON, p),
-			new Item.Properties().useBlockDescriptionPrefix());
+			new Item.Properties());
 
 	/** 神器宝箱（赛菲莉娅道具）：右键开出 5 件随机神器，选一件拿走。 */
 	public static final Item ARTIFACT_CHEST = register(key("artifact_chest"),
@@ -1057,25 +1047,10 @@ public final class ModItems {
 	private static Item sword(String name, WeaponBranch branch, float attackDamage, float attackSpeed, int durability, boolean drawAnimation, boolean blocks) {
 		ResourceKey<Item> key = key(name);
 		Item.Properties properties = new Item.Properties()
-				.sword(ToolMaterial.IRON,
-						attackDamage - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
-						attackSpeed - (float) Attributes.DEFAULT_ATTACK_SPEED)
+				.attributes(weaponAttributes(attackDamage - PLAYER_BASE_ATTACK_DAMAGE - Tiers.IRON.getAttackDamageBonus(),
+						attackSpeed - (float) 4.0D))
 				.durability(durability)
-				.component(DataComponents.UNBREAKABLE, Unit.INSTANCE);
-
-		if (blocks) {
-			// 剑盾的格挡参数：90° 格挡角、满减伤、按格挡次数掉耐久。
-			// 这里直接构造而不是抄原版盾牌的组件——物品注册发生在组件绑定之前，
-			// 初始化期读 Items.SHIELD 的组件会抛 "Components not bound yet"。
-			properties = properties.component(DataComponents.BLOCKS_ATTACKS, new BlocksAttacks(
-					0.0F,
-					1.0F,
-					List.of(new BlocksAttacks.DamageReduction(90.0F, Optional.empty(), 1.0F, 1.0F)),
-					BlocksAttacks.ItemDamageFunction.DEFAULT,
-					Optional.empty(),
-					Optional.empty(),
-					Optional.empty()));
-		}
+				.component(DataComponents.UNBREAKABLE, new Unbreakable(true));
 
 		return register(key, p -> new SephiriaWeaponItem(branch, drawAnimation, blocks, p), properties);
 	}
@@ -1087,27 +1062,38 @@ public final class ModItems {
 		Item.Properties properties = new Item.Properties()
 				.stacksTo(1)
 				.durability(durability)
-				.component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+				.component(DataComponents.UNBREAKABLE, new Unbreakable(true))
 				.component(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.EMPTY)
 				.component(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
 						.add(Attributes.ATTACK_SPEED,
 								new AttributeModifier(
-										Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "crossbow_attack_speed"),
-										CROSSBOW_ATTACK_SPEED - Attributes.DEFAULT_ATTACK_SPEED,
+										ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "crossbow_attack_speed"),
+										CROSSBOW_ATTACK_SPEED - 4.0D,
 										AttributeModifier.Operation.ADD_VALUE),
 								EquipmentSlotGroup.MAINHAND)
-						.build())
-				.enchantable(1);
+						.build());
 
 		return register(key, p -> new SephiriaCrossbowItem(branch, p), properties);
 	}
 
 	private static Item register(ResourceKey<Item> key, Function<Item.Properties, Item> factory, Item.Properties properties) {
-		// setId 必须在构造之前调用：物品 id 本身就是一个默认数据组件。
-		return Registry.register(BuiltInRegistries.ITEM, key, factory.apply(properties.setId(key)));
+		return Registry.register(BuiltInRegistries.ITEM, key, factory.apply(properties));
 	}
 
 	private static ResourceKey<Item> key(String name) {
-		return ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, name));
+		return ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, name));
+	}
+
+	private static ItemAttributeModifiers weaponAttributes(double damageBonus, double speedBonus) {
+		return ItemAttributeModifiers.builder()
+				.add(Attributes.ATTACK_DAMAGE,
+						new AttributeModifier(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "weapon_attack_damage"),
+								damageBonus, AttributeModifier.Operation.ADD_VALUE),
+						EquipmentSlotGroup.MAINHAND)
+				.add(Attributes.ATTACK_SPEED,
+						new AttributeModifier(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "weapon_attack_speed"),
+								speedBonus, AttributeModifier.Operation.ADD_VALUE),
+						EquipmentSlotGroup.MAINHAND)
+				.build();
 	}
 }

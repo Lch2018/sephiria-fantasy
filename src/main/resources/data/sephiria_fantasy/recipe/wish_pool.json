@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    "minecraft:water_bucket",
-    "#minecraft:saplings"
+    {
+      "item": "minecraft:water_bucket"
+    },
+    {
+      "tag": "minecraft:saplings"
+    }
   ],
   "result": {
     "id": "sephiria_fantasy:wish_pool"

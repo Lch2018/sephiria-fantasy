@@ -5,7 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 
@@ -32,7 +32,7 @@ public final class TraderFusionUses {
 
 	private static final AttachmentType<Saved> USED = AttachmentRegistry.<Saved>builder()
 			.persistent(Saved.CODEC)
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "trader_fusion_uses"));
+			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "trader_fusion_uses"));
 
 	private TraderFusionUses() {
 	}

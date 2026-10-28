@@ -5,7 +5,7 @@ import com.sephiria.artifact.EncouragementBannerItem;
 import com.sephiria.stats.TimedAttributes;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -48,7 +48,7 @@ public final class EncouragementBannerSkill implements ArtifactSkill {
 	private static final int BUFF_TICKS = 20;
 	/** 边缘粒子画多少个点。 */
 	private static final int RING_POINTS = 24;
-	private static final Identifier BUFF_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "banner_attack_speed");
+	private static final ResourceLocation BUFF_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "banner_attack_speed");
 
 	/** 场上的旗子。 */
 	private static final List<Banner> BANNERS = new ArrayList<>();
@@ -89,9 +89,9 @@ public final class EncouragementBannerSkill implements ArtifactSkill {
 
 		// 旗子：一件丢在原地的旗帜物品，无重力、捡不起来、免疫伤害
 		ItemEntity banner = new ItemEntity(level0, player.getX(), player.getY() + HOVER_HEIGHT, player.getZ(),
-				new ItemStack(Items.BANNER.pick(DyeColor.LIME)));
+				new ItemStack(Items.LIME_BANNER));
 		banner.setNoGravity(true);
-		banner.setPermanentlyInvulnerable(true);
+		banner.setInvulnerable(true);
 		banner.setNeverPickUp();
 		banner.setDeltaMovement(0.0D, 0.0D, 0.0D);
 		level0.addFreshEntity(banner);

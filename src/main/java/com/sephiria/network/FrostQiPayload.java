@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：玩家<b>用左键挥了一次武器</b>（可能是打中了什么，也可能只是挥空）。
@@ -20,7 +20,7 @@ public record FrostQiPayload() implements CustomPacketPayload {
 	public static final FrostQiPayload INSTANCE = new FrostQiPayload();
 
 	public static final CustomPacketPayload.Type<FrostQiPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frost_qi"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frost_qi"));
 
 	/** 空包：不写任何字节。 */
 	public static final StreamCodec<ByteBuf, FrostQiPayload> STREAM_CODEC = StreamCodec.unit(INSTANCE);

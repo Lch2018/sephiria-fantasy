@@ -2,9 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "W": "#sephiria_fantasy:iron_weapons",
-    "I": "minecraft:iron_ingot",
-    "S": "#minecraft:saplings"
+    "W": {
+      "tag": "sephiria_fantasy:iron_weapons"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "tag": "minecraft:saplings"
+    }
   },
   "pattern": [
     "IW",

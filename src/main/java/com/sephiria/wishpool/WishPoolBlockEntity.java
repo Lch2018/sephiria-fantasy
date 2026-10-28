@@ -63,7 +63,6 @@ public class WishPoolBlockEntity extends BlockEntity {
 			Vec3 pull = to.normalize().scale(SUCK_SPEED).add(0.0D, 0.04D, 0.0D);
 			drop.setDeltaMovement(pull);
 			// 速度是服务端算的，要标一下才会同步给客户端（不然客户端还在按旧速度插值）
-			drop.needsSync = true;
 		}
 	}
 

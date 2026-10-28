@@ -11,7 +11,7 @@ import com.sephiria.weapon.SephiriaStaffItem;
 import com.sephiria.weapon.SephiriaWeapon;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,8 +22,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
-import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.phys.AABB;
 
 import java.util.HashMap;
@@ -292,7 +292,7 @@ public final class SephiriaDamage {
 	 * 本模组所有「让这一下落地 / 不留无敌窗」的地方都走这里。
 	 */
 	public static void clearDamageCooldown(LivingEntity target) {
-		target.damageCooldownTime = 0;
+		target.invulnerableTime = 0;
 	}
 
 	// ------------------------------------------------------------------ 击退冷却
@@ -313,7 +313,7 @@ public final class SephiriaDamage {
 	 * 只有 10 刻的计时器，不用进存档，所以是内存附件（不 persistent、不 sync）。
 	 */
 	private static final AttachmentType<Integer> LAST_KNOCKBACK = AttachmentRegistry.create(
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "last_knockback"));
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "last_knockback"));
 
 	/**
 	 * 这一下能不能真的把目标推出去——由 {@code mixin/SephiriaDamageFramesMixin} 挂在
@@ -386,7 +386,6 @@ public final class SephiriaDamage {
 		float preTax = applyGoldenHands(source, result);
 		preTax *= com.sephiria.talent.Talents.bossDamageMultiplier(player, target);
 		preTax *= com.sephiria.talent.Talents.comboDamageMultiplier(player);
-		com.sephiria.compat.torohealth.ToroHealthCompat.send(player, target, source, critical, preTax);
 
 		if (!critical) {
 			return amount;
@@ -435,7 +434,7 @@ public final class SephiriaDamage {
 				continue;
 			}
 
-			victim.hurtServer(level, splash, damage);
+			victim.hurt(splash, damage);
 		}
 	}
 
@@ -464,8 +463,8 @@ public final class SephiriaDamage {
 	public static boolean autoTargetable(LivingEntity victim, ServerPlayer attacker) {
 		Entity vehicle = victim.getVehicle();
 		return strikeable(victim, attacker)
-				&& !(vehicle instanceof AbstractBoat)
-				&& !(vehicle instanceof AbstractMinecart);
+				&& !(vehicle instanceof Boat)
+				&& !(vehicle instanceof Minecart);
 	}
 
 	// ------------------------------------------------------------------ 黄金之手
@@ -527,7 +526,7 @@ public final class SephiriaDamage {
 
 		// 真实伤害不吃无敌帧，否则高速武器下它会经常被上一次的帧吞掉
 		clearDamageCooldown(target);
-		target.hurtServer(level, trueDamage(level, player), extra);
+		target.hurt(trueDamage(level, player), extra);
 	}
 
 	// ------------------------------------------------------------------ 技能倍率的标记
@@ -717,6 +716,6 @@ public final class SephiriaDamage {
 	}
 
 	private static ResourceKey<DamageType> typeKey(String name) {
-		return ResourceKey.create(Registries.DAMAGE_TYPE, Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, name));
+		return ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, name));
 	}
 }

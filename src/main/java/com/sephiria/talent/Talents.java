@@ -11,7 +11,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.tag.convention.v2.ConventionalEntityTypeTags;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelData;
@@ -196,7 +196,7 @@ public final class Talents {
 			.persistent(Saved.CODEC)
 			// 天赋点是长期成长，死一次不该丢（与叶子、属性一样）
 			.copyOnDeath()
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "talents"));
+			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "talents"));
 
 	/**
 	 * 实体类 → 是否自带一条服务端 BOSS 血条。
@@ -328,19 +328,14 @@ public final class Talents {
 			return false;
 		}
 
-		if (isNear(pos, level.getRespawnData().pos())) {
+		if (isNear(pos, level.getSharedSpawnPos())) {
 			return true;
 		}
 
-		ServerPlayer.RespawnConfig config = player.getRespawnConfig();
-
-		if (config == null) {
-			return false;
-		}
-
-		LevelData.RespawnData respawn = config.respawnData();
+		BlockPos respawn = player.getRespawnPosition();
 		// 床 / 重生锚在别的维度时不算：根之退与天赋都是「当前维度的出生点」这个口径
-		return respawn.dimension().equals(level.dimension()) && isNear(pos, respawn.pos());
+		return respawn != null && player.getRespawnDimension().equals(level.dimension())
+				&& isNear(pos, respawn);
 	}
 
 	private static boolean isNear(BlockPos pos, BlockPos spawn) {

@@ -7,8 +7,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
-import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.boss.EnderDragonPart;
+import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
@@ -64,6 +64,6 @@ public class SephiriaBoltArrow extends Arrow implements SephiriaDamage.Source {
 
 		// 与原版箭走同一条 hurtOrSimulate：末地水晶不是 LivingEntity，末影龙要靠部位转发给本体，
 		// 之前只对 LivingEntity 结算，这两类目标整段被跳过（用户 2026-10-22 报的 bug）
-		target.hurtOrSimulate(level.damageSources().arrow(this, owner), damage);
+		target.hurt(level.damageSources().arrow(this, owner), damage);
 	}
 }

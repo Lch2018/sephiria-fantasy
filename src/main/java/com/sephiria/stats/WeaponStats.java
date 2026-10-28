@@ -5,7 +5,7 @@ import com.sephiria.weapon.SephiriaWeapon;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -36,8 +36,8 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
  * 所以正常运行时这里只是一次读取。
  */
 public final class WeaponStats {
-	private static final Identifier DAMAGE_MODIFIER = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_weapon_damage");
-	private static final Identifier SPEED_MODIFIER = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_weapon_speed");
+	private static final ResourceLocation DAMAGE_MODIFIER = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_weapon_damage");
+	private static final ResourceLocation SPEED_MODIFIER = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_weapon_speed");
 	/** 检查间隔（tick）：换武器或属性变化后最多等这么久就会重算。 */
 	private static final int CHECK_INTERVAL = 4;
 
@@ -83,7 +83,7 @@ public final class WeaponStats {
 				damage = 1.0D + entry.modifier().amount();
 			}
 			else if (attribute.is(Attributes.ATTACK_SPEED)) {
-				speed = Attributes.DEFAULT_ATTACK_SPEED + entry.modifier().amount();
+				speed = 4.0D + entry.modifier().amount();
 			}
 		}
 
@@ -109,7 +109,7 @@ public final class WeaponStats {
 	 * 而属性表只继承永久修饰符——这里挂的临时修饰符会随旧实体一起消失。只比对自家缓存的话，
 	 * 复活后每一轮都会以为"已经写过了"而跳过，普通攻击就悄悄退回基础伤害。
 	 */
-	private static void write(ServerPlayer player, Holder<Attribute> attribute, Identifier id, double amount) {
+	private static void write(ServerPlayer player, Holder<Attribute> attribute, ResourceLocation id, double amount) {
 		AttributeInstance instance = player.getAttribute(attribute);
 
 		if (instance == null) {

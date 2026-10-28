@@ -300,7 +300,7 @@ public final class DarkCloud {
 	/** 红石元件 / 容器方块。 */
 	private static boolean isProtectedBlock(BlockState state) {
 		if (state.is(BlockTags.RAILS) || state.is(BlockTags.BUTTONS) || state.is(BlockTags.PRESSURE_PLATES)
-				|| state.is(BlockTags.SHULKER_BOXES) || state.is(BlockTags.COPPER_CHESTS)
+				|| state.is(BlockTags.SHULKER_BOXES)
 				|| state.getBlock() instanceof CopperBulbBlock) {
 			return true;
 		}
@@ -315,7 +315,7 @@ public final class DarkCloud {
 		}
 
 		if (stack.is(ItemTags.RAILS) || stack.is(ItemTags.WOODEN_BUTTONS)
-				|| stack.is(ItemTags.WOODEN_PRESSURE_PLATES) || stack.is(ItemTags.SHULKER_BOXES)
+				|| stack.is(ItemTags.WOODEN_PRESSURE_PLATES)
 				|| stack.is(ItemTags.CHEST_BOATS)) {
 			return true;
 		}
@@ -616,7 +616,7 @@ public final class DarkCloud {
 				: SephiriaDamage.iceAttack(level, player);
 		// 每段都要落地：清掉无敌帧（与触电结算同一套手法）
 		SephiriaDamage.clearDamageCooldown(target);
-		target.hurtServer(level, source, (float) damage);
+		target.hurt(source, (float) damage);
 
 		if (electric && ArtifactEffects.cloudAppliesBurn(player) && target.isAlive()) {
 			Debuffs.applyBurn(target, player);

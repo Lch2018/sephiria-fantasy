@@ -8,11 +8,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.entity.ai.village.poi.PoiTypes;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
@@ -97,7 +97,7 @@ public final class SephiriaTraderSpawner {
 
 	/** 每一刻推进一格：延迟 → 几率 → 1/10 → 找位置刷出来（顺序与原版 tick 完全一致）。 */
 	private void tick(ServerLevel level) {
-		if (!level.getGameRules().get(GameRules.SPAWN_WANDERING_TRADERS)) {
+		if (!level.getGameRules().getBoolean(GameRules.RULE_DO_TRADER_SPAWNING)) {
 			return;
 		}
 
@@ -153,7 +153,7 @@ public final class SephiriaTraderSpawner {
 		}
 
 		SephiriaWanderingTrader trader = ModEntities.SEPHIRIA_WANDERING_TRADER.spawn(level, pos,
-				EntitySpawnReason.EVENT);
+				MobSpawnType.EVENT);
 
 		if (trader == null) {
 			return false;
@@ -165,7 +165,6 @@ public final class SephiriaTraderSpawner {
 
 		trader.setDespawnDelay(DESPAWN_DELAY);
 		trader.setWanderTarget(anchor);
-		trader.setHomeTo(anchor, HOME_RADIUS);
 		return true;
 	}
 
@@ -177,7 +176,7 @@ public final class SephiriaTraderSpawner {
 			return;
 		}
 
-		SephiriaTraderLlama llama = ModEntities.SEPHIRIA_TRADER_LLAMA.spawn(level, pos, EntitySpawnReason.EVENT);
+		SephiriaTraderLlama llama = ModEntities.SEPHIRIA_TRADER_LLAMA.spawn(level, pos, MobSpawnType.EVENT);
 
 		if (llama != null) {
 			llama.setLeashedTo(trader, true);

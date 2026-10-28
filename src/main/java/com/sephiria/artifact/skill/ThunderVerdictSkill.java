@@ -157,7 +157,7 @@ public final class ThunderVerdictSkill implements ArtifactSkill {
 
 			// 10 击要能全部落地：每击前清一次无敌帧（真实伤害 / 触电结算同款手法）
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(level, source, damage);
+			victim.hurt(source, damage);
 		}
 
 		level.playSound(null, player.getX(), player.getY(), player.getZ(),

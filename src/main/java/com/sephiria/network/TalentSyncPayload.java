@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 服务端 → 客户端：天赋点与四条天赋页的加点数。
@@ -20,19 +20,22 @@ public record TalentSyncPayload(int earned, int rage, int swift, int will, int q
 		int survival, int patience, int wisdom, boolean nearSpawn)
 		implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<TalentSyncPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "talent_sync"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "talent_sync"));
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, TalentSyncPayload> STREAM_CODEC = StreamCodec.composite(
-			ByteBufCodecs.VAR_INT, TalentSyncPayload::earned,
-			ByteBufCodecs.VAR_INT, TalentSyncPayload::rage,
-			ByteBufCodecs.VAR_INT, TalentSyncPayload::swift,
-			ByteBufCodecs.VAR_INT, TalentSyncPayload::will,
-			ByteBufCodecs.VAR_INT, TalentSyncPayload::quickWit,
-			ByteBufCodecs.VAR_INT, TalentSyncPayload::survival,
-			ByteBufCodecs.VAR_INT, TalentSyncPayload::patience,
-			ByteBufCodecs.VAR_INT, TalentSyncPayload::wisdom,
-			ByteBufCodecs.BOOL, TalentSyncPayload::nearSpawn,
-			TalentSyncPayload::new);
+	public static final StreamCodec<RegistryFriendlyByteBuf, TalentSyncPayload> STREAM_CODEC =
+			StreamCodec.of((buf, payload) -> {
+				buf.writeVarInt(payload.earned());
+				buf.writeVarInt(payload.rage());
+				buf.writeVarInt(payload.swift());
+				buf.writeVarInt(payload.will());
+				buf.writeVarInt(payload.quickWit());
+				buf.writeVarInt(payload.survival());
+				buf.writeVarInt(payload.patience());
+				buf.writeVarInt(payload.wisdom());
+				buf.writeBoolean(payload.nearSpawn());
+			}, buf -> new TalentSyncPayload(buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
+					buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
+					buf.readVarInt(), buf.readBoolean()));
 
 	@Override
 	public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {

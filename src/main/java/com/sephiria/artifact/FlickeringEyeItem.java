@@ -1,5 +1,6 @@
 package com.sephiria.artifact;
 
+import com.sephiria.util.ParticleColors;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.util.Numbers;
@@ -178,7 +179,7 @@ public class FlickeringEyeItem extends ArtifactItem {
 			}
 
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(level, SephiriaDamage.chaos(level, player), chaos);
+			victim.hurt(SephiriaDamage.chaos(level, player), chaos);
 		}
 
 		playSphere(level, center);
@@ -212,11 +213,11 @@ public class FlickeringEyeItem extends ArtifactItem {
 			double z = radius * sinPhi * Math.sin(theta);
 			int colour = radius <= INNER_RADIUS ? GOLD : BLACK;
 			float scale = radius <= INNER_RADIUS ? 1.3F : 1.0F;
-			level.sendParticles(new DustParticleOptions(colour, scale),
+			level.sendParticles(ParticleColors.dust(colour, scale),
 					at.x + x, at.y + y, at.z + z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
 		}
 
-		level.sendParticles(ColorParticleOption.create(ParticleTypes.FLASH, 1.0F, 0.82F, 0.29F),
+		level.sendParticles(ParticleTypes.FLASH,
 				at.x, at.y, at.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
 	}
 

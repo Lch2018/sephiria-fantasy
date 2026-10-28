@@ -24,8 +24,8 @@ public final class BossChestDrops {
 			}
 
 			// 两个箱子各一个，直接掉在 BOSS 死亡的位置（来源不限，环境伤害也算）
-			entity.spawnAtLocation(level, new ItemStack(ModItems.RARE_ARTIFACT_CHEST));
-			entity.spawnAtLocation(level, new ItemStack(ModItems.RARE_SLATE_CHEST));
+			entity.spawnAtLocation(new ItemStack(ModItems.RARE_ARTIFACT_CHEST));
+			entity.spawnAtLocation(new ItemStack(ModItems.RARE_SLATE_CHEST));
 		});
 	}
 }

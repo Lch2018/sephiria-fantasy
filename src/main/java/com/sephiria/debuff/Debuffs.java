@@ -13,7 +13,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -117,11 +117,11 @@ public final class Debuffs {
 	private static final int FROZEN_BURST_PARTICLES = 18;
 
 	/** 冻伤减速挂在移动速度上的修饰符名（要能在解除时按名字摘掉）。 */
-	private static final Identifier FROSTBITE_SLOW_ID =
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frostbite_slow");
+	private static final ResourceLocation FROSTBITE_SLOW_ID =
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frostbite_slow");
 	/** 冰冻的「定身」修饰符名：移动速度乘 0，等于定在原地。 */
-	private static final Identifier FROZEN_STUN_ID =
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frozen_stun");
+	private static final ResourceLocation FROZEN_STUN_ID =
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frozen_stun");
 
 	/**
 	 * 目标身上的触电：一段共享的持续时间 + 一个周期计时器，层数是伤害乘数。
@@ -192,19 +192,19 @@ public final class Debuffs {
 	}
 
 	/** 触电的减益 id：附件名与脚下层数标签的同步 id 共用（客户端按它找标签文案）。 */
-	public static final Identifier SHOCK_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "electric_shocks");
+	public static final ResourceLocation SHOCK_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "electric_shocks");
 
 	/** 灼伤的减益 id：与触电同一套用法（标签文案见 {@code ui.sephiria.debuff.burns}）。 */
-	public static final Identifier BURN_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "burns");
+	public static final ResourceLocation BURN_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "burns");
 
 	/** 等离子体的减益 id：灼伤与触电合并后的标签文案见 {@code ui.sephiria_fantasy.debuff.plasma}。 */
-	public static final Identifier PLASMA_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "plasma");
+	public static final ResourceLocation PLASMA_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "plasma");
 
 	/** 冻伤的减益 id：标签文案见 {@code ui.sephiria_fantasy.debuff.frostbites}。 */
-	public static final Identifier FROSTBITE_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frostbites");
+	public static final ResourceLocation FROSTBITE_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frostbites");
 
 	/** 冰冻（眩晕）的减益 id：客户端按它把被冻住的敌人染成冰蓝（见 FrozenTintMixin）。 */
-	public static final Identifier FROZEN_ID = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frozen");
+	public static final ResourceLocation FROZEN_ID = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frozen");
 
 	/** 触电挂在目标实体上的运行时附件（一份记账：整段共享时间轴与层数）。 */
 	private static final AttachmentType<Shock> SHOCKS = AttachmentRegistry.<Shock>builder()
@@ -239,7 +239,7 @@ public final class Debuffs {
 	private static final double LABEL_RANGE = 64.0D;
 
 	/** 上次推给客户端的层数（减益 id → 实体 id → 层数）：变了才推，别每刻刷包。 */
-	private static final Map<Identifier, Map<Integer, Integer>> SENT_STACKS = new HashMap<>();
+	private static final Map<ResourceLocation, Map<Integer, Integer>> SENT_STACKS = new HashMap<>();
 
 	private Debuffs() {
 	}
@@ -322,7 +322,7 @@ public final class Debuffs {
 	 * 的（原版源码里是 {@code if_acmpne}），每刻都塞一个新对象进去会把属性标脏、
 	 * 每刻同步一次属性包；查过再决定要不要写，就只在真的变了那一次同步。
 	 */
-	private static void applySlow(LivingEntity entity, Identifier id, double amount) {
+	private static void applySlow(LivingEntity entity, ResourceLocation id, double amount) {
 		AttributeInstance instance = entity.getAttribute(Attributes.MOVEMENT_SPEED);
 
 		if (instance == null) {
@@ -345,7 +345,7 @@ public final class Debuffs {
 	 * <p>层数只存在服务端的附件里，而标签是给所有人看的，所以按距离广播、而不是只发给攻击者。
 	 * 只有层数真的变了才发（叠加 +1、整段结束归 0），平时每刻调用只是一次表查询。
 	 */
-	private static void syncStacks(Identifier debuff, LivingEntity entity, int stacks) {
+	private static void syncStacks(ResourceLocation debuff, LivingEntity entity, int stacks) {
 		Map<Integer, Integer> perEntity = SENT_STACKS.computeIfAbsent(debuff, key -> new HashMap<>());
 		Integer sent = perEntity.get(entity.getId());
 
@@ -488,7 +488,7 @@ public final class Debuffs {
 	}
 
 	/** 摘掉某一条减速修饰符（不碰另一条）。 */
-	private static void clearSlow(LivingEntity entity, Identifier id) {
+	private static void clearSlow(LivingEntity entity, ResourceLocation id) {
 		AttributeInstance instance = entity.getAttribute(Attributes.MOVEMENT_SPEED);
 
 		if (instance != null) {
@@ -983,7 +983,7 @@ public final class Debuffs {
 		if (damage > 0.0D) {
 			// 与其它额外结算同理：先清无敌帧，免得这一下被目标上一刻吃到的伤害顶掉
 			SephiriaDamage.clearDamageCooldown(target);
-			target.hurtServer(level, SephiriaDamage.freeze(level, player), (float) damage);
+			target.hurt(SephiriaDamage.freeze(level, player), (float) damage);
 		}
 
 		level.sendParticles(ParticleTypes.SNOWFLAKE, target.getX(), target.getY(0.5D), target.getZ(),
@@ -1034,7 +1034,7 @@ public final class Debuffs {
 
 		// 与真实伤害同理：额外的那一下不清无敌帧，就会被目标上一刻吃到的伤害顶掉
 		SephiriaDamage.clearDamageCooldown(target);
-		target.hurtServer(level, SephiriaDamage.electricShock(level, player), (float) damage);
+		target.hurt(SephiriaDamage.electricShock(level, player), (float) damage);
 
 		// 酷寒断头台：对敌人造成触电伤害时，它的冷却缩短 1 秒
 		if (player != null) {
@@ -1076,7 +1076,7 @@ public final class Debuffs {
 		}
 
 		SephiriaDamage.clearDamageCooldown(target);
-		target.hurtServer(level, ice > fire ? SephiriaDamage.blueBurn(level, player)
+		target.hurt(ice > fire ? SephiriaDamage.blueBurn(level, player)
 				: SephiriaDamage.burn(level, player), (float) damage);
 		// 这一跳的爆点浓度与身上那圈火苗同一个倍率，层数越高烧得越旺
 		double factor = burnParticleFactor(stacks);
@@ -1111,7 +1111,7 @@ public final class Debuffs {
 		}
 
 		SephiriaDamage.clearDamageCooldown(target);
-		target.hurtServer(level, SephiriaDamage.plasma(level, player), (float) damage);
+		target.hurt(SephiriaDamage.plasma(level, player), (float) damage);
 		double factor = burnParticleFactor(plasma.stacks());
 		RandomSource random = level.getRandom();
 		level.sendParticles(ModParticleTypes.PLASMA,
@@ -1139,7 +1139,7 @@ public final class Debuffs {
 		}
 
 		SephiriaDamage.clearDamageCooldown(target);
-		target.hurtServer(level, SephiriaDamage.plasma(level, player), (float) damage);
+		target.hurt(SephiriaDamage.plasma(level, player), (float) damage);
 
 		if (player != null) {
 			com.sephiria.artifact.CryoGuillotineItem.onShockDamage(player);

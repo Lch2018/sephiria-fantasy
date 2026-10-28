@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：在商店页面点了一次「刷新」。
@@ -15,7 +15,7 @@ public record RefreshShopPayload() implements CustomPacketPayload {
 	public static final RefreshShopPayload INSTANCE = new RefreshShopPayload();
 
 	public static final CustomPacketPayload.Type<RefreshShopPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "refresh_shop"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "refresh_shop"));
 
 	public static final StreamCodec<ByteBuf, RefreshShopPayload> STREAM_CODEC = StreamCodec.unit(INSTANCE);
 

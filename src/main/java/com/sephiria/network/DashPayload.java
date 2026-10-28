@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：玩家按下了冲刺键。
@@ -16,7 +16,7 @@ public record DashPayload() implements CustomPacketPayload {
 	public static final DashPayload INSTANCE = new DashPayload();
 
 	public static final CustomPacketPayload.Type<DashPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "dash"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "dash"));
 
 	/** 空包：不写任何字节。 */
 	public static final StreamCodec<ByteBuf, DashPayload> STREAM_CODEC = StreamCodec.unit(INSTANCE);

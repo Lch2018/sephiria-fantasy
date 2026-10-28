@@ -3,7 +3,7 @@ package com.sephiria.registry;
 import com.sephiria.Sephiria;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 
 /**
@@ -21,7 +21,7 @@ public final class ModSounds {
 	}
 
 	private static SoundEvent register(String name) {
-		Identifier id = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, name);
+		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, name);
 		return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createVariableRangeEvent(id));
 	}
 

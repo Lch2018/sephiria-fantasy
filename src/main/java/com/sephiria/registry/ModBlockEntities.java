@@ -7,11 +7,10 @@ import com.sephiria.wishpool.WishPoolBlockEntity;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
-import java.util.Set;
 
 /**
  * 方块实体注册表。
@@ -26,33 +25,33 @@ import java.util.Set;
 public final class ModBlockEntities {
 	public static final ResourceKey<BlockEntityType<?>> ROOT_RETREAT_KEY = ResourceKey.create(
 			Registries.BLOCK_ENTITY_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat"));
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat"));
 
 	/** 根之退的方块实体：存那个方块上的难度方案。 */
 	public static final BlockEntityType<RootRetreatBlockEntity> ROOT_RETREAT = Registry.register(
 			BuiltInRegistries.BLOCK_ENTITY_TYPE,
 			ROOT_RETREAT_KEY,
-			new BlockEntityType<>(RootRetreatBlockEntity::new, Set.of(ModBlocks.ROOT_RETREAT)));
+			BlockEntityType.Builder.of(RootRetreatBlockEntity::new, ModBlocks.ROOT_RETREAT).build(null));
 
 	/** 许愿池的方块实体（只负责吸升级宝箱，不存数据）。 */
 	public static final ResourceKey<BlockEntityType<?>> WISH_POOL_KEY = ResourceKey.create(
 			Registries.BLOCK_ENTITY_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool"));
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool"));
 
 	public static final BlockEntityType<WishPoolBlockEntity> WISH_POOL = Registry.register(
 			BuiltInRegistries.BLOCK_ENTITY_TYPE,
 			WISH_POOL_KEY,
-			new BlockEntityType<>(WishPoolBlockEntity::new, Set.of(ModBlocks.WISH_POOL)));
+			BlockEntityType.Builder.of(WishPoolBlockEntity::new, ModBlocks.WISH_POOL).build(null));
 
 	/** 赛菲莉娅信标的方块实体：存那一件物品，并给原版信标渲染器提供光柱颜色。 */
 	public static final ResourceKey<BlockEntityType<?>> SEPHIRIA_BEACON_KEY = ResourceKey.create(
 			Registries.BLOCK_ENTITY_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_beacon"));
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_beacon"));
 
 	public static final BlockEntityType<SephiriaBeaconBlockEntity> SEPHIRIA_BEACON = Registry.register(
 			BuiltInRegistries.BLOCK_ENTITY_TYPE,
 			SEPHIRIA_BEACON_KEY,
-			new BlockEntityType<>(SephiriaBeaconBlockEntity::new, Set.of(ModBlocks.SEPHIRIA_BEACON)));
+			BlockEntityType.Builder.of(SephiriaBeaconBlockEntity::new, ModBlocks.SEPHIRIA_BEACON).build(null));
 
 	private ModBlockEntities() {
 	}

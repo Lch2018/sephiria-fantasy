@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import com.sephiria.Sephiria;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public final class SkillSlots {
 	private static final AttachmentType<List<String>> SAVED = AttachmentRegistry.<List<String>>builder()
 			.persistent(Codec.STRING.listOf())
 			.copyOnDeath()
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_skill_slots"));
+			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_skill_slots"));
 
 	private SkillSlots() {
 	}

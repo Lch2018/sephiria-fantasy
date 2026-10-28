@@ -1,5 +1,6 @@
 package com.sephiria.weapon;
 
+import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.Dash;
 import com.sephiria.ability.Invulnerability;
@@ -9,7 +10,7 @@ import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -55,7 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	/** 专注在技能存储里的 id（HUD 也读它）。 */
-	public static final Identifier FOCUS = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "focus");
+	public static final ResourceLocation FOCUS = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "focus");
 
 	/** 专注上限：默认 1 层。 */
 	public static final double FOCUS_MAX = 1.0D;
@@ -139,7 +140,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	 */
 	@Override
 	public boolean isFoil(ItemStack stack) {
-		return com.sephiria.client.SkillClientData.current(FOCUS) > 0.0D;
+		return false;
 	}
 
 
@@ -167,15 +168,15 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 
 	/** 右键：有专注放狂怒，否则招架。 */
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
 
-		if (player.getCooldowns().isOnCooldown(stack)) {
-			return InteractionResult.FAIL;
+		if (player.getCooldowns().isOnCooldown(stack.getItem())) {
+			return InteractionResultHolder.fail(player.getItemInHand(hand));
 		}
 
 		if (level.isClientSide()) {
-			return InteractionResult.CONSUME;
+			return InteractionResultHolder.consume(player.getItemInHand(hand));
 		}
 
 		ServerPlayer serverPlayer = (ServerPlayer) player;
@@ -187,13 +188,13 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		else {
 			// 招架先收 7 点；完美招架（真的挡到攻击）在 rewardParry 里退 2 点
 			if (!PlayerStats.spendMp(serverPlayer, PARRY_MP_COST)) {
-				return InteractionResult.FAIL;
+				return InteractionResultHolder.fail(player.getItemInHand(hand));
 			}
 
 			parry(serverPlayer, stack);
 		}
 
-		return InteractionResult.CONSUME;
+		return InteractionResultHolder.consume(player.getItemInHand(hand));
 	}
 
 	/** 招架：短突进 + 无敌，落地后以自身为中心结算范围伤害。 */
@@ -202,7 +203,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		Invulnerability.grant(player, INVULNERABLE_TICKS);
 		PARRY_UNTIL.put(player.getUUID(), player.level().getGameTime() + INVULNERABLE_TICKS);
 		Dash.startVertical(player, direction, PARRY_DISTANCE, DASH_TICKS, Dash.DEFAULT_DECAY);
-		player.getCooldowns().addCooldown(stack, PARRY_COOLDOWN);
+		player.getCooldowns().addCooldown(stack.getItem(), PARRY_COOLDOWN);
 
 		PENDING.add(Pending.aura(player, DASH_TICKS, (float) (PARRY_DAMAGE * PlayerStats.skillDamageMultiplier(player)), PARRY_RANGE, PARRY_HEIGHT));
 	}
@@ -212,7 +213,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		Vec3 direction = lookDirection(player);
 		Invulnerability.grant(player, INVULNERABLE_TICKS);
 		Dash.startVertical(player, direction, FURY_DISTANCE, DASH_TICKS, Dash.DEFAULT_DECAY);
-		player.getCooldowns().addCooldown(stack, FURY_COOLDOWN);
+		player.getCooldowns().addCooldown(stack.getItem(), FURY_COOLDOWN);
 
 		SkillStorage.consume(player, FOCUS, 1.0D);
 		PENDING.add(Pending.path(player, direction, FURY_DISTANCE, DASH_TICKS, (float) (FURY_DAMAGE * PlayerStats.skillDamageMultiplier(player)), FURY_PATH_RADIUS));
@@ -238,7 +239,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 
 		if (dagger != null) {
 			// 冷却是按冷却组记账的，要从物品解析出组 id 再清
-			player.getCooldowns().removeCooldown(player.getCooldowns().getCooldownGroup(dagger));
+			player.getCooldowns().removeCooldown(dagger.getItem());
 		}
 	}
 
@@ -354,7 +355,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 
 				// 告诉伤害入口「这是技能伤害」：无视防御伤害要按技能的倍率放大（见 SephiriaDamage.applyTrueDamage）
 				SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
-				if (victim.hurtServer(level, level.damageSources().playerAttack(player), damage)) {
+				if (victim.hurt(level.damageSources().playerAttack(player), damage)) {
 					hitAnyone = true;
 				}
 			}

@@ -1,5 +1,6 @@
 package com.sephiria.backpack;
 
+import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.artifact.ItemQualities;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -34,12 +35,12 @@ public class ExtraBackpackRowItem extends Item {
 	}
 
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
 
 		// 客户端只负责把「用了」这个动作做出来，真正生效与消耗都只在服务端
 		if (!(player instanceof ServerPlayer serverPlayer)) {
-			return InteractionResult.SUCCESS;
+			return InteractionResultHolder.success(player.getItemInHand(hand));
 		}
 
 		ArtifactBackpack backpack = ArtifactBackpack.of(serverPlayer);
@@ -49,7 +50,7 @@ public class ExtraBackpackRowItem extends Item {
 					"message.sephiria_fantasy.backpack_slot_max", ArtifactBackpack.MAX_SLOTS), true);
 			level.playSound(null, serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(),
 					SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.7F, 1.1F);
-			return InteractionResult.FAIL;
+			return InteractionResultHolder.fail(player.getItemInHand(hand));
 		}
 
 		// consume 会自己判断创造模式（无限材料时不扣）
@@ -59,6 +60,6 @@ public class ExtraBackpackRowItem extends Item {
 				ArtifactBackpack.MAX_SLOTS), true);
 		level.playSound(null, serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(),
 				SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6F, 1.6F);
-		return InteractionResult.SUCCESS;
+		return InteractionResultHolder.success(player.getItemInHand(hand));
 	}
 }

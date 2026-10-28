@@ -3,7 +3,7 @@ package com.sephiria.stats;
 import com.sephiria.Sephiria;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,7 +30,7 @@ public final class TimedAttributes {
 	private static final List<Entry> ACTIVE = new ArrayList<>();
 
 	/** 一条限时修饰符：挂在谁身上、改哪条属性、什么数值、什么时候到期。 */
-	private record Entry(LivingEntity target, Holder<Attribute> attribute, Identifier id, double amount, long until) {
+	private record Entry(LivingEntity target, Holder<Attribute> attribute, ResourceLocation id, double amount, long until) {
 	}
 
 	private TimedAttributes() {
@@ -46,7 +46,7 @@ public final class TimedAttributes {
 	 *
 	 * @param ticks 持续多少 tick（从这一刻算起）
 	 */
-	public static void grant(LivingEntity entity, Holder<Attribute> attribute, Identifier id, double amount,
+	public static void grant(LivingEntity entity, Holder<Attribute> attribute, ResourceLocation id, double amount,
 			int ticks) {
 		// 同一个来源重复给：刷新时间与数值，不叠上去
 		ACTIVE.removeIf(entry -> entry.target() == entity && entry.id().equals(id));
@@ -68,7 +68,7 @@ public final class TimedAttributes {
 	 *
 	 * @param ticks 持续多少 tick（从这一刻算起）
 	 */
-	public static void grantStat(LivingEntity entity, Identifier id, double amount, int ticks) {
+	public static void grantStat(LivingEntity entity, ResourceLocation id, double amount, int ticks) {
 		// 同一个来源重复给：刷新时间与数值，不叠上去
 		ACTIVE.removeIf(entry -> entry.target() == entity && entry.id().equals(id));
 		ACTIVE.add(new Entry(entity, null, id, amount, entity.level().getGameTime() + ticks));
@@ -94,7 +94,7 @@ public final class TimedAttributes {
 	}
 
 	/** 目标身上某个自定义加成（{@link #grantStat} 挂的）正挂着的总和。 */
-	public static double statBonusOf(LivingEntity entity, Identifier id) {
+	public static double statBonusOf(LivingEntity entity, ResourceLocation id) {
 		double total = 0.0D;
 
 		for (Entry entry : ACTIVE) {
@@ -108,7 +108,7 @@ public final class TimedAttributes {
 
 	/** 挂着的攻速加成换算成面板的「攻击速度」百分点（基准 4 次/秒）。 */
 	public static double attackSpeedPercent(ServerPlayer player) {
-		return bonusOf(player, Attributes.ATTACK_SPEED) / Attributes.DEFAULT_ATTACK_SPEED * 100.0D;
+		return bonusOf(player, Attributes.ATTACK_SPEED) / 4.0D * 100.0D;
 	}
 
 	/** 挂着的移速加成换算成面板的「移动速度」百分点（按基础移速算）。 */
@@ -127,7 +127,7 @@ public final class TimedAttributes {
 	}
 
 	/** 立刻摘掉某一条（技能提前结束、玩家换装时用）。 */
-	public static void revoke(LivingEntity entity, Holder<Attribute> attribute, Identifier id) {
+	public static void revoke(LivingEntity entity, Holder<Attribute> attribute, ResourceLocation id) {
 		ACTIVE.removeIf(entry -> entry.target() == entity && entry.id().equals(id));
 		remove(entity, attribute, id);
 		sync(entity);
@@ -154,7 +154,7 @@ public final class TimedAttributes {
 		}
 	}
 
-	private static void remove(LivingEntity entity, Holder<Attribute> attribute, Identifier id) {
+	private static void remove(LivingEntity entity, Holder<Attribute> attribute, ResourceLocation id) {
 		// 自定义加成（attribute 为 null）没挂在原版属性上，摘除就是从表里删掉（tick 里已做）
 		if (attribute == null) {
 			return;

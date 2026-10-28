@@ -10,7 +10,7 @@ import com.sephiria.registry.ModItems;
 import com.sephiria.util.PlayerItems;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.SimpleContainer;
@@ -65,7 +65,7 @@ public final class ShopStock extends SimpleContainer {
 			.persistent(Saved.CODEC)
 			// 货架是商店的状态、不是身上的东西：死亡（换实体）也要跟着走，不然一死就换一批货
 			.copyOnDeath()
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "shop_stock"));
+			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "shop_stock"));
 
 	private static final Map<UUID, ShopStock> STOCKS = new HashMap<>();
 

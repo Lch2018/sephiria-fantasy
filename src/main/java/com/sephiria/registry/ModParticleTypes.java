@@ -13,7 +13,7 @@ import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * SEPHIRIA 的自定义粒子类型。
@@ -75,30 +75,30 @@ public final class ModParticleTypes {
 	}
 
 	private static SimpleParticleType register(String name) {
-		Identifier id = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, name);
+		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, name);
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id, FabricParticleTypes.simple());
 	}
 
 	private static ParticleType<SunSlashOptions> registerSunSlash() {
-		Identifier id = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_slash");
+		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_slash");
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
 				FabricParticleTypes.complex(SunSlashOptions.CODEC, SunSlashOptions.STREAM_CODEC));
 	}
 
 	private static ParticleType<FrostQiOptions> registerFrostQi() {
-		Identifier id = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frost_qi");
+		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frost_qi");
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
 				FabricParticleTypes.complex(FrostQiOptions.CODEC, FrostQiOptions.STREAM_CODEC));
 	}
 
 	private static ParticleType<FlameQiOptions> registerFlameQi() {
-		Identifier id = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "flame_qi");
+		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "flame_qi");
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
 				FabricParticleTypes.complex(FlameQiOptions.CODEC, FlameQiOptions.STREAM_CODEC));
 	}
 
 	private static ParticleType<IceSlashOptions> registerIceSlash() {
-		Identifier id = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "ice_slash");
+		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "ice_slash");
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, id,
 				FabricParticleTypes.complex(IceSlashOptions.CODEC, IceSlashOptions.STREAM_CODEC));
 	}

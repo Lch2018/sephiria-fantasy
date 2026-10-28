@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：附魔面板里点了一次「升级 N 级」。
@@ -13,7 +13,7 @@ import net.minecraft.resources.Identifier;
  */
 public record UpgradeArtifactPayload(int levels) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<UpgradeArtifactPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "upgrade_artifact"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "upgrade_artifact"));
 
 	public static final StreamCodec<FriendlyByteBuf, UpgradeArtifactPayload> STREAM_CODEC = StreamCodec.of(
 			(FriendlyByteBuf buffer, UpgradeArtifactPayload payload) -> buffer.writeVarInt(payload.levels()),

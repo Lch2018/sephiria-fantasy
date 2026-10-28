@@ -1,11 +1,12 @@
 package com.sephiria.slate;
 
+import com.sephiria.util.MenuLayout;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.trader.SephiriaWanderingTrader;
 import com.sephiria.trader.TraderFusionUses;
 import com.sephiria.util.PlayerItems;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -108,7 +109,7 @@ public class SlateFusionMenu extends AbstractContainerMenu {
 			}
 		});
 
-		addStandardInventorySlots(playerInventory, PLAYER_X, playerRowsY());
+		MenuLayout.addPlayerInventory(this::addSlot, playerInventory, PLAYER_X, playerRowsY());
 		addDataSlots(this.data);
 	}
 
@@ -132,7 +133,7 @@ public class SlateFusionMenu extends AbstractContainerMenu {
 			return;
 		}
 
-		player.openMenu(new ExtendedMenuProvider<Unit>() {
+		player.openMenu(new ExtendedScreenHandlerFactory<Unit>() {
 			@Override
 			public Unit getScreenOpeningData(ServerPlayer ignored) {
 				return Unit.INSTANCE;

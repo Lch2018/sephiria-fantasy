@@ -10,7 +10,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -27,7 +27,7 @@ import net.minecraft.world.item.ItemStack;
 public abstract class SlateItem extends Item implements BackpackStorable, Quality {
 	public static final DataComponentType<Integer> ROTATION = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_rotation"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_rotation"),
 			DataComponentType.<Integer>builder().persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
 
 	/** 四个朝向（0 = 默认，每次 +1 是逆时针 90°）。 */
@@ -41,7 +41,7 @@ public abstract class SlateItem extends Item implements BackpackStorable, Qualit
 	 */
 	public static final DataComponentType<Integer> IMPRINT = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_imprint_progress"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_imprint_progress"),
 			DataComponentType.<Integer>builder().persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
 
 	/** 刻印进度条的颜色：天赋「生存」的颜色 #D49ED8。 */

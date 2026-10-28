@@ -9,7 +9,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
+import net.minecraft.world.entity.npc.WanderingTrader;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -64,7 +64,6 @@ public class SephiriaWanderingTrader extends WanderingTrader {
 	 * <p>和原版一样通过 {@code getOffers()} 拿列表（它自己会在第一次访问时建好空表再调进来，
 	 * 不会递归）。
 	 */
-	@Override
 	protected void updateTrades(ServerLevel level) {
 		MerchantOffers offers = this.getOffers();
 		offers.clear();

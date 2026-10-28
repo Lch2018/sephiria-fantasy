@@ -1,5 +1,6 @@
 package com.sephiria.weapon;
 
+import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.Dash;
 import com.sephiria.ability.Invulnerability;
@@ -9,7 +10,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -214,9 +215,8 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 				continue;
 			}
 
-			if (victim.hurtServer(level, level.damageSources().playerAttack(player), sweepDamage)) {
-				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ(),
-						level.damageSources().playerAttack(player), sweepDamage);
+			if (victim.hurt(level.damageSources().playerAttack(player), sweepDamage)) {
+				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ());
 			}
 		}
 
@@ -227,15 +227,15 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 	// ------------------------------------------------------------------ 右键：回击
 
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
 
-		if (player.getCooldowns().isOnCooldown(stack)) {
-			return InteractionResult.FAIL;
+		if (player.getCooldowns().isOnCooldown(stack.getItem())) {
+			return InteractionResultHolder.fail(player.getItemInHand(hand));
 		}
 
 		if (level.isClientSide()) {
-			return InteractionResult.CONSUME;
+			return InteractionResultHolder.consume(player.getItemInHand(hand));
 		}
 
 		ServerPlayer serverPlayer = (ServerPlayer) player;
@@ -243,14 +243,14 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 
 		// 回击先收 7 点；蓝不够就整段放不出来（不进冷却、不位移、不无敌）
 		if (!PlayerStats.spendMp(serverPlayer, RIPOSTE_MP_COST)) {
-			return InteractionResult.FAIL;
+			return InteractionResultHolder.fail(player.getItemInHand(hand));
 		}
 
 		PERFECT.remove(serverPlayer.getUUID());
 		GUARD_UNTIL.put(serverPlayer.getUUID(), now + INVULNERABLE_TICKS);
 		REDUCTION_UNTIL.put(serverPlayer.getUUID(), now + INVULNERABLE_TICKS + REDUCTION_TICKS);
 		Invulnerability.grant(serverPlayer, INVULNERABLE_TICKS);
-		player.getCooldowns().addCooldown(stack, COOLDOWN_TICKS);
+		player.getCooldowns().addCooldown(stack.getItem(), COOLDOWN_TICKS);
 
 		Vec3 direction = player.getLookAngle();
 		Dash.startVertical(serverPlayer, direction, STEP1_DISTANCE, STEP_DASH_TICKS, Dash.DEFAULT_DECAY);
@@ -260,7 +260,7 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 		double step1Damage = RIPOSTE1_DAMAGE * PlayerStats.skillDamageMultiplier(serverPlayer);
 		PENDING.add(Pending.aura(serverPlayer, STEP_DASH_TICKS, (float) step1Damage, PARRY_RANGE, PARRY_HEIGHT));
 		PENDING.add(Pending.followUp(serverPlayer, PlayerStats.skillDamageMultiplier(serverPlayer), STEP2_DELAY_TICKS));
-		return InteractionResult.CONSUME;
+		return InteractionResultHolder.consume(player.getItemInHand(hand));
 	}
 
 	/** 无敌是否已结束、减免是否还在窗口内（供伤害减免的 mixin 查询）。 */
@@ -382,7 +382,7 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 
 				// 告诉伤害入口「这是技能伤害」：无视防御伤害要按技能的倍率放大（见 SephiriaDamage.applyTrueDamage）
 				SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
-				victim.hurtServer(level, level.damageSources().playerAttack(player), this.damage);
+				victim.hurt(level.damageSources().playerAttack(player), this.damage);
 			}
 
 			level.playSound(null, player.getX(), player.getY(), player.getZ(),

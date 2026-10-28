@@ -1,5 +1,6 @@
 package com.sephiria.artifact;
 
+import net.minecraft.world.InteractionResultHolder;
 import com.mojang.serialization.Codec;
 import com.sephiria.Sephiria;
 import com.sephiria.backpack.ChestMenu;
@@ -8,7 +9,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -45,7 +46,7 @@ public class ChestItem extends Item {
 	/** 这一箱抽到的奖励（第一次打开时写入）。 */
 	public static final DataComponentType<List<ItemStack>> ROLLED = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "chest_rewards"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "chest_rewards"),
 			DataComponentType.<List<ItemStack>>builder()
 					.persistent(ItemStack.CODEC.listOf())
 					.networkSynchronized(ItemStack.STREAM_CODEC.apply(ByteBufCodecs.list()))
@@ -58,7 +59,7 @@ public class ChestItem extends Item {
 	 */
 	public static final DataComponentType<Boolean> FREE_REROLL_USED = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "chest_free_reroll_used"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "chest_free_reroll_used"),
 			DataComponentType.<Boolean>builder().persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL).build());
 
 	/**
@@ -108,13 +109,13 @@ public class ChestItem extends Item {
 	}
 
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		if (!(player instanceof ServerPlayer serverPlayer)) {
-			return InteractionResult.CONSUME;
+			return InteractionResultHolder.consume(player.getItemInHand(hand));
 		}
 
 		serverPlayer.openMenu(ChestMenu.provider(serverPlayer, hand));
-		return InteractionResult.CONSUME;
+		return InteractionResultHolder.consume(player.getItemInHand(hand));
 	}
 
 	/** 箱子名字按品质上色：普通箱稀有（黄），稀有箱传说（红）。 */

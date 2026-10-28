@@ -18,8 +18,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
@@ -275,8 +275,8 @@ public class RedSnakeEyeItem extends ArtifactItem {
 	}
 
 	/** 现形与撞击用的闪光：这版的 FLASH 是可着色粒子，颜色得自己给（暖白偏橙才像火）。 */
-	private static ColorParticleOption flash() {
-		return ColorParticleOption.create(ParticleTypes.FLASH, 1.0F, 0.94F, 0.78F);
+	private static net.minecraft.core.particles.ParticleOptions flash() {
+		return ParticleTypes.FLASH;
 	}
 
 	/**
@@ -286,7 +286,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 	 * 这里靠访问拓宽直接把值写进同步数据——与原版自己装载 Display 的路径一致。
 	 */
 	private static Display.BlockDisplay spawnBody(ServerLevel level, Vec3 at) {
-		Display.BlockDisplay body = EntityTypes.BLOCK_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+		Display.BlockDisplay body = EntityType.BLOCK_DISPLAY.create(level);
 
 		if (body == null) {
 			return null;
@@ -443,7 +443,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 		for (LivingEntity victim : victims) {
 			// 同一次落点多目标、且要能稳定打中：先清无敌帧（真实伤害同款手法）
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(level, SephiriaDamage.fireAttack(level, owner), meteor.damage());
+			victim.hurt(SephiriaDamage.fireAttack(level, owner), meteor.damage());
 
 			// 被陨石击中的敌人附加灼伤：直接调用附加入口，不经过火焰之触的冷却
 			if (owner != null) {
@@ -536,7 +536,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 			}
 
 			List<Display.BlockDisplay> orphans = level.getEntitiesOfClass(Display.BlockDisplay.class,
-					player.getBoundingBox().inflate(SWEEP_RADIUS), body -> body.entityTags().contains(METEOR_TAG));
+					player.getBoundingBox().inflate(SWEEP_RADIUS), body -> body.getTags().contains(METEOR_TAG));
 
 			for (Display.BlockDisplay orphan : orphans) {
 				orphan.discard();

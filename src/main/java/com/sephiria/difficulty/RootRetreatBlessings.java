@@ -41,11 +41,11 @@ public final class RootRetreatBlessings {
 		boolean combat = CombatState.isInCombat(player);
 
 		if (stage >= RootRetreat.STRENGTH_STAGE && combat) {
-			apply(player, MobEffects.STRENGTH, 2);
+			apply(player, MobEffects.DAMAGE_BOOST, 2);
 		}
 
 		if (stage >= RootRetreat.LIGHTNESS_STAGE && !combat) {
-			apply(player, MobEffects.SPEED, 0);
+			apply(player, MobEffects.MOVEMENT_SPEED, 0);
 		}
 	}
 

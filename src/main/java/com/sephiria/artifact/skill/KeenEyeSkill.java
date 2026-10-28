@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import com.sephiria.artifact.KeenEyeItem;
 import com.sephiria.stats.TimedAttributes;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -23,8 +23,8 @@ public final class KeenEyeSkill implements ArtifactSkill {
 	/** 冷却 30 秒。 */
 	private static final int COOLDOWN_TICKS = 600;
 	/** 限时加成的来源 id：战斗与面板按它查当前加成。 */
-	public static final Identifier CRIT_BONUS_ID =
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "keen_eye_crit");
+	public static final ResourceLocation CRIT_BONUS_ID =
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "keen_eye_crit");
 
 	private KeenEyeSkill() {
 	}

@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 服务端 → 客户端：乌云容量的当前值 / 上限。
@@ -16,7 +16,7 @@ import net.minecraft.resources.Identifier;
  */
 public record CloudSyncPayload(double capacity, double max) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<CloudSyncPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "cloud_sync"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "cloud_sync"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, CloudSyncPayload> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.DOUBLE, CloudSyncPayload::capacity,

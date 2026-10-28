@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：把某个背包格里的石板刻印掉（长按进度满）。
@@ -15,7 +15,7 @@ import net.minecraft.resources.Identifier;
  */
 public record SlateImprintPayload(int slot) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<SlateImprintPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_imprint"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "slate_imprint"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, SlateImprintPayload> STREAM_CODEC =
 			StreamCodec.composite(ByteBufCodecs.VAR_INT, SlateImprintPayload::slot, SlateImprintPayload::new);

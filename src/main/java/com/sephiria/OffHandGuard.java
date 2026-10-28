@@ -4,6 +4,7 @@ import com.sephiria.registry.ModItems;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 
 /**
  * 标准剑盾是"一物两形"：主手渲染剑、副手渲染盾（见物品定义里的 display_context 分流）。
@@ -19,11 +20,11 @@ public final class OffHandGuard {
 	public static void register() {
 		UseItemCallback.EVENT.register((player, level, hand) -> {
 			if (hand != InteractionHand.OFF_HAND) {
-				return InteractionResult.PASS;
+				return InteractionResultHolder.pass(player.getItemInHand(hand));
 			}
 			return player.getMainHandItem().is(ModItems.DEFAULT_SWORD_AND_SHIELD)
-					? InteractionResult.FAIL
-					: InteractionResult.PASS;
+					? InteractionResultHolder.fail(player.getItemInHand(hand))
+					: InteractionResultHolder.pass(player.getItemInHand(hand));
 		});
 	}
 }

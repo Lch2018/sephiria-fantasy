@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,14 +28,14 @@ public record HudSyncPayload(List<Entry> skills, List<Entry> artifacts) implemen
 	 * @param total     冷却总 tick（充能条目为 -1）
 	 * @param charge    充能千分比 0..1000（冷却条目为 -1）
 	 */
-	public record Entry(Identifier item, int remaining, int total, int charge) {
+	public record Entry(ResourceLocation item, int remaining, int total, int charge) {
 		public boolean charging() {
 			return this.charge >= 0;
 		}
 	}
 
 	public static final CustomPacketPayload.Type<HudSyncPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "hud_sync"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "hud_sync"));
 
 	public static final StreamCodec<FriendlyByteBuf, HudSyncPayload> STREAM_CODEC = StreamCodec.of(
 			(FriendlyByteBuf buffer, HudSyncPayload payload) -> {
@@ -48,7 +48,7 @@ public record HudSyncPayload(List<Entry> skills, List<Entry> artifacts) implemen
 		buffer.writeVarInt(entries.size());
 
 		for (Entry entry : entries) {
-			Identifier.STREAM_CODEC.encode(buffer, entry.item());
+			ResourceLocation.STREAM_CODEC.encode(buffer, entry.item());
 			buffer.writeVarInt(entry.remaining() + 1);
 			buffer.writeVarInt(entry.total() + 1);
 			buffer.writeVarInt(entry.charge() + 1);
@@ -60,7 +60,7 @@ public record HudSyncPayload(List<Entry> skills, List<Entry> artifacts) implemen
 		List<Entry> entries = new ArrayList<>(count);
 
 		for (int index = 0; index < count; index++) {
-			entries.add(new Entry(Identifier.STREAM_CODEC.decode(buffer),
+			entries.add(new Entry(ResourceLocation.STREAM_CODEC.decode(buffer),
 					buffer.readVarInt() - 1, buffer.readVarInt() - 1, buffer.readVarInt() - 1));
 		}
 

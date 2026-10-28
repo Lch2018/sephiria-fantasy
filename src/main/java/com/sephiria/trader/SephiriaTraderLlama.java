@@ -1,11 +1,11 @@
 package com.sephiria.trader;
 
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.SpawnGroupData;
-import net.minecraft.world.entity.animal.equine.TraderLlama;
+import net.minecraft.world.entity.animal.horse.TraderLlama;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -29,9 +29,9 @@ public class SephiriaTraderLlama extends TraderLlama {
 
 	@Override
 	public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-			EntitySpawnReason reason, SpawnGroupData groupData) {
+			MobSpawnType reason, SpawnGroupData groupData) {
 		SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, groupData);
-		this.setItemSlot(EquipmentSlot.BODY, new ItemStack(Items.CARPET.pick(DyeColor.RED)));
+		this.setItemSlot(EquipmentSlot.BODY, new ItemStack(Items.RED_CARPET));
 		return data;
 	}
 }

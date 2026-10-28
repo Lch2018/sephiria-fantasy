@@ -1,5 +1,6 @@
 package com.sephiria.potion;
 
+import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.artifact.Quality;
 import net.minecraft.network.chat.Component;
@@ -12,7 +13,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
@@ -61,7 +62,7 @@ public class SephiriaPotionItem extends Item implements Quality {
 	}
 
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		player.startUsingItem(hand);
 
 		if (!level.isClientSide()) {
@@ -70,12 +71,12 @@ public class SephiriaPotionItem extends Item implements Quality {
 					SoundEvents.GENERIC_DRINK, SoundSource.PLAYERS, 0.5F, level.getRandom().nextFloat() * 0.1F + 0.9F);
 		}
 
-		return InteractionResult.CONSUME;
+		return InteractionResultHolder.consume(player.getItemInHand(hand));
 	}
 
 	@Override
-	public ItemUseAnimation getUseAnimation(ItemStack stack) {
-		return ItemUseAnimation.DRINK;
+	public UseAnim getUseAnimation(ItemStack stack) {
+		return UseAnim.DRINK;
 	}
 
 	@Override
