@@ -277,6 +277,24 @@ public class Sephiria implements ModInitializer {
 						shop.refresh(player);
 					}
 				}));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.OpenArtifactSkillsPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(() -> syncArtifactSkills(player)));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.AssignArtifactSkillPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					com.sephiria.network.AssignArtifactSkillPayload payload =
+							com.sephiria.network.AssignArtifactSkillPayload.read(buffer);
+					server.execute(() -> {
+						String entry = payload.entry();
+
+						if (!entry.isEmpty() && ArtifactSkills.resolve(player, entry) == null) {
+							return;
+						}
+
+						SkillSlots.set(player, payload.slot(), entry);
+						syncArtifactSkills(player);
+						com.sephiria.artifact.ArtifactHud.send(player);
+					});
+				});
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentClickPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> {
 					com.sephiria.network.TalentClickPayload payload =
@@ -465,7 +483,13 @@ public class Sephiria implements ModInitializer {
 					net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(available.item()), available.level()));
 		}
 
-
+		ArtifactSkillsPayload payload = new ArtifactSkillsPayload(skills,
+				java.util.List.copyOf(SkillSlots.of(player)));
+		net.minecraft.network.FriendlyByteBuf buffer = new net.minecraft.network.FriendlyByteBuf(
+				io.netty.buffer.Unpooled.buffer());
+		ArtifactSkillsPayload.write(buffer, payload);
+		net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
+				ArtifactSkillsPayload.CHANNEL, buffer);
 	}
 
-}
+	}
