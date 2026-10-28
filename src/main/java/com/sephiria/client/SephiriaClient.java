@@ -23,9 +23,14 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.entity.LlamaRenderer;
+import net.minecraft.client.renderer.entity.WanderingTraderRenderer;
+import com.sephiria.registry.ModEntities;
 import net.minecraft.network.chat.Component;
 
 /**
@@ -75,6 +80,11 @@ public final class SephiriaClient implements ClientModInitializer {
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
 						com.sephiria.beacon.SephiriaBeaconMenu.IMAGE_WIDTH,
 						com.sephiria.beacon.SephiriaBeaconMenu.IMAGE_HEIGHT, true));
+
+		// 流浪商人先用原版模型与贴图，至少保证实体可见；红袍自定义模型后续再接。
+		EntityRendererRegistry.register(ModEntities.SEPHIRIA_WANDERING_TRADER, WanderingTraderRenderer::new);
+		EntityRendererRegistry.register(ModEntities.SEPHIRIA_TRADER_LLAMA,
+				context -> new LlamaRenderer(context, ModelLayers.TRADER_LLAMA));
 
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.HudSyncPayload.TYPE,
 				(payload, context) -> HudClientData.accept(payload));
