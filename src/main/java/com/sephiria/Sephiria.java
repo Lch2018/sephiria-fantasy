@@ -277,6 +277,23 @@ public class Sephiria implements ModInitializer {
 						shop.refresh(player);
 					}
 				}));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentClickPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					com.sephiria.network.TalentClickPayload payload =
+							com.sephiria.network.TalentClickPayload.read(buffer);
+					server.execute(() -> {
+						if (payload.reset()) {
+							com.sephiria.talent.Talents.reset(player);
+							return;
+						}
+
+						com.sephiria.talent.Talent[] talents = com.sephiria.talent.Talent.values();
+
+						if (payload.page() >= 0 && payload.page() < talents.length) {
+							com.sephiria.talent.Talents.adjust(player, talents[payload.page()], payload.delta());
+						}
+					});
+				});
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.WishPoolClickPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> {
 					com.sephiria.network.WishPoolClickPayload payload =

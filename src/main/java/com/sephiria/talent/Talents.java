@@ -12,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import com.sephiria.network.TalentSyncPayload;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
@@ -422,7 +423,15 @@ public final class Talents {
 
 	/** 把天赋点与「能否修改」推给客户端（进服、每次变更与打开界面时各一次）。 */
 	public static void sync(ServerPlayer player) {
-
+		TalentSyncPayload payload = new TalentSyncPayload(earned(player),
+				points(player, Talent.RAGE), points(player, Talent.SWIFT), points(player, Talent.WILL),
+				points(player, Talent.QUICK_WIT), points(player, Talent.SURVIVAL),
+				points(player, Talent.PATIENCE), points(player, Talent.WISDOM), nearSpawn(player));
+		net.minecraft.network.FriendlyByteBuf buffer = new net.minecraft.network.FriendlyByteBuf(
+				io.netty.buffer.Unpooled.buffer());
+		com.sephiria.network.TalentSyncPayload.write(buffer, payload);
+		net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
+				com.sephiria.network.TalentSyncPayload.CHANNEL, buffer);
 	}
 
 	// ------------------------------------------------------------------

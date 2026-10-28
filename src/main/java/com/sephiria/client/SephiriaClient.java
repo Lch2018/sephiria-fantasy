@@ -54,6 +54,9 @@ public final class SephiriaClient implements ClientModInitializer {
 	private static final KeyMapping STATS_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.stats", InputConstants.Type.KEYSYM, InputConstants.KEY_K, CATEGORY));
 
+	private static final KeyMapping TALENT_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+			"key.sephiria_fantasy.talent", InputConstants.Type.KEYSYM, InputConstants.KEY_T, CATEGORY));
+
 	/** 神器技能 6 个栏位：默认不绑键，玩家自己去控制里设置。 */
 	private static final KeyMapping[] SKILL_KEYS = new KeyMapping[
 			com.sephiria.artifact.skill.SkillSlots.COUNT];
@@ -108,6 +111,12 @@ public final class SephiriaClient implements ClientModInitializer {
 		});
 
 		// 服务端每 5 刻推一次 HUD 状态；老版网络包在客户端线程外到达，切回主线程再写镜像
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentSyncPayload.CHANNEL,
+				(client, handler, buffer, sender) -> {
+					com.sephiria.network.TalentSyncPayload payload =
+							com.sephiria.network.TalentSyncPayload.read(buffer);
+					client.execute(() -> ClientTalents.accept(payload));
+				});
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.StatsSyncPayload.CHANNEL,
 				(client, handler, buffer, sender) -> {
 					com.sephiria.network.StatsSyncPayload payload =
@@ -132,6 +141,10 @@ public final class SephiriaClient implements ClientModInitializer {
 
 			while (STATS_KEY.consumeClick()) {
 				client.setScreen(new com.sephiria.client.gui.StatsScreen());
+			}
+
+			while (TALENT_KEY.consumeClick()) {
+				client.setScreen(new com.sephiria.client.gui.TalentScreen());
 			}
 
 			while (RELOAD_KEY.consumeClick()) {
