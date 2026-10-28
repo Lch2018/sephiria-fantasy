@@ -13,6 +13,7 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	modImplementation files('libs/geckolib-fabric-1.21.1-4.9.3.jar')
+	modCompileOnly files('libs/modmenu-11.0.5.jar')
 }
 
 processResources {
