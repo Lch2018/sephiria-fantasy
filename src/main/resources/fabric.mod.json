@@ -19,6 +19,9 @@
 	"entrypoints": {
 		"main": [
 			"com.sephiria.Sephiria"
+		],
+		"client": [
+			"com.sephiria.client.SephiriaClient"
 		]
 	},
 	"depends": {
