@@ -25,6 +25,12 @@ import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.fabricmc.fabric.api.client.screen.v1.Screens;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.screens.MenuScreens;
 
 /**
@@ -87,6 +93,26 @@ public final class SephiriaClient implements ClientModInitializer {
 						WishPoolMenu.IMAGE_WIDTH, WishPoolMenu.IMAGE_HEIGHT, false));
 		MenuScreens.<com.sephiria.beacon.SephiriaBeaconMenu, com.sephiria.client.beacon.SephiriaBeaconScreen>register(
 				ModMenus.SEPHIRIA_BEACON, com.sephiria.client.beacon.SephiriaBeaconScreen::new);
+
+		// 原版背包上沿两个入口：赛菲莉娅背包 / 商店。真正的界面由服务端打开。
+		// 1.20.1 的标签栏自绘还没移植，先用两个按钮占位。
+		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+			if (!(screen instanceof InventoryScreen) && !(screen instanceof CreativeModeInventoryScreen)) {
+				return;
+			}
+
+			int left = (scaledWidth - 176) / 2;
+			int top = (scaledHeight - 166) / 2;
+			int rowY = screen instanceof CreativeModeInventoryScreen ? top - 48 : top - 20;
+			Screens.getButtons(screen).add(Button.builder(
+					Component.translatable("screen.sephiria_fantasy.backpack"),
+					button -> sendEmpty(com.sephiria.network.OpenBackpackPayload.CHANNEL))
+					.bounds(left + 4, rowY, 72, 18).build());
+			Screens.getButtons(screen).add(Button.builder(
+					Component.translatable("screen.sephiria_fantasy.shop"),
+					button -> sendEmpty(com.sephiria.network.OpenShopPayload.CHANNEL))
+					.bounds(left + 80, rowY, 40, 18).build());
+		});
 
 		// 服务端每 5 刻推一次 HUD 状态；老版网络包在客户端线程外到达，切回主线程再写镜像
 		ClientPlayNetworking.registerGlobalReceiver(HudSyncPayload.CHANNEL,

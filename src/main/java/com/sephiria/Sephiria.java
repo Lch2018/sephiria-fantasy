@@ -265,6 +265,12 @@ public class Sephiria implements ModInitializer {
 				(server, player, handler, buffer, sender) -> server.execute(() -> DashSkill.perform(player)));
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.ReloadPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> server.execute(() -> SephiriaCrossbowItem.tryReload(player)));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.OpenBackpackPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(
+						() -> player.openMenu(ArtifactBackpackMenu.provider(player))));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.OpenShopPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(
+						() -> player.openMenu(ShopMenu.provider(player))));
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.CastArtifactSkillPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> {
 					int slot = com.sephiria.network.CastArtifactSkillPayload.read(buffer).slot();
