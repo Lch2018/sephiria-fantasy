@@ -1,5 +1,11 @@
 package com.sephiria.weapon;
 
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.util.GeckoLibUtil;
 import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.Invulnerability;
@@ -32,7 +38,8 @@ import net.minecraft.world.level.Level;
  * <p>26.3 依赖 GeckoLib 5 的渲染/动画 API；1.21.1 的 GeckoLib 4 接口完全不同，
  * 先把核心战斗数值和状态切换迁过来，动画后续再接。
  */
-public class SephiriaKatanaItem extends Item implements SephiriaWeapon {
+public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon {
+	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 	public static final int SWITCH_TICKS = 13;
 	public static final int BLOCK_TICKS = 6;
 
@@ -59,6 +66,17 @@ public class SephiriaKatanaItem extends Item implements SephiriaWeapon {
 	public SephiriaKatanaItem(WeaponBranch branch, Item.Properties properties) {
 		super(properties);
 		this.branch = branch;
+	}
+
+	@Override
+	public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+		controllers.add(new AnimationController<>(this, "main", 0,
+				state -> state.setAndContinue(RawAnimation.begin().thenLoop("animation.idle_unsheathed"))));
+	}
+
+	@Override
+	public AnimatableInstanceCache getAnimatableInstanceCache() {
+		return this.cache;
 	}
 
 	@Override

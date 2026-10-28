@@ -24,6 +24,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.KeyMapping;
@@ -66,6 +67,10 @@ public final class SephiriaClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		com.sephiria.client.particle.SephiriaParticles.register();
+		com.sephiria.client.render.KatanaRenderer katanaRenderer = new com.sephiria.client.render.KatanaRenderer();
+		BuiltinItemRendererRegistry.INSTANCE.register(com.sephiria.registry.ModItems.BLADE,
+				(stack, context, pose, buffers, light, overlay) -> katanaRenderer.renderByItem(
+						stack, context, pose, buffers, light, overlay));
 
 		MenuScreens.<ArtifactBackpackMenu, SephiriaMenuScreen<ArtifactBackpackMenu>>register(ModMenus.ARTIFACT_BACKPACK,
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title, ArtifactBackpackMenu.IMAGE_WIDTH, ArtifactBackpackMenu.imageHeight(BackpackWindow.ROWS),
