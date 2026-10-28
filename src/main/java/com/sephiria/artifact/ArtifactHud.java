@@ -37,8 +37,6 @@ public final class ArtifactHud {
 	/** 由 {@code Sephiria#onInitialize()} 调用。 */
 	public static void registerTicker() {
 		ServerTickEvents.END_SERVER_TICK.register(ArtifactHud::tick);
-		// 进服先推一份，客户端不用等下一个 5 刻周期
-		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> send(handler.player));
 	}
 
 	private static void tick(MinecraftServer server) {

@@ -57,6 +57,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -258,6 +259,12 @@ public class Sephiria implements ModInitializer {
 		// 各加一个 10% 概率的池子
 		// 品质概率的唯一入口（宝箱/商店/抽卡/药水四组比值 + config 覆盖）：服务器启动时读覆盖文件
 		ArtifactLoot.register();
+
+		// 1.20.1 旧 channel：客户端按键只发一个空包，实际判定全在服务端
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.DashPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(() -> DashSkill.perform(player)));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.ReloadPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(() -> SephiriaCrossbowItem.tryReload(player)));
 
 		// 进服时把各技能的存储量推给客户端，HUD 才有初始值
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

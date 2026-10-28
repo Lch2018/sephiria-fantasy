@@ -14,7 +14,13 @@ import com.sephiria.shop.ShopMenu;
 import com.sephiria.slate.SlateFusionMenu;
 import com.sephiria.trader.SephiriaTraderMenu;
 import com.sephiria.wishpool.WishPoolMenu;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.network.FriendlyByteBuf;
+import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -31,6 +37,14 @@ import net.minecraft.client.gui.screens.MenuScreens;
  * （见 {@code sephiria_fantasy.accesswidener}）。
  */
 public final class SephiriaClient implements ClientModInitializer {
+	private static final String CATEGORY = "key.categories.gameplay";
+
+	private static final KeyMapping DASH_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+			"key.sephiria_fantasy.dash", InputConstants.Type.MOUSE, 4, CATEGORY));
+
+	private static final KeyMapping RELOAD_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+			"key.sephiria_fantasy.reload", InputConstants.Type.KEYSYM, InputConstants.KEY_R, CATEGORY));
+
 	@Override
 	public void onInitializeClient() {
 		MenuScreens.<ArtifactBackpackMenu, SephiriaMenuScreen<ArtifactBackpackMenu>>register(
@@ -72,6 +86,20 @@ public final class SephiriaClient implements ClientModInitializer {
 		HudRenderCallback.EVENT.register(new SephiriaHud());
 
 		// 神器 / 石板 / 药水的提示行：名称由原版画，这里补连击、唯一、词条、稀有度与描述
+		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			while (DASH_KEY.consumeClick()) {
+				if (client.player != null) {
+					sendEmpty(com.sephiria.network.DashPayload.CHANNEL);
+				}
+			}
+
+			while (RELOAD_KEY.consumeClick()) {
+				if (client.player != null) {
+					sendEmpty(com.sephiria.network.ReloadPayload.CHANNEL);
+				}
+			}
+		});
+
 		ItemTooltipCallback.EVENT.register((stack, flag, lines) -> {
 			java.util.List<net.minecraft.network.chat.Component> artifactLines =
 					com.sephiria.client.artifact.ArtifactTooltip.lines(stack);
@@ -81,5 +109,9 @@ public final class SephiriaClient implements ClientModInitializer {
 				lines.addAll(artifactLines);
 			}
 		});
+	}
+
+	private static void sendEmpty(net.minecraft.resources.ResourceLocation channel) {
+		ClientPlayNetworking.send(channel, new FriendlyByteBuf(Unpooled.buffer()));
 	}
 }
