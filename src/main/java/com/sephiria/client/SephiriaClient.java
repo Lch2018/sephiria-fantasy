@@ -77,10 +77,8 @@ public final class SephiriaClient implements ClientModInitializer {
 		MenuScreens.<WishPoolMenu, SephiriaMenuScreen<WishPoolMenu>>register(ModMenus.WISH_POOL,
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
 						WishPoolMenu.IMAGE_WIDTH, WishPoolMenu.IMAGE_HEIGHT, false));
-		MenuScreens.<com.sephiria.beacon.SephiriaBeaconMenu, SephiriaMenuScreen<com.sephiria.beacon.SephiriaBeaconMenu>>register(ModMenus.SEPHIRIA_BEACON,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						com.sephiria.beacon.SephiriaBeaconMenu.IMAGE_WIDTH,
-						com.sephiria.beacon.SephiriaBeaconMenu.IMAGE_HEIGHT, true));
+		MenuScreens.<com.sephiria.beacon.SephiriaBeaconMenu, com.sephiria.client.beacon.SephiriaBeaconScreen>register(
+				ModMenus.SEPHIRIA_BEACON, com.sephiria.client.beacon.SephiriaBeaconScreen::new);
 
 		// 流浪商人先用原版模型与贴图，至少保证实体可见；红袍自定义模型后续再接。
 		EntityRendererRegistry.register(ModEntities.SEPHIRIA_WANDERING_TRADER, WanderingTraderRenderer::new);
