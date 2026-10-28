@@ -965,6 +965,22 @@ public final class PlayerStats {
 		// 所有改动都会走到这里，所以存档只在这一个地方写——属性存在附件里，重登/重启都不丢
 		player.setAttached(SAVED, Saved.of(values));
 
+		// 1.20.1 旧 channel：只推属性页需要的关键值
+		com.sephiria.network.StatsSyncPayload payload = new com.sephiria.network.StatsSyncPayload(
+				values.mp, maxMp, mpRegenTotal(player), physicalTotal(player),
+				elementTotal(player, Element.FIRE), elementTotal(player, Element.ICE),
+				elementTotal(player, Element.LIGHTNING), defenseTotal(player),
+				attackSpeedTotal(player) + TimedAttributes.attackSpeedPercent(player), meleeRangeTotal(player),
+				physicalAmpPercent(player), weaponDamageTotal(player), specialAttackTotal(player),
+				normalAttackDamageTotal(player), luckTotal(player),
+				moveSpeedPercentTotal(player) + TimedAttributes.moveSpeedPercent(player),
+				critChanceTotal(player), critDamageTotal(player), values.leaves);
+		net.minecraft.network.FriendlyByteBuf buffer = new net.minecraft.network.FriendlyByteBuf(
+				io.netty.buffer.Unpooled.buffer());
+		com.sephiria.network.StatsSyncPayload.write(buffer, payload);
+		net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
+				com.sephiria.network.StatsSyncPayload.CHANNEL, buffer);
+
 	}
 
 	/** 进服时推一次，面板才有初始值（顺带把读出来的那份写回附件）。 */

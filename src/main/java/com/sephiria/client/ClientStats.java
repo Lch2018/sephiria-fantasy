@@ -1,5 +1,7 @@
 package com.sephiria.client;
 
+import com.sephiria.network.StatsSyncPayload;
+
 import com.sephiria.stats.PlayerStats;
 
 /**
@@ -44,6 +46,28 @@ public final class ClientStats {
 			PlayerStats.DEFAULT_STRENGTH, 0.0D, 0.0D, 0.0D, 0.0D);
 
 	private ClientStats() {
+	}
+
+	public static void accept(StatsSyncPayload payload) {
+		mp = payload.mp();
+		maxMp = payload.maxMp();
+		mpRegen = payload.mpRegen();
+		physical = payload.physical();
+		fire = payload.fire();
+		ice = payload.ice();
+		lightning = payload.lightning();
+		defense = payload.defense();
+		attackSpeed = payload.attackSpeed();
+		meleeRange = payload.meleeRange();
+		physicalAmp = payload.physicalAmp();
+		weaponDamage = payload.weaponDamage();
+		specialAttack = payload.specialAttack();
+		normalAttackDamage = payload.normalAttackDamage();
+		luck = payload.luck();
+		moveSpeed = payload.moveSpeed();
+		critChance = payload.critChance();
+		critDamage = payload.critDamage();
+		leaves = payload.leaves();
 	}
 
 
