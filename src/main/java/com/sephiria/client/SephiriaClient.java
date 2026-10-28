@@ -5,6 +5,8 @@ import com.sephiria.backpack.ArtifactBackpackMenu;
 import com.sephiria.backpack.BackpackWindow;
 import com.sephiria.backpack.ChestMenu;
 import com.sephiria.backpack.EnchantMenu;
+import com.sephiria.client.hud.HudClientData;
+import com.sephiria.client.hud.SephiriaHud;
 import com.sephiria.client.menu.SephiriaMenuScreen;
 import com.sephiria.difficulty.RootRetreatBlock;
 import com.sephiria.difficulty.RootRetreatMenu;
@@ -18,8 +20,10 @@ import com.sephiria.wishpool.WishPoolBlock;
 import com.sephiria.wishpool.WishPoolMenu;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.network.chat.Component;
@@ -71,6 +75,11 @@ public final class SephiriaClient implements ClientModInitializer {
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
 						com.sephiria.beacon.SephiriaBeaconMenu.IMAGE_WIDTH,
 						com.sephiria.beacon.SephiriaBeaconMenu.IMAGE_HEIGHT, true));
+
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.HudSyncPayload.TYPE,
+				(payload, context) -> HudClientData.accept(payload));
+		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> HudClientData.reset());
+		HudRenderCallback.EVENT.register(new SephiriaHud());
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (DASH_KEY.consumeClick()) {
