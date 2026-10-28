@@ -4,9 +4,15 @@
 	"package": "com.sephiria.mixin.client",
 	"compatibilityLevel": "JAVA_17",
 	"client": [
-		"HealthChangeParticleMixin"
+		"HealthChangeFactoryMixin",
+		"HealthChangeParticleMixin",
+		"LivingEntitySyncMixin",
+		"ToroHealthHudMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
-	}
+	},
+	"mixins": [
+		"CriticalDamageMixin"
+	]
 }
