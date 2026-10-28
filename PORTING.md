@@ -33,8 +33,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.92.12+1.20.1` + Java 17。
 - 核心 `compileJava` 通过；无头服务端启动通过（注册、BE、资源、7 张配方、1271 个进度可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1105284 B，
-  sha256 `71d56c98be17b78608f5123300af12467abaf0ef72317399581ed08d844b0c84`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1108692 B，
+  sha256 `179c8ca5dc3421abb0e1065f9aca1fc2d1e1ebe61754ff4ae20ccfc0c59f6ced`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1\mods`。
 - 客户端同样有 `SephiriaClient` 与通用容器界面（9 个菜单），访问拓宽打开
   `MenuScreens.register`；提示行已接 `ArtifactTooltip`（1.20.1 的三参回调）。
@@ -46,7 +46,8 @@
   原版背包上沿已加「赛菲莉娅背包 / 商店」两个按钮（`OpenBackpackPayload` / `OpenShopPayload`），
   作为自绘标签栏的临时替代。商店的刷新/出售按钮已接（`RefreshShopPayload` / `SellItemPayload`），
   货架格点击购买沿用原版 `clicked`；商店现在可以买、刷新、出售。
-  宝箱界面的「刷新」也已接（`ChestRerollPayload`）。
+  宝箱界面的「刷新」也已接（`ChestRerollPayload`）；背包与附魔界面的滚轮翻行走
+  `ScrollBackpackPayload` → `BackpackGridMenu.scrollBackpack`。
   其余专属界面与网络包仍未迁。
 - 1.20.1 的数据层与 API 迁移：
   - 物品状态（神器等级/连击、石板朝向/刻印/图案、宝箱奖励、刀入鞘、太阳剑主人、
