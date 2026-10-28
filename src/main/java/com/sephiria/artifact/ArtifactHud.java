@@ -5,6 +5,9 @@ import com.sephiria.artifact.skill.ArtifactSkills;
 import com.sephiria.artifact.skill.SkillSlots;
 import com.sephiria.registry.ModItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -34,6 +37,8 @@ public final class ArtifactHud {
 	/** 由 {@code Sephiria#onInitialize()} 调用。 */
 	public static void registerTicker() {
 		ServerTickEvents.END_SERVER_TICK.register(ArtifactHud::tick);
+		// 进服先推一份，客户端不用等下一个 5 刻周期
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> send(handler.player));
 	}
 
 	private static void tick(MinecraftServer server) {
@@ -48,7 +53,10 @@ public final class ArtifactHud {
 
 	/** 立刻给一个玩家推一份（施放技能 / 改技能栏 / 进服时用）。 */
 	public static void send(ServerPlayer player) {
-
+		HudSyncPayload payload = new HudSyncPayload(skills(player), artifacts(player));
+		FriendlyByteBuf buffer = new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+		HudSyncPayload.write(buffer, payload);
+		ServerPlayNetworking.send(player, HudSyncPayload.CHANNEL, buffer);
 	}
 
 	private static List<HudSyncPayload.Entry> skills(ServerPlayer player) {

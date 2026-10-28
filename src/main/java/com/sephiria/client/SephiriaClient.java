@@ -4,7 +4,10 @@ import com.sephiria.backpack.ArtifactBackpackMenu;
 import com.sephiria.backpack.BackpackWindow;
 import com.sephiria.backpack.ChestMenu;
 import com.sephiria.backpack.EnchantMenu;
+import com.sephiria.client.hud.HudClientData;
+import com.sephiria.client.hud.SephiriaHud;
 import com.sephiria.client.menu.SephiriaMenuScreen;
+import com.sephiria.network.HudSyncPayload;
 import com.sephiria.difficulty.RootRetreatMenu;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.shop.ShopMenu;
@@ -13,6 +16,9 @@ import com.sephiria.trader.SephiriaTraderMenu;
 import com.sephiria.wishpool.WishPoolMenu;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.gui.screens.MenuScreens;
 
 /**
@@ -58,6 +64,15 @@ public final class SephiriaClient implements ClientModInitializer {
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
 						com.sephiria.beacon.SephiriaBeaconMenu.IMAGE_WIDTH,
 						com.sephiria.beacon.SephiriaBeaconMenu.IMAGE_HEIGHT, true));
+
+		// 服务端每 5 刻推一次 HUD 状态；老版网络包在客户端线程外到达，切回主线程再写镜像
+		ClientPlayNetworking.registerGlobalReceiver(HudSyncPayload.CHANNEL,
+				(client, handler, buffer, sender) -> {
+					HudSyncPayload payload = HudSyncPayload.read(buffer);
+					client.execute(() -> HudClientData.accept(payload));
+				});
+		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> HudClientData.reset());
+		HudRenderCallback.EVENT.register(new SephiriaHud());
 
 		// 神器 / 石板 / 药水的提示行：名称由原版画，这里补连击、唯一、词条、稀有度与描述
 		ItemTooltipCallback.EVENT.register((stack, flag, lines) -> {
