@@ -225,6 +225,9 @@ public class Sephiria implements ModInitializer {
 				com.sephiria.network.FrostSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.playS2C().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
 		PayloadTypeRegistry.playS2C().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
+		// ToroHealth 伤害数字：元素色 / 暴击 / 税前伤害。没装 ToroHealth 的客户端收到会直接丢弃。
+		PayloadTypeRegistry.playS2C().register(com.sephiria.compat.torohealth.ToroHealthDamagePayload.TYPE,
+				com.sephiria.compat.torohealth.ToroHealthDamagePayload.STREAM_CODEC);
 		PayloadTypeRegistry.playC2S().register(TalentClickPayload.TYPE, TalentClickPayload.STREAM_CODEC);
 		PayloadTypeRegistry.playC2S().register(TalentSyncRequestPayload.TYPE,
 				TalentSyncRequestPayload.STREAM_CODEC);

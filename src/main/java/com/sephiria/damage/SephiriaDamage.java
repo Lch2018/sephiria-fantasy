@@ -386,6 +386,7 @@ public final class SephiriaDamage {
 		float preTax = applyGoldenHands(source, result);
 		preTax *= com.sephiria.talent.Talents.bossDamageMultiplier(player, target);
 		preTax *= com.sephiria.talent.Talents.comboDamageMultiplier(player);
+		com.sephiria.compat.torohealth.ToroHealthCompat.send(player, target, source, critical, preTax);
 
 		if (!critical) {
 			return amount;

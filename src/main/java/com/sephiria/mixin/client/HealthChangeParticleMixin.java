@@ -1,32 +1,87 @@
 package com.sephiria.mixin.client;
 
-import com.sephiria.client.ToroHealthColor;
-import net.minecraft.client.multiplayer.ClientLevel;
+import com.sephiria.compat.torohealth.ToroHealthCompatClient;
+import com.sephiria.compat.torohealth.ToroHealthCritAccess;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-/** 把 ToroHealth 的伤害数字染成本模组武器的颜色（轻量兼容，不改变数值）。 */
+/**
+ * 给 ToroHealth 的伤害数字粒子挂上本模组的显示信息，并给要显示的文本加标签。
+ *
+ * <p>1.21.1 的 ToroHealth 在 {@code HealthChangeParticle#render} 里才把
+ * {@code Integer.toString(value)} 放进 {@code TextRenderEntry}（26.3 换成了 extract），
+ * 所以这里改的是 {@code render} 里的那个 String 局部变量。文本会被加上一段零宽标签
+ * （暴击、副色、要显示的数值），由 {@code TextParticleRendererMixin} 剥掉并自己按大小绘制。
+ *
+ * <p>目标类来自可选 mod，所以整体走 {@code required:false} 的 mixin 配置。
+ */
 @Mixin(targets = "net.kairost.torohealth.client.particle.HealthChangeParticle")
-public abstract class HealthChangeParticleMixin {
-	@Shadow
-	protected float rCol;
-	@Shadow
-	protected float gCol;
-	@Shadow
-	protected float bCol;
+public abstract class HealthChangeParticleMixin implements ToroHealthCritAccess {
+	@Unique
+	private boolean sephiria$custom;
+	@Unique
+	private boolean sephiria$crit;
+	@Unique
+	private int sephiria$secondaryColor = -1;
+	@Unique
+	private int sephiria$displayValue = -1;
 
-	@Inject(method = "render", at = @At("HEAD"))
-	private void sephiria$tint(com.mojang.blaze3d.vertex.VertexConsumer vertexConsumer,
-			net.minecraft.client.Camera camera, float partialTick, CallbackInfo info) {
-		int color = ToroHealthColor.color();
+	@Override
+	public void sephiria$setCustom(boolean custom) {
+		this.sephiria$custom = custom;
+	}
 
-		if (color >= 0) {
-			this.rCol = ((color >> 16) & 0xFF) / 255.0F;
-			this.gCol = ((color >> 8) & 0xFF) / 255.0F;
-			this.bCol = (color & 0xFF) / 255.0F;
+	@Override
+	public boolean sephiria$isCustom() {
+		return this.sephiria$custom;
+	}
+
+	@Override
+	public void sephiria$setCrit(boolean crit) {
+		this.sephiria$crit = crit;
+	}
+
+	@Override
+	public boolean sephiria$isCrit() {
+		return this.sephiria$crit;
+	}
+
+	@Override
+	public void sephiria$setSecondaryColor(int color) {
+		this.sephiria$secondaryColor = color;
+	}
+
+	@Override
+	public int sephiria$secondaryColor() {
+		return this.sephiria$secondaryColor;
+	}
+
+	@Override
+	public void sephiria$setDisplayValue(int value) {
+		this.sephiria$displayValue = value;
+	}
+
+	@Override
+	public int sephiria$displayValue() {
+		return this.sephiria$displayValue;
+	}
+
+	/**
+	 * {@code String text = Integer.toString(this.value);} 是方法里唯一的 String 局部变量，
+	 * 所以 ordinal 0 就是它。
+	 */
+	@ModifyVariable(method = "render(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/client/Camera;F)V",
+			at = @At("STORE"), ordinal = 0)
+	private String sephiria$mark(String text) {
+		if (!this.sephiria$custom) {
+			return text;
 		}
+
+		String plain = this.sephiria$displayValue >= 0
+				? Integer.toString(this.sephiria$displayValue)
+				: text;
+		return ToroHealthCompatClient.tag(this.sephiria$secondaryColor, this.sephiria$crit) + plain;
 	}
 }
