@@ -1,0 +1,173 @@
+package com.sephiria.client.artifact;
+
+import com.sephiria.artifact.ArtifactItem;
+import com.sephiria.artifact.ArtifactRarity;
+import com.sephiria.artifact.ItemQualities;
+import com.sephiria.artifact.SephiriaArtifact;
+import com.sephiria.util.Numbers;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 神器的提示框：名称（原版自己画）+ 连招 + 【唯一】+ 词条 + 稀有度 + 等级 + 背景描述。
+ *
+ * <p>词条数值按「实际等级」显示：物品自身等级 + 所处格子的格子等级。格子等级只有站在背包界面里
+ * 才看得见，所以由界面在渲染前塞进 {@link #setSlotLevelHint}，鼠标移开时清掉。
+ */
+public final class ArtifactTooltip {
+	/** 【唯一】标签的颜色（橙）。 */
+	private static final int COLOUR_TAG = 0xFFFFAA00;
+	/** 词条数值的颜色（绿），与其它界面里的数值一致。 */
+	private static final int COLOUR_BONUS = 0xFF55FF55;
+	/** 「增加连击数量」还是 0 时的颜色（灰）——这一行要一直在，但不该抢眼。 */
+	private static final int COLOUR_IDLE = 0xFFAAAAAA;
+	/** 鼠标下的格子等级；-1 表示不在背包界面里（按 0 算）。 */
+	private static int slotLevelHint = -1;
+
+	private ArtifactTooltip() {
+	}
+
+	/** 背包界面渲染前设置：鼠标悬停格子的格子等级。 */
+	public static void setSlotLevelHint(int slotLevel) {
+		slotLevelHint = slotLevel;
+	}
+
+	public static void clearSlotLevelHint() {
+		slotLevelHint = -1;
+	}
+
+	/** 神器 / 石板的提示行（调用方负责在它前面插空行）。 */
+	public static List<Component> lines(ItemStack stack) {
+		if (stack.getItem() instanceof com.sephiria.slate.SlateItem slate) {
+			return slateLines(stack, slate);
+		}
+
+		if (stack.getItem() instanceof com.sephiria.potion.SephiriaPotionItem potion) {
+			return potionLines(potion);
+		}
+
+		if (!(stack.getItem() instanceof SephiriaArtifact artifact)) {
+			ArtifactRarity quality = ItemQualities.of(stack.getItem());
+			return quality == null ? List.of() : qualityItemLines(quality);
+		}
+
+		int level = Math.min(ArtifactItem.levelOf(stack) + Math.max(0, slotLevelHint), artifact.maxLevel());
+		List<Component> lines = new ArrayList<>();
+
+		// 连招（坚固）
+		// 双连击神器（风车）两个连击都列出来
+		for (com.sephiria.artifact.ArtifactCombo combo : artifact.combos()) {
+			lines.add(Component.translatable(combo.translationKey()).withStyle(ChatFormatting.GREEN));
+		}
+
+		// 只有神器自身带【唯一】才显示这一行。智慧二阶段不再强制所有神器按【唯一】结算
+		// （2026-10-26 用户确认），这里也不能因为天赋点亮就给每件神器都挂上标签。
+		if (artifact.unique()) {
+			lines.add(Component.translatable("artifact.sephiria_fantasy.tag.unique").withColor(COLOUR_TAG));
+		}
+
+		lines.addAll(artifact.affixLines(level));
+
+		// 「增加连击数量」：每条连击写一行「「坚固」+x」。
+		// 每件神器**默认就是 +1**（它自己就提供 1 级连击），合并过一次变 +2（封顶）——
+		// 所以这一行永远有，用户 2026-10-24 要的就是「所有神器都有这条属性」。
+		// +1 是常态（灰），+2 才是合并赚到的（绿）；「书」这类无连击神器没有这一行。
+		int comboCount = ArtifactItem.comboCountOf(stack);
+
+		for (com.sephiria.artifact.ArtifactCombo combo : artifact.combos()) {
+			lines.add(Component.translatable("artifact.sephiria_fantasy.affix.combo_count",
+					Component.translatable(combo.translationKey()),
+					Component.literal("+" + comboCount)
+							.withColor(comboCount > 1 ? COLOUR_BONUS : COLOUR_IDLE)));
+		}
+
+		// 「书」：附魔等级挂在物品栈上（铁砧合出来的），不在等级表里，所以要拿 stack 现读——
+		// 效果数字（点燃几秒 / 掉落加几级）跟着当前的附魔走
+		if (artifact instanceof com.sephiria.artifact.BookItem) {
+			lines.addAll(com.sephiria.artifact.BookItem.enchantmentLines(stack));
+		}
+
+		// 桑德耳环的闪电攻击按「当前电元素强度」现算：客户端用同步过来的面板值补一行当前伤害
+		if (artifact instanceof com.sephiria.artifact.SandeEarringsItem) {
+			double current = com.sephiria.client.ClientStats.lightning()
+					* com.sephiria.artifact.SandeEarringsItem.ATTACK_PERCENT / 100.0D;
+			lines.add(Component.translatable("artifact.sephiria_fantasy.affix.sande_current",
+					Component.literal(Numbers.format(current)).withColor(0xFF55FF55)));
+		}
+
+		lines.add(Component.translatable("artifact.sephiria_fantasy.rarity_line",
+						Component.translatable(artifact.rarity().translationKey()).withColor(artifact.rarity().color()))
+				.withStyle(ChatFormatting.GRAY));
+		lines.add(Component.translatable("artifact.sephiria_fantasy.level_line", Numbers.format(level))
+				.withStyle(ChatFormatting.DARK_GRAY));
+		// 风味文本可以为空（用户还没给文案的神器）：空字符串就不写这一行，免得留一条空白斜体行
+		MutableComponent flavor = Component.translatable(artifact.flavorKey());
+
+		if (!flavor.getString().isEmpty()) {
+			lines.add(flavor.withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+		}
+
+		return lines;
+	}
+
+	/** 石板的提示行：效果（含自动生成的描述）+ 品质 + 当前朝向 + 背景描述。 */
+	private static List<Component> slateLines(ItemStack stack, com.sephiria.slate.SlateItem slate) {
+		List<Component> lines = new ArrayList<>();
+		lines.addAll(slate.effectLines(stack));
+		lines.add(Component.translatable("artifact.sephiria_fantasy.slate.rarity_line",
+						Component.translatable(slate.rarity().translationKey()).withColor(slate.rarity().color()))
+				.withStyle(ChatFormatting.GRAY));
+
+		// 不可旋转的石板没有朝向可言（永远是 0），这一行就不写了
+		if (slate.rotatable(stack)) {
+			lines.add(Component.translatable("artifact.sephiria_fantasy.slate.rotation",
+							Numbers.format(com.sephiria.slate.SlateItem.rotationOf(stack)))
+					.withStyle(ChatFormatting.DARK_GRAY));
+		}
+
+		// 风味文案可以为空：新石板的「描述」是 effectLines 里自动生成的那几行，作者不写风味——
+		// 空字符串就不写这一行（与神器那条同一个规矩）
+		MutableComponent flavor = Component.translatable(slate.flavorKey());
+
+		if (!flavor.getString().isEmpty()) {
+			lines.add(flavor.withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+		}
+
+		return lines;
+	}
+
+	/** 道具的「稀有 / 传说 道具」一行。 */
+	private static List<Component> qualityItemLines(ArtifactRarity rarity) {
+		return List.of(Component.translatable("artifact.sephiria_fantasy.item.rarity_line",
+						Component.translatable(rarity.translationKey()).withColor(rarity.color()))
+				.withStyle(ChatFormatting.GRAY));
+	}
+
+	/** 药水的提示行：效果 + 品质（大部分药水没有风味，有才画那行斜体灰字）。 */
+	private static List<Component> potionLines(com.sephiria.potion.SephiriaPotionItem potion) {
+		List<Component> lines = new ArrayList<>();
+		lines.add(potion.effect().describe());
+		// 药水是「稀有 药水」，不能复用神器的「稀有 神器」那一行
+		lines.add(Component.translatable("artifact.sephiria_fantasy.potion.rarity_line",
+						Component.translatable(potion.rarity().translationKey()).withColor(potion.rarity().color()))
+				.withStyle(ChatFormatting.GRAY));
+		// 风味可以为空（大部分药水没写）：空字符串就不写这一行，免得留一条空白斜体行
+		MutableComponent flavor = Component.translatable(potion.flavorKey());
+
+		if (!flavor.getString().isEmpty()) {
+			lines.add(flavor.withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+		}
+
+		return lines;
+	}
+
+	/** 供神器物品类复用的橙色标签构造。 */
+	public static MutableComponent tag(String key) {
+		return Component.translatable(key).withColor(COLOUR_TAG);
+	}
+}

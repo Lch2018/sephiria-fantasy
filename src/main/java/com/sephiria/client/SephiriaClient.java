@@ -21,6 +21,7 @@ import com.sephiria.wishpool.WishPoolMenu;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -88,6 +89,19 @@ public final class SephiriaClient implements ClientModInitializer {
 
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.HudSyncPayload.TYPE,
 				(payload, context) -> HudClientData.accept(payload));
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.StatsSyncPayload.TYPE,
+				(payload, context) -> ClientStats.accept(payload));
+
+		// 神器 / 石板 / 药水的提示行：名称由原版画，这里补连击、唯一、词条、稀有度与描述
+		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
+			java.util.List<net.minecraft.network.chat.Component> artifactLines =
+					com.sephiria.client.artifact.ArtifactTooltip.lines(stack);
+
+			if (!artifactLines.isEmpty()) {
+				lines.add(net.minecraft.network.chat.Component.empty());
+				lines.addAll(artifactLines);
+			}
+		});
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> HudClientData.reset());
 		HudRenderCallback.EVENT.register(new SephiriaHud());
 
