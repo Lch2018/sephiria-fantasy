@@ -24,7 +24,9 @@
 
 - 已建立 Loom 构建配置（Mojang 映射、Java 17、Fabric API `0.92.12+1.20.1`），
   并把 1.21.1 核心源码迁入。
-- 当前 `compileJava` 仍有约 **1098 个错误**，没有可实装 jar，`1.20.1` 实例的 mods 里没有本模组。
+- 当前 `compileJava` 仍有约 **629 个错误**，没有可实装 jar，`1.20.1` 实例的 mods 里没有本模组。
+- 2026-10-28 本轮已剥离客户端同步网络层（删除 `network/` 并用最小占位类型保留核心数据结构），
+  错误从 1098 降到 629；剩余集中在数据组件 / NBT、ModParticleTypes、菜单 API 和属性 API。
 - 主要缺口：
   1. 1.20.1 没有数据组件：`ArtifactItem` / `SlateItem` / `FusedSlateItem` / `PatternSlateItem` /
      `BookItem` / 武器组件等要改成 NBT 键；
