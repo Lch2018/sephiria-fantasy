@@ -51,6 +51,18 @@ public final class SephiriaClient implements ClientModInitializer {
 	private static final KeyMapping RELOAD_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.reload", InputConstants.Type.KEYSYM, InputConstants.KEY_R, CATEGORY));
 
+	private static final KeyMapping SKILL_PAGE_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+			"key.sephiria_fantasy.skill_page", InputConstants.Type.KEYSYM, InputConstants.KEY_L,
+			"key.categories.gameplay"));
+
+	private static final KeyMapping STATS_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+			"key.sephiria_fantasy.stats", InputConstants.Type.KEYSYM, InputConstants.KEY_K,
+			"key.categories.gameplay"));
+
+	private static final KeyMapping TALENT_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+			"key.sephiria_fantasy.talent", InputConstants.Type.KEYSYM, InputConstants.KEY_T,
+			"key.categories.gameplay"));
+
 	@Override
 	public void onInitializeClient() {
 		MenuScreens.<ArtifactBackpackMenu, SephiriaMenuScreen<ArtifactBackpackMenu>>register(ModMenus.ARTIFACT_BACKPACK,
@@ -66,12 +78,10 @@ public final class SephiriaClient implements ClientModInitializer {
 				ModMenus.SLATE_FUSION, com.sephiria.client.slate.SlateFusionScreen::new);
 		MenuScreens.<SephiriaTraderMenu, com.sephiria.client.trader.TraderScreen>register(ModMenus.TRADER,
 				com.sephiria.client.trader.TraderScreen::new);
-		MenuScreens.<RootRetreatMenu, SephiriaMenuScreen<RootRetreatMenu>>register(ModMenus.ROOT_RETREAT,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						RootRetreatMenu.IMAGE_WIDTH, 220, false));
-		MenuScreens.<WishPoolMenu, SephiriaMenuScreen<WishPoolMenu>>register(ModMenus.WISH_POOL,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						WishPoolMenu.IMAGE_WIDTH, WishPoolMenu.IMAGE_HEIGHT, false));
+		MenuScreens.<RootRetreatMenu, com.sephiria.client.difficulty.RootRetreatScreen>register(
+				ModMenus.ROOT_RETREAT, com.sephiria.client.difficulty.RootRetreatScreen::new);
+		MenuScreens.<WishPoolMenu, com.sephiria.client.wishpool.WishPoolScreen>register(
+				ModMenus.WISH_POOL, com.sephiria.client.wishpool.WishPoolScreen::new);
 		MenuScreens.<com.sephiria.beacon.SephiriaBeaconMenu, com.sephiria.client.beacon.SephiriaBeaconScreen>register(
 				ModMenus.SEPHIRIA_BEACON, com.sephiria.client.beacon.SephiriaBeaconScreen::new);
 
@@ -80,6 +90,10 @@ public final class SephiriaClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.SEPHIRIA_TRADER_LLAMA,
 				context -> new LlamaRenderer(context, ModelLayers.TRADER_LLAMA));
 
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentSyncPayload.TYPE,
+				(payload, context) -> ClientTalents.accept(payload));
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.ArtifactSkillsPayload.TYPE,
+				(payload, context) -> ClientSkills.accept(payload));
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.HudSyncPayload.TYPE,
 				(payload, context) -> HudClientData.accept(payload));
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.StatsSyncPayload.TYPE,
