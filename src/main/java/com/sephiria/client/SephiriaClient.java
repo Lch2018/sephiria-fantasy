@@ -58,6 +58,9 @@ public final class SephiriaClient implements ClientModInitializer {
 	private static final KeyMapping TALENT_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.talent", InputConstants.Type.KEYSYM, InputConstants.KEY_T, CATEGORY));
 
+	private static final KeyMapping HUD_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+			"key.sephiria_fantasy.hud", InputConstants.Type.KEYSYM, InputConstants.KEY_H, CATEGORY));
+
 	private static final KeyMapping SKILL_PAGE_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.skill_page", InputConstants.Type.KEYSYM, InputConstants.KEY_L, CATEGORY));
 
@@ -76,6 +79,7 @@ public final class SephiriaClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		com.sephiria.client.particle.SephiriaParticles.register();
+		com.sephiria.client.hud.HudConfig.load();
 
 		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.BackpackScreen>register(
 				ModMenus.ARTIFACT_BACKPACK, com.sephiria.client.backpack.BackpackScreen::new);
@@ -153,6 +157,10 @@ public final class SephiriaClient implements ClientModInitializer {
 
 			while (STATS_KEY.consumeClick()) {
 				client.setScreen(new com.sephiria.client.gui.StatsScreen());
+			}
+
+			while (HUD_KEY.consumeClick()) {
+				client.setScreen(new com.sephiria.client.hud.HudSettingsScreen());
 			}
 
 			while (TALENT_KEY.consumeClick()) {

@@ -22,13 +22,17 @@ public final class SephiriaHud implements HudRenderCallback {
 	public void onHudRender(GuiGraphics graphics, float tickDelta) {
 		Minecraft client = Minecraft.getInstance();
 
-		if (client.player == null || client.options.hideGui) {
+		if (client.player == null || client.options.hideGui || !HudConfig.visible()) {
 			return;
 		}
+
+		graphics.pose().pushPose();
+		graphics.pose().scale(HudConfig.scale(), HudConfig.scale(), 1.0F);
 
 		int y = graphics.guiHeight() - 64;
 		drawRow(graphics, HudClientData.skills(), MARGIN, y);
 		drawRow(graphics, HudClientData.artifacts(), MARGIN, y - STEP - ROW_GAP);
+		graphics.pose().popPose();
 	}
 
 	private void drawRow(GuiGraphics graphics, List<HudSyncPayload.Entry> entries, int x, int y) {

@@ -162,6 +162,8 @@
     "screen.sephiria_fantasy.damage_display.on":  "开",
     "screen.sephiria_fantasy.damage_display.off":  "关",
     "screen.sephiria_fantasy.hud":  "HUD 布局设置",
+    "screen.sephiria_fantasy.hud.visible":  "HUD 显示：%s",
+    "screen.sephiria_fantasy.hud.scale":  "HUD 缩放：%s",
     "screen.sephiria_fantasy.hud.weapon":  "武器 UI",
     "screen.sephiria_fantasy.hud.dash":  "冲刺 UI",
     "screen.sephiria_fantasy.hud.mp":  "MP 条",
