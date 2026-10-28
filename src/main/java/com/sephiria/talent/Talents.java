@@ -3,12 +3,10 @@ package com.sephiria.talent;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
-import com.sephiria.network.TalentSyncPayload;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.tag.convention.v2.ConventionalEntityTypeTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -424,11 +422,7 @@ public final class Talents {
 
 	/** 把天赋点与「能否修改」推给客户端（进服、每次变更与打开界面时各一次）。 */
 	public static void sync(ServerPlayer player) {
-		ServerPlayNetworking.send(player, new TalentSyncPayload(earned(player),
-				points(player, Talent.RAGE), points(player, Talent.SWIFT),
-				points(player, Talent.WILL), points(player, Talent.QUICK_WIT),
-				points(player, Talent.SURVIVAL), points(player, Talent.PATIENCE),
-				points(player, Talent.WISDOM), nearSpawn(player)));
+
 	}
 
 	// ------------------------------------------------------------------

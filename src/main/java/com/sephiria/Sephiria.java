@@ -8,28 +8,6 @@ import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.backpack.ArtifactBackpackMenu;
 import com.sephiria.backpack.BackpackGridMenu;
 import com.sephiria.backpack.EnchantMenu;
-import com.sephiria.network.DashPayload;
-import com.sephiria.network.CloudSyncPayload;
-import com.sephiria.network.DebuffSyncPayload;
-import com.sephiria.network.FuseSlatesPayload;
-import com.sephiria.network.InvulnerablePayload;
-import com.sephiria.network.OpenBackpackPayload;
-import com.sephiria.network.OpenShopPayload;
-import com.sephiria.network.OpenSlateFusionPayload;
-import com.sephiria.network.RotateFusionSlatePayload;
-import com.sephiria.network.RotateSlatePayload;
-import com.sephiria.network.ScrollBackpackPayload;
-import com.sephiria.network.UpgradeArtifactPayload;
-import com.sephiria.network.RefreshShopPayload;
-import com.sephiria.network.ReloadPayload;
-import com.sephiria.network.SellItemPayload;
-import com.sephiria.network.ShieldSweepPayload;
-import com.sephiria.network.SkillSyncPayload;
-import com.sephiria.network.StatsSyncPayload;
-import com.sephiria.network.SunSwordSyncPayload;
-import com.sephiria.network.TalentClickPayload;
-import com.sephiria.network.TalentSyncPayload;
-import com.sephiria.network.TalentSyncRequestPayload;
 import com.sephiria.potion.PotionTimers;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.debuff.Debuffs;
@@ -44,14 +22,7 @@ import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.artifact.skill.ArtifactSkills;
 import com.sephiria.artifact.skill.EncouragementBannerSkill;
 import com.sephiria.artifact.skill.SkillSlots;
-import com.sephiria.network.ArtifactSkillsPayload;
-import com.sephiria.network.AssignArtifactSkillPayload;
-import com.sephiria.network.CastArtifactSkillPayload;
 import com.sephiria.difficulty.RootRetreatMenu;
-import com.sephiria.network.RootRetreatClickPayload;
-import com.sephiria.network.WishPoolClickPayload;
-import com.sephiria.network.WishPoolResultPayload;
-import com.sephiria.network.OpenArtifactSkillsPayload;
 import com.sephiria.registry.ModCreativeTabs;
 import com.sephiria.registry.ModParticleTypes;
 import com.sephiria.registry.ModSounds;
@@ -84,9 +55,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -191,280 +160,98 @@ public class Sephiria implements ModInitializer {
 		// 特别神器「书」：书上附了火焰附加时，神器 / 连击的伤害点燃目标（抢夺在掉落结算那一侧接入）
 		com.sephiria.artifact.BookItem.register();
 
-		PayloadTypeRegistry.playC2S().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(com.sephiria.network.FrostQiPayload.TYPE,
-				com.sephiria.network.FrostQiPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(ShieldSweepPayload.TYPE, ShieldSweepPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(OpenShopPayload.TYPE, OpenShopPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(SellItemPayload.TYPE, SellItemPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(RefreshShopPayload.TYPE, RefreshShopPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(RotateSlatePayload.TYPE, RotateSlatePayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(OpenSlateFusionPayload.TYPE,
-				OpenSlateFusionPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(FuseSlatesPayload.TYPE, FuseSlatesPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(RotateFusionSlatePayload.TYPE,
-				RotateFusionSlatePayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(ScrollBackpackPayload.TYPE, ScrollBackpackPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(OpenArtifactSkillsPayload.TYPE, OpenArtifactSkillsPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(CastArtifactSkillPayload.TYPE, CastArtifactSkillPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(AssignArtifactSkillPayload.TYPE, AssignArtifactSkillPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(ArtifactSkillsPayload.TYPE, ArtifactSkillsPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(com.sephiria.network.HudSyncPayload.TYPE,
-				com.sephiria.network.HudSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(RootRetreatClickPayload.TYPE, RootRetreatClickPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(WishPoolClickPayload.TYPE, WishPoolClickPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(WishPoolResultPayload.TYPE, WishPoolResultPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(CloudSyncPayload.TYPE, CloudSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(DebuffSyncPayload.TYPE, DebuffSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(SunSwordSyncPayload.TYPE, SunSwordSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(com.sephiria.network.FrostSyncPayload.TYPE,
-				com.sephiria.network.FrostSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(TalentClickPayload.TYPE, TalentClickPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(TalentSyncRequestPayload.TYPE,
-				TalentSyncRequestPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playS2C().register(TalentSyncPayload.TYPE, TalentSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(com.sephiria.network.SlateImprintPayload.TYPE,
-				com.sephiria.network.SlateImprintPayload.STREAM_CODEC);
-		PayloadTypeRegistry.playC2S().register(com.sephiria.network.ChestRerollPayload.TYPE,
-				com.sephiria.network.ChestRerollPayload.STREAM_CODEC);
 
-		ServerPlayNetworking.registerGlobalReceiver(DashPayload.TYPE,
-				(payload, context) -> DashSkill.perform(context.player()));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		// 左键挥击（打中或挥空都算）：驱邪剑鞘充能满了就在这里放剑气
-		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.FrostQiPayload.TYPE,
-				(payload, context) -> com.sephiria.frost.FrostArmament.onSwing(context.player()));
-		ServerPlayNetworking.registerGlobalReceiver(ReloadPayload.TYPE,
-				(payload, context) -> SephiriaCrossbowItem.tryReload(context.player()));
-		ServerPlayNetworking.registerGlobalReceiver(ShieldSweepPayload.TYPE,
-				(payload, context) -> SephiriaShieldItem.tryDefendSweep(context.player()));
+
+
+
 		// 赛菲莉娅背包是容器菜单，必须由服务端打开（客户端只负责画那个标签页按钮）
-		ServerPlayNetworking.registerGlobalReceiver(OpenBackpackPayload.TYPE,
-				(payload, context) -> context.player().openMenu(ArtifactBackpackMenu.provider(context.player())));
+
 		// 背包页与附魔页都能按 R 旋转石板：只带菜单格子编号。服务端先确认开着的是带
 		// 背包格区的菜单、这一格真是背包格区（附魔页里背包格区前面还有神器槽/币槽），
 		// 别的菜单或玩家背包区里的格子不认
-		ServerPlayNetworking.registerGlobalReceiver(RotateSlatePayload.TYPE, (payload, context) -> {
-			AbstractContainerMenu menu = context.player().containerMenu;
 
-			if (!(menu instanceof BackpackGridMenu grid)
-					|| payload.slot() < 0 || payload.slot() >= menu.slots.size()) {
-				return;
-			}
-
-			Slot slot = menu.getSlot(payload.slot());
-
-			if (grid.isBackpackSlot(slot) && slot.getItem().getItem() instanceof SlateItem) {
-				SlateItem.rotate(slot.getItem());
-				// 朝向变了：让背包重算格子等级（缓存里存着上次的结果），并把新组件同步给客户端
-				slot.setChanged();
-				menu.broadcastChanges();
-			}
-		});
 		// 背包页与附魔页的滚轮翻页：窗口偏移在服务端，翻完由菜单整批重推这一屏（只带方向，
 		// 滚到第几行由服务端按背包真实行数裁）
-		ServerPlayNetworking.registerGlobalReceiver(ScrollBackpackPayload.TYPE, (payload, context) -> {
-			if (context.player().containerMenu instanceof BackpackGridMenu grid) {
-				grid.scrollBackpack(payload.delta());
-			}
-		});
+
 		// 商人界面左下角的「石板合成」：只有正开着商人界面时才认，防止别处凭空打开
 		// 商人界面左下角的「石板合成」：只有正开着商人界面、且这个玩家还没在**这只商人**身上用过时才认
-		ServerPlayNetworking.registerGlobalReceiver(OpenSlateFusionPayload.TYPE, (payload, context) -> {
-			if (context.player().containerMenu instanceof SephiriaTraderMenu menu && menu.canOpenFusion()) {
-				SlateFusionMenu.open(context.player(), menu.trader());
-			}
-		});
+
 		// 合成界面里的「合成」与「按 R 旋转输入石板」：都只认当前开着的合成菜单，
 		// 物品内容由服务端自己看格子，客户端发来的数据只是动作意图
-		ServerPlayNetworking.registerGlobalReceiver(FuseSlatesPayload.TYPE, (payload, context) -> {
-			if (context.player().containerMenu instanceof SlateFusionMenu menu) {
-				menu.fuse(context.player());
-			}
-		});
-		ServerPlayNetworking.registerGlobalReceiver(RotateFusionSlatePayload.TYPE, (payload, context) -> {
-			if (context.player().containerMenu instanceof SlateFusionMenu menu) {
-				menu.rotateInput(payload.input());
-			}
-		});
+
+
 		// 商店也是容器菜单（货架在服务端），同样只能由服务端打开
-		ServerPlayNetworking.registerGlobalReceiver(OpenShopPayload.TYPE,
-				(payload, context) -> context.player().openMenu(ShopMenu.provider(context.player())));
+
 		// 神器技能页：打开时把可用技能与 6 个栏位推过去；放入 / 清空后重推一次
-		ServerPlayNetworking.registerGlobalReceiver(OpenArtifactSkillsPayload.TYPE,
-				(payload, context) -> syncArtifactSkills(context.player()));
-		ServerPlayNetworking.registerGlobalReceiver(CastArtifactSkillPayload.TYPE,
-				(payload, context) -> ArtifactSkills.cast(context.player(), payload.slot()));
-		ServerPlayNetworking.registerGlobalReceiver(AssignArtifactSkillPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
-			String entry = payload.entry();
 
-			// 只接受「背包里确实有、且生效」的神器：客户端塞别的过来一律当清空处理
-			if (!entry.isEmpty() && ArtifactSkills.resolve(player, entry) == null) {
-				return;
-			}
 
-			SkillSlots.set(player, payload.slot(), entry);
-			syncArtifactSkills(player);
-			com.sephiria.artifact.ArtifactHud.send(player);
-		});
+
 
 		// 商店页面点「刷新」：吃掉骰子栏里的一颗骰子，重刷一批货
-		ServerPlayNetworking.registerGlobalReceiver(RefreshShopPayload.TYPE, (payload, context) -> {
-			if (context.player().containerMenu instanceof ShopMenu menu) {
-				menu.refresh(context.player());
-			}
-		});
+
 
 		// 商店页面点「出售」：卖出售栏里的东西，按原价 3 折换叶子
-		ServerPlayNetworking.registerGlobalReceiver(SellItemPayload.TYPE, (payload, context) -> {
-			if (context.player().containerMenu instanceof ShopMenu menu) {
-				menu.sell(context.player());
-			}
-		});
+
 
 		// 附魔面板：点「升级 N 级」——从附魔币栏扣币，把神器升上去（不会溢出）
-		ServerPlayNetworking.registerGlobalReceiver(UpgradeArtifactPayload.TYPE,
-				(payload, context) -> {
-					if (context.player().containerMenu instanceof EnchantMenu menu) {
-						menu.upgrade(payload.levels());
-					}
-				});
+
 		// 许愿池界面里的按钮：抽卡 / 锚定 / 神铸 / 溢出转化开关——够不够四叶草与能量、
 		// 能不能换、开关翻到哪一边都由菜单那边判
-		ServerPlayNetworking.registerGlobalReceiver(WishPoolClickPayload.TYPE,
-				(payload, context) -> {
-					if (!(context.player().containerMenu instanceof com.sephiria.wishpool.WishPoolMenu menu)) {
-						return;
-					}
 
-					net.minecraft.world.item.Item item = payload.itemId() <= 0 ? null
-							: net.minecraft.core.registries.BuiltInRegistries.ITEM.byId(payload.itemId());
-
-					switch (payload.action()) {
-						case WishPoolClickPayload.ACTION_DRAW_SINGLE -> menu.draw(payload.slatePool(), 1);
-						case WishPoolClickPayload.ACTION_DRAW_TEN ->
-								menu.draw(payload.slatePool(), com.sephiria.wishpool.WishPool.TEN_DRAW);
-						case WishPoolClickPayload.ACTION_ANCHOR -> {
-							// itemId = 0 是「清空这个池子的全部锚定」（选择页的取消按钮）
-							if (item == null) {
-								menu.clearAnchors(payload.slatePool());
-							} else {
-								menu.addAnchor(payload.slatePool(), item);
-							}
-						}
-						case WishPoolClickPayload.ACTION_CLEAR_ANCHOR_SLOT ->
-								menu.clearAnchor(payload.slatePool(), payload.itemId());
-						case WishPoolClickPayload.ACTION_FORGE -> menu.forge(item);
-						case WishPoolClickPayload.ACTION_TOGGLE_OVERFLOW -> menu.toggleOverflowToClover();
-						default -> {
-						}
-					}
-				});
 
 		// 石板刻印：客户端长按进度满后发过来。只带菜单格子编号，其余全部服务端再判一次
-		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.SlateImprintPayload.TYPE,
-				(payload, context) -> {
-					ServerPlayer player = context.player();
 
-					if (!(player.containerMenu instanceof com.sephiria.backpack.BackpackGridMenu grid)
-							|| com.sephiria.talent.Talents.stage(player,
-									com.sephiria.talent.Talent.SURVIVAL) < 3) {
-						return;
-					}
-
-					AbstractContainerMenu menu = player.containerMenu;
-
-					if (payload.slot() < 0 || payload.slot() >= menu.slots.size()) {
-						return;
-					}
-
-					Slot slot = menu.getSlot(payload.slot());
-					int real = grid.backpackIndex(slot);
-
-					if (real < 0) {
-						return;
-					}
-
-					ItemStack stack = slot.getItem();
-
-					if (!(stack.getItem() instanceof com.sephiria.slate.SlateItem)) {
-						return;
-					}
-
-					ItemStack imprinted = stack.copy();
-					com.sephiria.backpack.ArtifactBackpack backpack =
-							com.sephiria.backpack.ArtifactBackpack.of(player);
-					// 先清格子再写刻印：不然算格子等级时「背包里这块 + 存档里那块」会短暂叠两次
-					backpack.setItem(real, ItemStack.EMPTY);
-					com.sephiria.talent.SlateImprint.imprint(player, real, imprinted);
-					backpack.setChanged();
-					player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-							SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.8F, 1.4F);
-					player.sendSystemMessage(Component.translatable(
-							"message.sephiria_fantasy.slate_imprinted", imprinted.getHoverName()), true);
-				});
 
 		// 宝箱刷新：免费次数优先，没有就吃骰子格里的骰子
-		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.ChestRerollPayload.TYPE,
-				(payload, context) -> {
-					if (context.player().containerMenu instanceof com.sephiria.backpack.ChestMenu menu) {
-						menu.reroll(context.player());
-					}
-				});
+
 
 		// 打开天赋界面时客户端要一次最新状态：个人出生点（床 / 重生锚 / 指令）只有服务端知道，
 		// nearSpawn 必须由服务端算好，不能只靠进服时那一次同步（玩家会走动）
-		ServerPlayNetworking.registerGlobalReceiver(TalentSyncRequestPayload.TYPE,
-				(payload, context) -> com.sephiria.talent.Talents.sync(context.player()));
+
 
 		// 天赋界面的按钮：哪一页、加减多少、是不是重置。范围与剩余点数全部由 Talents 判，
 		// 客户端发 -5 但这一页只有 3 点时就只退 3 点（不会出现负加点）
-		ServerPlayNetworking.registerGlobalReceiver(TalentClickPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
 
-			if (payload.reset()) {
-				com.sephiria.talent.Talents.reset(player);
-				return;
-			}
-
-			com.sephiria.talent.Talent[] talents = com.sephiria.talent.Talent.values();
-
-			if (payload.page() < 0 || payload.page() >= talents.length) {
-				return;
-			}
-
-			com.sephiria.talent.Talents.adjust(player, talents[payload.page()], payload.delta());
-		});
 
 		// 根之退界面里的三个动作：加减号 / 清空 / 应用——只认「第几项 + 方向」这种最小信息，
 		// 等级范围与「方块还在不在」都由菜单那边判
-		ServerPlayNetworking.registerGlobalReceiver(RootRetreatClickPayload.TYPE,
-				(payload, context) -> {
-					if (!(context.player().containerMenu instanceof RootRetreatMenu menu)) {
-						return;
-					}
 
-					com.sephiria.difficulty.DifficultyOption[] options =
-							com.sephiria.difficulty.DifficultyOption.values();
-
-					switch (payload.action()) {
-						case RootRetreatClickPayload.ACTION_ADJUST -> {
-							if (payload.option() >= 0 && payload.option() < options.length) {
-								menu.adjust(options[payload.option()], payload.delta() < 0 ? -1 : 1);
-							}
-						}
-						case RootRetreatClickPayload.ACTION_CLEAR -> menu.clear();
-						case RootRetreatClickPayload.ACTION_APPLY -> menu.apply();
-						default -> {
-						}
-					}
-				});
 
 		// 赛菲莉娅货币进自然生成的箱子（骰子 + 神器附魔币）：所有 minecraft:chests/* 的表
 		// 各加一个 10% 概率的池子
@@ -518,7 +305,7 @@ public class Sephiria implements ModInitializer {
 					net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(available.item()), available.level()));
 		}
 
-		ServerPlayNetworking.send(player, new ArtifactSkillsPayload(skills, java.util.List.copyOf(SkillSlots.of(player))));
+
 	}
 
 }

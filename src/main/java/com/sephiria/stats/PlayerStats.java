@@ -5,12 +5,10 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
-import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.util.PlayerItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -966,19 +964,7 @@ public final class PlayerStats {
 
 		// 所有改动都会走到这里，所以存档只在这一个地方写——属性存在附件里，重登/重启都不丢
 		player.setAttached(SAVED, Saved.of(values));
-		ServerPlayNetworking.send(player, StatsSyncPayload.of(values, mpRegenTotal(player), physicalTotal(player),
-				elementTotal(player, Element.FIRE), elementTotal(player, Element.ICE),
-				elementTotal(player, Element.LIGHTNING),
-				// 面板要显示当前实际值：把限时加成（急速/旗帜）加回去；机械结算那边不加，免得重复
-				attackSpeedTotal(player) + TimedAttributes.attackSpeedPercent(player), physicalAmpPercent(player),
-				physicalBreakdown(player), attackSpeedBreakdown(player), weaponDamageTotal(player),
-				specialAttackTotal(player), normalAttackDamageTotal(player), critChanceTotal(player),
-				critDamageTotal(player), ignoreDefenseTotal(player),
-				moveSpeedPercentTotal(player) + TimedAttributes.moveSpeedPercent(player),
-				dodgeTotal(player), dodgeRatePercent(player), meleeRangeTotal(player),
-				negotiationTotal(player), shopDiscountPercent(player),
-				leafGainPercentTotal(player), xpDropPercentTotal(player), maxMp, luckTotal(player),
-				defenseTotal(player), mpAbsorbTotal(player)));
+
 	}
 
 	/** 进服时推一次，面板才有初始值（顺带把读出来的那份写回附件）。 */

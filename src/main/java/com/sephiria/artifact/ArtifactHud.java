@@ -2,10 +2,8 @@ package com.sephiria.artifact;
 
 import com.sephiria.artifact.skill.ArtifactSkills;
 import com.sephiria.artifact.skill.SkillSlots;
-import com.sephiria.network.HudSyncPayload;
 import com.sephiria.registry.ModItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -49,7 +47,7 @@ public final class ArtifactHud {
 
 	/** 立刻给一个玩家推一份（施放技能 / 改技能栏 / 进服时用）。 */
 	public static void send(ServerPlayer player) {
-		ServerPlayNetworking.send(player, new HudSyncPayload(skills(player), artifacts(player)));
+
 	}
 
 	private static List<HudSyncPayload.Entry> skills(ServerPlayer player) {

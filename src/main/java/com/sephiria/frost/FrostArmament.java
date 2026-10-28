@@ -10,14 +10,12 @@ import com.sephiria.artifact.ExorcismScabbardItem;
 import com.sephiria.artifact.IceBowItem;
 import com.sephiria.artifact.VolspaItem;
 import com.sephiria.damage.SephiriaDamage;
-import com.sephiria.network.FrostSyncPayload;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModParticleTypes;
 import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.sun.SunSword;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.particles.ColorParticleOption;
@@ -483,7 +481,7 @@ public final class FrostArmament {
 				State gone = STATES.remove(player.getUUID());
 
 				if (gone != null && gone.synced != null) {
-					ServerPlayNetworking.send(player, FrostSyncPayload.none());
+
 				}
 
 				continue;
@@ -546,7 +544,7 @@ public final class FrostArmament {
 		}
 
 		state.synced = payload;
-		ServerPlayNetworking.send(player, payload);
+
 	}
 
 	/** 剑鞘：6 秒的表一直走（2026-10-13 用户口径：充能不受战斗 / 脱战状态影响）。 */

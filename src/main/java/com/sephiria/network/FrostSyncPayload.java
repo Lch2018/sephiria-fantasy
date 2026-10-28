@@ -1,53 +1,12 @@
 package com.sephiria.network;
 
-import com.sephiria.Sephiria;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
-
-/**
- * 服务端 → 客户端：冰霜武具四件 + 「斩」的状态（HUD 那一行「冰霜武具：剑 锤 矛 弓x/7 斩」读它）。
- *
- * <p>充能 / 弹药 / 斩的冷却只存在服务端（{@code frost.FrostArmament} 与 {@code CryoGuillotineItem}），
- * 而 HUD 要显示「哪件带着、哪件可用了、弓还剩几发」，所以状态一变就推一份给拥有者
- * （与乌云 / 太阳剑的「变化才推」同一套）。每种「字」各两个字段：
- * <b>有没有带</b>与<b>是不是可用了</b>。弓另外带上「剩几发 / 上限」，HUD 显示成 {@code 弓3/7}；
- * 斩只看冷却是不是已经转好。
- */
+/** 占位：1.20.1 核心版暂不向客户端同步冰霜武具 HUD。 */
 public record FrostSyncPayload(boolean hasScabbard, boolean scabbardReady,
 		boolean hasHammer, boolean hammerReady,
 		boolean hasSpear, boolean spearReady,
 		boolean hasBow, int bowAmmo, int bowMax,
-		boolean hasGuillotine, boolean guillotineReady) implements CustomPacketPayload {
-	public static final CustomPacketPayload.Type<FrostSyncPayload> TYPE =
-			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frost_sync"));
-
-	public static final StreamCodec<RegistryFriendlyByteBuf, FrostSyncPayload> STREAM_CODEC =
-			StreamCodec.of((buf, payload) -> {
-				buf.writeBoolean(payload.hasScabbard());
-				buf.writeBoolean(payload.scabbardReady());
-				buf.writeBoolean(payload.hasHammer());
-				buf.writeBoolean(payload.hammerReady());
-				buf.writeBoolean(payload.hasSpear());
-				buf.writeBoolean(payload.spearReady());
-				buf.writeBoolean(payload.hasBow());
-				buf.writeVarInt(payload.bowAmmo());
-				buf.writeVarInt(payload.bowMax());
-				buf.writeBoolean(payload.hasGuillotine());
-				buf.writeBoolean(payload.guillotineReady());
-			}, buf -> new FrostSyncPayload(buf.readBoolean(), buf.readBoolean(), buf.readBoolean(),
-					buf.readBoolean(), buf.readBoolean(), buf.readBoolean(), buf.readBoolean(),
-					buf.readVarInt(), buf.readVarInt(), buf.readBoolean(), buf.readBoolean()));
-
-	/** 一件都没带（收 UI）。 */
+		boolean hasGuillotine, boolean guillotineReady) {
 	public static FrostSyncPayload none() {
 		return new FrostSyncPayload(false, false, false, false, false, false, false, 0, 0, false, false);
-	}
-
-	@Override
-	public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
-		return TYPE;
 	}
 }

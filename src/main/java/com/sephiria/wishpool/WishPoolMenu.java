@@ -1,9 +1,7 @@
 package com.sephiria.wishpool;
 
 import com.sephiria.registry.ModMenus;
-import com.sephiria.network.WishPoolResultPayload;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -255,7 +253,7 @@ public class WishPoolMenu extends AbstractContainerMenu {
 		scatter(drawn);
 
 		if (!drawn.isEmpty()) {
-			ServerPlayNetworking.send(this.owner, new WishPoolResultPayload(drawn));
+
 		}
 
 		this.broadcastChanges();
@@ -348,7 +346,7 @@ public class WishPoolMenu extends AbstractContainerMenu {
 		WishPool.addEnergy(this.owner, -cost);
 		List<ItemStack> forged = List.of(new ItemStack(item));
 		scatter(forged);
-		ServerPlayNetworking.send(this.owner, new WishPoolResultPayload(forged));
+
 		this.broadcastChanges();
 	}
 

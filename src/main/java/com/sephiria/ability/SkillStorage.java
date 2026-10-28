@@ -1,8 +1,6 @@
 package com.sephiria.ability;
 
-import com.sephiria.network.SkillSyncPayload;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -161,8 +159,7 @@ public final class SkillStorage {
 	}
 
 	private static void sync(ServerPlayer player, ResourceLocation skill, Pool pool) {
-		ServerPlayNetworking.send(player,
-				new SkillSyncPayload(skill, pool.current, max(player, skill)));
+
 	}
 
 	private static Pool pool(ServerPlayer player, ResourceLocation skill) {

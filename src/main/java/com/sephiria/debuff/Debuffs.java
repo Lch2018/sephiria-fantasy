@@ -4,14 +4,12 @@ import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.damage.SephiriaDamage;
-import com.sephiria.network.DebuffSyncPayload;
 import com.sephiria.registry.ModParticleTypes;
 import com.sephiria.registry.ModSounds;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -375,7 +373,7 @@ public final class Debuffs {
 
 		for (ServerPlayer player : level.players()) {
 			if (player.distanceToSqr(entity) <= LABEL_RANGE * LABEL_RANGE) {
-				ServerPlayNetworking.send(player, new DebuffSyncPayload(debuff, entity.getId(), stacks));
+
 			}
 		}
 	}
