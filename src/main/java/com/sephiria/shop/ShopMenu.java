@@ -1,14 +1,14 @@
 package com.sephiria.shop;
 
+import com.sephiria.util.MenuLayout;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.stats.PlayerStats;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
 import net.minecraft.util.Unit;
 import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
@@ -17,7 +17,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -113,7 +113,7 @@ public class ShopMenu extends AbstractContainerMenu {
 			}
 		});
 
-		addStandardInventorySlots(playerInventory, 8, playerRowsY());
+		MenuLayout.addPlayerInventory(this::addSlot, playerInventory, 8, playerRowsY());
 		addDataSlots(bought);
 	}
 
@@ -142,7 +142,7 @@ public class ShopMenu extends AbstractContainerMenu {
 	}
 
 	public static MenuProvider provider(ServerPlayer player) {
-		return new ExtendedMenuProvider<Unit>() {
+		return new ExtendedScreenHandlerFactory<Unit>() {
 			@Override
 			public Unit getScreenOpeningData(ServerPlayer ignored) {
 				return Unit.INSTANCE;
@@ -185,7 +185,7 @@ public class ShopMenu extends AbstractContainerMenu {
 
 	/** 点货架格 = 买它；其余格子走原版逻辑（顺带处理骰子刷新）。 */
 	@Override
-	public void clicked(int slotId, int button, ContainerInput input, Player player) {
+	public void clicked(int slotId, int button, ClickType input, Player player) {
 		if (slotId >= 0 && slotId < ShopStock.SLOT_COUNT) {
 			// 客户端也会走到这里（原版两边都会调 clicked），所以结算与音效都只在服务端做
 			if (player instanceof ServerPlayer serverPlayer && this.stock instanceof ShopStock shopStock) {
@@ -333,7 +333,7 @@ public class ShopMenu extends AbstractContainerMenu {
 			ItemStack left = container.removeItemNoUpdate(0);
 
 			if (!left.isEmpty() && player instanceof ServerPlayer) {
-				player.getInventory().placeItemBackInInventory(left, Prediction.SERVER_ONLY);
+				player.getInventory().placeItemBackInInventory(left );
 			}
 		}
 	}

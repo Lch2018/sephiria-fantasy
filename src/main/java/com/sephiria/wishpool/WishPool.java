@@ -13,7 +13,7 @@ import com.sephiria.talent.Talents;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.Item;
@@ -118,7 +118,7 @@ public final class WishPool {
 			.persistent(Saved.CODEC)
 			// 抽卡攒的能量与锚定是玩家自己的东西，死了不该清零
 			.copyOnDeath()
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool"));
+			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool"));
 
 	private WishPool() {
 	}
@@ -328,7 +328,7 @@ public final class WishPool {
 	}
 
 	private static Item byId(String id) {
-		Identifier key = Identifier.tryParse(id);
+		ResourceLocation key = ResourceLocation.tryParse(id);
 		return key == null ? null : BuiltInRegistries.ITEM.getOptional(key).orElse(null);
 	}
 

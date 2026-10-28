@@ -1,11 +1,12 @@
 package com.sephiria.backpack;
 
+import com.sephiria.util.MenuLayout;
 import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.artifact.ChestItem;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.util.PlayerItems;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -19,7 +20,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -108,7 +109,7 @@ public class ChestMenu extends AbstractContainerMenu {
 			}
 		});
 
-		addStandardInventorySlots(playerInventory, 8, playerRowsY());
+		MenuLayout.addPlayerInventory(this::addSlot, playerInventory, 8, playerRowsY());
 	}
 
 	/** 这一箱的免费刷新次数：智慧三阶段且这件宝箱还没用过免费刷新时 1 次。 */
@@ -171,7 +172,7 @@ public class ChestMenu extends AbstractContainerMenu {
 		// 已经抽过的箱子沿用存着的那一批（长度可能是 5 或 6），界面按它的实际格数显示
 		int rewardCount = Math.max(1, Math.min(ChestItem.MAX_REWARDS, rolled.size()));
 
-		return new ExtendedMenuProvider<Unit>() {
+		return new ExtendedScreenHandlerFactory<Unit>() {
 			@Override
 			public Unit getScreenOpeningData(ServerPlayer ignored) {
 				return Unit.INSTANCE;
@@ -191,7 +192,7 @@ public class ChestMenu extends AbstractContainerMenu {
 
 	/** 点奖励格 = 选它。 */
 	@Override
-	public void clicked(int slotId, int button, ContainerInput input, Player player) {
+	public void clicked(int slotId, int button, ClickType input, Player player) {
 		if (slotId >= 0 && slotId < rewardCount() && !this.claimed) {
 			claim(player, slotId);
 			return;
@@ -302,8 +303,7 @@ public class ChestMenu extends AbstractContainerMenu {
 		ItemStack left = this.dice.removeItemNoUpdate(0);
 
 		if (!left.isEmpty() && player instanceof ServerPlayer serverPlayer) {
-			serverPlayer.getInventory().placeItemBackInInventory(left,
-					net.minecraft.util.Prediction.SERVER_ONLY);
+			serverPlayer.getInventory().placeItemBackInInventory(left);
 		}
 	}
 }

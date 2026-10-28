@@ -2,7 +2,7 @@ package com.sephiria.wishpool;
 
 import com.sephiria.registry.ModMenus;
 import com.sephiria.network.WishPoolResultPayload;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -118,7 +118,7 @@ public class WishPoolMenu extends AbstractContainerMenu {
 
 	/** 把菜单打开给玩家（26.3 的菜单必须走 screenOpeningData 这条路，数据用 Unit 占位）。 */
 	public static MenuProvider provider(ServerPlayer player, BlockPos pos) {
-		return new ExtendedMenuProvider<Unit>() {
+		return new ExtendedScreenHandlerFactory<Unit>() {
 			@Override
 			public Unit getScreenOpeningData(ServerPlayer ignored) {
 				return Unit.INSTANCE;

@@ -1,5 +1,6 @@
 package com.sephiria.weapon;
 
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -7,7 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 
 /**
@@ -53,13 +54,13 @@ public class SephiriaWeaponItem extends Item implements SephiriaWeapon {
 
 
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		if (!this.blocks && !this.drawAnimation) {
 			return super.use(level, player, hand);
 		}
 
 		player.startUsingItem(hand);
-		return InteractionResult.CONSUME;
+		return InteractionResultHolder.consume(player.getItemInHand(hand));
 	}
 
 	@Override
@@ -71,10 +72,10 @@ public class SephiriaWeaponItem extends Item implements SephiriaWeapon {
 	}
 
 	@Override
-	public ItemUseAnimation getUseAnimation(ItemStack stack) {
+	public UseAnim getUseAnimation(ItemStack stack) {
 		if (this.blocks) {
-			return ItemUseAnimation.BLOCK;
+			return UseAnim.BLOCK;
 		}
-		return this.drawAnimation ? ItemUseAnimation.SPEAR : ItemUseAnimation.NONE;
+		return this.drawAnimation ? UseAnim.SPEAR : UseAnim.NONE;
 	}
 }

@@ -9,7 +9,7 @@ import com.sephiria.artifact.EternalEclipseItem;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
@@ -81,7 +81,7 @@ public final class ArtifactBackpack extends SimpleContainer {
 			.persistent(Saved.CODEC)
 			// 神器是收集品：死亡不掉落，背包跟着玩家走。要改成掉落去掉这一行即可。
 			.copyOnDeath()
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_backpack"));
+			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_backpack"));
 
 	/** 每个玩家一份：菜单与效果统计必须看到同一个对象，所以缓存起来。 */
 	private static final Map<UUID, ArtifactBackpack> CACHE = new HashMap<>();

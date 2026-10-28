@@ -1,5 +1,6 @@
 package com.sephiria.weapon;
 
+import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.Dash;
 import com.sephiria.damage.SephiriaDamage;
@@ -21,7 +22,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -147,9 +148,8 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 				continue;
 			}
 
-			if (victim.hurtServer(level, level.damageSources().playerAttack(player), sweepDamage)) {
-				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ(),
-						level.damageSources().playerAttack(player), sweepDamage);
+			if (victim.hurt(level.damageSources().playerAttack(player), sweepDamage)) {
+				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ());
 			}
 		}
 
@@ -165,9 +165,9 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	// ------------------------------------------------------------------ 右键：旋风
 
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		player.startUsingItem(hand);
-		return InteractionResult.CONSUME;
+		return InteractionResultHolder.consume(player.getItemInHand(hand));
 	}
 
 	@Override
@@ -176,8 +176,8 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	}
 
 	@Override
-	public ItemUseAnimation getUseAnimation(ItemStack stack) {
-		return ItemUseAnimation.SPEAR;
+	public UseAnim getUseAnimation(ItemStack stack) {
+		return UseAnim.SPEAR;
 	}
 
 	/**
@@ -209,18 +209,18 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 
 	/** 松开右键：只有蓄满才释放旋风；返回是否真的放出去了（原版用它决定要不要播使用成功的表现）。 */
 	@Override
-	public boolean releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
+	public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
 		if (!(entity instanceof ServerPlayer player) || !(level instanceof ServerLevel serverLevel)) {
-			return false;
+			return;
 		}
 
 		if (chargeTicks(stack, entity, timeLeft) < CHARGE_TICKS) {
-			return false;
+			return;
 		}
 
-		// 蓝不够时整段技能都不发动（返回 false：不突进、不出环形斩击，蓄力作废）
+		// 蓝不够时整段技能都不发动（不突进、不出环形斩击，蓄力作废）
 		if (!PlayerStats.spendMp(player, WHIRLWIND_MP_COST)) {
-			return false;
+			return;
 		}
 
 		Vec3 direction = player.getLookAngle();
@@ -228,7 +228,6 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 		serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2F, 0.7F);
 		PENDING.add(Pending.ring(player, DASH_TICKS, (float) (WHIRLWIND_DAMAGE * PlayerStats.skillDamageMultiplier(player)), RING_HEIGHT));
-		return true;
 	}
 
 	/**
@@ -299,7 +298,7 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 
 				// 告诉伤害入口「这是技能伤害」：无视防御伤害要按技能的倍率放大（见 SephiriaDamage.applyTrueDamage）
 				SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
-				victim.hurtServer(level, level.damageSources().playerAttack(player), damage);
+				victim.hurt(level.damageSources().playerAttack(player), damage);
 			}
 
 			level.playSound(null, player.getX(), player.getY(), player.getZ(),

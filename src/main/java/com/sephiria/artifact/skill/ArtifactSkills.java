@@ -3,7 +3,7 @@ package com.sephiria.artifact.skill;
 import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.stats.PlayerStats;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -106,7 +106,7 @@ public final class ArtifactSkills {
 			return null;
 		}
 
-		Identifier id = Identifier.tryParse(entry.substring(0, at));
+		ResourceLocation id = ResourceLocation.tryParse(entry.substring(0, at));
 		Item item = id == null ? null : BuiltInRegistries.ITEM.getOptional(id).orElse(null);
 
 		if (item == null) {

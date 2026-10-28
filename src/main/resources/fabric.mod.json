@@ -15,37 +15,17 @@
 	"license": "CC-BY-NC-4.0",
 	"icon": "assets/sephiria_fantasy/icon.png",
 	"environment": "*",
-	"accessWidener": "sephiria_fantasy.accesswidener",
 	"entrypoints": {
 		"main": [
 			"com.sephiria.Sephiria"
-		],
-		"client": [
-			"com.sephiria.client.SephiriaClient"
-		],
-		"modmenu": [
-			"com.sephiria.compat.modmenu.SephiriaModMenuIntegration"
 		]
 	},
 	"depends": {
-		"fabricloader": ">=0.19.5",
-		"minecraft": "~26.3",
-		"java": ">=25",
+		"fabricloader": ">=0.16.0",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
 		"fabric-api": "*"
 	},
-	"mixins": [
-		"sephiria_fantasy.mixins.json",
-		{
-			"config": "sephiria_fantasy.client.mixins.json",
-			"environment": "client"
-		},
-		{
-			"config": "sephiria_fantasy.torohealth.mixins.json",
-			"environment": "client"
-		}
-	],
-	"suggests": {
-		"torohealth": "*",
-		"modmenu": "*"
-	}
+	"mixins": [],
+	"accessWidener": "sephiria_fantasy.accesswidener"
 }

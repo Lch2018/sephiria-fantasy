@@ -1,80 +1,46 @@
 plugins {
-	// 26.1 起 Minecraft 已不再混淆，用的是不带 -remap 后缀的 loom。
-	// 混淆版本（<= 1.21.11）才需要 'net.fabricmc.fabric-loom-remap' + mappings 依赖。
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 }
 
 repositories {
-	// Loom 会自动加上 Minecraft 与 Fabric 的仓库，这里留给其它模组依赖。
+	maven { url = 'https://maven.fabricmc.net/' }
+	mavenCentral()
 }
 
 dependencies {
-	// 26.2 是未混淆版本，因此没有 mappings 这一行。
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// 未混淆版本下依赖用 implementation，而不是 modImplementation。
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-
-	// GeckoLib（骨骼动画）从本地 libs\ 引入：刀的模型/动画由 Blockbench 的 GeckoLib
-	// 格式导出，游戏内播放需要它。文件同时也放在 PCL 的 mods 目录里。
-	implementation files('libs/geckolib-fabric-26.3-5.5.6.jar')
-
-	// 只有编译期需要：ModMenu / ToroHealth 在游戏里由玩家自行安装，
-	// 对应入口 / mixin 类也只在它们存在时才会被加载。跟 GeckoLib 一样从 libs\ 取。
-	compileOnly files('libs/modmenu-21.0.0.jar')
-	compileOnly files('libs/torohealth-continued-26.3-1.5.2.jar')
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	modImplementation files('libs/geckolib-fabric-1.21.1-4.9.3.jar')
 }
 
 processResources {
 	def version = project.version
 	inputs.property "version", version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": version
-	}
+	filesMatching("fabric.mod.json") { expand "version": version }
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
-	// 源码里有中文注释与字符串，本机默认编码是 GBK，不显式指定会导致乱码。
+	it.options.release = 21
 	it.options.encoding = 'UTF-8'
+	it.options.compilerArgs += ['-Xmaxerrs', '2000']
 }
 
 java {
 	withSourcesJar()
-
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
 	def projectName = project.name
 	inputs.property "projectName", projectName
-
-	// 让发布的 jar 里也带上许可证
-	from("LICENSE") {
-		rename { "${it}_$projectName" }
-	}
+	from("LICENSE") { rename { "${it}_$projectName" } }
 }
 
-// 访问拓宽：26.2 把 MenuScreens 的注册方法收成了包私有，自定义容器菜单要靠它打开。
-// fabric.mod.json 里的 accessWidener 字段负责运行时，这里显式声明一份给 Loom（编译期与开发环境）。
 loom {
-	accessWidenerPath = file("src/main/resources/sephiria_fantasy.accesswidener")
+	accessWidenerPath = file('src/main/resources/sephiria_fantasy.accesswidener')
 }
 
-// 临时（开发用）：用原版真编解码器解一遍物品模型定义（见 src/test/java/ModelDecodeCheck.java）。
-// 物品模型只在客户端资源加载时解析，字段名写错要开游戏才发现；这个任务在普通 JVM 里跑同一套 codec。
-tasks.register('modelDecodeCheck', JavaExec) {
-	group = 'verification'
-	description = 'Decode the mod item model definitions with the vanilla item model codecs'
-	classpath = sourceSets.test.runtimeClasspath
-	mainClass = 'ModelDecodeCheck'
-}
-
-// 那个检查是 main 类、不是 JUnit 测试：test 源集里没有可发现的测试，
-// Gradle 9 默认会因为「有测试源码却一个测试都没发现」判构建失败，这里关掉那条判据。
-tasks.named('test') {
-	failOnNoDiscoveredTests = false
-}
+tasks.named('test') { failOnNoDiscoveredTests = false }

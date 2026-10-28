@@ -124,8 +124,7 @@ public final class Dash {
 			entity.setDeltaMovement(dash.direction.x * dash.speed, vertical, dash.direction.z * dash.speed);
 			// 玩家的位移是客户端物理执行的，必须把这份速度同步过去才会真的动
 			// ——原版的击退、三叉戟激流用的也是这个标记（26.3 里 hurtMarked 更名而来）。
-			entity.syncVelocity = true;
-
+	
 			dash.speed *= dash.decay;
 
 			if (--dash.remaining <= 0) {

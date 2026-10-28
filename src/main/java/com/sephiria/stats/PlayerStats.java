@@ -11,7 +11,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -214,7 +214,7 @@ public final class PlayerStats {
 			.persistent(Saved.CODEC)
 			// 永久加成不该因为死一次就没了（叶子同理：它是商店的货币）
 			.copyOnDeath()
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "player_stats"));
+			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "player_stats"));
 
 	private static final Map<UUID, Values> STATS = new HashMap<>();
 	/** 上一次推给客户端的「总值指纹」，用来发现神器换装这类不经过 sync 的变化。 */

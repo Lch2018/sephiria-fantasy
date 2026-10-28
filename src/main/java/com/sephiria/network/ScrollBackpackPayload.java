@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：在赛菲莉娅背包界面里滚了一格滚轮。
@@ -15,7 +15,7 @@ import net.minecraft.resources.Identifier;
  */
 public record ScrollBackpackPayload(int delta) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<ScrollBackpackPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "scroll_backpack"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "scroll_backpack"));
 
 	public static final StreamCodec<FriendlyByteBuf, ScrollBackpackPayload> STREAM_CODEC = StreamCodec.of(
 			(FriendlyByteBuf buffer, ScrollBackpackPayload payload) -> buffer.writeVarInt(payload.delta()),

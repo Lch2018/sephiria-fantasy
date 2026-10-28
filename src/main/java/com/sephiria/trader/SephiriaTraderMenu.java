@@ -1,12 +1,13 @@
 package com.sephiria.trader;
 
+import com.sephiria.util.MenuLayout;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.util.PlayerItems;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.util.Unit;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -14,7 +15,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -88,7 +89,7 @@ public class SephiriaTraderMenu extends AbstractContainerMenu {
 			});
 		}
 
-		addStandardInventorySlots(playerInventory, 8, playerRowsY());
+		MenuLayout.addPlayerInventory(this::addSlot, playerInventory, 8, playerRowsY());
 		addDataSlots(this.data);
 	}
 
@@ -132,9 +133,9 @@ public class SephiriaTraderMenu extends AbstractContainerMenu {
 		}
 
 		trader.setTradingPlayer(player);
-		// ⚠ 菜单是用 ExtendedMenuType 注册的，必须用 ExtendedMenuProvider 打开
-		// （SimpleMenuProvider 会直接抛「must be opened with an ExtendedMenuProvider!」）
-		player.openMenu(new ExtendedMenuProvider<Unit>() {
+		// ⚠ 菜单是用 ExtendedScreenHandlerType 注册的，必须用 ExtendedScreenHandlerFactory 打开
+		// （SimpleMenuProvider 会直接抛「must be opened with an ExtendedScreenHandlerFactory!」）
+		player.openMenu(new ExtendedScreenHandlerFactory<Unit>() {
 			@Override
 			public Unit getScreenOpeningData(ServerPlayer ignored) {
 				return Unit.INSTANCE;
@@ -154,7 +155,7 @@ public class SephiriaTraderMenu extends AbstractContainerMenu {
 
 	/** 点商品格 = 免费拿走它。 */
 	@Override
-	public void clicked(int slotId, int button, ContainerInput input, Player player) {
+	public void clicked(int slotId, int button, ClickType input, Player player) {
 		if (slotId >= 0 && slotId < SLOTS) {
 			if (player instanceof ServerPlayer serverPlayer) {
 				take(serverPlayer, slotId);

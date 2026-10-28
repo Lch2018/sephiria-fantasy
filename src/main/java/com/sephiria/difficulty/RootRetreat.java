@@ -7,7 +7,7 @@ import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.stats.CombatState;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -43,7 +43,7 @@ public final class RootRetreat {
 			.persistent(Saved.CODEC)
 			// 难度设置是玩家自己的偏好，死了不该清零
 			.copyOnDeath()
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat"));
+			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat"));
 
 	private RootRetreat() {
 	}

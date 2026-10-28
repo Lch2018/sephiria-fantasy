@@ -1,5 +1,6 @@
 package com.sephiria.artifact;
 
+import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.backpack.EnchantMenu;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,13 +23,13 @@ public class EnchantCoinItem extends Item {
 	}
 
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		if (!(player instanceof ServerPlayer serverPlayer)) {
-			return InteractionResult.CONSUME;
+			return InteractionResultHolder.consume(player.getItemInHand(hand));
 		}
 
 		serverPlayer.openMenu(EnchantMenu.provider(serverPlayer));
-		return InteractionResult.CONSUME;
+		return InteractionResultHolder.consume(player.getItemInHand(hand));
 	}
 
 	/** 附魔币是传说道具，名字跟品质色。 */

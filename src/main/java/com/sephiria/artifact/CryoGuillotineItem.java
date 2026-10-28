@@ -1,5 +1,6 @@
 package com.sephiria.artifact;
 
+import com.sephiria.util.ParticleColors;
 import com.sephiria.Sephiria;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.registry.ModParticleTypes;
@@ -12,7 +13,7 @@ import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,8 +21,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -283,7 +284,7 @@ public class CryoGuillotineItem extends ArtifactItem {
 
 	/** 造一把放大的铁剑本体；颜色靠周身冰蓝粒子补，物品本体仍是原版铁剑（用户口径）。 */
 	private static Display.ItemDisplay spawnBlade(ServerLevel level, Vec3 at, boolean flame) {
-		Display.ItemDisplay body = EntityTypes.ITEM_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+		Display.ItemDisplay body = EntityType.ITEM_DISPLAY.create(level);
 
 		if (body == null) {
 			return null;
@@ -291,10 +292,6 @@ public class CryoGuillotineItem extends ArtifactItem {
 
 		SynchedEntityData data = body.getEntityData();
 		ItemStack bladeStack = new ItemStack(Items.IRON_SWORD);
-		// 原版铁剑的模型换成重绘版；永恒蚀在左半边时用焰橙色版
-		bladeStack.set(DataComponents.ITEM_MODEL,
-				Identifier.fromNamespaceAndPath(Sephiria.MOD_ID,
-						flame ? "cryo_guillotine_blade_flame" : "cryo_guillotine_blade"));
 		data.set(Display.ItemDisplay.DATA_ITEM_STACK_ID, bladeStack);
 		data.set(Display.ItemDisplay.DATA_ITEM_DISPLAY_ID, (byte) ItemDisplayContext.FIXED.getId());
 		data.set(Display.DATA_SCALE_ID, new Vector3f(BLADE_SCALE));
@@ -377,7 +374,7 @@ public class CryoGuillotineItem extends ArtifactItem {
 			SephiriaDamage.clearDamageCooldown(target);
 			// 火焰模式跟剑 / 锤 / 矛一样换成 fire_attack（火属性，触发灼伤）；
 			// 默认仍是冰 + 电的 cryo_guillotine
-			damaged = target.hurtServer(level, blade.flame()
+			damaged = target.hurt(blade.flame()
 							? SephiriaDamage.fireAttack(level, owner)
 							: SephiriaDamage.cryoGuillotine(level, owner),
 					blade.damage());
@@ -400,7 +397,7 @@ public class CryoGuillotineItem extends ArtifactItem {
 	private static void playImpactSphere(ServerLevel level, Vec3 impact, boolean flame) {
 		RandomSource random = level.getRandom();
 		Vec3 center = impact.add(0.0D, 0.8D, 0.0D);
-		DustParticleOptions dust = new DustParticleOptions(flame ? FLAME_ORANGE : ICE_BLUE, 1.1F);
+		DustParticleOptions dust = ParticleColors.dust(flame ? FLAME_ORANGE : ICE_BLUE, 1.1F);
 
 		for (int index = 0; index < IMPACT_SPHERE_DUST; index++) {
 			double radius = IMPACT_SPHERE_RADIUS * Math.cbrt(random.nextDouble());

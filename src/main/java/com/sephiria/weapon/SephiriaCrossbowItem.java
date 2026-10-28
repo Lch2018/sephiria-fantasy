@@ -1,11 +1,12 @@
 package com.sephiria.weapon;
 
+import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.SkillStorage;
 import com.sephiria.registry.ModItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,7 +16,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ArrowItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.Item;
@@ -51,7 +52,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon {
 	/** 弹药在技能存储里的 id（HUD 也读它）。 */
-	public static final Identifier STORAGE = Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "crossbow");
+	public static final ResourceLocation STORAGE = ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "crossbow");
 
 	/** 弹匣容量，同时是存储总量。 */
 	public static final int MAGAZINE_SIZE = 10;
@@ -111,26 +112,26 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 
 	/** 右击：有弹药就射一发。空匣什么都不做，装填走 R 键。 */
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		ItemStack crossbow = player.getItemInHand(hand);
 
-		if (player.getCooldowns().isOnCooldown(crossbow)) {
-			return InteractionResult.FAIL;   // 射击间隔中 / 装填中
+		if (player.getCooldowns().isOnCooldown(crossbow.getItem())) {
+			return InteractionResultHolder.fail(player.getItemInHand(hand));   // 射击间隔中 / 装填中
 		}
 
 		if (level.isClientSide()) {
-			return InteractionResult.CONSUME;
+			return InteractionResultHolder.consume(player.getItemInHand(hand));
 		}
 
 		ServerPlayer serverPlayer = (ServerPlayer) player;
 
 		if (!SkillStorage.consume(serverPlayer, STORAGE, SHOT_COST)) {
-			return InteractionResult.CONSUME;   // 空匣
+			return InteractionResultHolder.consume(player.getItemInHand(hand));   // 空匣
 		}
 
 		fire(serverPlayer, crossbow);
-		player.getCooldowns().addCooldown(crossbow, FIRE_COOLDOWN_TICKS);
-		return InteractionResult.CONSUME;
+		player.getCooldowns().addCooldown(crossbow.getItem(), FIRE_COOLDOWN_TICKS);
+		return InteractionResultHolder.consume(player.getItemInHand(hand));
 	}
 
 	/**
@@ -151,7 +152,7 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 		}
 
 		RELOADS.put(player.getUUID(), player.level().getGameTime() + RELOAD_TICKS);
-		player.getCooldowns().addCooldown(crossbow, RELOAD_TICKS);
+		player.getCooldowns().addCooldown(crossbow.getItem(), RELOAD_TICKS);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.CROSSBOW_LOADING_START, SoundSource.PLAYERS, 1.0F, 1.0F);
 	}
@@ -236,7 +237,7 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 		}
 
 		crossbow.set(DataComponents.CHARGED_PROJECTILES,
-				ammo.isEmpty() ? ChargedProjectiles.EMPTY : ChargedProjectiles.ofNonEmpty(ammo));
+				ammo.isEmpty() ? ChargedProjectiles.EMPTY : ChargedProjectiles.of(ammo));
 	}
 
 	// ------------------------------------------------------------------ 耐久条 = 弹匣条
@@ -266,6 +267,6 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 
 	/** 视觉上的弩矢数（供提示框、耐久条等只读用途）。 */
 	public static int visualAmmoCount(ItemStack crossbow) {
-		return crossbow.getOrDefault(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.EMPTY).size();
+		return crossbow.getOrDefault(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.EMPTY).getItems().size();
 	}
 }

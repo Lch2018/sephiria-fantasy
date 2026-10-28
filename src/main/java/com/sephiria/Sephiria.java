@@ -61,7 +61,6 @@ import com.sephiria.registry.ModBlockEntities;
 import com.sephiria.registry.ModBlocks;
 import com.sephiria.registry.ModEntities;
 import com.sephiria.trader.SephiriaTraderSpawner;
-import com.sephiria.registry.ModRecipeBookCategories;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
 import com.sephiria.registry.ModStructures;
@@ -103,7 +102,6 @@ public class Sephiria implements ModInitializer {
 		// 赛菲莉娅宝藏：结构类型与结构片段类型（内容由 worldgen JSON 驱动）
 		ModStructures.initialize();
 		// 配方书多一页「赛菲莉娅」：分类登记（配方 JSON 的 category 指向它）
-		ModRecipeBookCategories.initialize();
 		ModCreativeTabs.initialize();
 		ModMenus.initialize();
 		ModSounds.initialize();
@@ -193,50 +191,47 @@ public class Sephiria implements ModInitializer {
 		// 特别神器「书」：书上附了火焰附加时，神器 / 连击的伤害点燃目标（抢夺在掉落结算那一侧接入）
 		com.sephiria.artifact.BookItem.register();
 
-		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.FrostQiPayload.TYPE,
+		PayloadTypeRegistry.playC2S().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(com.sephiria.network.FrostQiPayload.TYPE,
 				com.sephiria.network.FrostQiPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ShieldSweepPayload.TYPE, ShieldSweepPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(OpenShopPayload.TYPE, OpenShopPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(SellItemPayload.TYPE, SellItemPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(RefreshShopPayload.TYPE, RefreshShopPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(RotateSlatePayload.TYPE, RotateSlatePayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(OpenSlateFusionPayload.TYPE,
+		PayloadTypeRegistry.playC2S().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(ShieldSweepPayload.TYPE, ShieldSweepPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(OpenShopPayload.TYPE, OpenShopPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(SellItemPayload.TYPE, SellItemPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(RefreshShopPayload.TYPE, RefreshShopPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(RotateSlatePayload.TYPE, RotateSlatePayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(OpenSlateFusionPayload.TYPE,
 				OpenSlateFusionPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(FuseSlatesPayload.TYPE, FuseSlatesPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(RotateFusionSlatePayload.TYPE,
+		PayloadTypeRegistry.playC2S().register(FuseSlatesPayload.TYPE, FuseSlatesPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(RotateFusionSlatePayload.TYPE,
 				RotateFusionSlatePayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ScrollBackpackPayload.TYPE, ScrollBackpackPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(OpenArtifactSkillsPayload.TYPE, OpenArtifactSkillsPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(CastArtifactSkillPayload.TYPE, CastArtifactSkillPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(AssignArtifactSkillPayload.TYPE, AssignArtifactSkillPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(ArtifactSkillsPayload.TYPE, ArtifactSkillsPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(com.sephiria.network.HudSyncPayload.TYPE,
+		PayloadTypeRegistry.playC2S().register(ScrollBackpackPayload.TYPE, ScrollBackpackPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(OpenArtifactSkillsPayload.TYPE, OpenArtifactSkillsPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(CastArtifactSkillPayload.TYPE, CastArtifactSkillPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(AssignArtifactSkillPayload.TYPE, AssignArtifactSkillPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(ArtifactSkillsPayload.TYPE, ArtifactSkillsPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(com.sephiria.network.HudSyncPayload.TYPE,
 				com.sephiria.network.HudSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(
-				com.sephiria.compat.torohealth.ToroHealthDamagePayload.TYPE,
-				com.sephiria.compat.torohealth.ToroHealthDamagePayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(RootRetreatClickPayload.TYPE, RootRetreatClickPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(WishPoolClickPayload.TYPE, WishPoolClickPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(WishPoolResultPayload.TYPE, WishPoolResultPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(CloudSyncPayload.TYPE, CloudSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(DebuffSyncPayload.TYPE, DebuffSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(SunSwordSyncPayload.TYPE, SunSwordSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(com.sephiria.network.FrostSyncPayload.TYPE,
+		PayloadTypeRegistry.playC2S().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(RootRetreatClickPayload.TYPE, RootRetreatClickPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(WishPoolClickPayload.TYPE, WishPoolClickPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(WishPoolResultPayload.TYPE, WishPoolResultPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(CloudSyncPayload.TYPE, CloudSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(DebuffSyncPayload.TYPE, DebuffSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(SunSwordSyncPayload.TYPE, SunSwordSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(com.sephiria.network.FrostSyncPayload.TYPE,
 				com.sephiria.network.FrostSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(TalentClickPayload.TYPE, TalentClickPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(TalentSyncRequestPayload.TYPE,
+		PayloadTypeRegistry.playS2C().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
+		PayloadTypeRegistry.playS2C().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(TalentClickPayload.TYPE, TalentClickPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(TalentSyncRequestPayload.TYPE,
 				TalentSyncRequestPayload.STREAM_CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(TalentSyncPayload.TYPE, TalentSyncPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.SlateImprintPayload.TYPE,
+		PayloadTypeRegistry.playS2C().register(TalentSyncPayload.TYPE, TalentSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.playC2S().register(com.sephiria.network.SlateImprintPayload.TYPE,
 				com.sephiria.network.SlateImprintPayload.STREAM_CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.ChestRerollPayload.TYPE,
+		PayloadTypeRegistry.playC2S().register(com.sephiria.network.ChestRerollPayload.TYPE,
 				com.sephiria.network.ChestRerollPayload.STREAM_CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(DashPayload.TYPE,
@@ -473,9 +468,6 @@ public class Sephiria implements ModInitializer {
 
 		// 赛菲莉娅货币进自然生成的箱子（骰子 + 神器附魔币）：所有 minecraft:chests/* 的表
 		// 各加一个 10% 概率的池子
-		com.sephiria.shop.ChestLoot.register();
-		// 不带精准采集挖特定矿石，小概率额外掉对应品质的石板（slate/OreSlateDrops 里的概率表）
-		com.sephiria.slate.OreSlateDrops.register();
 		// 品质概率的唯一入口（宝箱/商店/抽卡/药水四组比值 + config 覆盖）：服务器启动时读覆盖文件
 		ArtifactLoot.register();
 

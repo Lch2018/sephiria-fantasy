@@ -163,7 +163,7 @@ public final class BeaconLoot {
 	}
 
 	private static Profile profileFor(Holder<Biome> biome) {
-		String path = biome.unwrapKey().map(key -> key.identifier().getPath()).orElse("");
+		String path = biome.unwrapKey().map(key -> key.location().getPath()).orElse("");
 
 		return switch (path) {
 			case "desert" -> DESERT;

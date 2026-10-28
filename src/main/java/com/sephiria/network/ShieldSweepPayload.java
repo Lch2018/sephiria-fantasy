@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：剑盾防御中按了左键，请求释放「横扫」。空包，服务端自己查是谁、手里是什么。
@@ -18,7 +18,7 @@ public record ShieldSweepPayload() implements CustomPacketPayload {
 	public static final ShieldSweepPayload INSTANCE = new ShieldSweepPayload();
 
 	public static final CustomPacketPayload.Type<ShieldSweepPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "shield_sweep"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "shield_sweep"));
 
 	public static final StreamCodec<ByteBuf, ShieldSweepPayload> STREAM_CODEC = StreamCodec.unit(INSTANCE);
 

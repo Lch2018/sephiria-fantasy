@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import com.sephiria.artifact.HasteGrimoireItem;
 import com.sephiria.stats.TimedAttributes;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -27,10 +27,10 @@ public final class HasteSkill implements ArtifactSkill {
 	/** 攻速与移速各 +15%。 */
 	private static final double PERCENT = 15.0D;
 
-	private static final Identifier ATTACK_SPEED_ID =
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "haste_attack_speed");
-	private static final Identifier MOVE_SPEED_ID =
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "haste_move_speed");
+	private static final ResourceLocation ATTACK_SPEED_ID =
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "haste_attack_speed");
+	private static final ResourceLocation MOVE_SPEED_ID =
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "haste_move_speed");
 
 	private HasteSkill() {
 	}

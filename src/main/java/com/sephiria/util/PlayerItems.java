@@ -1,7 +1,6 @@
 package com.sephiria.util;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -26,6 +25,6 @@ public final class PlayerItems {
 
 	/** 交付一份物品；背包满（或只装得下一部分）时，装不下的那部分掉在玩家脚下。 */
 	public static void give(ServerPlayer player, ItemStack stack) {
-		player.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
+		player.getInventory().placeItemBackInInventory(stack );
 	}
 }

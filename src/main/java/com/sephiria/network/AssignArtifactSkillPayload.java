@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：把某个技能放进第几号技能栏（{@code entry} 为空串表示清空这一格）。
@@ -14,7 +14,7 @@ import net.minecraft.resources.Identifier;
  */
 public record AssignArtifactSkillPayload(int slot, String entry) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<AssignArtifactSkillPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "assign_artifact_skill"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "assign_artifact_skill"));
 
 	public static final StreamCodec<FriendlyByteBuf, AssignArtifactSkillPayload> STREAM_CODEC = StreamCodec.of(
 			(FriendlyByteBuf buffer, AssignArtifactSkillPayload payload) -> {

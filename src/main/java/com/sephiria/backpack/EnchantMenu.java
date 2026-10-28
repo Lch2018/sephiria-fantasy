@@ -1,15 +1,15 @@
 package com.sephiria.backpack;
 
+import com.sephiria.util.MenuLayout;
 import com.sephiria.artifact.ArtifactItem;
 import com.sephiria.artifact.BackpackStorable;
 import com.sephiria.artifact.SephiriaArtifact;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Prediction;
 import net.minecraft.util.Unit;
 import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
@@ -18,7 +18,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -133,7 +133,7 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 			});
 		}
 
-		addStandardInventorySlots(playerInventory, FUNCTION_AREA_WIDTH + 8, playerRowsY());
+		MenuLayout.addPlayerInventory(this::addSlot, playerInventory, FUNCTION_AREA_WIDTH + 8, playerRowsY());
 		addDataSlots(this.slotLevels);
 	}
 
@@ -192,7 +192,7 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 
 	/** 把菜单打开给玩家（26.3 的菜单必须走 screenOpeningData 这条路，数据用 Unit 占位）。 */
 	public static MenuProvider provider(ServerPlayer player) {
-		return new ExtendedMenuProvider<Unit>() {
+		return new ExtendedScreenHandlerFactory<Unit>() {
 			@Override
 			public Unit getScreenOpeningData(ServerPlayer ignored) {
 				return Unit.INSTANCE;
@@ -249,13 +249,13 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 	 * <p>与 {@link ArtifactBackpackMenu#clicked} 同一套：合并成功后把被消耗的那件从光标扣掉。
 	 */
 	@Override
-	public void clicked(int slotId, int button, ContainerInput input, Player player) {
+	public void clicked(int slotId, int button, ClickType input, Player player) {
 		if (player instanceof ServerPlayer serverPlayer
 				&& slotId >= 2 && slotId < 2 + backpackSlotCount()) {
 			Slot slot = this.slots.get(slotId);
 
 			if (isBackpackSlot(slot) && backpackSlotExists(slot)) {
-				if ((input == ContainerInput.PICKUP || input == ContainerInput.QUICK_CRAFT)
+				if ((input == ClickType.PICKUP || input == ClickType.QUICK_CRAFT)
 						&& !this.getCarried().isEmpty()
 						&& com.sephiria.talent.WisdomTalent.tryMerge(serverPlayer, this.getCarried())) {
 					if (this.getCarried().isEmpty()) {
@@ -266,7 +266,7 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 					return;
 				}
 
-				if (input == ContainerInput.SWAP && button >= 0 && button < 9) {
+				if (input == ClickType.SWAP && button >= 0 && button < 9) {
 					ItemStack hotbar = serverPlayer.getInventory().getItem(button);
 
 					if (!hotbar.isEmpty()
@@ -512,11 +512,11 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 		}
 
 		if (!artifactLeft.isEmpty()) {
-			serverPlayer.getInventory().placeItemBackInInventory(artifactLeft, Prediction.SERVER_ONLY);
+			serverPlayer.getInventory().placeItemBackInInventory(artifactLeft );
 		}
 
 		if (!coinsLeft.isEmpty()) {
-			serverPlayer.getInventory().placeItemBackInInventory(coinsLeft, Prediction.SERVER_ONLY);
+			serverPlayer.getInventory().placeItemBackInInventory(coinsLeft );
 		}
 	}
 }

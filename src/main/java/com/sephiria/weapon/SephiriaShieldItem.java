@@ -1,5 +1,6 @@
 package com.sephiria.weapon;
 
+import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
@@ -19,7 +20,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
@@ -199,7 +200,7 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 				: player.getOffhandItem();
 
 		if (!(stack.getItem() instanceof SephiriaShieldItem)
-				|| player.getCooldowns().isOnCooldown(stack)
+				|| player.getCooldowns().isOnCooldown(stack.getItem())
 				|| player.getAttackStrengthScale(0.5F) <= SWEEP_CHARGE_THRESHOLD) {
 			return;
 		}
@@ -229,10 +230,10 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 
 			// 告诉伤害入口「这是技能伤害」：无视防御伤害要按技能的倍率放大（见 SephiriaDamage.applyTrueDamage）
 			SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
-			victim.hurtServer(level, level.damageSources().playerAttack(player), damage);
+			victim.hurt(level.damageSources().playerAttack(player), damage);
 		}
 
-		player.getCooldowns().addCooldown(stack, SWEEP_COOLDOWN_TICKS);
+		player.getCooldowns().addCooldown(stack.getItem(), SWEEP_COOLDOWN_TICKS);
 		level.playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2F, 0.9F);
 		level.sendParticles(ParticleTypes.SWEEP_ATTACK,
@@ -241,7 +242,7 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 
 	/** 右键：开始防御（原版 BLOCK 姿势），松开由原版自动结束。 */
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		player.startUsingItem(hand);
 
 		// 举盾那一刻开一个 0.3 秒的完美防御窗口：这段时间内挨打按半价扣蓝 + 下一次横扫免费
@@ -250,7 +251,7 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 					level.getGameTime() + PERFECT_GUARD_TICKS);
 		}
 
-		return InteractionResult.CONSUME;
+		return InteractionResultHolder.consume(player.getItemInHand(hand));
 	}
 
 	@Override
@@ -259,8 +260,8 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	}
 
 	@Override
-	public ItemUseAnimation getUseAnimation(ItemStack stack) {
-		return ItemUseAnimation.BLOCK;
+	public UseAnim getUseAnimation(ItemStack stack) {
+		return UseAnim.BLOCK;
 	}
 
 	/** 防御期间的伤害倍率（供减伤判定读取）。 */

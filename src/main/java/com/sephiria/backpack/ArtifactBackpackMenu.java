@@ -1,10 +1,11 @@
 package com.sephiria.backpack;
 
+import com.sephiria.util.MenuLayout;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.artifact.BackpackStorable;
 import com.sephiria.registry.ModMenus;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -16,7 +17,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -102,7 +103,7 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 			});
 		}
 
-		addStandardInventorySlots(playerInventory, COMBO_PANEL_WIDTH + 8, playerRowsY(BackpackWindow.ROWS));
+		MenuLayout.addPlayerInventory(this::addSlot, playerInventory, COMBO_PANEL_WIDTH + 8, playerRowsY(BackpackWindow.ROWS));
 		addDataSlots(this.slotLevels);
 	}
 
@@ -291,12 +292,12 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 	/**
 	 * 打开界面用的 {@link MenuProvider}。
 	 *
-	 * <p>必须是 Fabric 的 {@link ExtendedMenuProvider}：菜单类型是 {@link
-	 * net.fabricmc.fabric.api.menu.v1.ExtendedMenuType}，而它的普通 {@code create(id, inventory)}
+	 * <p>必须是 Fabric 的 {@link ExtendedScreenHandlerFactory}：菜单类型是 {@link
+	 * net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType}，而它的普通 {@code create(id, inventory)}
 	 * 是故意抛异常的（必须走带开屏数据的那条路）。这里没有额外数据，用 {@code Unit} 占位。
 	 */
 	public static MenuProvider provider(ServerPlayer player) {
-		return new ExtendedMenuProvider<Unit>() {
+		return new ExtendedScreenHandlerFactory<Unit>() {
 			@Override
 			public Unit getScreenOpeningData(ServerPlayer ignored) {
 				return Unit.INSTANCE;
@@ -321,14 +322,14 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 	 * 把它放进格子里（否则会出现「格子里原有那件 + 光标上这件」的复制）。
 	 */
 	@Override
-	public void clicked(int slotId, int button, ContainerInput input, Player player) {
+	public void clicked(int slotId, int button, ClickType input, Player player) {
 		if (player instanceof ServerPlayer serverPlayer
 				&& slotId >= 0 && slotId < backpackSlotCount()) {
 			Slot slot = this.slots.get(slotId);
 
 			if (isBackpackSlot(slot) && backpackSlotExists(slot)) {
 				// 左/右键放置与拖拽：合并光标上那件
-				if ((input == ContainerInput.PICKUP || input == ContainerInput.QUICK_CRAFT)
+				if ((input == ClickType.PICKUP || input == ClickType.QUICK_CRAFT)
 						&& !this.getCarried().isEmpty()
 						&& com.sephiria.talent.WisdomTalent.tryMerge(serverPlayer, this.getCarried())) {
 					if (this.getCarried().isEmpty()) {
@@ -340,7 +341,7 @@ public class ArtifactBackpackMenu extends AbstractContainerMenu implements Backp
 				}
 
 				// 数字键交换：被换进来的快捷栏那件也要合并
-				if (input == ContainerInput.SWAP && button >= 0 && button < 9) {
+				if (input == ClickType.SWAP && button >= 0 && button < 9) {
 					ItemStack hotbar = serverPlayer.getInventory().getItem(button);
 
 					if (!hotbar.isEmpty()

@@ -1,5 +1,6 @@
 package com.sephiria.difficulty;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -28,8 +29,17 @@ import net.minecraft.world.phys.BlockHitResult;
  * 相对默认多转了 180°（见 blockstates/root_retreat.json 的注释）。
  */
 public class RootRetreatBlock extends HorizontalDirectionalBlock implements EntityBlock {
+	/** 1.21.1 的 HorizontalDirectionalBlock 要求子类提供 codec；这里只用于注册/数据生成。 */
+	public static final MapCodec<RootRetreatBlock> CODEC = MapCodec.unit(
+			() -> new RootRetreatBlock(Properties.of()));
+
 	public RootRetreatBlock(Properties properties) {
 		super(properties);
+	}
+
+	@Override
+	protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
+		return CODEC;
 	}
 
 	@Override

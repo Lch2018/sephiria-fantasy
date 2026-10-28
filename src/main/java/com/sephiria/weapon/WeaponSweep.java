@@ -72,9 +72,8 @@ public final class WeaponSweep {
 				continue;
 			}
 
-			if (victim.hurtServer(level, level.damageSources().playerAttack(player), sweepDamage)) {
-				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ(),
-						level.damageSources().playerAttack(player), sweepDamage);
+			if (victim.hurt(level.damageSources().playerAttack(player), sweepDamage)) {
+				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ());
 			}
 		}
 

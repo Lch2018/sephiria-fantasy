@@ -14,7 +14,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.EntityTypeTags;
@@ -118,7 +118,7 @@ public final class Progress {
 	private static final AttachmentType<Saved> SAVED = AttachmentRegistry.<Saved>builder()
 			.persistent(Saved.CODEC)
 			.copyOnDeath()
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "progress"));
+			.buildAndRegister(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "progress"));
 
 	private static int tickCounter;
 
@@ -201,7 +201,7 @@ public final class Progress {
 	private static void tickPlayer(ServerPlayer player) {
 		Saved saved = get(player);
 		boolean changed = false;
-		String dimension = player.level().dimension().identifier().toString();
+		String dimension = player.level().dimension().location().toString();
 
 		if (!saved.dimensions.contains(dimension)) {
 			saved.dimensions.add(dimension);
@@ -317,7 +317,7 @@ public final class Progress {
 	private static AdvancementHolder holder(ServerPlayer player, String path) {
 		MinecraftServer server = player.level().getServer();
 		return server == null ? null
-				: server.getAdvancements().get(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, path));
+				: server.getAdvancements().get(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, path));
 	}
 
 	private static boolean isDone(ServerPlayer player, String path) {

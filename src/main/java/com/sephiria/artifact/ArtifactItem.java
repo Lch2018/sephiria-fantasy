@@ -7,7 +7,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +21,7 @@ import net.minecraft.world.item.ItemStack;
 public abstract class ArtifactItem extends Item implements SephiriaArtifact, BackpackStorable {
 	public static final DataComponentType<Integer> LEVEL = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_level"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_level"),
 			DataComponentType.<Integer>builder().persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
 
 	/**
@@ -32,7 +32,7 @@ public abstract class ArtifactItem extends Item implements SephiriaArtifact, Bac
 	 */
 	public static final DataComponentType<Integer> COMBO_BONUS = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_combo_bonus"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_combo_bonus"),
 			DataComponentType.<Integer>builder().persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
 
 	/** 「增加连击数量」的合并次数上限（合并到 2 次，但属性值早就在 2 封顶了）。 */

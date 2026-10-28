@@ -107,7 +107,7 @@ public class ProshiumRingItem extends ArtifactItem {
 			LAST_HIT.put(player.getUUID(), now);
 			// 额外那一下先清无敌帧，免得被目标上一刻吃到的伤害顶掉
 			SephiriaDamage.clearDamageCooldown(entity);
-			entity.hurtServer(level, SephiriaDamage.iceAttack(level, player), (float) flat);
+			entity.hurt(SephiriaDamage.iceAttack(level, player), (float) flat);
 			level.sendParticles(ParticleTypes.SNOWFLAKE, entity.getX(), entity.getY(0.5D), entity.getZ(),
 					8, 0.3D, 0.4D, 0.3D, 0.05D);
 		});

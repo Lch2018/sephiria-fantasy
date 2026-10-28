@@ -132,7 +132,7 @@ public class EternalWinterItem extends ArtifactItem {
 
 			// 额外那一下先清无敌帧，免得被目标上一刻吃到的伤害顶掉
 			SephiriaDamage.clearDamageCooldown(entity);
-			entity.hurtServer(level, SephiriaDamage.eternalWinter(level, player), extra);
+			entity.hurt(SephiriaDamage.eternalWinter(level, player), extra);
 			level.sendParticles(ParticleTypes.SNOWFLAKE, entity.getX(), entity.getY(0.5D), entity.getZ(),
 					10, 0.35D, 0.5D, 0.35D, 0.04D);
 			level.playSound(null, entity.getX(), entity.getY(), entity.getZ(),

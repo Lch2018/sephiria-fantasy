@@ -1,12 +1,12 @@
 package com.sephiria.registry;
 
 import com.sephiria.Sephiria;
-import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
@@ -14,13 +14,13 @@ import net.minecraft.world.item.ItemStack;
 public final class ModCreativeTabs {
 	public static final ResourceKey<CreativeModeTab> WEAPONS_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "weapons"));
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "weapons"));
 
 	public static final CreativeModeTab WEAPONS = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,
 			WEAPONS_KEY,
 			// 26.2 的 Fabric API 里这个模块叫 fabric-creative-tab-api-v1（老的 item-group-api 已改名）。
-			FabricCreativeModeTab.builder()
+			FabricItemGroup.builder()
 					.title(Component.translatable("itemGroup.sephiria_fantasy.weapons"))
 					.icon(() -> new ItemStack(ModItems.DEFAULT_SWORD_AND_SHIELD))
 					.displayItems((parameters, output) -> {
@@ -31,12 +31,12 @@ public final class ModCreativeTabs {
 	/** 神器标签页：标签页图标就是神器系统的那个袋子（用一个隐藏物品承载图标）。 */
 	public static final ResourceKey<CreativeModeTab> ARTIFACTS_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "artifacts"));
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifacts"));
 
 	public static final CreativeModeTab ARTIFACTS = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,
 			ARTIFACTS_KEY,
-			FabricCreativeModeTab.builder()
+			FabricItemGroup.builder()
 					.title(Component.translatable("itemGroup.sephiria_fantasy.artifacts"))
 					.icon(() -> new ItemStack(ModItems.ARTIFACT_TAB_ICON))
 					.displayItems((parameters, output) -> {
@@ -129,12 +129,12 @@ public final class ModCreativeTabs {
 	/** Slates tab: slates are not artifacts, they get their own page. */
 	public static final ResourceKey<CreativeModeTab> SLATES_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "slates"));
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "slates"));
 
 	public static final CreativeModeTab SLATES = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,
 			SLATES_KEY,
-			FabricCreativeModeTab.builder()
+			FabricItemGroup.builder()
 					.title(Component.translatable("itemGroup.sephiria_fantasy.slates"))
 					.icon(() -> new ItemStack(ModItems.SLATE_TAB_ICON))
 					.displayItems((parameters, output) -> {
@@ -203,12 +203,12 @@ public final class ModCreativeTabs {
 	/** Items tab: the enchant coin, its own icon. */
 	public static final ResourceKey<CreativeModeTab> ITEMS_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "items"));
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "items"));
 
 	public static final CreativeModeTab ITEMS = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,
 			ITEMS_KEY,
-			FabricCreativeModeTab.builder()
+			FabricItemGroup.builder()
 					.title(Component.translatable("itemGroup.sephiria_fantasy.items"))
 					.icon(() -> new ItemStack(ModItems.ENCHANT_COIN))
 					.displayItems((parameters, output) -> {
@@ -230,12 +230,12 @@ public final class ModCreativeTabs {
 	/** Potions tab: the potions are their own category, icon is the regeneration potion (fig 1). */
 	public static final ResourceKey<CreativeModeTab> POTIONS_KEY = ResourceKey.create(
 			Registries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "potions"));
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "potions"));
 
 	public static final CreativeModeTab POTIONS = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,
 			POTIONS_KEY,
-			FabricCreativeModeTab.builder()
+			FabricItemGroup.builder()
 					.title(Component.translatable("itemGroup.sephiria_fantasy.potions"))
 					.icon(() -> new ItemStack(ModItems.REGENERATION_POTION))
 					.displayItems((parameters, output) -> ModItems.POTIONS.forEach(output::accept))

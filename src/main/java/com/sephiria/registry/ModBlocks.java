@@ -7,7 +7,7 @@ import com.sephiria.wishpool.WishPoolBlock;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -25,8 +25,8 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
  */
 public final class ModBlocks {
 	/** 方块 id（{@code sephiria_fantasy:root_retreat}）。 */
-	public static final Identifier ROOT_RETREAT_ID =
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat");
+	public static final ResourceLocation ROOT_RETREAT_ID =
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat");
 	/** 方块的注册键：{@code Properties.setId} 与默认掉落表都用它。 */
 	public static final ResourceKey<Block> ROOT_RETREAT_KEY = ResourceKey.create(Registries.BLOCK, ROOT_RETREAT_ID);
 
@@ -41,14 +41,13 @@ public final class ModBlocks {
 			BuiltInRegistries.BLOCK,
 			ROOT_RETREAT_ID,
 			new RootRetreatBlock(BlockBehaviour.Properties.of()
-					.setId(ROOT_RETREAT_KEY)
 					.strength(2.0F, 6.0F)
 					.sound(SoundType.STONE)
 					.noOcclusion()));
 
 	/** 许愿池 id（{@code sephiria_fantasy:wish_pool}）。 */
-	public static final Identifier WISH_POOL_ID =
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool");
+	public static final ResourceLocation WISH_POOL_ID =
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool");
 	/** 许愿池的注册键。 */
 	public static final ResourceKey<Block> WISH_POOL_KEY = ResourceKey.create(Registries.BLOCK, WISH_POOL_ID);
 
@@ -62,14 +61,13 @@ public final class ModBlocks {
 			BuiltInRegistries.BLOCK,
 			WISH_POOL_ID,
 			new WishPoolBlock(BlockBehaviour.Properties.of()
-					.setId(WISH_POOL_KEY)
 					.strength(2.0F, 6.0F)
 					.sound(SoundType.STONE)
 					.noOcclusion()));
 
 	/** 赛菲莉娅信标 id（{@code sephiria_fantasy:sephiria_beacon}）。 */
-	public static final Identifier SEPHIRIA_BEACON_ID =
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_beacon");
+	public static final ResourceLocation SEPHIRIA_BEACON_ID =
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sephiria_beacon");
 	/** 赛菲莉娅信标的注册键。 */
 	public static final ResourceKey<Block> SEPHIRIA_BEACON_KEY =
 			ResourceKey.create(Registries.BLOCK, SEPHIRIA_BEACON_ID);
@@ -84,7 +82,6 @@ public final class ModBlocks {
 			BuiltInRegistries.BLOCK,
 			SEPHIRIA_BEACON_ID,
 			new SephiriaBeaconBlock(BlockBehaviour.Properties.of()
-					.setId(SEPHIRIA_BEACON_KEY)
 					.strength(3.0F, 6.0F)
 					.sound(SoundType.GLASS)
 					.lightLevel(state -> 15)

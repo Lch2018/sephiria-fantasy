@@ -1,5 +1,7 @@
 package com.sephiria.artifact;
 
+import net.minecraft.world.level.Level;
+
 import com.mojang.serialization.Codec;
 import com.sephiria.Sephiria;
 import com.sephiria.backpack.ArtifactBackpack;
@@ -9,7 +11,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -82,7 +84,7 @@ public class EternalEclipseItem extends ArtifactItem {
 	 */
 	public static final DataComponentType<Integer> SIDE = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "eternal_eclipse_side"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "eternal_eclipse_side"),
 			DataComponentType.<Integer>builder()
 					.persistent(Codec.INT)
 					.networkSynchronized(ByteBufCodecs.VAR_INT)
@@ -215,7 +217,7 @@ public class EternalEclipseItem extends ArtifactItem {
 	 * 这一道只是兜底，免得复制出来的副本带着别人的颜色。
 	 */
 	@Override
-	public void inventoryTick(ItemStack stack, ServerLevel level, Entity entity, EquipmentSlot slot) {
+	public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean selected) {
 		if (stack.has(SIDE)) {
 			stack.remove(SIDE);
 		}

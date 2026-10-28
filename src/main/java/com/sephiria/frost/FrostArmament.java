@@ -24,7 +24,7 @@ import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -34,8 +34,8 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.util.Unit;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -239,10 +239,10 @@ public final class FrostArmament {
 	 */
 	public static final DataComponentType<Unit> FLAME_TOOL = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "flame_tool"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "flame_tool"),
 			DataComponentType.<Unit>builder()
 					.persistent(Unit.CODEC)
-					.networkSynchronized(Unit.STREAM_CODEC)
+					.networkSynchronized(net.minecraft.network.codec.StreamCodec.unit(Unit.INSTANCE))
 					.build());
 
 	private static final Map<UUID, State> STATES = new HashMap<>();
@@ -918,7 +918,7 @@ public final class FrostArmament {
 
 			// 沿途要稳定打中每个目标：先清无敌帧（与陨石 / 露水同一套）
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(qi.level(), damageSource(qi.level(), owner, qi.flame()), qi.damage());
+			victim.hurt(damageSource(qi.level(), owner, qi.flame()), qi.damage());
 			SunSword.onFrostArmamentHit(owner, victim);
 		}
 	}
@@ -1018,7 +1018,7 @@ public final class FrostArmament {
 			}
 
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(spear.level(), damageSource(spear.level(), owner, spear.flame()), spear.damage());
+			victim.hurt(damageSource(spear.level(), owner, spear.flame()), spear.damage());
 			SunSword.onFrostArmamentHit(owner, victim);
 		}
 
@@ -1107,7 +1107,7 @@ public final class FrostArmament {
 			}
 
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(arrow.level(), damageSource(arrow.level(), owner, arrow.flame()), arrow.damage());
+			victim.hurt(damageSource(arrow.level(), owner, arrow.flame()), arrow.damage());
 			SunSword.onFrostArmamentHit(owner, victim);
 			trail(arrow.level(), arrow.flame(), at.x, at.y, at.z, 10, 0.25D, 0.06D);
 			stop = true;
@@ -1171,7 +1171,7 @@ public final class FrostArmament {
 	 */
 	private static Display.ItemDisplay spawnBody(ServerLevel level, Vec3 at, Item item, float scale,
 			boolean flame) {
-		Display.ItemDisplay body = EntityTypes.ITEM_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+		Display.ItemDisplay body = EntityType.ITEM_DISPLAY.create(level);
 
 		if (body == null) {
 			return null;
@@ -1318,7 +1318,7 @@ public final class FrostArmament {
 			}
 
 			SephiriaDamage.clearDamageCooldown(victim);
-			victim.hurtServer(level, damageSource(level, owner, hammer.flame()), hammer.damage());
+			victim.hurt(damageSource(level, owner, hammer.flame()), hammer.damage());
 
 			if (owner != null) {
 				SunSword.onFrostArmamentHit(owner, victim);
@@ -1330,8 +1330,8 @@ public final class FrostArmament {
 				at.x, at.y + 0.3D, at.z, 10, 0.4D, 0.3D, 0.4D, 0.05D);
 		// 闪光：冰蓝那一发是冷白，火焰那一发是暖白
 		level.sendParticles(hammer.flame()
-						? ColorParticleOption.create(ParticleTypes.FLASH, 1.0F, 0.78F, 0.4F)
-						: ColorParticleOption.create(ParticleTypes.FLASH, 0.72F, 0.92F, 1.0F),
+						? ParticleTypes.FLASH
+						: ParticleTypes.FLASH,
 				at.x, at.y + 0.4D, at.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
 		ring(level, hammer.flame(), at);
 		level.playSound(null, at.x, at.y, at.z, SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 0.8F, 0.9F);
@@ -1375,7 +1375,7 @@ public final class FrostArmament {
 
 			List<Display.ItemDisplay> orphans = level.getEntitiesOfClass(Display.ItemDisplay.class,
 					player.getBoundingBox().inflate(SWEEP_RADIUS),
-					body -> body.entityTags().contains(PROJECTILE_TAG));
+					body -> body.getTags().contains(PROJECTILE_TAG));
 
 			for (Display.ItemDisplay orphan : orphans) {
 				orphan.discard();

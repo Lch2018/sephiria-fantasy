@@ -3,7 +3,7 @@ package com.sephiria.ability;
 import com.sephiria.network.SkillSyncPayload;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -34,12 +34,12 @@ public final class SkillStorage {
 	private record Config(double max, double regenAmount, int regenIntervalTicks, double initial) {
 	}
 
-	private static final Map<Identifier, Config> CONFIGS = new LinkedHashMap<>();
+	private static final Map<ResourceLocation, Config> CONFIGS = new LinkedHashMap<>();
 	/** 按玩家的上限加成（风之歌 10 级给冲刺 +1 次这种）。 */
-	private static final Map<Identifier, java.util.function.ToIntFunction<ServerPlayer>> MAX_BONUS = new LinkedHashMap<>();
+	private static final Map<ResourceLocation, java.util.function.ToIntFunction<ServerPlayer>> MAX_BONUS = new LinkedHashMap<>();
 	/** 按玩家的回复速度加成（压迫绷带的冲刺恢复速度 +x%）。 */
-	private static final Map<Identifier, java.util.function.ToIntFunction<ServerPlayer>> REGEN_BONUS = new LinkedHashMap<>();
-	private static final Map<UUID, Map<Identifier, Pool>> POOLS = new HashMap<>();
+	private static final Map<ResourceLocation, java.util.function.ToIntFunction<ServerPlayer>> REGEN_BONUS = new LinkedHashMap<>();
+	private static final Map<UUID, Map<ResourceLocation, Pool>> POOLS = new HashMap<>();
 
 	private SkillStorage() {
 	}
@@ -52,7 +52,7 @@ public final class SkillStorage {
 	 * @param regenAmount        每次回复量
 	 * @param regenIntervalTicks 回复间隔（tick）
 	 */
-	public static void register(Identifier skill, double max, double regenAmount, int regenIntervalTicks) {
+	public static void register(ResourceLocation skill, double max, double regenAmount, int regenIntervalTicks) {
 		register(skill, max, regenAmount, regenIntervalTicks, max);
 	}
 
@@ -62,7 +62,7 @@ public final class SkillStorage {
 	 * <p>次数型资源（冲刺、弹匣）开局就该是满的，所以默认满仓；而「要攒起来」的资源
 	 * （刀的剑意）开局必须是空的，否则第一次挥刀就直接放技能了。
 	 */
-	public static void register(Identifier skill, double max, double regenAmount, int regenIntervalTicks, double initial) {
+	public static void register(ResourceLocation skill, double max, double regenAmount, int regenIntervalTicks, double initial) {
 		CONFIGS.put(skill, new Config(max, regenAmount, regenIntervalTicks, initial));
 	}
 
@@ -70,12 +70,12 @@ public final class SkillStorage {
 	 * 注册一个<b>不自动回复</b>的技能：回复完全由调用方自己调 {@link #regenerate}
 	 * （弩的装填就是这种——只有换弹完成才加弹）。
 	 */
-	public static void registerManual(Identifier skill, double max) {
+	public static void registerManual(ResourceLocation skill, double max) {
 		registerManual(skill, max, max);
 	}
 
 	/** 不自动回复，且开局是空的（见 {@link #register} 的重载）。 */
-	public static void registerManual(Identifier skill, double max, double initial) {
+	public static void registerManual(ResourceLocation skill, double max, double initial) {
 		register(skill, max, 0.0D, 0, initial);
 	}
 
@@ -89,7 +89,7 @@ public final class SkillStorage {
 	 *
 	 * <p>上限变化会跟着 {@link #syncAll} / 每次同步一起推给客户端，所以 HUD 的 x/y 会跟着变。
 	 */
-	public static void registerMaxBonus(Identifier skill, java.util.function.ToIntFunction<ServerPlayer> bonus) {
+	public static void registerMaxBonus(ResourceLocation skill, java.util.function.ToIntFunction<ServerPlayer> bonus) {
 		MAX_BONUS.put(skill, bonus);
 	}
 
@@ -99,12 +99,12 @@ public final class SkillStorage {
 	 * <p>配置里写的是<b>间隔</b>，而词条写的是<b>速度</b>，所以实际间隔 = 间隔 ÷ (1 + 加成)。
 	 * 每秒刻数取整（向上），否则 10% 这种小加成会被向下取整直接吃掉。
 	 */
-	public static void registerRegenBonus(Identifier skill, java.util.function.ToIntFunction<ServerPlayer> bonus) {
+	public static void registerRegenBonus(ResourceLocation skill, java.util.function.ToIntFunction<ServerPlayer> bonus) {
 		REGEN_BONUS.put(skill, bonus);
 	}
 
 	/** 某个玩家在该技能上的实际回复间隔（tick）。 */
-	private static int regenInterval(ServerPlayer player, Identifier skill, Config config) {
+	private static int regenInterval(ServerPlayer player, ResourceLocation skill, Config config) {
 		java.util.function.ToIntFunction<ServerPlayer> bonus = REGEN_BONUS.get(skill);
 		int base = config.regenIntervalTicks();
 
@@ -117,24 +117,24 @@ public final class SkillStorage {
 	}
 
 	/** 某个玩家在该技能上的实际上限：注册值 + 加成。 */
-	public static double max(ServerPlayer player, Identifier skill) {
+	public static double max(ServerPlayer player, ResourceLocation skill) {
 		java.util.function.ToIntFunction<ServerPlayer> bonus = MAX_BONUS.get(skill);
 		return max(skill) + (bonus == null ? 0.0D : bonus.applyAsInt(player));
 	}
 
 	/** 现有存储量。 */
-	public static double current(ServerPlayer player, Identifier skill) {
+	public static double current(ServerPlayer player, ResourceLocation skill) {
 		return pool(player, skill).current;
 	}
 
 	/** 存储总量；没注册过的技能返回 0。 */
-	public static double max(Identifier skill) {
+	public static double max(ResourceLocation skill) {
 		Config config = CONFIGS.get(skill);
 		return config == null ? 0.0D : config.max();
 	}
 
 	/** 消耗：返回是否扣得起。 */
-	public static boolean consume(ServerPlayer player, Identifier skill, double amount) {
+	public static boolean consume(ServerPlayer player, ResourceLocation skill, double amount) {
 		Pool pool = pool(player, skill);
 
 		if (pool.current < amount) {
@@ -147,7 +147,7 @@ public final class SkillStorage {
 	}
 
 	/** 回复：加上回复量并封顶到存储总量。 */
-	public static void regenerate(ServerPlayer player, Identifier skill, double amount) {
+	public static void regenerate(ServerPlayer player, ResourceLocation skill, double amount) {
 		Pool pool = pool(player, skill);
 		pool.current = Math.min(max(player, skill), pool.current + amount);
 		sync(player, skill, pool);
@@ -155,24 +155,24 @@ public final class SkillStorage {
 
 	/** 把某个玩家所有技能的当前值推给客户端（进服时调一次，HUD 才有初始值）。 */
 	public static void syncAll(ServerPlayer player) {
-		for (Identifier skill : CONFIGS.keySet()) {
+		for (ResourceLocation skill : CONFIGS.keySet()) {
 			sync(player, skill, pool(player, skill));
 		}
 	}
 
-	private static void sync(ServerPlayer player, Identifier skill, Pool pool) {
+	private static void sync(ServerPlayer player, ResourceLocation skill, Pool pool) {
 		ServerPlayNetworking.send(player,
 				new SkillSyncPayload(skill, pool.current, max(player, skill)));
 	}
 
-	private static Pool pool(ServerPlayer player, Identifier skill) {
+	private static Pool pool(ServerPlayer player, ResourceLocation skill) {
 		return POOLS
 				.computeIfAbsent(player.getUUID(), uuid -> new HashMap<>())
 				.computeIfAbsent(skill, id -> new Pool(initial(id)));
 	}
 
 	/** 某个技能的开局值；没注册过的技能从 0 开始。 */
-	private static double initial(Identifier skill) {
+	private static double initial(ResourceLocation skill) {
 		Config config = CONFIGS.get(skill);
 		return config == null ? 0.0D : config.initial();
 	}
@@ -183,13 +183,13 @@ public final class SkillStorage {
 		}
 
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-			Map<Identifier, Pool> pools = POOLS.get(player.getUUID());
+			Map<ResourceLocation, Pool> pools = POOLS.get(player.getUUID());
 
 			if (pools == null) {
 				continue;
 			}
 
-			for (Map.Entry<Identifier, Pool> entry : pools.entrySet()) {
+			for (Map.Entry<ResourceLocation, Pool> entry : pools.entrySet()) {
 				Config config = CONFIGS.get(entry.getKey());
 
 				if (config == null) {

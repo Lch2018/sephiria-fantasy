@@ -32,7 +32,7 @@ public final class PatienceTalent {
 			net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry.<Long>builder()
 					.persistent(Codec.LONG)
 					.copyOnDeath()
-					.buildAndRegister(net.minecraft.resources.Identifier.fromNamespaceAndPath(
+					.buildAndRegister(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
 							Sephiria.MOD_ID, "patience_revive_ready_at"));
 
 	private PatienceTalent() {

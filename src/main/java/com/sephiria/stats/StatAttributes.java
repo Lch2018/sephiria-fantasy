@@ -2,7 +2,7 @@ package com.sephiria.stats;
 
 import com.sephiria.Sephiria;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -21,10 +21,10 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
  * 那部分血要自己回满——和原版加血量上限的观感一致。
  */
 public final class StatAttributes {
-	private static final Identifier MOVE_SPEED_MODIFIER =
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_move_speed");
-	private static final Identifier MAX_HP_MODIFIER =
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_max_hp");
+	private static final ResourceLocation MOVE_SPEED_MODIFIER =
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_move_speed");
+	private static final ResourceLocation MAX_HP_MODIFIER =
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_max_hp");
 	/** 检查间隔（tick）：属性变化后最多等这么久就会重算。 */
 	private static final int CHECK_INTERVAL = 4;
 	/** 原版「幸运」buff 每次续多久（刻）：每 4 刻对账一次，时长比它大就不会闪断。 */

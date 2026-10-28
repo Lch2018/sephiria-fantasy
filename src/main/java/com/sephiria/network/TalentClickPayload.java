@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：天赋界面上的按钮。
@@ -16,7 +16,7 @@ import net.minecraft.resources.Identifier;
  */
 public record TalentClickPayload(int page, int delta, boolean reset) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<TalentClickPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "talent_click"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "talent_click"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, TalentClickPayload> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.VAR_INT, TalentClickPayload::page,

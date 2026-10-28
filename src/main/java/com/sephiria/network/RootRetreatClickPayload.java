@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：在根之退界面里做的操作。
@@ -24,7 +24,7 @@ public record RootRetreatClickPayload(int action, int option, int delta) impleme
 	public static final int ACTION_APPLY = 2;
 
 	public static final CustomPacketPayload.Type<RootRetreatClickPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat_click"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "root_retreat_click"));
 
 	public static final StreamCodec<FriendlyByteBuf, RootRetreatClickPayload> STREAM_CODEC = StreamCodec.of(
 			(FriendlyByteBuf buffer, RootRetreatClickPayload payload) -> {

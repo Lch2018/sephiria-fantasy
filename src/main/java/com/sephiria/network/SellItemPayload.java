@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：在商店页面点了一次「出售」。
@@ -15,7 +15,7 @@ public record SellItemPayload() implements CustomPacketPayload {
 	public static final SellItemPayload INSTANCE = new SellItemPayload();
 
 	public static final CustomPacketPayload.Type<SellItemPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sell_item"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sell_item"));
 
 	public static final StreamCodec<ByteBuf, SellItemPayload> STREAM_CODEC = StreamCodec.unit(INSTANCE);
 

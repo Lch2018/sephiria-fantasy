@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 服务端 → 客户端：太阳剑的现有数量 / 上限。
@@ -16,7 +16,7 @@ import net.minecraft.resources.Identifier;
  */
 public record SunSwordSyncPayload(double current, double max) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<SunSwordSyncPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_sword_sync"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_sword_sync"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, SunSwordSyncPayload> STREAM_CODEC =
 			StreamCodec.composite(

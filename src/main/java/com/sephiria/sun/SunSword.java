@@ -18,7 +18,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -106,7 +106,7 @@ public final class SunSword {
 	/** 掉落的太阳剑记着主人：只有本人走过去才会被拾取（也用它在重登后认领地上的剑）。 */
 	public static final DataComponentType<UUID> OWNER = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_sword_owner"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_sword_owner"),
 			DataComponentType.<UUID>builder()
 					.persistent(Codec.STRING.xmap(UUID::fromString, UUID::toString))
 					.networkSynchronized(ByteBufCodecs.STRING_UTF8.map(UUID::fromString, UUID::toString))
@@ -120,10 +120,10 @@ public final class SunSword {
 	 */
 	public static final DataComponentType<Unit> ICE_DROP = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_sword_ice"),
+			ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "sun_sword_ice"),
 			DataComponentType.<Unit>builder()
 					.persistent(Unit.CODEC)
-					.networkSynchronized(Unit.STREAM_CODEC)
+					.networkSynchronized(net.minecraft.network.codec.StreamCodec.unit(Unit.INSTANCE))
 					.build());
 
 	/** 一名玩家的太阳剑状态。 */
@@ -425,7 +425,7 @@ public final class SunSword {
 
 		// 直接打在敌人身上（不是从玩家那儿飞过去的实体），所以先清无敌帧，保证这一下落地
 		SephiriaDamage.clearDamageCooldown(target);
-		target.hurtServer(level, ice ? SephiriaDamage.iceSunSword(level, player) : SephiriaDamage.sunSword(level, player),
+		target.hurt(ice ? SephiriaDamage.iceSunSword(level, player) : SephiriaDamage.sunSword(level, player),
 				(float) damage);
 		slash(level, target, player, enlarged, ice);
 		drop(level, player, ArtifactEffects.sunSwordDropNearPlayer(player) ? player.position() : target.position(),

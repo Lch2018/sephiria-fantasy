@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 服务端 → 客户端：某个实体进入了无敌窗口。
@@ -16,7 +16,7 @@ import net.minecraft.resources.Identifier;
  */
 public record InvulnerablePayload(int entityId, int ticks) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<InvulnerablePayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "invulnerable"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "invulnerable"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, InvulnerablePayload> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.VAR_INT, InvulnerablePayload::entityId,

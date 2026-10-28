@@ -13,12 +13,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BeaconBeamOwner;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 
-import java.util.List;
 
 /**
  * 赛菲莉娅信标：单格容器 + 一条与原版信标同款的光柱。
@@ -31,7 +27,7 @@ import java.util.List;
  * {@link #setChanged()} 里额外发一次方块更新（原版 ChunkHolder 会顺带广播
  * {@link #getUpdatePacket()}）。
  */
-public class SephiriaBeaconBlockEntity extends BlockEntity implements Container, BeaconBeamOwner {
+public class SephiriaBeaconBlockEntity extends BlockEntity implements Container {
 	private static final String KEY_ITEM = "item";
 
 	private ItemStack item = ItemStack.EMPTY;
@@ -43,16 +39,6 @@ public class SephiriaBeaconBlockEntity extends BlockEntity implements Container,
 	/** 容器里那件物品（只读副本由调用方自己复制；这里返回真实栈，原版容器习惯如此）。 */
 	public ItemStack heldItem() {
 		return this.item;
-	}
-
-	/** 光柱：有物品才有一条，颜色 = 品质色；最后一段原版渲染器会自动拉到建筑高度。 */
-	@Override
-	public List<BeaconBeamOwner.Section> getBeamSections() {
-		if (this.item.isEmpty()) {
-			return List.of();
-		}
-
-		return List.of(new BeaconBeamOwner.Section(BeaconLoot.beamColor(this.item)));
 	}
 
 	@Override
@@ -140,18 +126,20 @@ public class SephiriaBeaconBlockEntity extends BlockEntity implements Container,
 	}
 
 	@Override
-	protected void saveAdditional(ValueOutput output) {
-		super.saveAdditional(output);
+	protected void saveAdditional(CompoundTag output, HolderLookup.Provider registries) {
+		super.saveAdditional(output, registries);
 		// ItemStack.CODEC 不允许空气（0 个物品）；空容器就不写这个字段，读的时候缺省为空
 		if (!this.item.isEmpty()) {
-			output.store(KEY_ITEM, ItemStack.CODEC, this.item);
+			output.put(KEY_ITEM, this.item.saveOptional(registries));
 		}
 	}
 
 	@Override
-	protected void loadAdditional(ValueInput input) {
-		super.loadAdditional(input);
-		this.item = input.read(KEY_ITEM, ItemStack.CODEC).orElse(ItemStack.EMPTY);
+	protected void loadAdditional(CompoundTag input, HolderLookup.Provider registries) {
+		super.loadAdditional(input, registries);
+		this.item = input.contains(KEY_ITEM)
+				? ItemStack.parseOptional(registries, input.getCompound(KEY_ITEM))
+				: ItemStack.EMPTY;
 
 		if (!this.item.isEmpty()) {
 			this.item = this.item.copyWithCount(Math.min(this.item.getCount(), getMaxStackSize(this.item)));

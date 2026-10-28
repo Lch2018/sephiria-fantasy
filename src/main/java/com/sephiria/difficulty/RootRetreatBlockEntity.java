@@ -6,8 +6,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 
 /**
  * 根之退方块上存着的<b>方案</b>（草稿）：每项难度选项一个等级。
@@ -97,18 +95,18 @@ public class RootRetreatBlockEntity extends BlockEntity {
 	}
 
 	@Override
-	protected void saveAdditional(ValueOutput output) {
-		super.saveAdditional(output);
+	protected void saveAdditional(net.minecraft.nbt.CompoundTag output, net.minecraft.core.HolderLookup.Provider registries) {
+		super.saveAdditional(output, registries);
 		output.putIntArray(KEY_LEVELS, this.levels);
 		output.putLong(KEY_PLACED_AT, this.placedAt);
 	}
 
 	@Override
-	protected void loadAdditional(ValueInput input) {
-		super.loadAdditional(input);
-		this.levels = clampAll(input.getIntArray(KEY_LEVELS).orElse(new int[0]));
+	protected void loadAdditional(net.minecraft.nbt.CompoundTag input, net.minecraft.core.HolderLookup.Provider registries) {
+		super.loadAdditional(input, registries);
+		this.levels = clampAll(input.getIntArray(KEY_LEVELS));
 		// 老存档没有这个键 → 0（世界时间早就超过 24000，等同「早已放好」）
-		this.placedAt = input.getLongOr(KEY_PLACED_AT, 0L);
+		this.placedAt = input.getLong(KEY_PLACED_AT);
 	}
 
 	/** 把读回来的数组规整成「枚举长度、逐项夹住」的样子（存档里的数组可能长短不一）。 */

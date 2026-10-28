@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 服务端 → 客户端：冰霜武具四件 + 「斩」的状态（HUD 那一行「冰霜武具：剑 锤 矛 弓x/7 斩」读它）。
@@ -22,22 +22,24 @@ public record FrostSyncPayload(boolean hasScabbard, boolean scabbardReady,
 		boolean hasBow, int bowAmmo, int bowMax,
 		boolean hasGuillotine, boolean guillotineReady) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<FrostSyncPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "frost_sync"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "frost_sync"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, FrostSyncPayload> STREAM_CODEC =
-			StreamCodec.composite(
-					ByteBufCodecs.BOOL, FrostSyncPayload::hasScabbard,
-					ByteBufCodecs.BOOL, FrostSyncPayload::scabbardReady,
-					ByteBufCodecs.BOOL, FrostSyncPayload::hasHammer,
-					ByteBufCodecs.BOOL, FrostSyncPayload::hammerReady,
-					ByteBufCodecs.BOOL, FrostSyncPayload::hasSpear,
-					ByteBufCodecs.BOOL, FrostSyncPayload::spearReady,
-					ByteBufCodecs.BOOL, FrostSyncPayload::hasBow,
-					ByteBufCodecs.VAR_INT, FrostSyncPayload::bowAmmo,
-					ByteBufCodecs.VAR_INT, FrostSyncPayload::bowMax,
-					ByteBufCodecs.BOOL, FrostSyncPayload::hasGuillotine,
-					ByteBufCodecs.BOOL, FrostSyncPayload::guillotineReady,
-					FrostSyncPayload::new);
+			StreamCodec.of((buf, payload) -> {
+				buf.writeBoolean(payload.hasScabbard());
+				buf.writeBoolean(payload.scabbardReady());
+				buf.writeBoolean(payload.hasHammer());
+				buf.writeBoolean(payload.hammerReady());
+				buf.writeBoolean(payload.hasSpear());
+				buf.writeBoolean(payload.spearReady());
+				buf.writeBoolean(payload.hasBow());
+				buf.writeVarInt(payload.bowAmmo());
+				buf.writeVarInt(payload.bowMax());
+				buf.writeBoolean(payload.hasGuillotine());
+				buf.writeBoolean(payload.guillotineReady());
+			}, buf -> new FrostSyncPayload(buf.readBoolean(), buf.readBoolean(), buf.readBoolean(),
+					buf.readBoolean(), buf.readBoolean(), buf.readBoolean(), buf.readBoolean(),
+					buf.readVarInt(), buf.readVarInt(), buf.readBoolean(), buf.readBoolean()));
 
 	/** 一件都没带（收 UI）。 */
 	public static FrostSyncPayload none() {

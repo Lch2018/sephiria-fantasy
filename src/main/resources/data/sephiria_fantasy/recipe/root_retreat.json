@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    "minecraft:cobblestone",
-    "#minecraft:saplings"
+    {
+      "item": "minecraft:cobblestone"
+    },
+    {
+      "tag": "minecraft:saplings"
+    }
   ],
   "result": {
     "id": "sephiria_fantasy:root_retreat"

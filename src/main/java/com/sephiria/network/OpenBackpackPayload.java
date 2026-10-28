@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 客户端 → 服务端：请求打开赛菲莉娅背包的界面。
@@ -16,7 +16,7 @@ public record OpenBackpackPayload() implements CustomPacketPayload {
 	public static final OpenBackpackPayload INSTANCE = new OpenBackpackPayload();
 
 	public static final CustomPacketPayload.Type<OpenBackpackPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "open_backpack"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "open_backpack"));
 
 	public static final StreamCodec<ByteBuf, OpenBackpackPayload> STREAM_CODEC = StreamCodec.unit(INSTANCE);
 

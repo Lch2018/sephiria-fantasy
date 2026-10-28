@@ -1,8 +1,9 @@
 package com.sephiria.beacon;
 
+import com.sephiria.util.MenuLayout;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModMenus;
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Unit;
@@ -48,12 +49,12 @@ public class SephiriaBeaconMenu extends AbstractContainerMenu {
 				return stack.is(ModItems.ENCHANT_COIN) ? 3 : 1;
 			}
 		});
-		addStandardInventorySlots(inventory, 8, PLAYER_ROWS_Y);
+		MenuLayout.addPlayerInventory(this::addSlot, inventory, 8, PLAYER_ROWS_Y);
 	}
 
 	/** 服务端使用：把菜单绑到方块实体那个真实容器上。 */
-	public static ExtendedMenuProvider<Unit> provider(ServerPlayer player, SephiriaBeaconBlockEntity beacon) {
-		return new ExtendedMenuProvider<Unit>() {
+	public static ExtendedScreenHandlerFactory<Unit> provider(ServerPlayer player, SephiriaBeaconBlockEntity beacon) {
+		return new ExtendedScreenHandlerFactory<Unit>() {
 			@Override
 			public Unit getScreenOpeningData(ServerPlayer ignored) {
 				return Unit.INSTANCE;

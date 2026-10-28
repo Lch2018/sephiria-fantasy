@@ -4,7 +4,7 @@ import com.sephiria.Sephiria;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,18 +20,18 @@ import java.util.List;
  */
 public record ArtifactSkillsPayload(List<Entry> skills, List<String> slots) implements CustomPacketPayload {
 	/** 一条可用技能：神器物品 id + 实际等级（图标与名字都用这件神器）。 */
-	public record Entry(Identifier item, int level) {
+	public record Entry(ResourceLocation item, int level) {
 	}
 
 	public static final CustomPacketPayload.Type<ArtifactSkillsPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_skills"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "artifact_skills"));
 
 	public static final StreamCodec<FriendlyByteBuf, ArtifactSkillsPayload> STREAM_CODEC = StreamCodec.of(
 			(FriendlyByteBuf buffer, ArtifactSkillsPayload payload) -> {
 				buffer.writeVarInt(payload.skills().size());
 
 				for (Entry entry : payload.skills()) {
-					Identifier.STREAM_CODEC.encode(buffer, entry.item());
+					ResourceLocation.STREAM_CODEC.encode(buffer, entry.item());
 					buffer.writeVarInt(entry.level());
 				}
 
@@ -46,7 +46,7 @@ public record ArtifactSkillsPayload(List<Entry> skills, List<String> slots) impl
 				List<Entry> skills = new ArrayList<>(count);
 
 				for (int index = 0; index < count; index++) {
-					skills.add(new Entry(Identifier.STREAM_CODEC.decode(buffer), buffer.readVarInt()));
+					skills.add(new Entry(ResourceLocation.STREAM_CODEC.decode(buffer), buffer.readVarInt()));
 				}
 
 				int slots = buffer.readVarInt();

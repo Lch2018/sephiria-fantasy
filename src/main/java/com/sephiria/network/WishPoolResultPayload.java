@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.List;
  */
 public record WishPoolResultPayload(List<ItemStack> items) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<WishPoolResultPayload> TYPE =
-			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool_result"));
+			new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Sephiria.MOD_ID, "wish_pool_result"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, WishPoolResultPayload> STREAM_CODEC = StreamCodec.composite(
 			ItemStack.STREAM_CODEC.apply(ByteBufCodecs.list()), WishPoolResultPayload::items,
