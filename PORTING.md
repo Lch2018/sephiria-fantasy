@@ -33,8 +33,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.92.12+1.20.1` + Java 17。
 - 核心 `compileJava` 通过；无头服务端启动通过（注册、BE、资源、7 张配方、1271 个进度可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1096138 B，
-  sha256 `d9f09ddb15ed7eb574c1cc2af2aff28d6702d8c0d8b95caaff4f3cab181dc781`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1097921 B，
+  sha256 `0a685a83fc6bde9c98616a1787731c90326cc56967539e2b4d6d9f979504ee7d`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1\mods`。
 - 客户端同样有 `SephiriaClient` 与通用容器界面（9 个菜单），访问拓宽打开
   `MenuScreens.register`；提示行已接 `ArtifactTooltip`（1.20.1 的三参回调）。
@@ -42,6 +42,7 @@
   `ArtifactHud` 每 5 刻推送、进服先推一份；客户端显示左下角技能/神器图标、冷却遮罩与充能条。
   信标界面也已换回品质色外框。冲刺（鼠标侧键）与装填（R）已用旧 channel 接回，
   服务端分别调用 `DashSkill.perform` 与 `SephiriaCrossbowItem.tryReload`；
+  神器技能 6 个按键（默认未绑定）也走 `CastArtifactSkillPayload` → `ArtifactSkills.cast`。
   其余专属界面与网络包仍未迁。
 - 1.20.1 的数据层与 API 迁移：
   - 物品状态（神器等级/连击、石板朝向/刻印/图案、宝箱奖励、刀入鞘、太阳剑主人、
