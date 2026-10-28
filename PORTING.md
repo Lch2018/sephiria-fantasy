@@ -10,8 +10,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.116.17+1.21.1`。
 - 核心 `compileJava` 通过；临时无头服务端启动通过（注册、BE、资源、配方可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1164140 B，
-  sha256 `ebf1c45729d4cd5ec1c19ae5934c1b5853a24282bef01b56e5e80cc3b65f84b7`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1165619 B，
+  sha256 `4cc6c786f996f69afd5fd0e41ec27f01b79d97713235d931d67a6b376e17d71d`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.21.1-Fabric 0.20.1\mods`。
 - 客户端已有入口 `com.sephiria.client.SephiriaClient`：注册 9 个容器菜单的通用界面
   （深色面板 + 槽位底 + 标题），并接回冲刺（鼠标侧键）与装填（R）按键。
@@ -39,8 +39,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.92.12+1.20.1` + Java 17。
 - 核心 `compileJava` 通过；无头服务端启动通过（注册、BE、资源、7 张配方、1271 个进度可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1168501 B，
-  sha256 `98b863b8aaf452310e8b8c51a2db9a05461de2bb2db3ce26b0621b1dbe73ad37`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1169973 B，
+  sha256 `00bbc41b0f602fdee365d5f2ec42da8c3774d8d12436de3cf7efc1c1eae7beb6`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1\mods`。
 - 客户端同样有 `SephiriaClient` 与通用容器界面（9 个菜单），访问拓宽打开
   `MenuScreens.register`；提示行已接 `ArtifactTooltip`（1.20.1 的三参回调）。
@@ -75,9 +75,10 @@
   商人界面在商品格下方显示物品名；两版 H 键可开关 HUD 并切换 100/125/150% 缩放
   （配置持久化到 `config/sephiria-fantasy-hud.properties`）。
   ModMenu 配置入口已接（打开 HUD 设置页），ToroHealth/ModMenu 声明为可选依赖；
+  HUD 设置页已支持分模块开关（技能/神器）与拖动预览框调整偏移；
   ToroHealth 1.5.1 已接轻量染色：命中后 150ms 内按武器分支改伤害数字颜色
   （`HealthChangeParticleMixin`，required:false）；元素/暴击精确着色仍未移植。
-  仍缺：26.3 的模块化 HUD 拖拽/分模块开关、部分专属绘制与客户端实测。
+  仍缺：ToroHealth 完整元素/暴击方案、26.3 专属界面绘制细节与客户端实测。
 
 ## 注意
 
