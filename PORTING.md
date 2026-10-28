@@ -10,8 +10,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.116.17+1.21.1`。
 - 核心 `compileJava` 通过；临时无头服务端启动通过（注册、BE、资源、配方可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1148944 B，
-  sha256 `e9067a422303ddc6b9a18c470e638b71738c62320c9c59d14e3cd580c1c92110`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1152025 B，
+  sha256 `abbe663e657c6c03f8f389254c55f3c0c42f19861982254cdd90d681646b8e20`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.21.1-Fabric 0.20.1\mods`。
 - 客户端已有入口 `com.sephiria.client.SephiriaClient`：注册 9 个容器菜单的通用界面
   （深色面板 + 槽位底 + 标题），并接回冲刺（鼠标侧键）与装填（R）按键。
@@ -25,6 +25,8 @@
   商人石板合成按钮、合成界面合成与输入格 R 旋转。
 - 第 3 轮已补：根之退加减/清空/应用、许愿池抽卡/溢出/锚定/神铸、技能页（L）、
   属性页（K）、天赋页（T）。所有容器菜单现在都有可操作界面，不再是纯通用面板。
+- 第 4 轮已补：自定义粒子的客户端 Provider（blue_spark/snowfall/plasma/sun_slash/
+  frost_qi/flame_qi/ice_slash），粒子能正常显示；26.3 的方向/尺寸参数暂未还原。
 - **暂缺**：26.3 的模块化 HUD 布局/缩放/拖拽、ToroHealth/ModMenu 兼容、GeckoLib 刀动画、
   原版 mixin、各界面专属绘制与按钮。当前是「能打开容器、能操作槽位、有基础 HUD」的客户端，
   不是完整可玩版。
@@ -37,8 +39,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.92.12+1.20.1` + Java 17。
 - 核心 `compileJava` 通过；无头服务端启动通过（注册、BE、资源、7 张配方、1271 个进度可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1152700 B，
-  sha256 `39b320d5199a8d051cb35c1eb81d174d35e5ea01636bfbf6b8219a17ed5b6b1b`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1155773 B，
+  sha256 `4113df6f70bfff9139431595a11f03b70eb2346d5a1065137820ca3e8f12335b`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1\mods`。
 - 客户端同样有 `SephiriaClient` 与通用容器界面（9 个菜单），访问拓宽打开
   `MenuScreens.register`；提示行已接 `ArtifactTooltip`（1.20.1 的三参回调）。
@@ -68,7 +70,7 @@
   - 界面是统一的深色面板，没有 26.3 的专属绘制、按钮与滚动条；
   - 物品模型里的 `items/*.json`（1.21.4+ 格式）在 1.20.1 被忽略，按 `models/item/*.json` 渲染，
     因此按状态/组件换贴图的效果暂时没有。
-- 下一步优先级：补 HUD 与各界面专属绘制/按钮；再做旧版网络通道和 GeckoLib 动画。
+- 第 4 轮已补自定义粒子的客户端 Provider；其余专属绘制/按钮、GeckoLib 动画仍未迁。
 
 ## 注意
 
