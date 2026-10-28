@@ -277,6 +277,31 @@ public class Sephiria implements ModInitializer {
 						shop.refresh(player);
 					}
 				}));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.RootRetreatClickPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					com.sephiria.network.RootRetreatClickPayload payload =
+							com.sephiria.network.RootRetreatClickPayload.read(buffer);
+					server.execute(() -> {
+						if (!(player.containerMenu instanceof RootRetreatMenu menu)) {
+							return;
+						}
+
+						com.sephiria.difficulty.DifficultyOption[] options =
+								com.sephiria.difficulty.DifficultyOption.values();
+
+						switch (payload.action()) {
+							case com.sephiria.network.RootRetreatClickPayload.ACTION_ADJUST -> {
+								if (payload.option() >= 0 && payload.option() < options.length) {
+									menu.adjust(options[payload.option()], payload.delta() < 0 ? -1 : 1);
+								}
+							}
+							case com.sephiria.network.RootRetreatClickPayload.ACTION_CLEAR -> menu.clear();
+							case com.sephiria.network.RootRetreatClickPayload.ACTION_APPLY -> menu.apply();
+							default -> {
+							}
+						}
+					});
+				});
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.UpgradeArtifactPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> {
 					int levels = com.sephiria.network.UpgradeArtifactPayload.read(buffer).levels();

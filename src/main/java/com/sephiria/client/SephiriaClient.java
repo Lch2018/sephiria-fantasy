@@ -77,9 +77,8 @@ public final class SephiriaClient implements ClientModInitializer {
 				ModMenus.SLATE_FUSION, com.sephiria.client.slate.SlateFusionScreen::new);
 		MenuScreens.<SephiriaTraderMenu, com.sephiria.client.trader.TraderScreen>register(ModMenus.TRADER,
 				com.sephiria.client.trader.TraderScreen::new);
-		MenuScreens.<RootRetreatMenu, SephiriaMenuScreen<RootRetreatMenu>>register(ModMenus.ROOT_RETREAT,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						RootRetreatMenu.IMAGE_WIDTH, 220, false));
+		MenuScreens.<RootRetreatMenu, com.sephiria.client.difficulty.RootRetreatScreen>register(
+				ModMenus.ROOT_RETREAT, com.sephiria.client.difficulty.RootRetreatScreen::new);
 		MenuScreens.<WishPoolMenu, SephiriaMenuScreen<WishPoolMenu>>register(ModMenus.WISH_POOL,
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
 						WishPoolMenu.IMAGE_WIDTH, WishPoolMenu.IMAGE_HEIGHT, false));
