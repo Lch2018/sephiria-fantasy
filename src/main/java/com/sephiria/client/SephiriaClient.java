@@ -79,9 +79,8 @@ public final class SephiriaClient implements ClientModInitializer {
 				com.sephiria.client.trader.TraderScreen::new);
 		MenuScreens.<RootRetreatMenu, com.sephiria.client.difficulty.RootRetreatScreen>register(
 				ModMenus.ROOT_RETREAT, com.sephiria.client.difficulty.RootRetreatScreen::new);
-		MenuScreens.<WishPoolMenu, SephiriaMenuScreen<WishPoolMenu>>register(ModMenus.WISH_POOL,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						WishPoolMenu.IMAGE_WIDTH, WishPoolMenu.IMAGE_HEIGHT, false));
+		MenuScreens.<WishPoolMenu, com.sephiria.client.wishpool.WishPoolScreen>register(
+				ModMenus.WISH_POOL, com.sephiria.client.wishpool.WishPoolScreen::new);
 		MenuScreens.<com.sephiria.beacon.SephiriaBeaconMenu, com.sephiria.client.beacon.SephiriaBeaconScreen>register(
 				ModMenus.SEPHIRIA_BEACON, com.sephiria.client.beacon.SephiriaBeaconScreen::new);
 
