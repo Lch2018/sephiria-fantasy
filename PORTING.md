@@ -10,14 +10,17 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.116.17+1.21.1`。
 - 核心 `compileJava` 通过；临时无头服务端启动通过（注册、BE、资源、配方可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1109061 B，
-  sha256 `2a4fa20d8e7e5368313f62a9a179462432cd6ac01885dcf1a4bf004772772b9d`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1113420 B，
+  sha256 `22ce4adda6bb482da7d9f14021a8e13a326ad08c1556bb4637b3a8fb85d6bdf7`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.21.1-Fabric 0.20.1\mods`。
 - 客户端已有入口 `com.sephiria.client.SephiriaClient`：注册 9 个容器菜单的通用界面
   （深色面板 + 槽位底 + 标题），并接回冲刺（鼠标侧键）与装填（R）按键。
   访问拓宽打开了 1.21.1 包私有的 `MenuScreens.register`。
-- **暂缺**：26.3 的自绘 HUD、ToroHealth/ModMenu 兼容、GeckoLib 刀动画、原版 mixin、
-  各界面专属绘制与按钮。当前是「能打开容器、能操作槽位」的基础客户端，不是完整可玩版。
+- HUD 已接基础版：左下角两排图标（技能 / 神器）、冷却遮罩与绿色充能条；
+  数据来自服务端 `HudSyncPayload`，两包之间按客户端刻数平滑。
+- **暂缺**：26.3 的模块化 HUD 布局/缩放/拖拽、ToroHealth/ModMenu 兼容、GeckoLib 刀动画、
+  原版 mixin、各界面专属绘制与按钮。当前是「能打开容器、能操作槽位、有基础 HUD」的客户端，
+  不是完整可玩版。
 - 1.21.1 专用的简化点：
   - `SephiriaKatanaItem` 先去掉 GeckoLib 与剑意，保留出鞘/入鞘属性切换。
   - 信标光柱实体渲染器未接（核心 BE 已迁）。
