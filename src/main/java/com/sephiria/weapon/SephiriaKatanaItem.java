@@ -72,7 +72,11 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	@Override
 	public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
 		controllers.add(new AnimationController<>(this, "main", 0,
-				state -> state.setAndContinue(RawAnimation.begin().thenLoop("animation.idle_unsheathed"))));
+				state -> state.setAndContinue(RawAnimation.begin().thenLoop("animation.idle_unsheathed")))
+				.triggerableAnim("sheathed", RawAnimation.begin()
+						.thenPlay("animation.switch_to_sheathed").thenLoop("animation.idle_sheathed"))
+				.triggerableAnim("unsheathed", RawAnimation.begin()
+						.thenPlay("animation.switch_to_unsheathed").thenLoop("animation.idle_unsheathed")));
 	}
 
 	@Override
@@ -122,6 +126,8 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 			ItemData.setBoolean(stack, SHEATHED, sheathed);
 			serverPlayer.getCooldowns().addCooldown(stack.getItem(), SWITCH_TICKS);
 			Invulnerability.grant(serverPlayer, BLOCK_TICKS);
+			this.triggerAnim(serverPlayer, GeoItem.getOrAssignId(stack, serverPlayer.serverLevel()),
+					"main", sheathed ? "sheathed" : "unsheathed");
 			level.playSound(null, player.getX(), player.getY(), player.getZ(),
 					SoundEvents.ARMOR_EQUIP_IRON, SoundSource.PLAYERS, 1.0F, sheathed ? 0.8F : 1.2F);
 		}
