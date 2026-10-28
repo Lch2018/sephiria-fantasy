@@ -33,6 +33,10 @@
 		"fabric-api": "*",
 		"geckolib": "*"
 	},
+	"suggests": {
+		"torohealth": "*",
+		"modmenu": "*"
+	},
 	"mixins": [],
 	"accessWidener": "sephiria_fantasy.accesswidener"
 }
