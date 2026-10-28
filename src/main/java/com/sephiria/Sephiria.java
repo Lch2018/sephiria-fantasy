@@ -277,6 +277,15 @@ public class Sephiria implements ModInitializer {
 						shop.refresh(player);
 					}
 				}));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.UpgradeArtifactPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					int levels = com.sephiria.network.UpgradeArtifactPayload.read(buffer).levels();
+					server.execute(() -> {
+						if (player.containerMenu instanceof EnchantMenu menu) {
+							menu.upgrade(levels);
+						}
+					});
+				});
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.RotateSlatePayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> {
 					int slotId = com.sephiria.network.RotateSlatePayload.read(buffer).slot();
