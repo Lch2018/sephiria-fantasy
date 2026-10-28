@@ -76,9 +76,8 @@ public final class SephiriaClient implements ClientModInitializer {
 		MenuScreens.<ChestMenu, SephiriaMenuScreen<ChestMenu>>register(ModMenus.CHEST,
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
 						ChestMenu.IMAGE_WIDTH, ChestMenu.imageHeight(), true));
-		MenuScreens.<ShopMenu, SephiriaMenuScreen<ShopMenu>>register(ModMenus.SHOP,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						ShopMenu.IMAGE_WIDTH, ShopMenu.imageHeight(), true));
+		MenuScreens.<ShopMenu, com.sephiria.client.shop.ShopScreen>register(ModMenus.SHOP,
+				com.sephiria.client.shop.ShopScreen::new);
 		MenuScreens.<SlateFusionMenu, SephiriaMenuScreen<SlateFusionMenu>>register(ModMenus.SLATE_FUSION,
 				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
 						SlateFusionMenu.IMAGE_WIDTH, SlateFusionMenu.imageHeight(), true));
