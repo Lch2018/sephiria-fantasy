@@ -11,6 +11,7 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	modImplementation files('libs/geckolib-fabric-1.20.1-4.8.4.jar')
+	modCompileOnly files('libs/modmenu-7.2.2.jar')
 }
 processResources {
 	def version = project.version

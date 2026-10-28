@@ -22,6 +22,9 @@
 		],
 		"client": [
 			"com.sephiria.client.SephiriaClient"
+		],
+		"modmenu": [
+			"com.sephiria.compat.modmenu.SephiriaModMenuIntegration"
 		]
 	},
 	"depends": {
