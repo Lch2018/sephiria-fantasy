@@ -15,6 +15,10 @@ public final class HudConfig {
 			.resolve("sephiria-fantasy-hud.properties");
 	private static boolean visible = true;
 	private static float scale = 1.0F;
+	private static boolean showSkills = true;
+	private static boolean showArtifacts = true;
+	private static int offsetX;
+	private static int offsetY;
 
 	private HudConfig() {
 	}
@@ -30,6 +34,10 @@ public final class HudConfig {
 			properties.load(input);
 			visible = Boolean.parseBoolean(properties.getProperty("visible", "true"));
 			scale = Float.parseFloat(properties.getProperty("scale", "1.0"));
+			showSkills = Boolean.parseBoolean(properties.getProperty("show_skills", "true"));
+			showArtifacts = Boolean.parseBoolean(properties.getProperty("show_artifacts", "true"));
+			offsetX = Integer.parseInt(properties.getProperty("offset_x", "0"));
+			offsetY = Integer.parseInt(properties.getProperty("offset_y", "0"));
 		} catch (IOException | NumberFormatException ignored) {
 		}
 	}
@@ -38,6 +46,10 @@ public final class HudConfig {
 		Properties properties = new Properties();
 		properties.setProperty("visible", Boolean.toString(visible));
 		properties.setProperty("scale", Float.toString(scale));
+		properties.setProperty("show_skills", Boolean.toString(showSkills));
+		properties.setProperty("show_artifacts", Boolean.toString(showArtifacts));
+		properties.setProperty("offset_x", Integer.toString(offsetX));
+		properties.setProperty("offset_y", Integer.toString(offsetY));
 
 		try {
 			Files.createDirectories(FILE.getParent());
@@ -60,6 +72,37 @@ public final class HudConfig {
 
 	public static float scale() {
 		return scale;
+	}
+
+	public static boolean showSkills() {
+		return showSkills;
+	}
+
+	public static boolean showArtifacts() {
+		return showArtifacts;
+	}
+
+	public static void toggleSkills() {
+		showSkills = !showSkills;
+		save();
+	}
+
+	public static void toggleArtifacts() {
+		showArtifacts = !showArtifacts;
+		save();
+	}
+
+	public static int offsetX() {
+		return offsetX;
+	}
+
+	public static int offsetY() {
+		return offsetY;
+	}
+
+	public static void setOffset(int x, int y) {
+		offsetX = x;
+		offsetY = y;
 	}
 
 	public static void cycleScale() {

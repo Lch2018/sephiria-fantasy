@@ -30,8 +30,16 @@ public final class SephiriaHud implements HudRenderCallback {
 		graphics.pose().scale(HudConfig.scale(), HudConfig.scale(), 1.0F);
 
 		int y = graphics.guiHeight() - 64;
-		drawRow(graphics, HudClientData.skills(), MARGIN, y);
-		drawRow(graphics, HudClientData.artifacts(), MARGIN, y - STEP - ROW_GAP);
+		int x = MARGIN + HudConfig.offsetX();
+		y += HudConfig.offsetY();
+
+		if (HudConfig.showSkills()) {
+			drawRow(graphics, HudClientData.skills(), x, y);
+		}
+
+		if (HudConfig.showArtifacts()) {
+			drawRow(graphics, HudClientData.artifacts(), x, y - STEP - ROW_GAP);
+		}
 		graphics.pose().popPose();
 	}
 
