@@ -74,6 +74,8 @@ public final class SephiriaClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		com.sephiria.client.particle.SephiriaParticles.register();
+
 		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.BackpackScreen>register(
 				ModMenus.ARTIFACT_BACKPACK, com.sephiria.client.backpack.BackpackScreen::new);
 		MenuScreens.<EnchantMenu, com.sephiria.client.backpack.EnchantScreen>register(ModMenus.ARTIFACT_ENCHANT,
