@@ -65,14 +65,10 @@ public final class SephiriaClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		MenuScreens.<ArtifactBackpackMenu, SephiriaMenuScreen<ArtifactBackpackMenu>>register(
-				ModMenus.ARTIFACT_BACKPACK,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						ArtifactBackpackMenu.IMAGE_WIDTH, ArtifactBackpackMenu.imageHeight(BackpackWindow.ROWS),
-						true));
-		MenuScreens.<EnchantMenu, SephiriaMenuScreen<EnchantMenu>>register(ModMenus.ARTIFACT_ENCHANT,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title,
-						EnchantMenu.IMAGE_WIDTH, EnchantMenu.imageHeight(), true));
+		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.BackpackScreen>register(
+				ModMenus.ARTIFACT_BACKPACK, com.sephiria.client.backpack.BackpackScreen::new);
+		MenuScreens.<EnchantMenu, com.sephiria.client.backpack.EnchantScreen>register(ModMenus.ARTIFACT_ENCHANT,
+				com.sephiria.client.backpack.EnchantScreen::new);
 		MenuScreens.<ChestMenu, com.sephiria.client.backpack.ChestScreen>register(ModMenus.CHEST,
 				com.sephiria.client.backpack.ChestScreen::new);
 		MenuScreens.<ShopMenu, com.sephiria.client.shop.ShopScreen>register(ModMenus.SHOP,
