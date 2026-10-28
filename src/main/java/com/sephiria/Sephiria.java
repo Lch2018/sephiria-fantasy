@@ -277,6 +277,12 @@ public class Sephiria implements ModInitializer {
 						shop.refresh(player);
 					}
 				}));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.ChestRerollPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(() -> {
+					if (player.containerMenu instanceof com.sephiria.backpack.ChestMenu chest) {
+						chest.reroll(player);
+					}
+				}));
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.SellItemPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> server.execute(() -> {
 					if (player.containerMenu instanceof ShopMenu shop) {
