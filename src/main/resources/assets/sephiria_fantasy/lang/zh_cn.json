@@ -121,6 +121,8 @@
     "item.sephiria_fantasy.rare_slate_chest":  "稀有石板宝箱",
     "screen.sephiria_fantasy.chest":  "宝箱",
     "screen.sephiria_fantasy.chest.hint":  "点一件直接拿走，宝箱会消失",
+    "screen.sephiria_fantasy.chest.free_rerolls":  "免费刷新：%s 次",
+    "screen.sephiria_fantasy.chest.reroll_cost":  "刷新消耗一颗骰子",
     "screen.sephiria_fantasy.trader.slate_fusion":  "石板合成",
     "screen.sephiria_fantasy.slate_fusion":  "石板合成",
     "screen.sephiria_fantasy.slate_fusion.craft":  "合成",

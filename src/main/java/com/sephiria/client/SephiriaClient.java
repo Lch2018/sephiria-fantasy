@@ -2,12 +2,10 @@ package com.sephiria.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.sephiria.backpack.ArtifactBackpackMenu;
-import com.sephiria.backpack.BackpackWindow;
 import com.sephiria.backpack.ChestMenu;
 import com.sephiria.backpack.EnchantMenu;
 import com.sephiria.client.hud.HudClientData;
 import com.sephiria.client.hud.SephiriaHud;
-import com.sephiria.client.menu.SephiriaMenuScreen;
 import com.sephiria.difficulty.RootRetreatBlock;
 import com.sephiria.difficulty.RootRetreatMenu;
 import com.sephiria.network.DashPayload;
@@ -38,8 +36,8 @@ import net.minecraft.network.chat.Component;
 /**
  * 1.21.1 客户端入口（核心版）。
  *
- * <p>目前只做两件不依赖 26.3 渲染管线的事：容器界面注册（统一用 {@link SephiriaMenuScreen}
- * 画一个可用面板）与冲刺 / 装填两个按键。26.3 的自绘 HUD、ToroHealth、ModMenu、
+ * <p>目前只做两件不依赖 26.3 渲染管线的事：容器界面注册（背包 / 附魔 / 石板合成 / 宝箱这几个
+ * 已经换成自绘面板，其余仍用通用面板）与冲刺 / 装填两个按键。26.3 的自绘 HUD、ToroHealth、ModMenu、
  * GeckoLib 刀动画还没有移植，别把这一版当完整客户端。
  */
 public final class SephiriaClient implements ClientModInitializer {
@@ -76,9 +74,8 @@ public final class SephiriaClient implements ClientModInitializer {
 				(stack, context, pose, buffers, light, overlay) -> katanaRenderer.renderByItem(
 						stack, context, pose, buffers, light, overlay));
 
-		MenuScreens.<ArtifactBackpackMenu, SephiriaMenuScreen<ArtifactBackpackMenu>>register(ModMenus.ARTIFACT_BACKPACK,
-				(menu, inventory, title) -> new SephiriaMenuScreen<>(menu, inventory, title, ArtifactBackpackMenu.IMAGE_WIDTH, ArtifactBackpackMenu.imageHeight(BackpackWindow.ROWS),
-						true));
+		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.ArtifactBackpackScreen>register(
+				ModMenus.ARTIFACT_BACKPACK, com.sephiria.client.backpack.ArtifactBackpackScreen::new);
 		MenuScreens.<EnchantMenu, com.sephiria.client.backpack.EnchantScreen>register(
 				ModMenus.ARTIFACT_ENCHANT, com.sephiria.client.backpack.EnchantScreen::new);
 		MenuScreens.<ChestMenu, com.sephiria.client.backpack.ChestScreen>register(ModMenus.CHEST,
