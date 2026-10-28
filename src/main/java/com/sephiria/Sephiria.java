@@ -260,6 +260,10 @@ public class Sephiria implements ModInitializer {
 		// 品质概率的唯一入口（宝箱/商店/抽卡/药水四组比值 + config 覆盖）：服务器启动时读覆盖文件
 		ArtifactLoot.register();
 
+		// ToroHealth 伤害数字的 S2C 包：1.20.1 旧式 channel 没有 PayloadTypeRegistry，
+		// 服务端直接按 channel 发，客户端在 SephiriaClient 里注册接收器；这里保留统一入口。
+		com.sephiria.compat.torohealth.ToroHealthDamagePayload.register();
+
 		// 1.20.1 旧 channel：客户端按键只发一个空包，实际判定全在服务端
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.DashPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> server.execute(() -> DashSkill.perform(player)));

@@ -12,6 +12,12 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	modImplementation files('libs/geckolib-fabric-1.20.1-4.8.4.jar')
 	modCompileOnly files('libs/modmenu-7.2.2.jar')
+	// 可选兼容：ToroHealth-Continued 1.5.1（1.20.1）。只编译期引用；运行时靠 required:false 的
+	// mixin 配置兜底，没装 ToroHealth 时目标类缺失只会跳过，不炸游戏。
+	modCompileOnly files('libs/torohealth-continued-fabric-1.20-1.5.1.jar')
+	// ToroHealth 把 cloth-config 以 JiJ 内嵌在 META-INF/jars 里；编译 HUD mixin 时要解析
+	// ModConfig 的父接口 ConfigData，所以把 cloth-config 也放到编译类路径（不参与打包）。
+	compileOnly files('libs/cloth-config-11.1.136-fabric.jar')
 }
 processResources {
 	def version = project.version

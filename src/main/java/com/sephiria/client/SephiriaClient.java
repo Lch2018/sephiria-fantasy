@@ -144,19 +144,23 @@ public final class SephiriaClient implements ClientModInitializer {
 					HudSyncPayload payload = HudSyncPayload.read(buffer);
 					client.execute(() -> HudClientData.accept(payload));
 				});
-		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> HudClientData.reset());
+		// ToroHealth 可选兼容：收服务端的伤害显示信息，等粒子生成时再匹配。
+		// 没装 ToroHealth 时 ToroHealthCompatClient.accept 会直接丢弃，不会积压。
+		ClientPlayNetworking.registerGlobalReceiver(
+				com.sephiria.compat.torohealth.ToroHealthDamagePayload.CHANNEL,
+				(client, handler, buffer, sender) -> {
+					com.sephiria.compat.torohealth.ToroHealthDamagePayload payload =
+							com.sephiria.compat.torohealth.ToroHealthDamagePayload.read(buffer);
+					client.execute(() -> com.sephiria.compat.torohealth.ToroHealthCompatClient.accept(payload));
+				});
+		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+			HudClientData.reset();
+			// 换世界后别让上个世界残留的待匹配伤害串到新实体上
+			com.sephiria.compat.torohealth.ToroHealthCompatClient.reset();
+		});
 		HudRenderCallback.EVENT.register(new SephiriaHud());
 
 		// 神器 / 石板 / 药水的提示行：名称由原版画，这里补连击、唯一、词条、稀有度与描述
-		net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
-				(player, level, hand, entity, hitResult) -> {
-					if (level.isClientSide()) {
-						ToroHealthColor.mark(player.getItemInHand(hand));
-					}
-
-					return net.minecraft.world.InteractionResult.PASS;
-				});
-
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (DASH_KEY.consumeClick()) {
 				if (client.player != null) {
