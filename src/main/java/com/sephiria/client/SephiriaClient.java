@@ -123,6 +123,15 @@ public final class SephiriaClient implements ClientModInitializer {
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> HudClientData.reset());
 		HudRenderCallback.EVENT.register(new SephiriaHud());
 
+		net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
+				(player, level, hand, entity, hitResult) -> {
+					if (level.isClientSide()) {
+						ToroHealthColor.mark(player.getItemInHand(hand));
+					}
+
+					return net.minecraft.world.InteractionResult.PASS;
+				});
+
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (DASH_KEY.consumeClick()) {
 				if (client.player != null) {

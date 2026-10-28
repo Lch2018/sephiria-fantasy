@@ -37,6 +37,6 @@
 		"torohealth": "*",
 		"modmenu": "*"
 	},
-	"mixins": [],
+	"mixins": ["sephiria_fantasy.mixins.json"],
 	"accessWidener": "sephiria_fantasy.accesswidener"
 }
