@@ -33,5 +33,9 @@
 		"java": ">=17",
 		"fabric-api": "*",
 		"geckolib": "*"
+	},
+	"suggests": {
+		"torohealth": "*",
+		"modmenu": "*"
 	}
 }
