@@ -321,11 +321,26 @@ public class Sephiria implements ModInitializer {
 							return;
 						}
 
+						net.minecraft.world.item.Item item = payload.itemId() <= 0 ? null
+								: net.minecraft.core.registries.BuiltInRegistries.ITEM.byId(payload.itemId());
+
 						switch (payload.action()) {
 							case com.sephiria.network.WishPoolClickPayload.ACTION_DRAW_SINGLE ->
 									menu.draw(payload.slatePool(), 1);
 							case com.sephiria.network.WishPoolClickPayload.ACTION_DRAW_TEN ->
 									menu.draw(payload.slatePool(), com.sephiria.wishpool.WishPool.TEN_DRAW);
+							case com.sephiria.network.WishPoolClickPayload.ACTION_ANCHOR -> {
+								if (item != null) {
+									menu.addAnchor(payload.slatePool(), item);
+								}
+							}
+							case com.sephiria.network.WishPoolClickPayload.ACTION_CLEAR_ANCHORS ->
+									menu.clearAnchors(payload.slatePool());
+							case com.sephiria.network.WishPoolClickPayload.ACTION_FORGE -> {
+								if (item != null) {
+									menu.forge(item);
+								}
+							}
 							case com.sephiria.network.WishPoolClickPayload.ACTION_TOGGLE_OVERFLOW ->
 									menu.toggleOverflowToClover();
 							default -> {

@@ -8,7 +8,10 @@ import net.minecraft.resources.ResourceLocation;
 public record WishPoolClickPayload(int action, boolean slatePool, int itemId) {
 	public static final int ACTION_DRAW_SINGLE = 0;
 	public static final int ACTION_DRAW_TEN = 1;
+	public static final int ACTION_ANCHOR = 2;
+	public static final int ACTION_FORGE = 3;
 	public static final int ACTION_TOGGLE_OVERFLOW = 4;
+	public static final int ACTION_CLEAR_ANCHORS = 5;
 
 	public static final ResourceLocation CHANNEL =
 			new ResourceLocation(Sephiria.MOD_ID, "wish_pool_click");
@@ -19,6 +22,18 @@ public record WishPoolClickPayload(int action, boolean slatePool, int itemId) {
 
 	public static WishPoolClickPayload toggleOverflow() {
 		return new WishPoolClickPayload(ACTION_TOGGLE_OVERFLOW, false, 0);
+	}
+
+	public static WishPoolClickPayload anchor(boolean slatePool, int itemId) {
+		return new WishPoolClickPayload(ACTION_ANCHOR, slatePool, itemId);
+	}
+
+	public static WishPoolClickPayload forge(int itemId) {
+		return new WishPoolClickPayload(ACTION_FORGE, false, itemId);
+	}
+
+	public static WishPoolClickPayload clearAnchors(boolean slatePool) {
+		return new WishPoolClickPayload(ACTION_CLEAR_ANCHORS, slatePool, 0);
 	}
 
 	public static void write(FriendlyByteBuf buffer, WishPoolClickPayload payload) {

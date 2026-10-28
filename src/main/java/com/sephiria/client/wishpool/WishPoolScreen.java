@@ -36,6 +36,16 @@ public class WishPoolScreen extends SephiriaMenuScreen<WishPoolMenu> {
 				Component.translatable("screen.sephiria_fantasy.wish_pool.draw_ten"),
 				button -> send(WishPoolClickPayload.draw(this.slatePool, true)))
 				.bounds(this.leftPos + 82, this.topPos + 192, 84, 18).build());
+		this.addRenderableWidget(Button.builder(Component.literal("锚定主手"),
+				button -> send(WishPoolClickPayload.anchor(this.slatePool, mainHandItemId())))
+				.bounds(this.leftPos + 8, this.topPos + 52, 64, 18).build());
+		this.addRenderableWidget(Button.builder(Component.literal("清除锚定"),
+				button -> send(WishPoolClickPayload.clearAnchors(this.slatePool)))
+				.bounds(this.leftPos + 8, this.topPos + 72, 64, 18).build());
+		this.addRenderableWidget(Button.builder(Component.literal("神铸主手"),
+				button -> send(WishPoolClickPayload.forge(mainHandItemId())))
+				.bounds(this.leftPos + 8, this.topPos + 170, 64, 18).build());
+
 		this.addRenderableWidget(Button.builder(overflowLabel(),
 				button -> {
 					send(WishPoolClickPayload.toggleOverflow());
@@ -62,6 +72,17 @@ public class WishPoolScreen extends SephiriaMenuScreen<WishPoolMenu> {
 				this.menu.overflowToClover()
 						? Component.translatable("screen.sephiria_fantasy.wish_pool.overflow_on")
 						: Component.translatable("screen.sephiria_fantasy.wish_pool.overflow_off"));
+	}
+
+	private static int mainHandItemId() {
+		net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+
+		if (client.player == null) {
+			return 0;
+		}
+
+		return net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(
+				client.player.getMainHandItem().getItem());
 	}
 
 	private static void send(WishPoolClickPayload payload) {
