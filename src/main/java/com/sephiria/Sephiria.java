@@ -299,6 +299,11 @@ public class Sephiria implements ModInitializer {
 						com.sephiria.artifact.ArtifactHud.send(player);
 					});
 				});
+		// 打开天赋界面时客户端要一次最新状态：个人出生点（床 / 重生锚 / 指令）只有服务端知道，
+		// nearSpawn 必须由服务端算好，不能只靠进服时那一次同步（玩家会走动）
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentSyncRequestPayload.CHANNEL,
+				(server, player, handler, buffer, sender) ->
+						server.execute(() -> com.sephiria.talent.Talents.sync(player)));
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentClickPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> {
 					com.sephiria.network.TalentClickPayload payload =

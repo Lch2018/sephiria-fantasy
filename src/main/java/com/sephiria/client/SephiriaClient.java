@@ -53,8 +53,10 @@ public final class SephiriaClient implements ClientModInitializer {
 	private static final KeyMapping STATS_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.stats", InputConstants.Type.KEYSYM, InputConstants.KEY_K, CATEGORY));
 
+	// T 在 1.20.1 是原版聊天键，天赋页默认不绑键，玩家自己去控制里设置
 	private static final KeyMapping TALENT_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-			"key.sephiria_fantasy.talent", InputConstants.Type.KEYSYM, InputConstants.KEY_T, CATEGORY));
+			"key.sephiria_fantasy.talent", InputConstants.Type.KEYSYM,
+			InputConstants.UNKNOWN.getValue(), CATEGORY));
 
 	private static final KeyMapping HUD_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.hud", InputConstants.Type.KEYSYM, InputConstants.KEY_H, CATEGORY));
