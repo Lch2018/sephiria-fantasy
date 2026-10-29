@@ -1,4 +1,4 @@
-package com.sephiria.mixin;
+package com.sephiria.mixin.client;
 
 import com.sephiria.damage.SephiriaDamage;
 import net.minecraft.server.level.ServerLevel;
