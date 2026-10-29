@@ -131,6 +131,12 @@ public final class SephiriaClient implements ClientModInitializer {
 							com.sephiria.network.TalentSyncPayload.read(buffer);
 					client.execute(() -> ClientTalents.accept(payload));
 				});
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.WishPoolResultPayload.CHANNEL,
+				(client, handler, buffer, sender) -> {
+					com.sephiria.network.WishPoolResultPayload payload =
+							com.sephiria.network.WishPoolResultPayload.read(buffer);
+					client.execute(() -> com.sephiria.client.wishpool.ClientWishPool.accept(payload.items()));
+				});
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.StatsSyncPayload.CHANNEL,
 				(client, handler, buffer, sender) -> {
 					com.sephiria.network.StatsSyncPayload payload =

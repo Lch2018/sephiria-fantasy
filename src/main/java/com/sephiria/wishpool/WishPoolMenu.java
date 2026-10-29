@@ -252,7 +252,12 @@ public class WishPoolMenu extends AbstractContainerMenu {
 		scatter(drawn);
 
 		if (!drawn.isEmpty()) {
-
+			net.minecraft.network.FriendlyByteBuf buffer = new net.minecraft.network.FriendlyByteBuf(
+					io.netty.buffer.Unpooled.buffer());
+			com.sephiria.network.WishPoolResultPayload.write(buffer,
+					new com.sephiria.network.WishPoolResultPayload(List.copyOf(drawn)));
+			net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(this.owner,
+					com.sephiria.network.WishPoolResultPayload.CHANNEL, buffer);
 		}
 
 		this.broadcastChanges();

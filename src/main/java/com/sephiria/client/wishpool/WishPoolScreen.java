@@ -121,6 +121,7 @@ public class WishPoolScreen extends SephiriaMenuScreen<WishPoolMenu> {
 	private void startFlip(boolean ten) {
 		this.flipTicks = FLIP_TICKS;
 		this.flipTen = ten;
+		ClientWishPool.clear();
 	}
 
 	private void renderFlipOverlay(GuiGraphics graphics) {
@@ -144,7 +145,14 @@ public class WishPoolScreen extends SephiriaMenuScreen<WishPoolMenu> {
 					originY + CARD_HEIGHT, CARD_FILL);
 
 			if (revealed) {
-				drawDiamond(graphics, x + CARD_WIDTH / 2, originY + CARD_HEIGHT / 2, 12, CARD_EMBLEM);
+				java.util.List<net.minecraft.world.item.ItemStack> items = ClientWishPool.items();
+
+				if (index < items.size() && !items.get(index).isEmpty()) {
+					graphics.renderItem(items.get(index), x + CARD_WIDTH / 2 - 8,
+							originY + CARD_HEIGHT / 2 - 8);
+				} else {
+					drawDiamond(graphics, x + CARD_WIDTH / 2, originY + CARD_HEIGHT / 2, 12, CARD_EMBLEM);
+				}
 			}
 		}
 
