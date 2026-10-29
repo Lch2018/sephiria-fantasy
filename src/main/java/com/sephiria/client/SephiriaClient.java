@@ -69,10 +69,6 @@ public final class SephiriaClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		com.sephiria.client.particle.SephiriaParticles.register();
 		com.sephiria.client.hud.HudConfig.load();
-		com.sephiria.client.render.KatanaRenderer katanaRenderer = new com.sephiria.client.render.KatanaRenderer();
-		BuiltinItemRendererRegistry.INSTANCE.register(com.sephiria.registry.ModItems.BLADE,
-				(stack, context, pose, buffers, light, overlay) -> katanaRenderer.renderByItem(
-						stack, context, pose, buffers, light, overlay));
 
 		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.ArtifactBackpackScreen>register(
 				ModMenus.ARTIFACT_BACKPACK, com.sephiria.client.backpack.ArtifactBackpackScreen::new);
