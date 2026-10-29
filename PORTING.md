@@ -39,8 +39,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.92.12+1.20.1` + Java 17。
 - 核心 `compileJava` 通过；无头服务端启动通过（注册、BE、资源、7 张配方、1271 个进度可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1192888 B，
-  sha256 `5e6838fcccb916606c9c0a3c35dfa7273f2c305d6bc8e2f60cd1131d36508139`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1209035 B，
+  sha256 `a781d27d3383656253f7f7f516f274fc20c20814a5333a2d7838a8ef51e538b8`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1\mods`。
 - 客户端同样有 `SephiriaClient` 与通用容器界面（9 个菜单），访问拓宽打开
   `MenuScreens.register`；提示行已接 `ArtifactTooltip`（1.20.1 的三参回调）。
@@ -80,8 +80,9 @@
   （1.21.1 有 TextParticleRenderer，1.20.1 直接重绘粒子文本）；applyCrit 已由
   LivingEntity mixin 接回，暴击与元数据发送生效
   （`HealthChangeParticleMixin`，required:false）；元素/暴击精确着色仍未移植。
-  1.21.1 背包/附魔/石板/宝箱已补专属绘制（滚动条、格子等级、连击面板、7x7 预览）；
-  仍缺：1.20.1 对应专属绘制、许愿池翻牌动画与客户端实测。
+  两版背包/附魔/石板/宝箱都已补专属绘制（滚动条、格子等级、连击面板、7x7 预览），
+  1.20.1 另有许愿池翻牌遮罩。ToroHealth 完整链路与 applyCrit 均已在两版接通。
+  仍缺：客户端实际启动验证与少量视觉细节。
 
 ## 注意
 
