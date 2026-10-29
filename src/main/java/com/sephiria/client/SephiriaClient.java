@@ -155,6 +155,19 @@ public final class SephiriaClient implements ClientModInitializer {
 					ClientPlayNetworking.send(ReloadPayload.INSTANCE);
 				}
 			}
+
+			// K / T 打开属性页与天赋页：只在没有任何界面开着时响应，避免在聊天/背包里误触
+			while (STATS_KEY.consumeClick()) {
+				if (client.player != null && client.screen == null) {
+					client.setScreen(new com.sephiria.client.gui.StatsScreen());
+				}
+			}
+
+			while (TALENT_KEY.consumeClick()) {
+				if (client.player != null && client.screen == null) {
+					client.setScreen(new com.sephiria.client.gui.TalentScreen());
+				}
+			}
 		});
 
 		// 引用一次，保证标题常量被初始化（也避免 IDE 把 import 当成未使用）
