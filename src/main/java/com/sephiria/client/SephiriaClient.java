@@ -100,6 +100,18 @@ public final class SephiriaClient implements ClientModInitializer {
 
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.WishPoolResultPayload.TYPE,
 				(payload, context) -> com.sephiria.client.wishpool.ClientWishPool.accept(payload.items()));
+		net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register(
+				(client, screen, scaledWidth, scaledHeight) -> {
+					if (!com.sephiria.client.tabs.InventoryTabs.applies(screen)) {
+						return;
+					}
+
+					int left = (scaledWidth - 176) / 2;
+					int top = (scaledHeight - 166) / 2;
+					int rowY = screen instanceof net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
+							? top - 48 : top - 22;
+					com.sephiria.client.tabs.InventoryTabs.add(screen, left, rowY);
+				});
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentSyncPayload.TYPE,
 				(payload, context) -> ClientTalents.accept(payload));
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.ArtifactSkillsPayload.TYPE,

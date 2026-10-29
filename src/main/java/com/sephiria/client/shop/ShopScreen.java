@@ -5,9 +5,11 @@ import com.sephiria.network.RefreshShopPayload;
 import com.sephiria.network.SellItemPayload;
 import com.sephiria.shop.ShopMenu;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
 /** 商店：刷新/出售按钮；货架格点击购买沿用原版 clicked。 */
 public class ShopScreen extends SephiriaMenuScreen<ShopMenu> {
@@ -28,5 +30,25 @@ public class ShopScreen extends SephiriaMenuScreen<ShopMenu> {
 				button -> ClientPlayNetworking.send(SellItemPayload.INSTANCE))
 				.bounds(this.leftPos + ShopMenu.BUTTON_X, this.topPos + ShopMenu.BUTTON_Y,
 						ShopMenu.BUTTON_WIDTH, ShopMenu.BUTTON_HEIGHT).build());
+	}
+
+	@Override
+	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+		super.renderLabels(graphics, mouseX, mouseY);
+
+		for (int index = 0; index < com.sephiria.shop.ShopStock.SLOT_COUNT; index++) {
+			ItemStack stack = this.menu.shopStack(index);
+
+			if (stack.isEmpty()) {
+				continue;
+			}
+
+			int price = com.sephiria.shop.ShopPrices.buy(stack);
+			int remaining = this.menu.remaining(index);
+			int x = this.menu.getSlot(index).x;
+			int y = this.menu.getSlot(index).y + 17;
+			graphics.drawString(this.font, Component.literal(price + "叶 " + remaining + "件"), x, y,
+					price > 0 ? 0xFF55FF55 : 0xFFFF5555, false);
+		}
 	}
 }
