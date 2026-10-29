@@ -5,13 +5,13 @@ import com.sephiria.network.RefreshShopPayload;
 import com.sephiria.network.SellItemPayload;
 import com.sephiria.shop.ShopMenu;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import io.netty.buffer.Unpooled;
+import net.minecraft.world.item.ItemStack;
 
-/** 商店界面：通用面板 + 「刷新」「出售」两个按钮。 */
+/** 商店：刷新/出售按钮；货架格点击购买沿用原版 clicked。 */
 public class ShopScreen extends SephiriaMenuScreen<ShopMenu> {
 	public ShopScreen(ShopMenu menu, Inventory inventory, Component title) {
 		super(menu, inventory, title, ShopMenu.IMAGE_WIDTH, ShopMenu.imageHeight(), true);
@@ -20,20 +20,35 @@ public class ShopScreen extends SephiriaMenuScreen<ShopMenu> {
 	@Override
 	protected void init() {
 		super.init();
-
 		this.addRenderableWidget(Button.builder(
 				Component.translatable("screen.sephiria_fantasy.shop.refresh_button"),
-				button -> sendEmpty(RefreshShopPayload.CHANNEL))
+				button -> ClientPlayNetworking.send(RefreshShopPayload.CHANNEL, new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer())))
 				.bounds(this.leftPos + ShopMenu.REFRESH_BUTTON_X, this.topPos + ShopMenu.BUTTON_Y,
 						ShopMenu.BUTTON_WIDTH, ShopMenu.BUTTON_HEIGHT).build());
 		this.addRenderableWidget(Button.builder(
 				Component.translatable("screen.sephiria_fantasy.shop.sell_button"),
-				button -> sendEmpty(SellItemPayload.CHANNEL))
+				button -> ClientPlayNetworking.send(SellItemPayload.CHANNEL, new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer())))
 				.bounds(this.leftPos + ShopMenu.BUTTON_X, this.topPos + ShopMenu.BUTTON_Y,
 						ShopMenu.BUTTON_WIDTH, ShopMenu.BUTTON_HEIGHT).build());
 	}
 
-	private static void sendEmpty(net.minecraft.resources.ResourceLocation channel) {
-		ClientPlayNetworking.send(channel, new FriendlyByteBuf(Unpooled.buffer()));
+	@Override
+	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+		super.renderLabels(graphics, mouseX, mouseY);
+
+		for (int index = 0; index < com.sephiria.shop.ShopStock.SLOT_COUNT; index++) {
+			ItemStack stack = this.menu.shopStack(index);
+
+			if (stack.isEmpty()) {
+				continue;
+			}
+
+			int price = com.sephiria.shop.ShopPrices.buy(stack);
+			int remaining = this.menu.remaining(index);
+			int x = this.menu.getSlot(index).x;
+			int y = this.menu.getSlot(index).y + 17;
+			graphics.drawString(this.font, Component.literal(price + "叶 " + remaining + "件"), x, y,
+					price > 0 ? 0xFF55FF55 : 0xFFFF5555, false);
+		}
 	}
 }
