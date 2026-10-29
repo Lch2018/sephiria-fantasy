@@ -118,6 +118,7 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 		ArtifactTooltip.setSlotLevelHint(hoveredSlotLevel(mouseX, mouseY));
 		super.render(graphics, mouseX, mouseY, partialTick);
+		this.sephiria$redrawBackpackTop(graphics);
 		ArtifactTooltip.clearSlotLevelHint();
 
 		ArtifactCombo hovered = hoveredCombo(mouseX, mouseY);
@@ -315,6 +316,32 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 		}
 
 		return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+	}
+
+
+	/** 最后再画一遍背包格：清掉石板旧图标，再画旋转图标与等级文字，保证它们在最上层。 */
+	private void sephiria$redrawBackpackTop(GuiGraphics graphics) {
+		for (Slot slot : this.menu.slots) {
+			if (!this.menu.isBackpackSlot(slot) || !this.menu.backpackSlotExists(slot)) {
+				continue;
+			}
+
+			net.minecraft.world.item.ItemStack shown = slot.getItem();
+			int x = this.leftPos + slot.x;
+			int y = this.topPos + slot.y;
+			graphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF15151A);
+			graphics.fill(x, y, x + 16, y + 16, 0xFF2A2A30);
+
+			if (shown.getItem() instanceof com.sephiria.slate.SlateItem
+					&& com.sephiria.slate.SlateItem.rotationOf(shown) != 0) {
+				BackpackCellRenderer.drawRotatedItem(graphics, slot, shown);
+			} else if (!shown.isEmpty()) {
+				graphics.renderItem(shown, x, y);
+			}
+
+			BackpackCellRenderer.drawLevelText(graphics, this.font, slot, shown,
+					this.menu.slotLevelOf(slot));
+		}
 	}
 
 	/** 悬停石板按 R 旋转（保持移植版原来的行为：只要指着格子就发，服务端自己校验）。 */
