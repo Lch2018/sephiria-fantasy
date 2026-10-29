@@ -1,12 +1,10 @@
 package com.sephiria.client;
 
 import com.sephiria.backpack.ArtifactBackpackMenu;
-import com.sephiria.backpack.BackpackWindow;
 import com.sephiria.backpack.ChestMenu;
 import com.sephiria.backpack.EnchantMenu;
 import com.sephiria.client.hud.HudClientData;
 import com.sephiria.client.hud.SephiriaHud;
-import com.sephiria.client.menu.SephiriaMenuScreen;
 import com.sephiria.network.HudSyncPayload;
 import com.sephiria.difficulty.RootRetreatMenu;
 import com.sephiria.registry.ModMenus;
@@ -37,8 +35,8 @@ import net.minecraft.client.gui.screens.MenuScreens;
 /**
  * 1.20.1 客户端入口（核心版）。
  *
- * <p>目前只注册容器界面：统一用 {@link SephiriaMenuScreen} 画一个可用面板。
- * HUD、自绘界面、网络同步与 GeckoLib 动画还没有移植。
+ * <p>目前只注册容器界面：背包 / 附魔 / 石板合成 / 宝箱这几个已经换成自绘面板，
+ * 其余仍用通用面板。HUD、自绘界面、网络同步与 GeckoLib 动画还没有移植。
  *
  * <p>1.20.1 的 {@code MenuScreens.register} 是包私有，靠访问拓宽打开
  * （见 {@code sephiria_fantasy.accesswidener}）。
@@ -81,8 +79,8 @@ public final class SephiriaClient implements ClientModInitializer {
 		com.sephiria.client.particle.SephiriaParticles.register();
 		com.sephiria.client.hud.HudConfig.load();
 
-		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.BackpackScreen>register(
-				ModMenus.ARTIFACT_BACKPACK, com.sephiria.client.backpack.BackpackScreen::new);
+		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.ArtifactBackpackScreen>register(
+				ModMenus.ARTIFACT_BACKPACK, com.sephiria.client.backpack.ArtifactBackpackScreen::new);
 		MenuScreens.<EnchantMenu, com.sephiria.client.backpack.EnchantScreen>register(ModMenus.ARTIFACT_ENCHANT,
 				com.sephiria.client.backpack.EnchantScreen::new);
 		MenuScreens.<ChestMenu, com.sephiria.client.backpack.ChestScreen>register(ModMenus.CHEST,
