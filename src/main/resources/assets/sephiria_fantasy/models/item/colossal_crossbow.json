@@ -2,5 +2,13 @@
 	"parent": "sephiria_fantasy:item/weapon",
 	"textures": {
 		"layer0": "sephiria_fantasy:item/colossal_crossbow"
-	}
+	},
+	"overrides": [
+		{
+			"predicate": {
+				"custom_model_data": 999999
+			},
+			"model": "sephiria_fantasy:item/colossal_crossbow_in_hand"
+		}
+	]
 }
