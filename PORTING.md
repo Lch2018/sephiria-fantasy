@@ -10,8 +10,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.116.17+1.21.1`。
 - 核心 `compileJava` 通过；临时无头服务端启动通过（注册、BE、资源、配方可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1214964 B，
-  sha256 `067518abd2cea51a33d57581c463e79efde5911d4632d055024f45a263225d2f`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1225511 B，
+  sha256 `378e05005c4c63d0c7761cb9ebff50188f8b6ee3291859696e56093edb87136a`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.21.1-Fabric 0.20.1\mods`。
 - 客户端已有入口 `com.sephiria.client.SephiriaClient`：注册 9 个容器菜单的通用界面
   （深色面板 + 槽位底 + 标题），并接回冲刺（鼠标侧键）与装填（R）按键。
@@ -39,8 +39,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.92.12+1.20.1` + Java 17。
 - 核心 `compileJava` 通过；无头服务端启动通过（注册、BE、资源、7 张配方、1271 个进度可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1219277 B，
-  sha256 `51be575f22d0fdb0031c48e10fafa160723f3b743c81f47ac5db98303f22808a`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1231208 B，
+  sha256 `6560207e595cec9363997d21735b6afab973751a2b073e08b95b3aa40e1af8a5`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1\mods`。
 - 客户端同样有 `SephiriaClient` 与通用容器界面（9 个菜单），访问拓宽打开
   `MenuScreens.register`；提示行已接 `ArtifactTooltip`（1.20.1 的三参回调）。
@@ -91,6 +91,7 @@
   1.21.1 CriticalDamageMixin 目标 hurtServer 不存在（改为 hurt）。
   两版背包格最后统一重绘，修复石板旧图标与等级文字层级；重新启用武器 3D/刀 builtin
   （输入问题已确认是 applyCrit mixin 失败导致）。
+  两版属性页/天赋页已补完整布局与阶段图标；1.20.1 属性同步仍只有 19 项，部分行显示默认值。
   仍缺：背包格子等级/旋转层级、属性/天赋/HUD 视觉细节与客户端实测。
 
 ## 注意
