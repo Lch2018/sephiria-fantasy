@@ -10,8 +10,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.116.17+1.21.1`。
 - 核心 `compileJava` 通过；临时无头服务端启动通过（注册、BE、资源、配方可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1206878 B，
-  sha256 `2ed136208638d4a43f41c5f7a8966f9c55568a7139a7b0905a31b1d12b2d52c0`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1206896 B，
+  sha256 `b18c1cbb7186e3193d81eca15b16e1a84ac8837f7d2466348709760b815f6a1f`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.21.1-Fabric 0.20.1\mods`。
 - 客户端已有入口 `com.sephiria.client.SephiriaClient`：注册 9 个容器菜单的通用界面
   （深色面板 + 槽位底 + 标题），并接回冲刺（鼠标侧键）与装填（R）按键。
@@ -39,8 +39,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.92.12+1.20.1` + Java 17。
 - 核心 `compileJava` 通过；无头服务端启动通过（注册、BE、资源、7 张配方、1271 个进度可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1212033 B，
-  sha256 `b13f0562a064af35198a75f74f6dfd9d457db9b77b9ccafa88d198e3781ded1b`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1212052 B，
+  sha256 `bb8cc5ffabe099c38eee62fe99cc2912f0f5174326fb307c256eda9178c29a51`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1\mods`。
 - 客户端同样有 `SephiriaClient` 与通用容器界面（9 个菜单），访问拓宽打开
   `MenuScreens.register`；提示行已接 `ArtifactTooltip`（1.20.1 的三参回调）。
@@ -83,7 +83,7 @@
   两版背包/附魔/石板/宝箱都已补专属绘制（滚动条、格子等级、连击面板、7x7 预览），
   1.20.1 另有许愿池翻牌遮罩。ToroHealth 完整链路与 applyCrit 均已在两版接通；
   1.20.1 许愿池新增结果包，1.21.1 翻牌揭晓也会显示实际物品。
-  仍缺：客户端实际启动验证与少量视觉细节。
+  两版无头服务端启动通过（Mixin 包路径已修正）；仍缺客户端实际启动验证。
 
 ## 注意
 
