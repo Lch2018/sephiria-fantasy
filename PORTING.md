@@ -10,8 +10,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.116.17+1.21.1`。
 - 核心 `compileJava` 通过；临时无头服务端启动通过（注册、BE、资源、配方可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1211975 B，
-  sha256 `e212ae9e6f68793fa1d02371c22ce09f3bf447ec0e2d0dc977328b8fdd12f2c3`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1212035 B，
+  sha256 `71c9add81f5e13eccf8258801057ad3c8db9c216866b14c9500fec147691bb0a`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.21.1-Fabric 0.20.1\mods`。
 - 客户端已有入口 `com.sephiria.client.SephiriaClient`：注册 9 个容器菜单的通用界面
   （深色面板 + 槽位底 + 标题），并接回冲刺（鼠标侧键）与装填（R）按键。
@@ -40,7 +40,7 @@
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.92.12+1.20.1` + Java 17。
 - 核心 `compileJava` 通过；无头服务端启动通过（注册、BE、资源、7 张配方、1271 个进度可加载）。
 - jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1216779 B，
-  sha256 `5ae879d08e1262891cbb1e9157f67ba051fbc181f38120fdeb465e7d92108ac8`）。
+  sha256 `efe8791ef8afcc686ed62ea5e69176e57360175629479b9f3b782f8cf99d5f7a`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1\mods`。
 - 客户端同样有 `SephiriaClient` 与通用容器界面（9 个菜单），访问拓宽打开
   `MenuScreens.register`；提示行已接 `ArtifactTooltip`（1.20.1 的三参回调）。
