@@ -98,6 +98,8 @@ public final class SephiriaClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.SEPHIRIA_TRADER_LLAMA,
 				context -> new LlamaRenderer(context, ModelLayers.TRADER_LLAMA));
 
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.WishPoolResultPayload.TYPE,
+				(payload, context) -> com.sephiria.client.wishpool.ClientWishPool.accept(payload.items()));
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentSyncPayload.TYPE,
 				(payload, context) -> ClientTalents.accept(payload));
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.ArtifactSkillsPayload.TYPE,
