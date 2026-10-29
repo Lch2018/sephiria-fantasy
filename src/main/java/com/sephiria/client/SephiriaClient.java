@@ -53,9 +53,10 @@ public final class SephiriaClient implements ClientModInitializer {
 	private static final KeyMapping HUD_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.hud", InputConstants.Type.KEYSYM, InputConstants.KEY_H, CATEGORY));
 
+	// L 被原版「进度」占用，默认不绑键，玩家自己去控制里设
 	private static final KeyMapping SKILL_PAGE_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-			"key.sephiria_fantasy.skill_page", InputConstants.Type.KEYSYM, InputConstants.KEY_L,
-			"key.categories.gameplay"));
+			"key.sephiria_fantasy.skill_page", InputConstants.Type.KEYSYM,
+			InputConstants.UNKNOWN.getValue(), "key.categories.gameplay"));
 
 	private static final KeyMapping STATS_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.sephiria_fantasy.stats", InputConstants.Type.KEYSYM, InputConstants.KEY_K,
