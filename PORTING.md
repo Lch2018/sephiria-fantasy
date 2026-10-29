@@ -10,8 +10,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.116.17+1.21.1`。
 - 核心 `compileJava` 通过；临时无头服务端启动通过（注册、BE、资源、配方可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1212035 B，
-  sha256 `71c9add81f5e13eccf8258801057ad3c8db9c216866b14c9500fec147691bb0a`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1211848 B，
+  sha256 `78cc46617000829d623c9b54d007492a93fe9dc74f524ef380c20b9c3a597635`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.21.1-Fabric 0.20.1\mods`。
 - 客户端已有入口 `com.sephiria.client.SephiriaClient`：注册 9 个容器菜单的通用界面
   （深色面板 + 槽位底 + 标题），并接回冲刺（鼠标侧键）与装填（R）按键。
@@ -39,8 +39,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.92.12+1.20.1` + Java 17。
 - 核心 `compileJava` 通过；无头服务端启动通过（注册、BE、资源、7 张配方、1271 个进度可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1216779 B，
-  sha256 `efe8791ef8afcc686ed62ea5e69176e57360175629479b9f3b782f8cf99d5f7a`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1216613 B，
+  sha256 `7f5799bf4c032a67e5257527dc11a60b40b334356681c1b3524edc88ca8764aa`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1\mods`。
 - 客户端同样有 `SephiriaClient` 与通用容器界面（9 个菜单），访问拓宽打开
   `MenuScreens.register`；提示行已接 `ArtifactTooltip`（1.20.1 的三参回调）。
@@ -87,7 +87,9 @@
   两版已补原版背包上沿 5 个图标标签与商店价格/限购显示；
   武器手持 3D 的 ItemRenderer mixin 与刀 builtin/entity 因出现「无法操作」问题已回退，
   先恢复可玩；根之退/信标/许愿池的 models/item 物品模型保留。
-  仍缺：背包格子等级/旋转的实机日志、属性/天赋/HUD 视觉细节与客户端实测。
+  日志定位并修复：root_retreat 模型 rotation 缺 axis（黑紫模型根因）、
+  1.21.1 CriticalDamageMixin 目标 hurtServer 不存在（改为 hurt）。
+  仍缺：背包格子等级/旋转层级、属性/天赋/HUD 视觉细节与客户端实测。
 
 ## 注意
 
