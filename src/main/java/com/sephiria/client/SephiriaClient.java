@@ -62,9 +62,10 @@ public final class SephiriaClient implements ClientModInitializer {
 			"key.sephiria_fantasy.stats", InputConstants.Type.KEYSYM, InputConstants.KEY_K,
 			"key.categories.gameplay"));
 
+	// T 被原版聊天占用，默认不绑键
 	private static final KeyMapping TALENT_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-			"key.sephiria_fantasy.talent", InputConstants.Type.KEYSYM, InputConstants.KEY_T,
-			"key.categories.gameplay"));
+			"key.sephiria_fantasy.talent", InputConstants.Type.KEYSYM,
+			InputConstants.UNKNOWN.getValue(), "key.categories.gameplay"));
 
 	@Override
 	public void onInitializeClient() {
