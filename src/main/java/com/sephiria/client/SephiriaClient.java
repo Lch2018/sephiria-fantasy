@@ -35,8 +35,8 @@ import net.minecraft.client.gui.screens.MenuScreens;
 /**
  * 1.20.1 客户端入口（核心版）。
  *
- * <p>目前只注册容器界面：背包 / 附魔 / 石板合成 / 宝箱这几个已经换成自绘面板，
- * 其余仍用通用面板。HUD、自绘界面、网络同步与 GeckoLib 动画还没有移植。
+ * <p>目前只注册容器界面与技能 / 神器两排 HUD：背包 / 附魔 / 石板合成 / 宝箱这几个已经换成
+ * 自绘面板，HUD 的布局界面用 H 键打开。其余自绘界面与 GeckoLib 动画还没有移植。
  *
  * <p>1.20.1 的 {@code MenuScreens.register} 是包私有，靠访问拓宽打开
  * （见 {@code sephiria_fantasy.accesswidener}）。
@@ -171,8 +171,11 @@ public final class SephiriaClient implements ClientModInitializer {
 				client.setScreen(new com.sephiria.client.gui.StatsScreen());
 			}
 
+			// H 打开 HUD 布局：和属性 / 天赋页一样只在没有界面开着时响应，避免在聊天里误触
 			while (HUD_KEY.consumeClick()) {
-				client.setScreen(new com.sephiria.client.hud.HudSettingsScreen());
+				if (client.player != null && client.screen == null) {
+					client.setScreen(new com.sephiria.client.hud.HudConfigScreen(null));
+				}
 			}
 
 			while (TALENT_KEY.consumeClick()) {
