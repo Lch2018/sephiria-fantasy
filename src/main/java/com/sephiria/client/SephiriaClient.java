@@ -165,7 +165,7 @@ public final class SephiriaClient implements ClientModInitializer {
 				}
 			}
 
-			// K / T 打开属性页与天赋页：只在没有任何界面开着时响应，避免在聊天/背包里误触
+			// K / T / L 打开属性页、天赋页与神器技能页：只在没有任何界面开着时响应，避免在聊天/背包里误触
 			while (STATS_KEY.consumeClick()) {
 				if (client.player != null && client.screen == null) {
 					client.setScreen(new com.sephiria.client.gui.StatsScreen());
@@ -175,6 +175,13 @@ public final class SephiriaClient implements ClientModInitializer {
 			while (TALENT_KEY.consumeClick()) {
 				if (client.player != null && client.screen == null) {
 					client.setScreen(new com.sephiria.client.gui.TalentScreen());
+				}
+			}
+
+			// L 被原版「进度」占用，默认不绑键；补上处理，玩家在控制里设了就能用
+			while (SKILL_PAGE_KEY.consumeClick()) {
+				if (client.player != null && client.screen == null) {
+					client.setScreen(new com.sephiria.client.skill.ArtifactSkillScreen());
 				}
 			}
 		});
