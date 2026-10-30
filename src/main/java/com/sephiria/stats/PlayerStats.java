@@ -967,19 +967,22 @@ public final class PlayerStats {
 
 		// 1.20.1 旧 channel：只推属性页需要的关键值
 		com.sephiria.network.StatsSyncPayload payload = new com.sephiria.network.StatsSyncPayload(
-				values.mp, maxMp, mpRegenTotal(player), physicalTotal(player),
+				values.mp, mpRegenTotal(player), physicalTotal(player),
 				elementTotal(player, Element.FIRE), elementTotal(player, Element.ICE),
 				elementTotal(player, Element.LIGHTNING), defenseTotal(player),
 				attackSpeedTotal(player) + TimedAttributes.attackSpeedPercent(player), meleeRangeTotal(player),
-				physicalAmpPercent(player), weaponDamageTotal(player), specialAttackTotal(player),
-				normalAttackDamageTotal(player), luckTotal(player),
-				moveSpeedPercentTotal(player) + TimedAttributes.moveSpeedPercent(player),
-				critChanceTotal(player), critDamageTotal(player), values.leaves);
-		net.minecraft.network.FriendlyByteBuf buffer = new net.minecraft.network.FriendlyByteBuf(
-				io.netty.buffer.Unpooled.buffer());
-		com.sephiria.network.StatsSyncPayload.write(buffer, payload);
-		net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
-				com.sephiria.network.StatsSyncPayload.CHANNEL, buffer);
+				physicalAmpPercent(player), physicalBreakdown(player).base(),
+				physicalBreakdown(player).artifactFlat(), physicalBreakdown(player).potionFlat(),
+				physicalBreakdown(player).artifactPercent(), physicalBreakdown(player).potionPercent(),
+				attackSpeedBreakdown(player).base(), attackSpeedBreakdown(player).artifactFlat(),
+				attackSpeedBreakdown(player).potionFlat(), attackSpeedBreakdown(player).artifactPercent(),
+				attackSpeedBreakdown(player).potionPercent(), values.leaves, weaponDamageTotal(player),
+				specialAttackTotal(player), values.lifesteal, normalAttackDamageTotal(player),
+				critChanceTotal(player), critDamageTotal(player), ignoreDefenseTotal(player),
+				moveSpeedPercentTotal(player) + TimedAttributes.moveSpeedPercent(player), dodgeTotal(player),
+				dodgeRatePercent(player), negotiationTotal(player), shopDiscountPercent(player),
+				leafGainPercentTotal(player), xpDropPercentTotal(player), maxMp, luckTotal(player),
+				mpAbsorbTotal(player));
 
 	}
 

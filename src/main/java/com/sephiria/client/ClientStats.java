@@ -51,6 +51,7 @@ public final class ClientStats {
 	public static void accept(StatsSyncPayload payload) {
 		mp = payload.mp();
 		maxMp = payload.maxMp();
+		luck = payload.luck();
 		mpRegen = payload.mpRegen();
 		physical = payload.physical();
 		fire = payload.fire();
@@ -60,14 +61,26 @@ public final class ClientStats {
 		attackSpeed = payload.attackSpeed();
 		meleeRange = payload.meleeRange();
 		physicalAmp = payload.physicalAmp();
+		leaves = payload.leaves();
 		weaponDamage = payload.weaponDamage();
 		specialAttack = payload.specialAttack();
+		lifesteal = payload.lifesteal();
+		mpAbsorb = payload.mpAbsorb();
 		normalAttackDamage = payload.normalAttackDamage();
-		luck = payload.luck();
-		moveSpeed = payload.moveSpeed();
 		critChance = payload.critChance();
 		critDamage = payload.critDamage();
-		leaves = payload.leaves();
+		ignoreDefense = payload.ignoreDefense();
+		moveSpeed = payload.moveSpeed();
+		dodge = payload.dodge();
+		dodgeRate = payload.dodgeRate();
+		negotiation = payload.negotiation();
+		shopDiscount = payload.shopDiscount();
+		leafGainPercent = payload.leafGainPercent();
+		xpDropPercent = payload.xpDropPercent();
+		breakdown = new PlayerStats.PhysicalBreakdown(payload.physicalBase(), payload.artifactFlat(),
+				payload.potionFlat(), payload.artifactPercent(), payload.potionPercent());
+		attackBreakdown = new PlayerStats.PhysicalBreakdown(payload.attackBase(), payload.attackArtifactFlat(),
+				payload.attackPotionFlat(), payload.attackArtifactPercent(), payload.attackPotionPercent());
 	}
 
 
