@@ -153,6 +153,7 @@
     "ui.sephiria_fantasy.dash":  "冲刺次数 %s/%s",
     "ui.sephiria_fantasy.sheathed":  "入鞘",
     "ui.sephiria_fantasy.unsheathed":  "拔刀",
+    "ui.sephiria_fantasy.katana_state":  "刀：%s",
     "screen.sephiria_fantasy.settings":  "赛菲莉娅 Mod 设置",
     "screen.sephiria_fantasy.settings.hud":  "HUD 设置",
     "screen.sephiria_fantasy.settings.damage_display":  "伤害显示",

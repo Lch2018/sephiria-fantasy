@@ -37,9 +37,10 @@ import net.minecraft.network.chat.Component;
  * 1.21.1 客户端入口（核心版）。
  *
  * <p>目前只做不依赖 26.3 渲染管线的事：容器界面注册（背包 / 附魔 / 石板合成 / 宝箱这几个
- * 已经换成自绘面板，其余仍用通用面板）、冲刺 / 装填按键、技能与神器两排 HUD 及其布局界面
- * （H 键）。26.3 的武器 / 冲刺 / MP 等自绘 HUD、ToroHealth、GeckoLib 刀动画还没有移植，
- * 别把这一版当完整客户端。
+ * 已经换成自绘面板，其余仍用通用面板）、冲刺 / 装填按键、HUD 及其布局界面（H 键）。
+ * HUD 已经补齐 26.3 的全部模块（武器 / 冲刺 / MP / 乌云 / 太阳剑 / 冰霜武具 / 无敌条 +
+ * 技能 / 神器两排），数据各自有客户端镜像；26.3 的无敌描边、ToroHealth 与 GeckoLib
+ * 刀动画还没有移植，别把这一版当完整客户端。
  */
 public final class SephiriaClient implements ClientModInitializer {
 	/** 1.21.1 的按键分类仍是一个字符串。 */
@@ -123,6 +124,21 @@ public final class SephiriaClient implements ClientModInitializer {
 				(payload, context) -> HudClientData.accept(payload));
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.StatsSyncPayload.TYPE,
 				(payload, context) -> ClientStats.accept(payload));
+		// 技能存储（冲刺次数 / 弹匣 / 专注）：武器面板与冲刺 UI 读它
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.SkillSyncPayload.TYPE,
+				(payload, context) -> SkillClientData.accept(payload));
+		// 乌云容量：HUD 的乌云 UI 读它（上限 > 0 才显示）
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.CloudSyncPayload.TYPE,
+				(payload, context) -> CloudClientData.accept(payload));
+		// 太阳剑数量：HUD 的太阳剑 UI 读它（上限 > 0 才显示）
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.SunSwordSyncPayload.TYPE,
+				(payload, context) -> SunSwordClientData.accept(payload));
+		// 冰霜武具的状态：HUD 那一行「冰霜武具：剑 锤 矛 弓x/7 斩」读它
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.FrostSyncPayload.TYPE,
+				(payload, context) -> FrostClientData.accept(payload));
+		// 无敌窗口：HUD 的无敌条按剩余刻数自己递减
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.InvulnerablePayload.TYPE,
+				(payload, context) -> InvulnClientData.accept(payload));
 		// ToroHealth 可选兼容：收服务端的伤害显示信息，等粒子生成时再匹配。
 		// 没装 ToroHealth 时 ToroHealthCompatClient.accept 会直接丢弃，不会积压。
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.compat.torohealth.ToroHealthDamagePayload.TYPE,
@@ -140,12 +156,23 @@ public final class SephiriaClient implements ClientModInitializer {
 		});
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
 			HudClientData.reset();
+			// 乌云 / 太阳剑 / 冰霜武具 / 技能存储 / 无敌窗口都不跨世界：不清的话新世界里
+			// 还挂着上个世界的残值（HUD 会多亮一瞬、无敌条卡住）
+			CloudClientData.reset();
+			SunSwordClientData.reset();
+			FrostClientData.reset();
+			SkillClientData.reset();
+			InvulnClientData.reset();
+			SephiriaHud.resetFlash();
 			// 换世界后别让上个世界残留的待匹配伤害串到新实体上
 			com.sephiria.compat.torohealth.ToroHealthCompatClient.reset();
 		});
 		HudRenderCallback.EVENT.register(new SephiriaHud());
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			// 无敌窗口只在收到包时写入，之后由客户端自己每刻递减
+			InvulnClientData.tick();
+
 			while (DASH_KEY.consumeClick()) {
 				if (client.player != null) {
 					ClientPlayNetworking.send(DashPayload.INSTANCE);

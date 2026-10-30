@@ -11,13 +11,17 @@ import net.minecraft.network.chat.Component;
  *
  * <p>模块清单在 {@link HudConfig#MODULES} 统一登记，所以这个界面不需要因为新增模块而改动；
  * 点「布局」进 {@link HudModuleScreen}，在那里拖动预览调整位置、用 - / + 调缩放。
+ *
+ * <p>模块到 9 个以后单列放不下 240 高的 GUI，所以超过 5 行时自动排两列。
  */
 public class HudConfigScreen extends Screen {
 	private static final int ROW_WIDTH = 280;
 	private static final int ROW_HEIGHT = 20;
 	private static final int ROW_GAP = 4;
 	private static final int BUTTON_GAP = 8;
-	private static final int TOGGLE_WIDTH = 160;
+	private static final int LAYOUT_WIDTH = 52;
+	/** 超过这个行数就排两列，免得在 240 高的 GUI 上把「完成」按钮挤出屏幕。 */
+	private static final int SINGLE_COLUMN_ROWS = 5;
 
 	private final Screen parent;
 
@@ -28,29 +32,33 @@ public class HudConfigScreen extends Screen {
 
 	@Override
 	protected void init() {
+		int count = HudConfig.MODULES.size();
+		int columns = count > SINGLE_COLUMN_ROWS ? 2 : 1;
 		// GUI 宽度最小 320，但留一点余量，别在极端分辨率下把按钮挤出屏幕
-		int rowWidth = Math.min(ROW_WIDTH, this.width - 16);
-		int toggleWidth = Math.min(TOGGLE_WIDTH, rowWidth - 64 - BUTTON_GAP);
-		int left = (this.width - rowWidth) / 2;
+		int columnWidth = Math.min(ROW_WIDTH, (this.width - 16 - BUTTON_GAP * (columns - 1)) / columns);
+		int toggleWidth = Math.max(40, columnWidth - LAYOUT_WIDTH - BUTTON_GAP);
+		int left = (this.width - (columnWidth * columns + BUTTON_GAP * (columns - 1))) / 2;
 		int top = 52;
 
-		for (int index = 0; index < HudConfig.MODULES.size(); index++) {
+		for (int index = 0; index < count; index++) {
 			String module = HudConfig.MODULES.get(index);
 			HudConfig.Element element = HudConfig.element(module);
-			int y = top + index * (ROW_HEIGHT + ROW_GAP);
+			int column = index % columns;
+			int row = index / columns;
+			int rowX = left + column * (columnWidth + BUTTON_GAP);
+			int y = top + row * (ROW_HEIGHT + ROW_GAP);
 
 			addRenderableWidget(Button.builder(toggleLabel(module, element), button -> {
 						element.visible = !element.visible;
 						button.setMessage(toggleLabel(module, element));
 						HudConfig.save();
 					})
-					.bounds(left, y, toggleWidth, ROW_HEIGHT)
+					.bounds(rowX, y, toggleWidth, ROW_HEIGHT)
 					.build());
 
 			addRenderableWidget(Button.builder(Component.translatable("screen.sephiria_fantasy.hud.layout"),
 							button -> Minecraft.getInstance().setScreen(new HudModuleScreen(this, module)))
-					.bounds(left + toggleWidth + BUTTON_GAP, y,
-							rowWidth - toggleWidth - BUTTON_GAP, ROW_HEIGHT)
+					.bounds(rowX + toggleWidth + BUTTON_GAP, y, LAYOUT_WIDTH, ROW_HEIGHT)
 					.build());
 		}
 

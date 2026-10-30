@@ -563,6 +563,7 @@
     "ui.sephiria_fantasy.dash":  "Dashes %s/%s",
     "ui.sephiria_fantasy.sheathed":  "Sheathed",
     "ui.sephiria_fantasy.unsheathed":  "Drawn",
+    "ui.sephiria_fantasy.katana_state":  "Blade: %s",
     "screen.sephiria_fantasy.settings":  "Sephiria Mod Settings",
     "screen.sephiria_fantasy.settings.hud":  "HUD Settings",
     "screen.sephiria_fantasy.settings.damage_display":  "Damage Display",
