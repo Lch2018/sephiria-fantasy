@@ -2,6 +2,8 @@ package com.sephiria.client.gui;
 
 import com.sephiria.Sephiria;
 import com.sephiria.client.ClientTalents;
+import com.sephiria.client.tabs.ScreenTabs;
+import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.network.TalentClickPayload;
 import com.sephiria.network.TalentSyncRequestPayload;
 import com.sephiria.talent.Talent;
@@ -106,6 +108,9 @@ public class TalentScreen extends Screen {
 		// 打开界面时向服务端要一次最新状态：个人出生点（床 / 重生锚 / 指令）只在服务端
 		ClientPlayNetworking.send(TalentSyncRequestPayload.CHANNEL,
 				new FriendlyByteBuf(Unpooled.buffer()));
+
+		// 顶部标签栏：高亮「天赋」；标签在 y=6~26，标题从 TITLE_Y=38 起，两者不重叠
+		ScreenTabs.add(this, SephiriaTab.TALENT);
 
 		this.panelLeft = this.width / 2 - PANEL_WIDTH / 2;
 		this.panelRight = this.panelLeft + PANEL_WIDTH;

@@ -3,6 +3,8 @@ package com.sephiria.client.gui;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.client.ClientStats;
+import com.sephiria.client.tabs.ScreenTabs;
+import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.stats.PlayerStats;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -73,6 +75,16 @@ public class StatsScreen extends Screen {
 
 	public StatsScreen() {
 		super(Component.translatable("screen.sephiria_fantasy.stats"));
+	}
+
+	/**
+	 * 顶部标签栏：六页里高亮「属性」这一格，其余页点了直接切过去。
+	 * 标签放在 y=6~26，内容从 {@code CONTENT_TOP}=34 起，不会压到属性行。
+	 */
+	@Override
+	protected void init() {
+		super.init();
+		ScreenTabs.add(this, SephiriaTab.ATTRIBUTES);
 	}
 
 	/**
