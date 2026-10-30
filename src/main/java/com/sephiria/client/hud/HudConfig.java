@@ -21,19 +21,38 @@ import java.util.Properties;
  * （见 {@link SephiriaHud#layout(String)}）。默认位置依赖当前分辨率，所以第一次用到某个
  * 模块时才按屏幕大小落位（{@link Element#placed}）。
  *
+ * <p>默认布局与 26.3 对齐：武器在右下，技能 / 神器两排在它上方；左下一列从下往上依次是
+ * 冲刺、MP、乌云、太阳剑、冰霜武具；无敌条在准星下方居中。
+ *
  * <p>旧版配置只有一个全局的 {@code visible} / {@code scale} / {@code show_skills} /
  * {@code show_artifacts} / {@code offset_x} / {@code offset_y}。读取时如果某个模块没有
- * {@code skills.*} / {@code artifacts.*} 新键，就把旧键翻译成它的初始配置：显示开关与缩放
- * 直接继承，偏移量叠加到默认位置上。写盘统一用新键，所以旧文件升级后不会被写回旧格式。
+ * {@code <模块>.*} 新键，就把旧键翻译成它的初始配置：技能 / 神器两排继承旧开关与缩放，
+ * 后加的模块（武器、乌云这些旧版没有的）保持显示、缩放 1.0。写盘统一用新键，
+ * 所以旧文件升级后不会被写回旧格式。
  */
 public final class HudConfig {
-	/** 技能 HUD（6 个技能栏的图标与冷却）。 */
+	/** 武器 UI（右下角）：名称 + 特有属性 + 图标。 */
+	public static final String WEAPON = "weapon";
+	/** 冲刺 UI（左下角）：剩余次数。 */
+	public static final String DASH = "dash";
+	/** MP 条（左下角，默认在冲刺上方）。 */
+	public static final String MP = "mp";
+	/** 乌云容量条（左下角，默认在 MP 上方；只在乌云激活时显示）。 */
+	public static final String CLOUD = "cloud";
+	/** 太阳剑数量条（左下角，默认在乌云上方；只在太阳剑激活时显示）。 */
+	public static final String SUN_SWORD = "sun_sword";
+	/** 冰霜武具充能行（左下角，默认在太阳剑上方；带上那些神器时才显示）。 */
+	public static final String FROST = "frost";
+	/** 无敌条（准星下方居中）。 */
+	public static final String INVULN = "invuln";
+	/** 技能 HUD（右下，武器 / 神器上方；6 个技能栏的图标与冷却）。 */
 	public static final String SKILLS = "skills";
-	/** 神器 HUD（有冷却 / 充能的神器图标）。 */
+	/** 神器 HUD（右下，技能 HUD 与武器 UI 之间；有冷却 / 充能的神器图标）。 */
 	public static final String ARTIFACTS = "artifacts";
 
 	/** 全部可调的 HUD 模块，顺序即设置界面里的顺序；新增模块在这里登记。 */
-	public static final List<String> MODULES = List.of(SKILLS, ARTIFACTS);
+	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, CLOUD, SUN_SWORD, FROST, INVULN,
+			SKILLS, ARTIFACTS);
 
 	public static final double SCALE_MIN = 0.5D;
 	public static final double SCALE_MAX = 2.0D;
@@ -45,16 +64,33 @@ public final class HudConfig {
 	/** 默认按 9 个图标估算行宽：技能栏最多 6 格、神器最多 9 个，取大的那一边。 */
 	private static final int DEFAULT_SLOTS = 9;
 	private static final int DEFAULT_ICON_STEP = 18;
-	/** 行高含图标下方 4px 的充能条，与 {@link SephiriaHud} 的 ROW_HEIGHT 一致。 */
+	/** 图标行高（含图标下方 4px 的充能条），与 {@link SephiriaHud} 的 ROW_HEIGHT 一致。 */
 	private static final int DEFAULT_ROW_HEIGHT = 22;
-	/** 技能行离屏幕底边的距离；神器行在它上面 22px（旧 HUD 的两行间距 + 行高）。 */
-	private static final int SKILLS_BOTTOM = 64;
-	private static final int ARTIFACTS_BOTTOM = 86;
+	/** 文字面板高（图标下方一行 10px 文字 + 上下 4px 留白），与 {@link SephiriaHud} 的测量一致。 */
+	private static final int DEFAULT_PANEL_HEIGHT = 18;
+	/** 面板默认宽度：只用来首次落位时夹进屏幕，真实宽度渲染时按文字重新算。 */
+	private static final int DEFAULT_PANEL_WIDTH = 150;
+	private static final int DEFAULT_INVULN_WIDTH = 60;
+	/** 无敌条默认高度取预览高度（真实条只有 3px，太细不好拖）。 */
+	private static final int DEFAULT_INVULN_HEIGHT = 9;
+
+	/** 左下一列从下往上的默认高度；顺序与 26.3 一致：冲刺、MP、乌云、太阳剑、冰霜武具。 */
+	private static final int DASH_BOTTOM = 40;
+	private static final int MP_BOTTOM = 64;
+	private static final int CLOUD_BOTTOM = 88;
+	private static final int SUN_SWORD_BOTTOM = 112;
+	private static final int FROST_BOTTOM = 136;
+	/** 右下三行从下往上的默认高度：武器、神器、技能。 */
+	private static final int WEAPON_BOTTOM = 40;
+	private static final int ARTIFACTS_BOTTOM = 64;
+	private static final int SKILLS_BOTTOM = 88;
+	/** 右下三行的默认左边缘：图标行的锚点宽 162px（9 格），加右侧 8px 边距。 */
+	private static final int RIGHT_STACK_X = 170;
 
 	private static final Path FILE = FabricLoader.getInstance().getConfigDir()
 			.resolve("sephiria-fantasy-hud.properties");
 	private static final Map<String, Element> ELEMENTS = new LinkedHashMap<>();
-	/** 旧格式的偏移量，只在模块还没有绝对坐标时叠加到默认落位上。 */
+	/** 旧格式的偏移量，只在左下模块还没有绝对坐标时叠加到默认落位上。 */
 	private static int legacyOffsetX;
 	private static int legacyOffsetY;
 	private static boolean loaded;
@@ -76,14 +112,32 @@ public final class HudConfig {
 			}
 
 			// 缩放围绕左上角：放大多少就把默认 y 往上挪多少，让底边仍贴着原来的位置
-			double extra = DEFAULT_ROW_HEIGHT * Math.max(0.0D, this.scale - 1.0D);
-			this.x = MARGIN + legacyOffsetX;
-			this.y = (switch (module) {
-				case SKILLS -> screenHeight - SKILLS_BOTTOM;
-				case ARTIFACTS -> screenHeight - ARTIFACTS_BOTTOM;
-				default -> screenHeight / 2.0D;
-			}) + legacyOffsetY - extra;
-			clamp(this, screenWidth, screenHeight, DEFAULT_SLOTS * DEFAULT_ICON_STEP, DEFAULT_ROW_HEIGHT);
+			double extra = defaultHeight(module) * Math.max(0.0D, this.scale - 1.0D);
+
+			switch (module) {
+				case WEAPON -> {
+					this.x = screenWidth - DEFAULT_PANEL_WIDTH - MARGIN;
+					this.y = screenHeight - WEAPON_BOTTOM - extra;
+				}
+				case ARTIFACTS -> {
+					this.x = screenWidth - RIGHT_STACK_X;
+					this.y = screenHeight - ARTIFACTS_BOTTOM - extra;
+				}
+				case SKILLS -> {
+					this.x = screenWidth - RIGHT_STACK_X;
+					this.y = screenHeight - SKILLS_BOTTOM - extra;
+				}
+				case INVULN -> {
+					this.x = screenWidth / 2.0D - DEFAULT_INVULN_WIDTH / 2.0D;
+					this.y = screenHeight / 2.0D + 18.0D;
+				}
+				default -> {
+					this.x = MARGIN + legacyOffsetX;
+					this.y = screenHeight - bottomOf(module) + legacyOffsetY - extra;
+				}
+			}
+
+			clamp(this, screenWidth, screenHeight, defaultWidth(module), defaultHeight(module));
 			this.placed = true;
 		}
 	}
@@ -153,10 +207,21 @@ public final class HudConfig {
 				// 只写了开关 / 缩放而没有坐标：位置仍按默认落位算
 				element.placed = properties.containsKey(module + ".x") || properties.containsKey(module + ".y");
 			}
-			else {
-				element.visible = globalVisible && (SKILLS.equals(module) ? showSkills : showArtifacts);
+			else if (SKILLS.equals(module)) {
+				element.visible = globalVisible && showSkills;
 				element.scale = legacyScale;
 				// 位置要等窗口尺寸出来再算，placeFrom 会把旧偏移量算进去
+				element.placed = false;
+			}
+			else if (ARTIFACTS.equals(module)) {
+				element.visible = globalVisible && showArtifacts;
+				element.scale = legacyScale;
+				element.placed = false;
+			}
+			else {
+				// 旧版没有这些模块：默认按 1.0 缩放、可见落位，不继承旧的全局缩放
+				element.visible = globalVisible;
+				element.scale = 1.0D;
 				element.placed = false;
 			}
 
@@ -170,7 +235,7 @@ public final class HudConfig {
 		Element artifacts = element(ARTIFACTS);
 
 		for (String module : MODULES) {
-			// 位置在拖动 / 缩放时已经按该模块的真实行宽夹过（SephiriaHud.layout），
+			// 位置在拖动 / 缩放时已经按该模块的真实宽高夹过（SephiriaHud.layout），
 			// 这里不要再按固定宽度夹一次：技能行只有 6 格，按 9 格夹会把它们往左推
 			Element element = element(module);
 			properties.setProperty(module + ".visible", Boolean.toString(element.visible));
@@ -181,7 +246,7 @@ public final class HudConfig {
 		}
 
 		// 同时写一份旧版的全局键：万一降级回旧构建，至少能读回显示开关与缩放。
-		// 新版读取时只要看到 skills.* / artifacts.* 就不会再走旧键，所以不会打架。
+		// 新版读取时只要看到 <模块>.* 就不会再走旧键，所以不会打架。
 		// 旧版没有绝对坐标的概念（只有 offset），这里写 0，位置由旧版的默认角落决定。
 		properties.setProperty("visible", Boolean.toString(skills.visible || artifacts.visible));
 		properties.setProperty("scale", Double.toString(Math.round(skills.scale * 100.0D) / 100.0D));
@@ -200,6 +265,36 @@ public final class HudConfig {
 		catch (IOException ignored) {
 			// 写不进去只影响下次启动的布局，不影响本次游戏
 		}
+	}
+
+	/** 左下模块默认贴底高度。 */
+	private static int bottomOf(String module) {
+		return switch (module) {
+			case DASH -> DASH_BOTTOM;
+			case MP -> MP_BOTTOM;
+			case CLOUD -> CLOUD_BOTTOM;
+			case SUN_SWORD -> SUN_SWORD_BOTTOM;
+			case FROST -> FROST_BOTTOM;
+			default -> DASH_BOTTOM;
+		};
+	}
+
+	/** 首次落位时用来夹进屏幕的估算宽度（真实宽度渲染时按文字重新算）。 */
+	private static int defaultWidth(String module) {
+		return switch (module) {
+			case SKILLS, ARTIFACTS -> DEFAULT_SLOTS * DEFAULT_ICON_STEP;
+			case INVULN -> DEFAULT_INVULN_WIDTH;
+			default -> DEFAULT_PANEL_WIDTH;
+		};
+	}
+
+	/** 首次落位时用来夹进屏幕的估算高度。 */
+	private static int defaultHeight(String module) {
+		return switch (module) {
+			case SKILLS, ARTIFACTS, WEAPON -> DEFAULT_ROW_HEIGHT;
+			case INVULN -> DEFAULT_INVULN_HEIGHT;
+			default -> DEFAULT_PANEL_HEIGHT;
+		};
 	}
 
 	private static boolean hasModuleKeys(Properties properties, String module) {

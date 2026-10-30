@@ -4,12 +4,15 @@ import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.debuff.Debuffs;
+import com.sephiria.network.CloudSyncPayload;
 import com.sephiria.registry.ModParticleTypes;
 import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -170,7 +173,9 @@ public final class DarkCloud {
 				// 没点亮（或人没了）：把乌云收掉，下次点亮重新攒满容量；
 				// 顺手推一份 0/0 让 HUD 的乌云 UI 跟着消失
 				if (CLOUDS.remove(player.getUUID()) != null) {
-
+					FriendlyByteBuf buffer = new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+					CloudSyncPayload.write(buffer, new CloudSyncPayload(0.0D, 0.0D));
+					ServerPlayNetworking.send(player, CloudSyncPayload.CHANNEL, buffer);
 				}
 
 				continue;
@@ -218,7 +223,9 @@ public final class DarkCloud {
 
 		cloud.syncedCapacity = cloud.capacity;
 		cloud.syncedMax = max;
-
+		FriendlyByteBuf buffer = new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+		CloudSyncPayload.write(buffer, new CloudSyncPayload(cloud.capacity, max));
+		ServerPlayNetworking.send(player, CloudSyncPayload.CHANNEL, buffer);
 	}
 
 	/** 容量上限：基础 15 + 连击各档的加成 + 神器的「乌云容量」加成（沙波特果实 / 避雷针）。 */

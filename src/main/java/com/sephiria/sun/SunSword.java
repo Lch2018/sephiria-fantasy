@@ -7,14 +7,17 @@ import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.artifact.EternalEclipseItem;
 import com.sephiria.damage.SephiriaDamage;
+import com.sephiria.network.SunSwordSyncPayload;
 import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModParticleTypes;
 import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -240,7 +243,9 @@ public final class SunSword {
 			if (!active) {
 				// 没点亮（或人没了）：收掉状态、HUD 也收掉；地上的剑不动，重新点亮后还能捡
 				if (STATES.remove(player.getUUID()) != null) {
-
+					FriendlyByteBuf buffer = new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+					SunSwordSyncPayload.write(buffer, new SunSwordSyncPayload(0.0D, 0.0D));
+					ServerPlayNetworking.send(player, SunSwordSyncPayload.CHANNEL, buffer);
 				}
 
 				continue;
@@ -358,7 +363,9 @@ public final class SunSword {
 
 		state.syncedCurrent = state.current;
 		state.syncedMax = max;
-
+		FriendlyByteBuf buffer = new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+		SunSwordSyncPayload.write(buffer, new SunSwordSyncPayload(state.current, max));
+		ServerPlayNetworking.send(player, SunSwordSyncPayload.CHANNEL, buffer);
 	}
 
 	/**

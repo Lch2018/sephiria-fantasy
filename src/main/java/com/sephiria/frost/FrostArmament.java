@@ -18,9 +18,11 @@ import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.sun.SunSword;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -475,7 +477,9 @@ public final class FrostArmament {
 				State gone = STATES.remove(player.getUUID());
 
 				if (gone != null && gone.synced != null) {
-
+					FriendlyByteBuf buffer = new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+					FrostSyncPayload.write(buffer, FrostSyncPayload.none());
+					ServerPlayNetworking.send(player, FrostSyncPayload.CHANNEL, buffer);
 				}
 
 				continue;
@@ -538,7 +542,9 @@ public final class FrostArmament {
 		}
 
 		state.synced = payload;
-
+		FriendlyByteBuf buffer = new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+		FrostSyncPayload.write(buffer, payload);
+		ServerPlayNetworking.send(player, FrostSyncPayload.CHANNEL, buffer);
 	}
 
 	/** 剑鞘：6 秒的表一直走（2026-10-13 用户口径：充能不受战斗 / 脱战状态影响）。 */
