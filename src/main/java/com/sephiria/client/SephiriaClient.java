@@ -36,9 +36,10 @@ import net.minecraft.network.chat.Component;
 /**
  * 1.21.1 客户端入口（核心版）。
  *
- * <p>目前只做两件不依赖 26.3 渲染管线的事：容器界面注册（背包 / 附魔 / 石板合成 / 宝箱这几个
- * 已经换成自绘面板，其余仍用通用面板）与冲刺 / 装填两个按键。26.3 的自绘 HUD、ToroHealth、ModMenu、
- * GeckoLib 刀动画还没有移植，别把这一版当完整客户端。
+ * <p>目前只做不依赖 26.3 渲染管线的事：容器界面注册（背包 / 附魔 / 石板合成 / 宝箱这几个
+ * 已经换成自绘面板，其余仍用通用面板）、冲刺 / 装填按键、技能与神器两排 HUD 及其布局界面
+ * （H 键）。26.3 的武器 / 冲刺 / MP 等自绘 HUD、ToroHealth、GeckoLib 刀动画还没有移植，
+ * 别把这一版当完整客户端。
  */
 public final class SephiriaClient implements ClientModInitializer {
 	/** 1.21.1 的按键分类仍是一个字符串。 */
@@ -154,6 +155,13 @@ public final class SephiriaClient implements ClientModInitializer {
 			while (RELOAD_KEY.consumeClick()) {
 				if (client.player != null) {
 					ClientPlayNetworking.send(ReloadPayload.INSTANCE);
+				}
+			}
+
+			// H 打开 HUD 布局：与 K / T 一样只在没有任何界面开着时响应，避免在聊天里误触
+			while (HUD_KEY.consumeClick()) {
+				if (client.player != null && client.screen == null) {
+					client.setScreen(new com.sephiria.client.hud.HudConfigScreen(null));
 				}
 			}
 
