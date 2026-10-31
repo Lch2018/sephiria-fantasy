@@ -86,7 +86,7 @@ public final class BackpackCellRenderer {
 		// 字号缩到 0.6 倍，等级数字要小到不盖住图标
 		PoseStack pose = graphics.pose();
 		pose.pushPose();
-		pose.translate(x + 1.0F, y + 1.0F, 0.0F);
+		pose.translate(x + 1.0F, y + 1.0F, 300.0F);
 		pose.scale(LEVEL_TEXT_SCALE, LEVEL_TEXT_SCALE, 1.0F);
 		graphics.drawString(font, text, 0, 0, colour, true);
 		pose.popPose();
