@@ -107,7 +107,6 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 			return;
 		}
 
-		BackpackCellRenderer.drawLevelText(graphics, this.font, slot, shown, this.menu.slotLevelOf(slot));
 	}
 
 	/**
@@ -321,14 +320,17 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 
 	/** 最后再画一遍背包格：清掉石板旧图标，再画旋转图标与等级文字，保证它们在最上层。 */
 	private void sephiria$redrawBackpackTop(GuiGraphics graphics) {
+		graphics.pose().pushPose();
+		graphics.pose().translate(this.leftPos, this.topPos, 0.0F);
+
 		for (Slot slot : this.menu.slots) {
 			if (!this.menu.isBackpackSlot(slot) || !this.menu.backpackSlotExists(slot)) {
 				continue;
 			}
 
 			net.minecraft.world.item.ItemStack shown = slot.getItem();
-			int x = this.leftPos + slot.x;
-			int y = this.topPos + slot.y;
+			int x = slot.x;
+			int y = slot.y;
 			graphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF15151A);
 			graphics.fill(x, y, x + 16, y + 16, 0xFF2A2A30);
 
@@ -342,6 +344,8 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 			BackpackCellRenderer.drawLevelText(graphics, this.font, slot, shown,
 					this.menu.slotLevelOf(slot));
 		}
+
+		graphics.pose().popPose();
 	}
 
 	/** 悬停石板按 R 旋转（保持移植版原来的行为：只要指着格子就发，服务端自己校验）。 */
@@ -383,8 +387,8 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 				continue;
 			}
 
-			int x = this.leftPos + slot.x;
-			int y = this.topPos + slot.y;
+			int x = slot.x;
+			int y = slot.y;
 
 			if (mouseX >= x && mouseX < x + 16 && mouseY >= y && mouseY < y + 16) {
 				return this.menu.slotLevelOf(slot);
