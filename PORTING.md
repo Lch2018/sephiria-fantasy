@@ -10,8 +10,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.116.17+1.21.1`。
 - 核心 `compileJava` 通过；临时无头服务端启动通过（注册、BE、资源、配方可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1260974 B，
-  sha256 `b1e04d460d2b73d6082dd9ae178d8a0e53c97b09bfd3c7b2a3d05c661f9a48c5`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.21.1.jar`（1258401 B，
+  sha256 `80bb6e4dbad252c11ec76cb4807088ff623624dd781b6a4706d8a33efd595fb2`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.21.1-Fabric 0.20.1\mods`。
 - 客户端已有入口 `com.sephiria.client.SephiriaClient`：注册 9 个容器菜单的通用界面
   （深色面板 + 槽位底 + 标题），并接回冲刺（鼠标侧键）与装填（R）按键。
@@ -39,8 +39,8 @@
 
 - 构建：Mojang 官方映射 + Loom `1.17.21` + Fabric API `0.92.12+1.20.1` + Java 17。
 - 核心 `compileJava` 通过；无头服务端启动通过（注册、BE、资源、7 张配方、1271 个进度可加载）。
-- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1274470 B，
-  sha256 `afcec5b3f16e2800fce9e8ade1359d60c451d76419fb0b6ce58c7fdeecdf9e10`）。
+- jar：`build/libs/sephiria-fantasy-0.4.0.58-a-mc1.20.1.jar`（1271775 B，
+  sha256 `64d970a66728cd433b8cf54d318d6fc97606f265c2899f561b26e5fc80718c5d`）。
 - 已实装到 `D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1\mods`。
 - 客户端同样有 `SephiriaClient` 与通用容器界面（9 个菜单），访问拓宽打开
   `MenuScreens.register`；提示行已接 `ArtifactTooltip`（1.20.1 的三参回调）。
@@ -96,6 +96,7 @@
   每模块独立 visible/x/y/scale、拖拽、缩放、持久化；图标冷却改径向扇形并加完成闪光。
   属性/天赋/技能页顶部也补了六标签栏。
   修复背包等级文字重复/层级；GeckoLib 4 模型路径改为 assets/<ns>/geo 与 animations。
+  弩 in-hand 模型补齐 rotation axis；冲刺每 tick 补发 motion 包；1.21.1 属性/天赋页去掉背景模糊。
   仍缺：背包格子等级/旋转层级、属性/天赋/HUD 视觉细节与客户端实测。
 
 ## 注意
