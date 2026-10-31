@@ -9,7 +9,7 @@ import software.bernie.geckolib.model.GeoModel;
 public class KatanaModel extends GeoModel<SephiriaKatanaItem> {
 	@Override
 	public ResourceLocation getModelResource(SephiriaKatanaItem animatable) {
-		return new ResourceLocation(Sephiria.MOD_ID, "geckolib/models/katana.geo.json");
+		return new ResourceLocation(Sephiria.MOD_ID, "geo/katana.geo.json");
 	}
 
 	@Override
@@ -19,6 +19,6 @@ public class KatanaModel extends GeoModel<SephiriaKatanaItem> {
 
 	@Override
 	public ResourceLocation getAnimationResource(SephiriaKatanaItem animatable) {
-		return new ResourceLocation(Sephiria.MOD_ID, "geckolib/animations/katana.animation.json");
+		return new ResourceLocation(Sephiria.MOD_ID, "animations/katana.animation.json");
 	}
 }
