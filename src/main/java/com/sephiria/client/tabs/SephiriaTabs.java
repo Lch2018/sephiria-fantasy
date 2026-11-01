@@ -93,13 +93,9 @@ public final class SephiriaTabs {
 		// 目标是容器菜单（背包 / 商店）时不用先关：服务端会用 openMenu 顶掉当前那个
 		boolean containerTarget = tab == SephiriaTab.BACKPACK || tab == SephiriaTab.SHOP;
 
-		if (containerTarget) {
-			// 容器页由服务端回包后才开界面，时间不可控：别让上一次还没兑现的还原落到它头上
-			com.sephiria.client.CursorKeeper.cancel();
-		} else {
-			// 记下关容器 / 换界面前的光标位置（mixin 在 setScreen 返回时还原）
-			com.sephiria.client.CursorKeeper.capture(client);
-		}
+		// 容器目标也要记：服务端回包后才 setScreen，位置一直保留到目标界面开出来；
+		// 中途的 setScreen(null) 由 afterSetScreen 跳过。
+		com.sephiria.client.CursorKeeper.capture(client);
 
 		if (!containerTarget && client.player.containerMenu != client.player.inventoryMenu) {
 			// closeContainer() 会发关闭包、顺手关掉当前界面，下面再切到目标界面
