@@ -34,6 +34,8 @@ public class ShopScreen extends SephiriaMenuScreen<ShopMenu> {
 
 	@Override
 	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+		graphics.drawString(this.font, Component.literal("叶子: " + (int) com.sephiria.client.ClientStats.leaves()),
+				this.imageWidth - 70, 6, 0xFFFFD060, false);
 		super.renderLabels(graphics, mouseX, mouseY);
 
 		for (int index = 0; index < com.sephiria.shop.ShopStock.SLOT_COUNT; index++) {
