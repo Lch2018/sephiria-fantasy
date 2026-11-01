@@ -15,6 +15,7 @@ import net.minecraft.world.item.Item;
 
 /** 简易神器技能页：6 个栏位 + 可用技能列表，先选栏位再点技能。 */
 public class ArtifactSkillScreen extends Screen {
+	private boolean backgroundDrawn;
 	private static final int PANEL = 0xF0101014;
 	private static final int BORDER = 0xFF4A4A52;
 	private static final int PANEL_WIDTH = 320;
@@ -99,7 +100,16 @@ public class ArtifactSkillScreen extends Screen {
 	}
 
 	@Override
+	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		if (!this.backgroundDrawn) {
+			this.backgroundDrawn = true;
+			super.renderBackground(graphics, mouseX, mouseY, partialTick);
+		}
+	}
+
+	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		this.backgroundDrawn = false;
 		this.renderBackground(graphics, mouseX, mouseY, partialTick);
 		int left = panelLeft();
 		int top = panelTop();

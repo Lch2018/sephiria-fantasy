@@ -105,6 +105,7 @@ public class StatsScreen extends Screen {
 	@Override
 	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 		if (!this.backgroundDrawn) {
+			this.backgroundDrawn = true;
 			super.renderBackground(graphics, mouseX, mouseY, partialTick);
 		}
 	}
