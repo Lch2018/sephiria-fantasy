@@ -82,11 +82,6 @@ public class StatsScreen extends Screen {
 	 * 标签放在 y=6~26，内容从 {@code CONTENT_TOP}=34 起，不会压到属性行。
 	 */
 	@Override
-	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-		this.renderTransparentBackground(graphics);
-	}
-
-	@Override
 	protected void init() {
 		super.init();
 		ScreenTabs.add(this, SephiriaTab.ATTRIBUTES);

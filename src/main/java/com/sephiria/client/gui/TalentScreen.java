@@ -90,11 +90,6 @@ public class TalentScreen extends Screen {
 	 * 按「背包键」（默认 E）关掉天赋页、回到游戏——与属性页、神器技能页一致。
 	 */
 	@Override
-	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-		this.renderTransparentBackground(graphics);
-	}
-
-	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
 		if (Minecraft.getInstance().options.keyInventory.matches(keyCode, scanCode)) {
 			this.onClose();

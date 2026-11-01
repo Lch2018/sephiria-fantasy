@@ -122,6 +122,11 @@ public final class Dash {
 			// 含垂直分量的突进连 Y 一起接管，否则保留实体自身的垂直速度（重力照常作用）
 			double vertical = dash.vertical ? dash.direction.y * dash.speed : velocity.y;
 			entity.setDeltaMovement(dash.direction.x * dash.speed, vertical, dash.direction.z * dash.speed);
+			if (entity instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+				serverPlayer.hurtMarked = true;
+				serverPlayer.connection.send(
+						new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(serverPlayer));
+			}
 			// 玩家的位移是客户端物理执行的，必须把这份速度同步过去才会真的动
 			// ——原版的击退、三叉戟激流用的也是这个标记（26.3 里 hurtMarked 更名而来）。
 	
