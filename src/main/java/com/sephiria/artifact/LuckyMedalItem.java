@@ -14,7 +14,7 @@ public class LuckyMedalItem extends ArtifactItem {
 	/** 各等级每买一瓶药水生成的叶子（2026-10-16 用户要求整表减半：100/150/200 → 50/75/100）。 */
 	private static final double[] POTION_BUY_LEAVES_BY_LEVEL = { 50.0D, 75.0D, 100.0D };
 	/** 各等级的谈判力加成（点）。 */
-	private static final double[] NEGOTIATION_BY_LEVEL = { 2.0D, 6.0D, 10.0D };
+	private static final double[] NEGOTIATION_BY_LEVEL = { 4.0D, 12.0D, 20.0D };
 	/** 词条数值的颜色：绿色。 */
 	private static final int COLOUR_BONUS = 0xFF55FF55;
 

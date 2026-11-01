@@ -135,6 +135,7 @@ public class Sephiria implements ModInitializer {
 		// 商店货架的内容与限购次数存在玩家附件里：跨会话保留，重登/重启不会换一批货
 		com.sephiria.shop.ShopStock.register();
 		PlayerStats.register();
+		com.sephiria.stats.Fatigue.register();
 		OffHandGuard.register();
 		SephiriaKatanaItem.registerEvents();
 		SephiriaKatanaItem.register();

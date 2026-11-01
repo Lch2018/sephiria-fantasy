@@ -73,8 +73,8 @@ public final class PlayerStats {
 	public static final double DEFAULT_XP_DROP = 100.0D;
 	/** 「村庄英雄」buff 期间给的谈判力：buff 一消失加成就归零，所以不进存档、每次算总值时现查。 */
 	public static final double VILLAGE_HERO_NEGOTIATION = 20.0D;
-	/** 多少点经验换一个升级宝箱（2026-10-16 用户从 1000 降到 500）。 */
-	public static final double EXPERIENCE_PER_CHEST = 500.0D;
+	/** 多少点经验换一个升级宝箱（用户 2026-11-01 改回 1000）。 */
+	public static final double EXPERIENCE_PER_CHEST = 1000.0D;
 	/**
 	 * 幸运值（点）：默认 0，只影响「稀有及以上」物品的掉落概率（商店 / 宝箱 / 抽卡）。
 	 *

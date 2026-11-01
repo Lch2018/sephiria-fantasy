@@ -27,22 +27,22 @@ import java.util.Map;
  * （铜锭）；骰子 / 附魔币 / 宝箱这些稀有道具不收购。
  */
 public final class ShopPrices {
-	/** 白 / 蓝 / 黄 / 红 / 彩 五档买价：神器用这套。 */
-	private static final int[] BY_RARITY = { 250, 500, 750, 1000, 1500 };
+	/** 白 / 蓝 / 黄 / 红 / 彩 五档买价：神器用这套（2026-11-01 全部翻倍）。 */
+	private static final int[] BY_RARITY = { 500, 1000, 1500, 2000, 3000 };
 	/**
 	 * 石板的五档买价（用户 2026-10-17：石板价格下调 30%）——所以不再与神器共用一张表。
 	 * 175 / 350 / 525 / 700 / 1050 恰好是神器那套的 7 折，向下取整不亏分。
 	 */
-	private static final int[] SLATE_BY_RARITY = { 175, 350, 525, 700, 1050 };
-	/** 药水的五档买价：白 25、蓝 1500、黄 5043、红与彩 0（0 = 商店不出售）。 */
-	private static final int[] POTION_BY_RARITY = { 25, 1500, 5043, 0, 0 };
+	private static final int[] SLATE_BY_RARITY = { 350, 700, 1050, 1400, 2100 };
+	/** 药水的五档买价：白 50、蓝 3000、黄 10086、红与彩 0（全部翻倍）。 */
+	private static final int[] POTION_BY_RARITY = { 50, 3000, 10086, 0, 0 };
 	/** 宝箱（神器 / 升级）买价：用户定价。 */
-	public static final int CHEST_PRICE = 750;
+	public static final int CHEST_PRICE = 1500;
 	/**
 	 * 石板宝箱买价：比另两种箱子便宜 30%（用户 2026-10-18 定的，750 × 0.7 = 525），
 	 * 与石板本身「比神器便宜 30%」是同一条口径。
 	 */
-	public static final int SLATE_CHEST_PRICE = 525;
+	public static final int SLATE_CHEST_PRICE = 1050;
 	/** 出售折扣：原价的 3 折。 */
 	public static final int SELL_PERCENT = 30;
 	/**
