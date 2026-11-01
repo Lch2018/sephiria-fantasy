@@ -47,8 +47,12 @@ public class ShopScreen extends SephiriaMenuScreen<ShopMenu> {
 			int remaining = this.menu.remaining(index);
 			int x = this.menu.getSlot(index).x;
 			int y = this.menu.getSlot(index).y + 17;
-			graphics.drawString(this.font, Component.literal(price + "叶 " + remaining + "件"), x, y,
+			graphics.pose().pushPose();
+			graphics.pose().translate(x, y, 0.0F);
+			graphics.pose().scale(0.5F, 0.5F, 1.0F);
+			graphics.drawString(this.font, Component.literal(String.valueOf(price)), 0, 0,
 					price > 0 ? 0xFF55FF55 : 0xFFFF5555, false);
+			graphics.pose().popPose();
 		}
 	}
 }
