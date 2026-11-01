@@ -113,6 +113,7 @@ public class CardSelectionScreen extends Screen {
 			Button button = this.refreshButtons[index];
 
 			if (button != null) {
+				button.visible = this.chances > 0;
 				button.active = !this.selecting && !this.refreshUsed[index];
 			}
 		}
@@ -201,6 +202,10 @@ public class CardSelectionScreen extends Screen {
 	}
 
 	private void drawCards(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
+		if (this.chances <= 0) {
+			return;
+		}
+
 		for (int index = 0; index < CardSelection.CARDS; index++) {
 			int x = cardX(index);
 			int y = cardsTop();
