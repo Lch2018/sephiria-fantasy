@@ -962,30 +962,35 @@ public final class ModItems {
 			p -> new BlockItem(ModBlocks.SEPHIRIA_BEACON, p),
 			new Item.Properties().useBlockDescriptionPrefix());
 
-	/** 神器宝箱（赛菲莉娅道具）：右键开出 5 件随机神器，选一件拿走。 */
+	/**
+	 * 神器宝箱（赛菲莉娅道具）：右键开出 5 件随机神器，选一件拿走。
+	 *
+	 * <p>五种宝箱默认叠 {@link ChestItem#MAX_STACK}；打开过的那一份会被 {@code ChestItem#markOpened}
+	 * 把 max_stack_size 改成 1，所以「没开过才叠」是逐份生效的。
+	 */
 	public static final Item ARTIFACT_CHEST = register(key("artifact_chest"),
 			p -> new ChestItem(ChestItem.Kind.ARTIFACT, p),
-			new Item.Properties().stacksTo(1));
+			new Item.Properties().stacksTo(ChestItem.MAX_STACK));
 
 	/** 石板宝箱：同上，奖池是石板。 */
 	public static final Item SLATE_CHEST = register(key("slate_chest"),
 			p -> new ChestItem(ChestItem.Kind.SLATE, p),
-			new Item.Properties().stacksTo(1));
+			new Item.Properties().stacksTo(ChestItem.MAX_STACK));
 
 	/** 升级宝箱：每 1000 点经验发一个，奖池混着神器与石板，好东西更少。 */
 	public static final Item UPGRADE_CHEST = register(key("upgrade_chest"),
 			p -> new ChestItem(ChestItem.Kind.UPGRADE, p),
-			new Item.Properties().stacksTo(1));
+			new Item.Properties().stacksTo(ChestItem.MAX_STACK));
 
 	/** 稀有神器宝箱（BOSS 掉落）：奖池只保留稀有及以上品质的神器。 */
 	public static final Item RARE_ARTIFACT_CHEST = register(key("rare_artifact_chest"),
 			p -> new ChestItem(ChestItem.Kind.RARE_ARTIFACT, p),
-			new Item.Properties().stacksTo(1));
+			new Item.Properties().stacksTo(ChestItem.MAX_STACK));
 
 	/** 稀有石板宝箱（BOSS 掉落）：奖池只保留稀有及以上品质的石板。 */
 	public static final Item RARE_SLATE_CHEST = register(key("rare_slate_chest"),
 			p -> new ChestItem(ChestItem.Kind.RARE_SLATE, p),
-			new Item.Properties().stacksTo(1));
+			new Item.Properties().stacksTo(ChestItem.MAX_STACK));
 
 	/**
 	 * 神器标签页的图标物品。

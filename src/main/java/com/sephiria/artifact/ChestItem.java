@@ -5,14 +5,18 @@ import com.sephiria.Sephiria;
 import com.sephiria.backpack.ChestMenu;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -23,15 +27,23 @@ import java.util.List;
 /**
  * 宝箱类道具（赛菲莉娅道具）：神器宝箱 / 石板宝箱 / 升级宝箱。
  *
- * <p>不可堆叠，手持右键打开「宝箱页面」：页面里有 {@value #REWARDS} 格随机奖励，选一件直接获得，
- * 宝箱本身消耗掉、那一栏被选中的东西填上。
+ * <p><b>没开过的箱子可以叠 16 个</b>（用户 2026-11-01 的口径：神器 / 升级 / 石板 / 稀有神器 / 稀有石板
+ * 五种宝箱都算）；一旦打开过（抽过奖励 / 用过免费刷新 / 带 {@link #OPENED} 标记）就恢复成一次一个。
  *
- * <p>三种箱子的区别只有奖池与权重：神器箱只出神器、石板箱只出石板、升级箱两者混着出且好东西更少。
+ * <p>堆叠靠原版 <b>max_stack_size 数据组件</b>：物品默认 16，打开时把这一份的组件改成 1，
+ * 同时加上 {@link #OPENED}。这样合并时组件不同、开过的也叠不起来，shift-click 也不会把
+ * 开过的和没开过的并成一堆（原版合并判的是「同物品 + 同组件」）。
  *
- * <p>奖励在<b>第一次打开时</b>抽好并写进物品组件（{@link #REWARDS}），之后关掉再打开还是同一批——
+ * <p>手持右键打开「宝箱页面」：页面里有 {@value #REWARDS} 格随机奖励，选一件直接获得，
+ * 宝箱本身消耗掉、那一栏被选中的东西填上。打开时从手里<b>取出一个</b>交给菜单持有，
+ * 剩下的同种箱子仍是没开过的。
+ *
+ * <p>奖励在<b>第一次打开时</b>抽好并写进物品组件（{@link #ROLLED}），之后关掉再打开还是同一批——
  * 否则玩家可以反复开关界面刷奖池。
  */
 public class ChestItem extends Item {
+	/** 没开过的宝箱最多叠几个。 */
+	public static final int MAX_STACK = 16;
 	/** 宝箱页面的基础奖励格数。 */
 	public static final int REWARDS = 5;
 	/** 天赋「急智」二阶段之后的奖励格数上限（5 选 1 → 6 选 1）。 */
@@ -59,6 +71,18 @@ public class ChestItem extends Item {
 	public static final DataComponentType<Boolean> FREE_REROLL_USED = Registry.register(
 			BuiltInRegistries.DATA_COMPONENT_TYPE,
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "chest_free_reroll_used"),
+			DataComponentType.<Boolean>builder().persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL).build());
+
+	/**
+	 * 这一份宝箱「已经打开过」（不管选没选）。
+	 *
+	 * <p>为什么不只靠 {@link #ROLLED}：奖励为空时（池子异常 / 以后加别的箱子）ROLLED 可能不写；
+	 * 而且老存档里已经开过的箱子也没有这个标记。打开时标记 + 把这一份的 max_stack_size 改成 1，
+	 * 两条一起保证开过的箱子永远和没开过的分开。
+	 */
+	public static final DataComponentType<Boolean> OPENED = Registry.register(
+			BuiltInRegistries.DATA_COMPONENT_TYPE,
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "chest_opened"),
 			DataComponentType.<Boolean>builder().persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL).build());
 
 	/**
@@ -113,8 +137,51 @@ public class ChestItem extends Item {
 			return InteractionResult.CONSUME;
 		}
 
-		serverPlayer.openMenu(ChestMenu.provider(serverPlayer, hand));
+		ItemStack held = serverPlayer.getItemInHand(hand);
+		ItemStack opened = held.copyWithCount(1);
+		// 先扣掉手里的这一份：菜单持有的是单独的一份，剩下的同种箱子仍是「没开过」、还能叠
+		held.shrink(1);
+		serverPlayer.getInventory().setChanged();
+		// 开过的这一份改成不可堆叠（max_stack_size=1），这次打开就算后面是空奖励也已经标记了
+		markOpened(opened);
+		serverPlayer.openMenu(ChestMenu.provider(serverPlayer, opened));
 		return InteractionResult.CONSUME;
+	}
+
+	/**
+	 * 标记这一份宝箱已经打开：加 {@link #OPENED}，并把这一份的最大堆叠改成 1。
+	 *
+	 * <p>原版 {@code ItemStack#getMaxStackSize} 读的是 max_stack_size 数据组件，改这一份的组件
+	 * 就只影响这一份——同一个物品的其它箱子仍然是 16。
+	 */
+	public static ItemStack markOpened(ItemStack chest) {
+		chest.set(OPENED, true);
+		chest.set(DataComponents.MAX_STACK_SIZE, 1);
+		return chest;
+	}
+
+	/**
+	 * 这一份宝箱是否已经打开过（老存档没有 {@link #OPENED} 时，有奖励表或免费刷新标记也算）。
+	 *
+	 * <p>只用于展示 / 判断，真正的堆叠上限由 max_stack_size 组件管。
+	 */
+	public static boolean opened(ItemStack chest) {
+		return Boolean.TRUE.equals(chest.get(OPENED))
+				|| chest.get(ROLLED) != null
+				|| Boolean.TRUE.equals(chest.get(FREE_REROLL_USED));
+	}
+
+	/**
+	 * 背包里每刻检查一次：老存档里「已经开过、但还没有 max_stack_size 组件」的宝箱
+	 * 在这里补上 1，让它和更新后的开箱行为一致（不再能叠）。
+	 *
+	 * <p>只在服务端主背包 tick 里做；已经标记过的是空操作，开销可以忽略。
+	 */
+	@Override
+	public void inventoryTick(ItemStack stack, ServerLevel level, Entity entity, EquipmentSlot slot) {
+		if (opened(stack) && !Integer.valueOf(1).equals(stack.get(DataComponents.MAX_STACK_SIZE))) {
+			stack.set(DataComponents.MAX_STACK_SIZE, 1);
+		}
 	}
 
 	/** 箱子名字按品质上色：普通箱稀有（黄），稀有箱传说（红）。 */

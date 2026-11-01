@@ -12,7 +12,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Unit;
 import net.minecraft.world.Container;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -55,7 +54,13 @@ public class ChestMenu extends AbstractContainerMenu {
 
 	private final Container rewards;
 	private final Container dice;
-	private final InteractionHand hand;
+	/**
+	 * 这一次打开的<b>那一份</b>宝箱（服务端持有；客户端是空的）。
+	 *
+	 * <p>打开时从手里取出一份交给菜单，菜单不再回头去读「手里现在拿的是什么」——
+	 * 否则手里叠着 16 个时，关掉界面再开、或者中途换手，读到的会是另一份没开过的箱子。
+	 */
+	private final ItemStack chest;
 	/** 这一箱实际开几格（5 或 6）+ 剩余免费刷新：服务端写、客户端读。 */
 	private final ContainerData data;
 	/** 服务端：开箱的玩家（客户端为 null）。筛奖励 / 刷新要用随机、幸运与天赋。 */
@@ -66,24 +71,24 @@ public class ChestMenu extends AbstractContainerMenu {
 	/** 客户端用的构造：奖励格数先按 5，服务端打开菜单时会把真实值同步过来。 */
 	public ChestMenu(int containerId, Inventory playerInventory) {
 		this(containerId, playerInventory, new SimpleContainer(ChestItem.MAX_REWARDS), new SimpleContainer(1),
-				InteractionHand.MAIN_HAND, ChestItem.REWARDS, null);
+				ItemStack.EMPTY, ChestItem.REWARDS, null);
 	}
 
-	public ChestMenu(int containerId, Inventory playerInventory, Container rewards, InteractionHand hand,
+	public ChestMenu(int containerId, Inventory playerInventory, Container rewards, ItemStack chest,
 			int rewardCount, ServerPlayer owner) {
-		this(containerId, playerInventory, rewards, new SimpleContainer(1), hand, rewardCount, owner);
+		this(containerId, playerInventory, rewards, new SimpleContainer(1), chest, rewardCount, owner);
 	}
 
 	private ChestMenu(int containerId, Inventory playerInventory, Container rewards, Container dice,
-			InteractionHand hand, int rewardCount, ServerPlayer owner) {
+			ItemStack chest, int rewardCount, ServerPlayer owner) {
 		super(ModMenus.CHEST, containerId);
 		this.rewards = rewards;
 		this.dice = dice;
-		this.hand = hand;
+		this.chest = chest;
 		this.owner = owner;
 		this.data = new SimpleContainerData(DATA_COUNT);
 		this.data.set(DATA_REWARDS, rewardCount);
-		this.data.set(DATA_FREE_REROLLS, owner == null ? 0 : freeRerollsFor(owner, hand));
+		this.data.set(DATA_FREE_REROLLS, owner == null ? 0 : freeRerollsFor(owner, chest));
 		addDataSlots(this.data);
 
 		for (int index = 0; index < ChestItem.MAX_REWARDS; index++) {
@@ -112,14 +117,13 @@ public class ChestMenu extends AbstractContainerMenu {
 	}
 
 	/** 这一箱的免费刷新次数：智慧三阶段且这件宝箱还没用过免费刷新时 1 次。 */
-	private static int freeRerollsFor(ServerPlayer player, InteractionHand hand) {
+	private static int freeRerollsFor(ServerPlayer player, ItemStack chest) {
 		if (player == null
 				|| com.sephiria.talent.Talents.stage(player, com.sephiria.talent.Talent.WISDOM) < 3) {
 			return 0;
 		}
 
-		ItemStack held = player.getItemInHand(hand);
-		return ChestItem.freeRerollUsed(held) ? 0 : 1;
+		return ChestItem.freeRerollUsed(chest) ? 0 : 1;
 	}
 
 	/** 这一箱实际有几格可选（5 或 6）。 */
@@ -154,14 +158,17 @@ public class ChestMenu extends AbstractContainerMenu {
 		return playerRowsY() + 4 * 18 + 4;
 	}
 
-	/** 服务端使用：按手里的宝箱种类抽好奖励再打开（已经抽过的箱子沿用原来那一批）。 */
-	public static MenuProvider provider(ServerPlayer player, InteractionHand hand) {
-		ItemStack held = player.getItemInHand(hand);
-		ChestItem.Kind kind = held.getItem() instanceof ChestItem chest ? chest.kind() : ChestItem.Kind.ARTIFACT;
+	/**
+	 * 服务端使用：按这一份宝箱的种类抽好奖励再打开（已经抽过的箱子沿用原来那一批）。
+	 *
+	 * @param chest 这一次打开的那一份（已由 {@link ChestItem#markOpened} 标记、堆叠上限 1）
+	 */
+	public static MenuProvider provider(ServerPlayer player, ItemStack chest) {
+		ChestItem.Kind kind = chest.getItem() instanceof ChestItem item ? item.kind() : ChestItem.Kind.ARTIFACT;
 		Container rewards = new SimpleContainer(ChestItem.MAX_REWARDS);
 		int choices = ChestItem.choicesFor(player);
 
-		java.util.List<ItemStack> rolled = ChestItem.rewardsOf(held, player.getRandom(), kind,
+		java.util.List<ItemStack> rolled = ChestItem.rewardsOf(chest, player.getRandom(), kind,
 				com.sephiria.stats.PlayerStats.luckTotal(player), choices);
 
 		for (int index = 0; index < rolled.size(); index++) {
@@ -184,7 +191,7 @@ public class ChestMenu extends AbstractContainerMenu {
 
 				@Override
 				public AbstractContainerMenu createMenu(int containerId, Inventory inventory, Player opener) {
-					return new ChestMenu(containerId, inventory, rewards, hand, rewardCount, player);
+					return new ChestMenu(containerId, inventory, rewards, chest, rewardCount, player);
 				}
 		};
 	}
@@ -208,9 +215,8 @@ public class ChestMenu extends AbstractContainerMenu {
 		}
 
 		this.claimed = true;
-		ItemStack held = player.getItemInHand(this.hand);
-		held.shrink(1);
-		player.getInventory().setChanged();
+		// 这一份宝箱已经拿在菜单手里（打开时就扣掉了），选中后直接作废；不再从玩家手里扣一次
+		this.chest.setCount(0);
 
 		// 交付走 PlayerItems.give：背包满时掉在脚下（别用 Inventory#add 的返回值判断，见它顶部）
 		PlayerItems.give(serverPlayer, reward);
@@ -231,15 +237,13 @@ public class ChestMenu extends AbstractContainerMenu {
 			return false;
 		}
 
-		ItemStack held = player.getItemInHand(this.hand);
-
-		if (!(held.getItem() instanceof ChestItem chest)) {
+		if (!(this.chest.getItem() instanceof ChestItem item)) {
 			return false;
 		}
 
 		if (freeRerolls() > 0) {
 			this.data.set(DATA_FREE_REROLLS, freeRerolls() - 1);
-			ChestItem.markFreeRerollUsed(held);
+			ChestItem.markFreeRerollUsed(this.chest);
 		} else {
 			ItemStack diceStack = this.dice.getItem(0);
 
@@ -251,7 +255,7 @@ public class ChestMenu extends AbstractContainerMenu {
 			this.dice.setChanged();
 		}
 
-		java.util.List<ItemStack> rolled = ChestItem.reroll(held, player.getRandom(), chest.kind(),
+		java.util.List<ItemStack> rolled = ChestItem.reroll(this.chest, player.getRandom(), item.kind(),
 				com.sephiria.stats.PlayerStats.luckTotal(player), rewardCount());
 
 		for (int index = 0; index < ChestItem.MAX_REWARDS; index++) {
@@ -302,8 +306,15 @@ public class ChestMenu extends AbstractContainerMenu {
 		ItemStack left = this.dice.removeItemNoUpdate(0);
 
 		if (!left.isEmpty() && player instanceof ServerPlayer serverPlayer) {
-			serverPlayer.getInventory().placeItemBackInInventory(left,
-					net.minecraft.util.Prediction.SERVER_ONLY);
+			PlayerItems.give(serverPlayer, left);
+		}
+
+		// 没选就关界面：把这一份宝箱还给玩家。它带着 OPENED 与 max_stack_size=1，
+		// 回去以后不会和没开过的箱子并堆；选过的（claimed）直接作废
+		if (!this.claimed && !this.chest.isEmpty() && player instanceof ServerPlayer serverPlayer) {
+			ItemStack returned = this.chest.copy();
+			this.chest.setCount(0);
+			PlayerItems.give(serverPlayer, returned);
 		}
 	}
 }

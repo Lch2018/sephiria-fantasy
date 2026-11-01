@@ -1,8 +1,10 @@
 package com.sephiria.client.tabs;
 
+import com.sephiria.client.card.ClientCardSelection;
 import com.sephiria.client.gui.StatsScreen;
 import com.sephiria.client.gui.TalentScreen;
 import com.sephiria.client.skill.ArtifactSkillScreen;
+import com.sephiria.network.CardOpenPayload;
 import com.sephiria.network.OpenArtifactSkillsPayload;
 import net.minecraft.client.gui.components.Button;
 import com.sephiria.network.OpenBackpackPayload;
@@ -17,10 +19,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * 六个页面的标签栏：原版背包（木箱）/ 赛菲莉娅背包 / 属性 / 天赋 / 神器技能 / 商店。
+ * 七个页面的标签栏：原版背包（木箱）/ 赛菲莉娅背包 / 属性 / 天赋 / 神器技能 / 商店 / 选卡。
  *
- * <p>原版背包、赛菲莉娅背包与商店（后两者都是容器菜单）、属性面板、天赋页是五个不同的界面，
- * 所以每个界面都在同一位置画出这一排标签，当前页那一格高亮；这样从任意一页都能直接切到另外几页。
+ * <p>这七个页面是七个不同的界面（背包 / 商店是容器菜单），所以每个界面都在同一位置画出这一排标签，
+ * 当前页那一格高亮；这样从任意一页都能直接切到另外几页。
  */
 public final class SephiriaTabs {
 	private static final int GAP = 1;
@@ -28,7 +30,7 @@ public final class SephiriaTabs {
 	private SephiriaTabs() {
 	}
 
-	/** 在 (x, y) 处画一排标签；{@code current} 是当前所在的页面，传 null 表示都不是（三个都可点）。 */
+	/** 在 (x, y) 处画一排标签；{@code current} 是当前所在的页面，传 null 表示都不是（七个都可点）。 */
 	public static void add(Screen screen, int x, int y, SephiriaTab current) {
 		int slot = 0;
 
@@ -59,6 +61,8 @@ public final class SephiriaTabs {
 			case ARTIFACT_SKILLS -> TabButton.texture(x, y, TabButton.SKILLS_ICON, tab.title(), active, press);
 			// 配方页用工作台图标（原版物品，不用另画图）
 			case SHOP -> TabButton.texture(x, y, TabButton.SHOP_ICON, tab.title(), active, press);
+			// 选卡页是紫色卡背图标（card_tab.png）
+			case CARD -> TabButton.texture(x, y, TabButton.CARD_ICON, tab.title(), active, press);
 		};
 	}
 
@@ -98,6 +102,11 @@ public final class SephiriaTabs {
 				ClientPlayNetworking.send(OpenArtifactSkillsPayload.INSTANCE);
 			}
 			case SHOP -> ClientPlayNetworking.send(OpenShopPayload.INSTANCE);
+			// 选卡不是容器菜单：清掉「刚关掉」的静默期，让服务端掷好三张卡再推回来打开界面
+			case CARD -> {
+				ClientCardSelection.clearSuppress();
+				ClientPlayNetworking.send(CardOpenPayload.INSTANCE);
+			}
 		}
 	}
 }

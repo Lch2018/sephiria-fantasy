@@ -76,8 +76,13 @@ public class WishPoolBlockEntity extends BlockEntity {
 			return;
 		}
 
+		// 升级宝箱现在能叠 16 个：一叠扔进来按实际个数换四叶草，别整叠只给一片
+		int count = Math.max(1, drop.getItem().getCount());
 		drop.discard();
-		WishPool.giveClover(owner);
+
+		for (int index = 0; index < count; index++) {
+			WishPool.giveClover(owner);
+		}
 
 		if (level instanceof ServerLevel serverLevel) {
 			serverLevel.sendParticles(ParticleTypes.SPLASH, pos.getX() + 0.5D, pos.getY() + 1.0D, pos.getZ() + 0.5D,

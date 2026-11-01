@@ -124,6 +124,8 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.difficulty.RootRetreatBlessings.register();
 		// 许愿池：能量与锚定也是每玩家一份的数据附件（方块只是入口 + 吸升级宝箱）
 		com.sephiria.wishpool.WishPool.register();
+		// 选卡：每 2 个游戏日攒一次机会（玩家附件），三张卡由服务端临时掷、客户端只负责显示
+		com.sephiria.card.CardSelection.register();
 		// 天赋：成就是四叶草之外再 +1 天赋点，击杀 BOSS 也 +1（见 talent/Talents）
 		com.sephiria.talent.Talents.register();
 		// 天赋「耐心」：第一行格子等级、低血回复、十日复活
@@ -238,6 +240,15 @@ public class Sephiria implements ModInitializer {
 				com.sephiria.network.SlateImprintPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.ChestRerollPayload.TYPE,
 				com.sephiria.network.ChestRerollPayload.STREAM_CODEC);
+		// 选卡：客户端只发「打开 / 刷新第几张 / 选第几张」，三张卡由服务端算好推回来
+		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.CardOpenPayload.TYPE,
+				com.sephiria.network.CardOpenPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.CardRefreshPayload.TYPE,
+				com.sephiria.network.CardRefreshPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.CardSelectPayload.TYPE,
+				com.sephiria.network.CardSelectPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(com.sephiria.network.CardSelectionPayload.TYPE,
+				com.sephiria.network.CardSelectionPayload.STREAM_CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(DashPayload.TYPE,
 				(payload, context) -> DashSkill.perform(context.player()));
@@ -422,6 +433,14 @@ public class Sephiria implements ModInitializer {
 						menu.reroll(context.player());
 					}
 				});
+
+		// 选卡：打开时不扣次数、每次重掷三张；刷新 / 选择的下标与资格全由 CardSelection 判
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.CardOpenPayload.TYPE,
+				(payload, context) -> com.sephiria.card.CardSelection.open(context.player()));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.CardRefreshPayload.TYPE,
+				(payload, context) -> com.sephiria.card.CardSelection.refresh(context.player(), payload.index()));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.CardSelectPayload.TYPE,
+				(payload, context) -> com.sephiria.card.CardSelection.select(context.player(), payload.index()));
 
 		// 打开天赋界面时客户端要一次最新状态：个人出生点（床 / 重生锚 / 指令）只有服务端知道，
 		// nearSpawn 必须由服务端算好，不能只靠进服时那一次同步（玩家会走动）

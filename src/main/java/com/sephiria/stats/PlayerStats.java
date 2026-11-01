@@ -922,11 +922,12 @@ public final class PlayerStats {
 	 *
 	 * <p>开关开着（许愿池界面里那行，见 {@link com.sephiria.wishpool.WishPool#overflowToClover}）时，
 	 * 背包满的情况下不再掉在脚下，而是**直接换成一片四叶草**（用户 2026-10-17 的口径）。
-	 * 「满」用的是 {@code Inventory#getFreeSlot()}——它只搜主背包那 36 格（不含装备/副手），
-	 * 和原版 {@code placeItemBackInInventory} 往哪儿塞是同一套；升级宝箱不可堆叠，需要的就是空格子。
+	 * 「满」先看 {@code Inventory#getFreeSlot()}（主背包 36 格，和 {@code placeItemBackInInventory}
+	 * 往哪儿塞是同一套），再看有没有<b>没叠满</b>的升级宝箱——宝箱现在能叠 16 个，
+	 * 有空位能并进已有的一叠时不该误判成「满了」而换成四叶草。
 	 */
 	private static void giveUpgradeChest(ServerPlayer player) {
-		boolean converted = player.getInventory().getFreeSlot() < 0
+		boolean converted = !canAcceptChest(player)
 				&& com.sephiria.wishpool.WishPool.overflowToClover(player);
 
 		if (converted) {
@@ -940,6 +941,24 @@ public final class PlayerStats {
 		// 用与开箱交付、抽卡同一颗 PLAYER_LEVELUP，音量/音高也照抄开箱那一处
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.7F, 1.4F);
+	}
+
+	/** 背包还能不能收下一个升级宝箱：有空格，或有没叠满的同一叠。 */
+	private static boolean canAcceptChest(ServerPlayer player) {
+		if (player.getInventory().getFreeSlot() >= 0) {
+			return true;
+		}
+
+		for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+			ItemStack stack = player.getInventory().getItem(slot);
+
+			if (stack.is(com.sephiria.registry.ModItems.UPGRADE_CHEST)
+					&& stack.getCount() < stack.getMaxStackSize()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/** 取属性：首次访问时从存档里读出来，读不到就是一份默认值。 */

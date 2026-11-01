@@ -27,7 +27,10 @@ import com.sephiria.network.ReloadPayload;
 import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.SunSwordSyncPayload;
+import com.sephiria.client.card.CardSelectionScreen;
+import com.sephiria.client.card.ClientCardSelection;
 import com.sephiria.client.trader.SephiriaTraderRenderer;
+import com.sephiria.network.CardSelectionPayload;
 import com.sephiria.registry.ModBlockEntities;
 import com.sephiria.registry.ModEntities;
 import com.sephiria.registry.ModItems;
@@ -205,6 +208,36 @@ public class SephiriaClient implements ClientModInitializer {
 		// 天赋点与两条天赋页的加点数：天赋界面读它
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentSyncPayload.TYPE,
 				(payload, context) -> ClientTalents.accept(payload));
+		// 选卡：服务端掷好三张卡推过来才开界面（打开请求 / 睡醒自动打开走同一条路）
+		ClientPlayNetworking.registerGlobalReceiver(CardSelectionPayload.TYPE, (payload, context) -> {
+			ClientCardSelection.accept(payload);
+			Minecraft client = Minecraft.getInstance();
+
+			if (!payload.open()) {
+				if (client.gui.screen() instanceof CardSelectionScreen screen) {
+					screen.onClose();
+				}
+
+				return;
+			}
+
+			if (client.gui.screen() instanceof CardSelectionScreen screen) {
+				screen.syncFromCache(false);
+				return;
+			}
+
+			if (ClientCardSelection.autoOpenSuppressed()) {
+				// 玩家刚手动关掉界面：路上的刷新回包不该把窗口弹回来
+				return;
+			}
+
+			// 万一还开着容器菜单（背包 / 商店），先让服务端关掉它，免得它继续同步格子
+			if (client.player != null && client.player.containerMenu != client.player.inventoryMenu) {
+				client.player.closeContainer();
+			}
+
+			client.setScreenAndShow(new CardSelectionScreen());
+		});
 		// 换世界 / 重连时清掉镜像：云、减益、太阳剑与冰霜武具状态都不跨世界，
 		// 免得新世界里 UI 还挂着上个世界的残值
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
@@ -213,6 +246,8 @@ public class SephiriaClient implements ClientModInitializer {
 			SunSwordClientData.reset();
 			FrostClientData.reset();
 			ClientTalents.reset();
+			// 选卡的三张卡也不跨世界：新服由服务端重新掷
+			ClientCardSelection.clear();
 			// 专注 / 剑意同样不跨世界：不清的话换世界后匕首与刀的微光会按上个世界的层数多亮一瞬
 			SkillClientData.reset();
 			com.sephiria.client.hud.HudClientData.reset();

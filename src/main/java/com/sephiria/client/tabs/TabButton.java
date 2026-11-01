@@ -37,6 +37,10 @@ public class TabButton extends Button {
 	public static final Identifier SHOP_ICON =
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "textures/gui/shop_tab.png");
 
+	/** 选卡页的图标：紫色卡背（card_tab.png，20×20）。 */
+	public static final Identifier CARD_ICON =
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "textures/gui/card_tab.png");
+
 	public static final int SIZE = 20;
 	private static final int ICON_SIZE = 20;
 	/** 当前页那一格的高亮描边。 */
