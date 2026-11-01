@@ -74,7 +74,7 @@ public enum ArtifactCombo {
 	/** 谈判：谈判力（商店折扣）与叶子获得量，4 级解锁黄金之手。 */
 	NEGOTIATION("negotiation", new Tier[] {
 			new Tier(2, "artifact.sephiria_fantasy.combo.negotiation.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
-					20.0D, 30.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
+					10.0D, 15.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
 			new Tier(4, "artifact.sephiria_fantasy.combo.negotiation.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					15.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, true)
 	}),
