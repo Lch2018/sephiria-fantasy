@@ -40,15 +40,21 @@ public final class Fatigue {
 	}
 
 	/**
-	 * 获得经验时结算疲劳：每满 24 点给 1 点额外经验，触发后清空全部点数。
-	 * 不满 24 点不触发、也不清空。
+	 * 获得经验时结算疲劳：消耗当前点数的 5%，消耗量每满 24 点给 1 点额外经验。
+	 * 不满 24 点时仍会消耗这 5%，但额外经验为 0。
 	 */
 	public static int claimBonus(ServerPlayer player) {
 		int points = points(player);
-		int bonus = points / POINTS_PER_EXPERIENCE;
 
-		if (bonus > 0) {
-			player.setAttached(POINTS, 0);
+		if (points <= 0) {
+			return 0;
+		}
+
+		int consumed = Math.round(points * 0.05F);
+		int bonus = consumed / POINTS_PER_EXPERIENCE;
+
+		if (consumed > 0) {
+			player.setAttached(POINTS, points - consumed);
 		}
 
 		return bonus;
