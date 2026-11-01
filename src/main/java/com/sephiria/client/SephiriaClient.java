@@ -237,6 +237,8 @@ public class SephiriaClient implements ClientModInitializer {
 			}
 
 			client.setScreenAndShow(new CardSelectionScreen());
+			client.mouseHandler.resyncMousePosition();
+			client.execute(() -> client.mouseHandler.resyncMousePosition());
 		});
 		// 换世界 / 重连时清掉镜像：云、减益、太阳剑与冰霜武具状态都不跨世界，
 		// 免得新世界里 UI 还挂着上个世界的残值

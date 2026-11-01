@@ -50,6 +50,14 @@ public final class SephiriaTabs {
 		return SephiriaTab.values().length * TabButton.SIZE + (SephiriaTab.values().length - 1) * GAP;
 	}
 
+	/** 切界面后重新对齐一次鼠标：26.3 从容器界面切到普通界面会把逻辑光标拉回中心。 */
+	private static void show(Minecraft client, Screen screen) {
+		client.setScreenAndShow(screen);
+		client.mouseHandler.resyncMousePosition();
+		// 下一帧再对齐一次：容器界面关闭后的那次光标回中在 setScreen 之后才生效
+		client.execute(() -> client.mouseHandler.resyncMousePosition());
+	}
+
 	private static TabButton create(int x, int y, SephiriaTab tab, boolean active) {
 		// 当前页那一格点了不做事（否则会把自己重新打开一遍，界面闪一下）
 		Button.OnPress press = active ? button -> { } : button -> open(tab);
@@ -92,16 +100,16 @@ public final class SephiriaTabs {
 		}
 
 		switch (tab) {
-			case VANILLA -> client.setScreenAndShow(client.player.isCreative()
+			case VANILLA -> show(client, client.player.isCreative()
 					? new CreativeModeInventoryScreen(client.player, client.player.connection.enabledFeatures(), false)
 					: new InventoryScreen(client.player));
 			// 背包与商店都是容器菜单，只能由服务端打开，所以这里发包
 			case BACKPACK -> ClientPlayNetworking.send(OpenBackpackPayload.INSTANCE);
-			case ATTRIBUTES -> client.setScreenAndShow(new StatsScreen());
-			case TALENT -> client.setScreenAndShow(new TalentScreen());
+			case ATTRIBUTES -> show(client, new StatsScreen());
+			case TALENT -> show(client, new TalentScreen());
 			// 技能列表由服务端算（客户端没有背包内容），所以先开页面再发请求，包一到就填上
 			case ARTIFACT_SKILLS -> {
-				client.setScreenAndShow(new ArtifactSkillScreen());
+				show(client, new ArtifactSkillScreen());
 				ClientPlayNetworking.send(OpenArtifactSkillsPayload.INSTANCE);
 			}
 			case SHOP -> ClientPlayNetworking.send(OpenShopPayload.INSTANCE);
