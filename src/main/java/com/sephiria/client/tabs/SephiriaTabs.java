@@ -32,6 +32,9 @@ public final class SephiriaTabs {
 
 	/** 在 (x, y) 处画一排标签；{@code current} 是当前所在的页面，传 null 表示都不是（七个都可点）。 */
 	public static void add(Screen screen, int x, int y, SephiriaTab current) {
+		// 所有界面统一固定在最上方居中，忽略调用方传进来的坐标
+		x = (screen.width - width()) / 2;
+		y = 6;
 		int slot = 0;
 
 		for (SephiriaTab tab : SephiriaTab.values()) {

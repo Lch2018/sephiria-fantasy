@@ -42,7 +42,8 @@ public class TabButton extends Button {
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "textures/gui/card_tab.png");
 
 	public static final int SIZE = 20;
-	private static final int ICON_SIZE = 20;
+	private static final int TEXTURE_ICON_SIZE = 18;
+	private static final int ITEM_ICON_SIZE = 16;
 	/** 当前页那一格的高亮描边。 */
 	private static final int ACTIVE_FRAME = 0xFFE8E8E8;
 
@@ -76,14 +77,15 @@ public class TabButton extends Button {
 		// 统一成方形灰底格子，图标居中，和移植版标签页一致
 		extractor.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), 0xFF3A3A3A);
 		extractor.fill(getX(), getY(), getX() + getWidth(), getY() + 1, 0xFF6A6A6A);
-		int x = getX() + (getWidth() - ICON_SIZE) / 2;
-		int y = getY() + (getHeight() - ICON_SIZE) / 2;
-
 		if (this.stack != null) {
+			int x = getX() + (getWidth() - ITEM_ICON_SIZE) / 2;
+			int y = getY() + (getHeight() - ITEM_ICON_SIZE) / 2;
 			extractor.item(this.stack, x, y);
 		} else {
-			extractor.blit(RenderPipelines.GUI_TEXTURED, this.texture, x, y, 0.0F, 0.0F, ICON_SIZE, ICON_SIZE,
-					ICON_SIZE, ICON_SIZE);
+			int x = getX() + (getWidth() - TEXTURE_ICON_SIZE) / 2;
+			int y = getY() + (getHeight() - TEXTURE_ICON_SIZE) / 2;
+			extractor.blit(RenderPipelines.GUI_TEXTURED, this.texture, x, y, 0.0F, 0.0F,
+					TEXTURE_ICON_SIZE, TEXTURE_ICON_SIZE, TEXTURE_ICON_SIZE, TEXTURE_ICON_SIZE);
 		}
 
 		if (this.active) {

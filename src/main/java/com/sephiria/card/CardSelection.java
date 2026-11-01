@@ -246,6 +246,12 @@ public final class CardSelection {
 
 	/** 打开（或重新打开）选卡：每次重新掷三张，不扣机会。 */
 	public static void open(ServerPlayer player) {
+		if (chances(player) <= 0) {
+			// 没机会就不打开；客户端收到 open=false 会留在原界面
+			send(player, null, false);
+			return;
+		}
+
 		Session session = session(player);
 
 		if (session == null) {
