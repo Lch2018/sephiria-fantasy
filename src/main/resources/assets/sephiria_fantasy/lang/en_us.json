@@ -470,7 +470,7 @@
     "screen.sephiria_fantasy.shop.refresh_button":  "Refresh",
     "screen.sephiria_fantasy.tab.card":  "Card Pick",
     "screen.sephiria_fantasy.card":  "Card Pick",
-    "screen.sephiria_fantasy.card.charge":  "Charge progress (over time):",
+    "screen.sephiria_fantasy.card.charge":  "Charge progress (over time)",
     "screen.sephiria_fantasy.card.chances":  "Card picks available: %s",
     "screen.sephiria_fantasy.card.refresh":  "Refresh",
     "screen.sephiria_fantasy.card.refreshed":  "Refreshed",

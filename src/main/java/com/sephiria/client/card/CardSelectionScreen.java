@@ -36,7 +36,7 @@ import java.util.List;
 public class CardSelectionScreen extends Screen {
 	/** 面板尺寸（比原版箱子窄一点，刚好放三张卡 + 标签栏）。 */
 	private static final int PANEL_WIDTH = 280;
-	private static final int PANEL_HEIGHT = 200;
+	private static final int PANEL_HEIGHT = 230;
 	/** 卡面尺寸与间距。 */
 	private static final int CARD_WIDTH = 72;
 	private static final int CARD_HEIGHT = 104;
@@ -191,7 +191,7 @@ public class CardSelectionScreen extends Screen {
 		// 充能进度：距离下一次选卡机会的时间比例
 		int barWidth = 160;
 		int barX = this.width / 2 - barWidth / 2;
-		int barY = this.panelTop + PANEL_HEIGHT - 34;
+		int barY = this.panelTop + PANEL_HEIGHT - 20;
 		float progress = ClientCardSelection.chargeProgress();
 		extractor.centeredText(this.font,
 				Component.translatable("screen.sephiria_fantasy.card.charge"),
@@ -199,15 +199,16 @@ public class CardSelectionScreen extends Screen {
 		extractor.fill(barX, barY, barX + barWidth, barY + 6, 0xFF1A1428);
 		extractor.fill(barX, barY, barX + Math.round(barWidth * progress), barY + 6, 0xFF9E86E8);
 
-		Component hint = Component.translatable(this.chances > 0
-				? "screen.sephiria_fantasy.card.hint"
-				: "screen.sephiria_fantasy.card.no_chance");
-		extractor.centeredText(this.font, hint, this.width / 2, this.panelTop + PANEL_HEIGHT - 16, DIM_COLOR);
+		if (this.chances > 0) {
+			Component hint = Component.translatable("screen.sephiria_fantasy.card.hint");
+			extractor.centeredText(this.font, hint, this.width / 2, this.panelTop + PANEL_HEIGHT - 50,
+					DIM_COLOR);
+		}
 
 		if (this.selecting) {
 			extractor.centeredText(this.font,
 					Component.translatable("screen.sephiria_fantasy.card.selecting"),
-					this.width / 2, this.panelTop + PANEL_HEIGHT - 28, 0xFF9E86E8);
+					this.width / 2, this.panelTop + PANEL_HEIGHT - 62, 0xFF9E86E8);
 		}
 	}
 
