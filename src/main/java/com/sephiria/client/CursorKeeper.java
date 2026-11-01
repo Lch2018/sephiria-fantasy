@@ -19,6 +19,8 @@ import java.nio.IntBuffer;
 public final class CursorKeeper {
 	private static float pendingX;
 	private static float pendingY;
+	private static float pendingGlobalX;
+	private static float pendingGlobalY;
 	private static int pendingTicks;
 
 	private CursorKeeper() {
@@ -35,8 +37,10 @@ public final class CursorKeeper {
 		IntBuffer windowX = BufferUtils.createIntBuffer(1);
 		IntBuffer windowY = BufferUtils.createIntBuffer(1);
 		SDLVideo.SDL_GetWindowPosition(client.getWindow().handle(), windowX, windowY);
-		pendingX = globalX.get(0) - windowX.get(0);
-		pendingY = globalY.get(0) - windowY.get(0);
+		pendingGlobalX = globalX.get(0);
+		pendingGlobalY = globalY.get(0);
+		pendingX = pendingGlobalX - windowX.get(0);
+		pendingY = pendingGlobalY - windowY.get(0);
 		pendingTicks = 3;
 
 		client.setScreenAndShow(screen);
@@ -49,7 +53,22 @@ public final class CursorKeeper {
 		}
 
 		pendingTicks--;
-		SDLMouse.SDL_WarpMouseInWindow(client.getWindow().handle(), pendingX, pendingY);
+		long window = client.getWindow().handle();
+		boolean relative = SDLMouse.SDL_GetWindowRelativeMouseMode(window);
+
+		if (relative) {
+			SDLMouse.SDL_SetWindowRelativeMouseMode(window, false);
+		}
+
+		// 全局坐标优先：窗口坐标在部分 DPI / 相对模式下会被忽略
+		if (!SDLMouse.SDL_WarpMouseGlobal(pendingGlobalX, pendingGlobalY)) {
+			SDLMouse.SDL_WarpMouseInWindow(window, pendingX, pendingY);
+		}
+
+		if (relative) {
+			SDLMouse.SDL_SetWindowRelativeMouseMode(window, true);
+		}
+
 		client.mouseHandler.resyncMousePosition();
 	}
 }
