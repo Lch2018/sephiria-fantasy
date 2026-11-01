@@ -17,7 +17,8 @@ import net.minecraft.util.Mth;
  * 属性面板：与 26.3 的属性页同一套排版——上边第一行是叶子（带图标），
  * 下面左右两列铺开全部属性。
  *
- * <p>1.21.1 没有 26.3 的 {@code GuiGraphicsExtractor}，这里直接用
+ * <p>1.21.1 没有 26.3 的 {
+	@code GuiGraphicsExtractor}，这里直接用
  * {@link GuiGraphics#drawString} 画文字、{@link GuiGraphics#blit} 画图标；
  * 悬停算式与 26.3 一样在行下面补一行。
  *
@@ -25,6 +26,7 @@ import net.minecraft.util.Mth;
  * 滚动（一次一行），正常窗口尺寸下仍是最上面、与 26.3 完全一致。
  */
 public class StatsScreen extends Screen {
+	private boolean backgroundDrawn;
 	private static final int ROW_HEIGHT = 14;
 	/** 叶子（货币）的图标。 */
 	private static final ResourceLocation LEAF_ICON =
@@ -101,7 +103,15 @@ public class StatsScreen extends Screen {
 	}
 
 	@Override
+	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		if (!this.backgroundDrawn) {
+			super.renderBackground(graphics, mouseX, mouseY, partialTick);
+		}
+	}
+
+	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		this.backgroundDrawn = false;
 		this.renderBackground(graphics, mouseX, mouseY, partialTick);
 
 		this.rowsLeft = this.width / 2 - COLUMN_OFFSET;

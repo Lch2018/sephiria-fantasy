@@ -26,13 +26,15 @@ import java.util.Map;
  * 天赋页：一行一条天赋，最左是「名字：已加点数」与「+x% 属性」，中间三个阶段图标，
  * 最右是 -5 / -1 / +1 / +5，底下是「重置」与「剩余天赋点数」。
  *
- * <p>所有数字读 {@link ClientTalents}（服务端同步下来的），按钮只发包；加减范围、剩余点数、
+ * <p>所有数字读 {
+	@link ClientTalents}（服务端同步下来的），按钮只发包；加减范围、剩余点数、
  * 阶段是否点亮都由服务端判定并立刻重推，所以界面永远显示服务端的真实状态。
  *
  * <p>1.21.1 没有 26.3 的 {@code GuiGraphicsExtractor}：这里用 {@link GuiGraphics} 直接画，
  * 绘制顺序是「底板与文字 → 按钮（super.render）→ 阶段图标的悬停提示」。
  */
 public class TalentScreen extends Screen {
+	private boolean backgroundDrawn;
 	private static final int TITLE_Y = 38;
 	private static final int SUBTITLE_Y = 52;
 	private static final int FIRST_ROW_Y = 68;
@@ -226,7 +228,15 @@ public class TalentScreen extends Screen {
 	}
 
 	@Override
+	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		if (!this.backgroundDrawn) {
+			super.renderBackground(graphics, mouseX, mouseY, partialTick);
+		}
+	}
+
+	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		this.backgroundDrawn = false;
 		// 修改门槛：出生点 100 格内（用户 2026-10-21）。每帧现算，走开了立刻置灰。
 		this.editingAllowed = canEditHere();
 		this.hoveredStageTooltip = null;
