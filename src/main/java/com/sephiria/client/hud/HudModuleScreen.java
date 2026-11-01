@@ -37,10 +37,19 @@ public class HudModuleScreen extends Screen {
 		addRenderableWidget(new PositionSlider(false, left, y, 200, 20, 0.0D, this.height - 20.0D));
 		y += 24;
 		addRenderableWidget(new ScaleSlider(left, y, 200, 20));
+		y += 24;
+		addRenderableWidget(Button.builder(visibleLabel(), button -> {
+			this.element.visible = !this.element.visible;
+			button.setMessage(visibleLabel());
+		}).bounds(left, y, 200, 20).build());
 
 		addRenderableWidget(Button.builder(Component.translatable("gui.back"), button -> back())
 				.bounds(left, this.height - 40, 200, 20)
 				.build());
+	}
+
+	private Component visibleLabel() {
+		return Component.literal("显示：" + (this.element.visible ? "开" : "关"));
 	}
 
 	private void back() {

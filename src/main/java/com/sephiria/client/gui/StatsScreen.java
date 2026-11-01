@@ -114,7 +114,8 @@ public class StatsScreen extends Screen {
 		row(rightX, y += ROW_HEIGHT, "screen.sephiria_fantasy.stats.lifesteal", format(ClientStats.lifesteal()));
 		// 商店折扣是谈判力换算出来的，单独占一行太浪费——藏进谈判力的悬停里
 		this.negotiationRowY = y += ROW_HEIGHT;
-		row(rightX, this.negotiationRowY, "screen.sephiria_fantasy.stats.negotiation", format(ClientStats.negotiation()));
+		row(rightX, this.negotiationRowY, "screen.sephiria_fantasy.stats.negotiation",
+				format(ClientStats.negotiation()) + "（折扣：" + formatDecimal(ClientStats.shopDiscount()) + "%）");
 		// 幸运值也只显示点数，换算出的「稀有及以上 +y%」藏在悬停里（和商店折扣同一个套路）
 		this.luckRowY = y += ROW_HEIGHT;
 		row(rightX, this.luckRowY, "screen.sephiria_fantasy.stats.luck", format(ClientStats.luck()));

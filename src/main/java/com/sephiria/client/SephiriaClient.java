@@ -206,6 +206,8 @@ public class SephiriaClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(FrostSyncPayload.TYPE,
 				(payload, context) -> FrostClientData.accept(payload));
 		// 天赋点与两条天赋页的加点数：天赋界面读它
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.FatigueSyncPayload.TYPE,
+				(payload, context) -> FatigueClientData.accept(payload.points()));
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentSyncPayload.TYPE,
 				(payload, context) -> ClientTalents.accept(payload));
 		// 选卡：服务端掷好三张卡推过来才开界面（打开请求 / 睡醒自动打开走同一条路）

@@ -153,6 +153,7 @@ public final class SephiriaHud implements HudElement {
 		renderArtifactHud(extractor, client);
 		renderWeapon(extractor, client);
 		renderDash(extractor, client);
+		renderFatigue(extractor, client);
 		renderMp(extractor, client);
 		renderCloud(extractor, client);
 		renderSunSword(extractor, client);
@@ -535,6 +536,24 @@ public final class SephiriaHud implements HudElement {
 		int barY = PAD + 2;
 		extractor.fill(barX, barY, barX + barWidth, barY + 8, 0xFF202020);
 		extractor.fill(barX, barY, barX + (int) (barWidth * fraction), barY + 8, 0xFF3B6BE8);
+		pose.popMatrix();
+	}
+
+	private void renderFatigue(GuiGraphicsExtractor extractor, Minecraft client) {
+		HudConfig.Element config = HudConfig.element(HudConfig.FATIGUE);
+
+		if (!config.visible) {
+			return;
+		}
+
+		Font font = client.font;
+		Component text = Component.translatable("ui.sephiria_fantasy.fatigue",
+				com.sephiria.client.FatigueClientData.points(), 6000);
+		int width = font.width(text) + PAD * 2;
+		int height = LINE + PAD * 2;
+		Matrix3x2fStack pose = beginHud(extractor, client, config, width, height, HudAnchor.LEFT);
+		extractor.fill(0, 0, width, height, PANEL_COLOR);
+		extractor.text(font, text, PAD, PAD, NAME_COLOR, true);
 		pose.popMatrix();
 	}
 

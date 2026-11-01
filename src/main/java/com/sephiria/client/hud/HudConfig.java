@@ -49,9 +49,12 @@ public final class HudConfig {
 	/** 神器 HUD（技能 HUD 与武器 UI 之间；有冷却 / 充能的神器图标）。 */
 	public static final String ARTIFACTS = "artifacts";
 
+	/** 疲劳点数（默认关闭）。 */
+	public static final String FATIGUE = "fatigue";
+
 	/** 全部可调的 HUD 模块，顺序即设置界面里的顺序；新增模块在这里登记。 */
 	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, CLOUD, SUN_SWORD, FROST, INVULN,
-			SKILLS, ARTIFACTS);
+			SKILLS, ARTIFACTS, FATIGUE);
 
 	/** 一个界面元素的位置与缩放。 */
 	public static final class Element {
@@ -59,6 +62,7 @@ public final class HudConfig {
 		public double y;
 		public double scale = 1.0D;
 		public boolean placed;
+		public boolean visible = true;
 
 		/** 没落过位就按角落放好；center 表示"屏幕水平居中、准星下方一点"。 */
 		void placeFrom(String corner, int guiWidth, int guiHeight) {
@@ -79,6 +83,7 @@ public final class HudConfig {
 				// 两列都从下往上排：武器 / 神器 / 技能各差一行高；左下角依次是冲刺、MP、乌云、
 				// 太阳剑、冰霜武具
 				this.y = guiHeight - (switch (corner) {
+					case "bottom_left_highest3" -> 160.0D;
 					case "bottom_left_highest2" -> 136.0D;
 					case "bottom_left_highest" -> 112.0D;
 					case "bottom_right_higher", "bottom_left_higher" -> 88.0D;
@@ -101,7 +106,8 @@ public final class HudConfig {
 			FROST, "bottom_left_highest2",
 			SKILLS, "bottom_right_higher",
 			ARTIFACTS, "bottom_right_high",
-			INVULN, "center");
+			INVULN, "center",
+			FATIGUE, "bottom_left_highest3");
 	private static final Map<String, Element> ELEMENTS = new LinkedHashMap<>();
 
 	private static boolean loaded;
@@ -112,7 +118,15 @@ public final class HudConfig {
 	public static Element element(String key) {
 		load();
 
-		Element element = ELEMENTS.computeIfAbsent(key, k -> new Element());
+		Element element = ELEMENTS.computeIfAbsent(key, k -> {
+			Element created = new Element();
+
+			if (FATIGUE.equals(k)) {
+				created.visible = false;
+			}
+
+			return created;
+		});
 		Minecraft client = Minecraft.getInstance();
 
 		if (client.getWindow() != null) {
@@ -144,6 +158,7 @@ public final class HudConfig {
 				element.x = object.get("x").getAsDouble();
 				element.y = object.get("y").getAsDouble();
 				element.scale = object.get("scale").getAsDouble();
+				element.visible = !object.has("visible") || object.get("visible").getAsBoolean();
 				element.placed = true;
 				ELEMENTS.put(entry.getKey(), element);
 			}
@@ -162,6 +177,7 @@ public final class HudConfig {
 			object.addProperty("x", entry.getValue().x);
 			object.addProperty("y", entry.getValue().y);
 			object.addProperty("scale", entry.getValue().scale);
+			object.addProperty("visible", entry.getValue().visible);
 			root.add(entry.getKey(), object);
 		}
 

@@ -25,6 +25,8 @@ public final class Fatigue {
 			.copyOnDeath()
 			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "fatigue_points"));
 
+	private static int syncTicker;
+
 	private Fatigue() {
 	}
 
@@ -43,11 +45,19 @@ public final class Fatigue {
 	}
 
 	private static void tick(MinecraftServer server) {
+		boolean sync = ++syncTicker % 20 == 0;
+
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			int points = points(player);
 
 			if (points < MAX_POINTS) {
-				player.setAttached(POINTS, Math.min(MAX_POINTS, points + REGEN_PER_TICK));
+				points = Math.min(MAX_POINTS, points + REGEN_PER_TICK);
+				player.setAttached(POINTS, points);
+			}
+
+			if (sync) {
+				net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
+						new com.sephiria.network.FatigueSyncPayload(points));
 			}
 		}
 	}
