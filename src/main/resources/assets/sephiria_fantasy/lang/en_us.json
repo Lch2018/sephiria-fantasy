@@ -564,6 +564,7 @@
     "key.sephiria_fantasy.artifact_skill_5":  "Artifact Skill 5",
     "key.sephiria_fantasy.artifact_skill_6":  "Artifact Skill 6",
     "ui.sephiria_fantasy.magazine":  "Magazine: %s/%s",
+    "ui.sephiria_fantasy.fatigue":  "Fatigue: %s/6000",
     "ui.sephiria_fantasy.dash":  "Dashes %s/%s",
     "ui.sephiria_fantasy.sheathed":  "Sheathed",
     "ui.sephiria_fantasy.unsheathed":  "Drawn",
