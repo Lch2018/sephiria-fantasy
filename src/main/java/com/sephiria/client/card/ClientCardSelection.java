@@ -16,6 +16,7 @@ public final class ClientCardSelection {
 	private static List<ItemStack> cards = List.of();
 	private static final boolean[] REFRESHED = new boolean[CardSelection.CARDS];
 	private static int chances;
+	private static float chargeProgress;
 	/**
 	 * 主动关掉选卡界面后的一小段「静默期」。
 	 *
@@ -39,12 +40,14 @@ public final class ClientCardSelection {
 
 		cards = List.copyOf(copied);
 		chances = Math.max(0, payload.chances());
+		chargeProgress = Math.max(0.0F, Math.min(1.0F, payload.chargeProgress()));
 	}
 
 	/** 清空（退出服务器时调用，免得上个服的三张卡留到下一个服）。 */
 	public static void clear() {
 		cards = List.of();
 		chances = 0;
+		chargeProgress = 0.0F;
 		suppressUntil = 0L;
 
 		for (int index = 0; index < REFRESHED.length; index++) {
@@ -62,6 +65,10 @@ public final class ClientCardSelection {
 
 	public static int chances() {
 		return chances;
+	}
+
+	public static float chargeProgress() {
+		return chargeProgress;
 	}
 
 	/** 关掉界面后压一小段时间的自动打开（刷新回包可能在路上）。 */

@@ -596,6 +596,7 @@
     "screen.sephiria_fantasy.shop.refresh_button":  "刷新",
     "screen.sephiria_fantasy.tab.card":  "选卡",
     "screen.sephiria_fantasy.card":  "选卡",
+    "screen.sephiria_fantasy.card.charge":  "充能进度（随时间）：",
     "screen.sephiria_fantasy.card.chances":  "选卡机会：%s",
     "screen.sephiria_fantasy.card.refresh":  "刷新",
     "screen.sephiria_fantasy.card.refreshed":  "已刷新",

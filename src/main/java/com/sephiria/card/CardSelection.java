@@ -24,10 +24,8 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -113,8 +111,6 @@ public final class CardSelection {
 
 	/** 当前打开的选卡（只活在一次界面会话里，关掉/选完就丢）。键 = 玩家 UUID。 */
 	private static final Map<UUID, Session> SESSIONS = new HashMap<>();
-	/** 上一刻是否在睡觉：用来检测「睡着 → 醒来」这个翻转。 */
-	private static final Set<UUID> SLEEPING = new HashSet<>();
 
 	/** 一次界面会话里的三张卡与各自的刷新状态。 */
 	private static final class Session {
@@ -135,7 +131,6 @@ public final class CardSelection {
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			UUID id = handler.player.getUUID();
 			SESSIONS.remove(id);
-			SLEEPING.remove(id);
 		});
 	}
 
@@ -178,7 +173,6 @@ public final class CardSelection {
 	private static void tick(MinecraftServer server) {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			awardIfDue(player);
-			checkWaking(player);
 		}
 	}
 
@@ -221,26 +215,6 @@ public final class CardSelection {
 		player.setAttached(SAVED, new Saved(chances, lastAward));
 	}
 
-	/** 睡醒检测：睡着 → 醒来、天亮了、还有机会，才自动打开。 */
-	private static void checkWaking(ServerPlayer player) {
-		UUID id = player.getUUID();
-
-		if (player.isSleeping()) {
-			SLEEPING.add(id);
-			return;
-		}
-
-		if (!SLEEPING.remove(id)) {
-			return;
-		}
-
-		// 只有正常睡到天亮才弹；半夜被打断 / 半途起床不打扰玩家
-		if (!player.level().isBrightOutside() || chances(player) <= 0) {
-			return;
-		}
-
-		open(player);
-	}
 
 	// ------------------------------------------------------------------ 界面动作
 
@@ -437,9 +411,21 @@ public final class CardSelection {
 
 	// ------------------------------------------------------------------ 同步
 
+	/** 距离下一次选卡机会的充能进度（0..1）。 */
+	public static float chargeProgress(ServerPlayer player) {
+		Saved saved = player.getAttached(SAVED);
+
+		if (saved == null || saved.lastAward() <= 0L) {
+			return 0.0F;
+		}
+
+		long elapsed = Math.max(0L, player.level().getGameTime() - saved.lastAward());
+		return Mth.clamp(elapsed / (float) AWARD_PERIOD_TICKS, 0.0F, 1.0F);
+	}
+
 	private static void send(ServerPlayer player, Session session, boolean open) {
 		if (session == null) {
-			ServerPlayNetworking.send(player, new CardSelectionPayload(List.of(), 0, chances(player), open));
+			ServerPlayNetworking.send(player, new CardSelectionPayload(List.of(), 0, chances(player), chargeProgress(player), open));
 			return;
 		}
 
@@ -457,6 +443,6 @@ public final class CardSelection {
 			}
 		}
 
-		ServerPlayNetworking.send(player, new CardSelectionPayload(cards, mask, chances(player), open));
+		ServerPlayNetworking.send(player, new CardSelectionPayload(cards, mask, chances(player), chargeProgress(player), open));
 	}
 }

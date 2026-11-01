@@ -177,6 +177,17 @@ public class CardSelectionScreen extends Screen {
 				Component.literal(String.valueOf(this.chances)).withColor(colour));
 		extractor.centeredText(this.font, chancesText, this.width / 2, this.panelTop + 22, DIM_COLOR);
 
+		// 充能进度：距离下一次选卡机会的时间比例
+		int barWidth = 160;
+		int barX = this.width / 2 - barWidth / 2;
+		int barY = this.panelTop + PANEL_HEIGHT - 34;
+		float progress = ClientCardSelection.chargeProgress();
+		extractor.centeredText(this.font,
+				Component.translatable("screen.sephiria_fantasy.card.charge"),
+				this.width / 2, barY - 10, DIM_COLOR);
+		extractor.fill(barX, barY, barX + barWidth, barY + 6, 0xFF1A1428);
+		extractor.fill(barX, barY, barX + Math.round(barWidth * progress), barY + 6, 0xFF9E86E8);
+
 		Component hint = Component.translatable(this.chances > 0
 				? "screen.sephiria_fantasy.card.hint"
 				: "screen.sephiria_fantasy.card.no_chance");

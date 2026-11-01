@@ -18,7 +18,7 @@ import java.util.List;
  *
  * <p>刷新状态用位掩码传：第 {@code i} 位 = 第 {@code i} 张卡是否已经用过刷新。
  */
-public record CardSelectionPayload(List<ItemStack> cards, int refreshUsedMask, int chances, boolean open)
+public record CardSelectionPayload(List<ItemStack> cards, int refreshUsedMask, int chances, float chargeProgress, boolean open)
 		implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<CardSelectionPayload> TYPE =
 			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "card_selection"));
@@ -28,6 +28,7 @@ public record CardSelectionPayload(List<ItemStack> cards, int refreshUsedMask, i
 					ItemStack.STREAM_CODEC.apply(ByteBufCodecs.list()), CardSelectionPayload::cards,
 					ByteBufCodecs.VAR_INT, CardSelectionPayload::refreshUsedMask,
 					ByteBufCodecs.VAR_INT, CardSelectionPayload::chances,
+					ByteBufCodecs.FLOAT, CardSelectionPayload::chargeProgress,
 					ByteBufCodecs.BOOL, CardSelectionPayload::open,
 					CardSelectionPayload::new);
 
