@@ -275,7 +275,19 @@ public final class CardSelection {
 			pool = new ArrayList<>(ArtifactLoot.artifactPool());
 		}
 
-		Item picked = pick(pool, old.isEmpty() ? null : old.getItem(), player.getRandom());
+		java.util.Set<Item> avoid = new java.util.HashSet<>();
+
+		for (int other = 0; other < CARDS; other++) {
+			if (other != index && !session.cards.get(other).isEmpty()) {
+				avoid.add(session.cards.get(other).getItem());
+			}
+		}
+
+		if (!old.isEmpty()) {
+			avoid.add(old.getItem());
+		}
+
+		Item picked = pick(pool, avoid, player.getRandom());
 
 		if (picked != null) {
 			session.cards.set(index, new ItemStack(picked));
@@ -387,20 +399,25 @@ public final class CardSelection {
 	}
 
 	/** 从池子里挑一件，尽量避开当前这张（只有一件时只能不变）。 */
-	private static Item pick(List<Item> pool, Item avoid, RandomSource random) {
+	private static Item pick(List<Item> pool, java.util.Set<Item> avoid, RandomSource random) {
 		if (pool.isEmpty()) {
 			return null;
 		}
 
-		Item picked = pool.get(random.nextInt(pool.size()));
+		List<Item> fresh = new ArrayList<>();
 
-		if (avoid != null && pool.size() > 1) {
-			for (int attempt = 0; attempt < 8 && picked == avoid; attempt++) {
-				picked = pool.get(random.nextInt(pool.size()));
+		for (Item item : pool) {
+			if (!avoid.contains(item)) {
+				fresh.add(item);
 			}
 		}
 
-		return picked;
+		if (!fresh.isEmpty()) {
+			return fresh.get(random.nextInt(fresh.size()));
+		}
+
+		// 池子太小、所有候选都被占时只能接受重复
+		return pool.get(random.nextInt(pool.size()));
 	}
 
 	/** 品质升一档；红色（传说）不再升，也不进入羁绊 / 永恒。 */

@@ -181,7 +181,7 @@ public class StatsScreen extends Screen {
 			extractor.text(this.font,
 					Component.translatable("screen.sephiria_fantasy.stats.shop_discount",
 							Component.literal(formatDecimal(ClientStats.shopDiscount()) + "%").withColor(0xFFFFD24A)),
-					this.rowsRight, this.negotiationRowY + 10, 0xFFDDDDDD);
+					this.rowsRight, hoverY(this.negotiationRowY), 0xFFDDDDDD);
 		} else {
 			// 幸运值 = 50×(1−e^(−0.0601x))——「稀有及以上物品的出现概率增加 y%」，用户要求 y% 是绿的
 			extractor.text(this.font,
@@ -191,6 +191,11 @@ public class StatsScreen extends Screen {
 									.withColor(0xFF55FF55)),
 					this.rowsRight, this.luckRowY + 10, 0xFFDDDDDD);
 		}
+	}
+
+	/** 悬停说明画在行下方；最后一行贴近屏幕底边时改画到行上方。 */
+	private int hoverY(int rowY) {
+		return rowY + 10 + this.font.lineHeight <= this.height ? rowY + 10 : rowY - 10;
 	}
 
 	/** 鼠标是否悬停在某一行的行高范围内。 */
