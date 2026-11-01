@@ -43,7 +43,11 @@ public final class CursorKeeper {
 		pendingY = pendingGlobalY - windowY.get(0);
 		pendingTicks = 3;
 
+		// 原版 releaseMouse() 只在 mouseGrabbed 为 true 时把光标重置到窗口中心；
+		// 打开界面前先置 false，让它直接返回，再 setScreen，光标完全不动。
+		client.mouseHandler.mouseGrabbed = false;
 		client.setScreenAndShow(screen);
+		client.mouseHandler.mouseGrabbed = false;
 		client.mouseHandler.resyncMousePosition();
 	}
 

@@ -35,3 +35,6 @@ accessible	field	net/minecraft/world/entity/Display	DATA_POS_ROT_INTERPOLATION_D
 accessible	field	net/minecraft/world/entity/Display$BlockDisplay	DATA_BLOCK_STATE_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
 accessible	field	net/minecraft/world/entity/Display$ItemDisplay	DATA_ITEM_STACK_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
 accessible	field	net/minecraft/world/entity/Display$ItemDisplay	DATA_ITEM_DISPLAY_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
+
+# 切界面时阻止原版 releaseMouse 把光标重置到窗口中心
+accessible field net/minecraft/client/MouseHandler mouseGrabbed Z
