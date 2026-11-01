@@ -27,7 +27,7 @@ public abstract class LeafExperienceMixin {
 			return experiencePoints;
 		}
 
-		double bonus = com.sephiria.stats.Fatigue.bonusExperience(player);
+		int bonus = com.sephiria.stats.Fatigue.claimBonus(player);
 		int actual = (int) Math.round(experiencePoints * PlayerStats.xpDropPercentTotal(player) / 100.0D + bonus);
 		PlayerStats.addLeaves(player, actual);
 		return actual;

@@ -17,8 +17,8 @@ import net.minecraft.server.level.ServerPlayer;
 public final class Fatigue {
 	public static final int MAX_POINTS = 6000;
 	public static final int REGEN_PER_TICK = 1;
-	/** 每 12 点疲劳提供 1 点额外经验；不满 12 点不给。 */
-	public static final int POINTS_PER_EXPERIENCE = 12;
+	/** 每 24 点疲劳提供 1 点额外经验；不满 24 点不给。 */
+	public static final int POINTS_PER_EXPERIENCE = 24;
 
 	private static final AttachmentType<Integer> POINTS = AttachmentRegistry.<Integer>builder()
 			.persistent(Codec.INT)
@@ -39,9 +39,19 @@ public final class Fatigue {
 		return value == null ? 0 : Math.max(0, Math.min(MAX_POINTS, value));
 	}
 
-	/** 当前疲劳折算出的额外经验：每满 12 点给 1 点。 */
-	public static int bonusExperience(ServerPlayer player) {
-		return points(player) / POINTS_PER_EXPERIENCE;
+	/**
+	 * 获得经验时结算疲劳：每满 24 点给 1 点额外经验，触发后清空全部点数。
+	 * 不满 24 点不触发、也不清空。
+	 */
+	public static int claimBonus(ServerPlayer player) {
+		int points = points(player);
+		int bonus = points / POINTS_PER_EXPERIENCE;
+
+		if (bonus > 0) {
+			player.setAttached(POINTS, 0);
+		}
+
+		return bonus;
 	}
 
 	private static void tick(MinecraftServer server) {
