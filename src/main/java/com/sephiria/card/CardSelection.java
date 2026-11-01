@@ -98,6 +98,19 @@ public final class CardSelection {
 			.copyOnDeath()
 			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "card_selection"));
 
+	/** 当前未选的三张卡与刷新状态：持久化，关界面/重进游戏都不重掷。 */
+	private record SessionSaved(List<ItemStack> cards, List<Boolean> refreshed) {
+		private static final Codec<SessionSaved> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+				ItemStack.CODEC.listOf().optionalFieldOf("cards", List.of()).forGetter(SessionSaved::cards),
+				Codec.BOOL.listOf().optionalFieldOf("refreshed", List.of()).forGetter(SessionSaved::refreshed)
+		).apply(instance, SessionSaved::new));
+	}
+
+	private static final AttachmentType<SessionSaved> SESSION = AttachmentRegistry.<SessionSaved>builder()
+			.persistent(SessionSaved.CODEC)
+			.copyOnDeath()
+			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "card_session"));
+
 	/** 当前打开的选卡（只活在一次界面会话里，关掉/选完就丢）。键 = 玩家 UUID。 */
 	private static final Map<UUID, Session> SESSIONS = new HashMap<>();
 	/** 上一刻是否在睡觉：用来检测「睡着 → 醒来」这个翻转。 */
@@ -233,8 +246,13 @@ public final class CardSelection {
 
 	/** 打开（或重新打开）选卡：每次重新掷三张，不扣机会。 */
 	public static void open(ServerPlayer player) {
-		Session session = roll(player.getRandom());
-		SESSIONS.put(player.getUUID(), session);
+		Session session = session(player);
+
+		if (session == null) {
+			session = roll(player.getRandom());
+			saveSession(player, session);
+		}
+
 		send(player, session, true);
 	}
 
@@ -243,7 +261,7 @@ public final class CardSelection {
 	 * 每张卡在一次会话里只能刷一次。
 	 */
 	public static void refresh(ServerPlayer player, int index) {
-		Session session = SESSIONS.get(player.getUUID());
+		Session session = session(player);
 
 		if (session == null) {
 			// 没有会话（比如服务端重启后残留的界面）：关掉客户端那一页，别发三张空卡
@@ -284,6 +302,7 @@ public final class CardSelection {
 		}
 
 		session.refreshed[index] = true;
+		saveSession(player, session);
 		send(player, session, true);
 	}
 
@@ -294,7 +313,7 @@ public final class CardSelection {
 	 * 客户端发来的只是「点了哪一张」。
 	 */
 	public static void select(ServerPlayer player, int index) {
-		Session session = SESSIONS.get(player.getUUID());
+		Session session = session(player);
 
 		if (session == null) {
 			send(player, null, false);
@@ -314,12 +333,42 @@ public final class CardSelection {
 			return;
 		}
 
-		SESSIONS.remove(player.getUUID());
+		clearSession(player);
 		// 走 PlayerItems.give：背包满时装不下的部分掉在脚下，不会被吞
 		PlayerItems.give(player, chosen.copy());
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.7F, 1.4F);
 		send(player, null, false);
+	}
+
+	private static Session session(ServerPlayer player) {
+		SessionSaved saved = player.getAttached(SESSION);
+
+		if (saved == null || saved.cards().size() != CARDS) {
+			return null;
+		}
+
+		Session session = new Session(new ArrayList<>(saved.cards()));
+
+		for (int index = 0; index < CARDS; index++) {
+			session.refreshed[index] = index < saved.refreshed().size() && saved.refreshed().get(index);
+		}
+
+		return session;
+	}
+
+	private static void saveSession(ServerPlayer player, Session session) {
+		List<Boolean> refreshed = new ArrayList<>(CARDS);
+
+		for (boolean flag : session.refreshed) {
+			refreshed.add(flag);
+		}
+
+		player.setAttached(SESSION, new SessionSaved(List.copyOf(session.cards), List.copyOf(refreshed)));
+	}
+
+	private static void clearSession(ServerPlayer player) {
+		player.setAttached(SESSION, new SessionSaved(List.of(), List.of()));
 	}
 
 	// ------------------------------------------------------------------ 掷卡

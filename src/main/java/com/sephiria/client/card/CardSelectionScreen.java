@@ -198,7 +198,7 @@ public class CardSelectionScreen extends Screen {
 			boolean face = progress >= FILL_TICKS;
 
 			// 卡背一直垫在下面：翻面的前半段还能看到它
-			drawCardBack(extractor, x, y, progress);
+			drawCardBack(extractor, x, y, index, progress);
 
 			// 空卡（池子异常时才会出现）不画卡面，免得去找 air 的贴图
 			if (face && !this.cards.get(index).isEmpty()) {
@@ -216,14 +216,19 @@ public class CardSelectionScreen extends Screen {
 	}
 
 	/** 卡背：外框 + 深底 + 从下往上填的亮色 + 填充前沿的流光。 */
-	private void drawCardBack(GuiGraphicsExtractor extractor, int x, int y, int progress) {
+	private void drawCardBack(GuiGraphicsExtractor extractor, int x, int y, int index, int progress) {
 		int filled = CARD_HEIGHT * Math.min(progress, FILL_TICKS) / FILL_TICKS;
-		extractor.fill(x - 1, y - 1, x + CARD_WIDTH + 1, y + CARD_HEIGHT + 1, CARD_EDGE);
+		net.minecraft.world.item.ItemStack card = this.cards.get(index);
+		int rarityColor = card.isEmpty() ? 0xFFFFFFFF
+				: 0xFF000000 | (ArtifactLoot.rarityOf(card.getItem()).color() & 0xFFFFFF);
+		int borderColor = 0xFF000000 | (rarityColor & 0xFFFFFF);
+		int fill = 0xFF000000 | (dim(rarityColor, 0.45F) & 0xFFFFFF);
+		extractor.fill(x - 1, y - 1, x + CARD_WIDTH + 1, y + CARD_HEIGHT + 1, borderColor);
 		extractor.fill(x, y, x + CARD_WIDTH, y + CARD_HEIGHT, CARD_BACK);
 
 		if (filled > 0) {
 			extractor.fillGradient(x, y + CARD_HEIGHT - filled, x + CARD_WIDTH, y + CARD_HEIGHT,
-					0xFF4A3A78, CARD_FILL);
+					dim(rarityColor, 0.25F), fill);
 		}
 
 		if (progress < FILL_TICKS && filled > 0) {
@@ -240,6 +245,13 @@ public class CardSelectionScreen extends Screen {
 			extractor.centeredText(this.font, Component.literal("?"), x + CARD_WIDTH / 2,
 					y + CARD_HEIGHT / 2 - 4, CARD_EMBLEM);
 		}
+	}
+
+	private static int dim(int color, float factor) {
+		int r = (int) (((color >> 16) & 0xFF) * factor);
+		int g = (int) (((color >> 8) & 0xFF) * factor);
+		int b = (int) ((color & 0xFF) * factor);
+		return 0xFF000000 | (r << 16) | (g << 8) | b;
 	}
 
 	/** 卡面：品质色外框 + 品质名 + 神器图标 + 名字（太长就缩放贴进卡宽）。 */

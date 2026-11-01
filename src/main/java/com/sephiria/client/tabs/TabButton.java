@@ -73,6 +73,9 @@ public class TabButton extends Button {
 
 	@Override
 	protected void extractContents(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
+		// 统一成方形灰底格子，图标居中，和移植版标签页一致
+		extractor.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), 0xFF3A3A3A);
+		extractor.fill(getX(), getY(), getX() + getWidth(), getY() + 1, 0xFF6A6A6A);
 		int x = getX() + (getWidth() - ICON_SIZE) / 2;
 		int y = getY() + (getHeight() - ICON_SIZE) / 2;
 
