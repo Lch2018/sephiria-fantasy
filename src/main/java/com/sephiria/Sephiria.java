@@ -225,6 +225,8 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.serverboundPlay().register(RootRetreatClickPayload.TYPE, RootRetreatClickPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(WishPoolClickPayload.TYPE, WishPoolClickPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(WishPoolResultPayload.TYPE, WishPoolResultPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(com.sephiria.network.FatigueSyncPayload.TYPE,
+				com.sephiria.network.FatigueSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(SkillSyncPayload.TYPE, SkillSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CloudSyncPayload.TYPE, CloudSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(DebuffSyncPayload.TYPE, DebuffSyncPayload.STREAM_CODEC);
