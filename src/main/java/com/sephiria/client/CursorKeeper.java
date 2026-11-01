@@ -1,5 +1,6 @@
 package com.sephiria.client;
 
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.BufferUtils;
@@ -7,26 +8,43 @@ import org.lwjgl.sdl.SDLMouse;
 
 import java.nio.FloatBuffer;
 
-/** 切界面前后保住鼠标位置：26.3 从容器界面切普通界面会把光标拉回窗口中心。 */
+/**
+ * 切界面前后保住鼠标位置：26.3 从容器界面切普通界面会把光标拉回窗口中心。
+ *
+ * <p>回中发生在 setScreen 之后、甚至下一帧，所以不能只在 setScreen 后立刻 warp；
+ * 这里记下切换前的位置，在接下来两个客户端 tick 里各 warp 一次。
+ */
 public final class CursorKeeper {
+	private static float pendingX;
+	private static float pendingY;
+	private static int pendingTicks;
+
 	private CursorKeeper() {
+	}
+
+	public static void register() {
+		ClientTickEvents.END_CLIENT_TICK.register(client -> tick(client));
 	}
 
 	public static void show(Minecraft client, Screen screen) {
 		FloatBuffer x = BufferUtils.createFloatBuffer(1);
 		FloatBuffer y = BufferUtils.createFloatBuffer(1);
 		SDLMouse.SDL_GetMouseState(x, y);
-		float mouseX = x.get(0);
-		float mouseY = y.get(0);
+		pendingX = x.get(0);
+		pendingY = y.get(0);
+		pendingTicks = 3;
 
 		client.setScreenAndShow(screen);
-
-		long window = client.getWindow().handle();
-		// 立即对齐一次，下一帧再 warp 一次：原版回中在 setScreen 之后才生效
 		client.mouseHandler.resyncMousePosition();
-		client.execute(() -> {
-			SDLMouse.SDL_WarpMouseInWindow(window, mouseX, mouseY);
-			client.mouseHandler.resyncMousePosition();
-		});
+	}
+
+	private static void tick(Minecraft client) {
+		if (pendingTicks <= 0) {
+			return;
+		}
+
+		pendingTicks--;
+		SDLMouse.SDL_WarpMouseInWindow(client.getWindow().handle(), pendingX, pendingY);
+		client.mouseHandler.resyncMousePosition();
 	}
 }
