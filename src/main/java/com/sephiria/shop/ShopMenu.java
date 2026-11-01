@@ -64,20 +64,22 @@ public class ShopMenu extends AbstractContainerMenu {
 	private final Container dice;
 	private final Container sell;
 	private final ContainerData bought;
+	private final ContainerData freeRerolls;
 
 	/** 客户端用的构造：空壳容器与空数据槽，内容等原版同步（骰子栏是普通容器，不会触发刷新）。 */
 	public ShopMenu(int containerId, Inventory playerInventory) {
 		this(containerId, playerInventory, new SimpleContainer(ShopStock.SLOT_COUNT), new SimpleContainer(1),
-				new SimpleContainer(1), new SimpleContainerData(ShopStock.SLOT_COUNT));
+				new SimpleContainer(1), new SimpleContainerData(ShopStock.SLOT_COUNT), new SimpleContainerData(1));
 	}
 
 	public ShopMenu(int containerId, Inventory playerInventory, Container stock, Container dice, Container sell,
-			ContainerData bought) {
+			ContainerData bought, ContainerData freeRerolls) {
 		super(ModMenus.SHOP, containerId);
 		this.stock = stock;
 		this.dice = dice;
 		this.sell = sell;
 		this.bought = bought;
+		this.freeRerolls = freeRerolls;
 
 		for (int index = 0; index < ShopStock.SLOT_COUNT; index++) {
 			int x = index < ShopStock.GOOD_SLOTS
@@ -115,6 +117,7 @@ public class ShopMenu extends AbstractContainerMenu {
 
 		addStandardInventorySlots(playerInventory, 8, playerRowsY());
 		addDataSlots(bought);
+		addDataSlots(freeRerolls);
 	}
 
 	/** 第二排格子的横坐标（宝箱 2 个、药水 2 个、骰子、出售）。 */
@@ -137,8 +140,10 @@ public class ShopMenu extends AbstractContainerMenu {
 	/** 服务端使用：接上这名玩家自己的货架。 */
 	public static ShopMenu forPlayer(int containerId, Inventory playerInventory, ServerPlayer player) {
 		ShopStock stock = ShopStock.of(player);
+		SimpleContainerData free = new SimpleContainerData(1);
+		free.set(0, ShopFreeRerolls.available(player));
 		return new ShopMenu(containerId, playerInventory, stock, new SimpleContainer(1),
-				new SimpleContainer(1), stock.data());
+				new SimpleContainer(1), stock.data(), free);
 	}
 
 	public static MenuProvider provider(ServerPlayer player) {
@@ -200,6 +205,10 @@ public class ShopMenu extends AbstractContainerMenu {
 
 	/** 骰子栏里还有没有骰子（刷新按钮的可用状态看它）。 */
 	public boolean canRefresh() {
+		if (this.freeRerolls.get(0) > 0) {
+			return true;
+		}
+
 		ItemStack stack = this.dice.getItem(0);
 		return stack.getItem() == ModItems.DICE && stack.getCount() > 0;
 	}
@@ -210,12 +219,24 @@ public class ShopMenu extends AbstractContainerMenu {
 	 * <p>一次只吃一颗：栏里放着好几颗时，按几次按钮就刷几次，多的留着下次用。
 	 */
 	public boolean refresh(ServerPlayer player) {
-		if (!canRefresh() || !(this.stock instanceof ShopStock shopStock)) {
+		if (!(this.stock instanceof ShopStock shopStock)) {
 			return false;
 		}
 
-		this.dice.getItem(0).shrink(1);
-		this.dice.setChanged();
+		if (this.freeRerolls.get(0) > 0) {
+			ShopFreeRerolls.consume(player);
+			this.freeRerolls.set(0, this.freeRerolls.get(0) - 1);
+		} else if (canRefresh()) {
+			this.dice.getItem(0).shrink(1);
+			this.dice.setChanged();
+
+			if (com.sephiria.talent.Talents.stage(player, com.sephiria.talent.Talent.WISDOM) >= 3) {
+				ShopFreeRerolls.grantNext(player);
+				this.freeRerolls.set(0, 1);
+			}
+		} else {
+			return false;
+		}
 		shopStock.refresh(player.getRandom(), PlayerStats.luckTotal(player));
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.NOTE_BLOCK_BELL, SoundSource.PLAYERS, 0.7F, 0.9F);

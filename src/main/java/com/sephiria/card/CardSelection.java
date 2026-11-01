@@ -97,17 +97,17 @@ public final class CardSelection {
 			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "card_selection"));
 
 	/** 当前未选的三张卡与刷新状态：持久化，关界面/重进游戏都不重掷。 */
-	private record SessionSaved(List<ItemStack> cards, List<Boolean> refreshed) {
+	private record SessionSaved(List<ItemStack> cards, List<Integer> refreshed) {
 		private static final Codec<SessionSaved> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				ItemStack.CODEC.listOf().optionalFieldOf("cards", List.of()).forGetter(SessionSaved::cards),
-				Codec.BOOL.listOf().optionalFieldOf("refreshed", List.of()).forGetter(SessionSaved::refreshed)
+				Codec.INT.listOf().optionalFieldOf("refreshed", List.of()).forGetter(SessionSaved::refreshed)
 		).apply(instance, SessionSaved::new));
 	}
 
 	private static final AttachmentType<SessionSaved> SESSION = AttachmentRegistry.<SessionSaved>builder()
 			.persistent(SessionSaved.CODEC)
 			.copyOnDeath()
-			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "card_session"));
+			.buildAndRegister(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "card_session_v2"));
 
 	/** 当前打开的选卡（只活在一次界面会话里，关掉/选完就丢）。键 = 玩家 UUID。 */
 	private static final Map<UUID, Session> SESSIONS = new HashMap<>();
@@ -115,7 +115,7 @@ public final class CardSelection {
 	/** 一次界面会话里的三张卡与各自的刷新状态。 */
 	private static final class Session {
 		private final List<ItemStack> cards;
-		private final boolean[] refreshed = new boolean[CARDS];
+		private final int[] refreshed = new int[CARDS];
 
 		private Session(List<ItemStack> cards) {
 			this.cards = cards;
@@ -254,8 +254,8 @@ public final class CardSelection {
 			return;
 		}
 
-		if (session.refreshed[index]) {
-			// 客户端说还能刷但服务端已经用过了：以服务端为准，把当前状态重发一遍
+		if (session.refreshed[index] >= refreshLimit(player)) {
+			// 客户端说还能刷但服务端已经用完了：以服务端为准，把当前状态重发一遍
 			send(player, session, true);
 			return;
 		}
@@ -281,7 +281,7 @@ public final class CardSelection {
 			session.cards.set(index, new ItemStack(picked));
 		}
 
-		session.refreshed[index] = true;
+		session.refreshed[index]++;
 		saveSession(player, session);
 		send(player, session, true);
 	}
@@ -321,6 +321,10 @@ public final class CardSelection {
 		send(player, null, false);
 	}
 
+	private static int refreshLimit(ServerPlayer player) {
+		return com.sephiria.talent.Talents.stage(player, com.sephiria.talent.Talent.WISDOM) >= 3 ? 2 : 1;
+	}
+
 	private static Session session(ServerPlayer player) {
 		SessionSaved saved = player.getAttached(SESSION);
 
@@ -331,17 +335,17 @@ public final class CardSelection {
 		Session session = new Session(new ArrayList<>(saved.cards()));
 
 		for (int index = 0; index < CARDS; index++) {
-			session.refreshed[index] = index < saved.refreshed().size() && saved.refreshed().get(index);
+			session.refreshed[index] = index < saved.refreshed().size() ? saved.refreshed().get(index) : 0;
 		}
 
 		return session;
 	}
 
 	private static void saveSession(ServerPlayer player, Session session) {
-		List<Boolean> refreshed = new ArrayList<>(CARDS);
+		List<Integer> refreshed = new ArrayList<>(CARDS);
 
-		for (boolean flag : session.refreshed) {
-			refreshed.add(flag);
+		for (int count : session.refreshed) {
+			refreshed.add(count);
 		}
 
 		player.setAttached(SESSION, new SessionSaved(List.copyOf(session.cards), List.copyOf(refreshed)));
@@ -438,7 +442,7 @@ public final class CardSelection {
 		int mask = 0;
 
 		for (int index = 0; index < CARDS; index++) {
-			if (session.refreshed[index]) {
+			if (session.refreshed[index] >= refreshLimit(player)) {
 				mask |= 1 << index;
 			}
 		}

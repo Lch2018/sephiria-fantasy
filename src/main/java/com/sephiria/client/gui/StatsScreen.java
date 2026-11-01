@@ -137,12 +137,10 @@ public class StatsScreen extends Screen {
 			float partialTick) {
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 
-		// 叶子：图标在文字左边，数值黄色
-		extractor.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, LEAF_ICON,
-				this.rowsLeft, this.leafRowY + 3, 0.0F, 0.0F, 8, 8, 16, 16);
+		// 叶子只显示文字与数值（用户 2026-11-01 去掉图标）
 		extractor.text(this.font, Component.translatable("screen.sephiria_fantasy.stats.leaves",
 						Component.literal(format(ClientStats.leaves())).withColor(0xFFFFD24A)),
-				this.rowsLeft + 11, this.leafRowY + 2, 0xFFFFFFFF);
+				this.rowsLeft, this.leafRowY + 2, 0xFFFFFFFF);
 
 		// 悬停提示跟着行所在的那一列：物理强度与攻速在左列，闪避与谈判力在右列
 		// （先按行定列再查 x——谈判力在右列，用左列的 x 范围判断会永远判不中）
