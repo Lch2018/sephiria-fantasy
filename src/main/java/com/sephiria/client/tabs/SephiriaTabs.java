@@ -50,12 +50,8 @@ public final class SephiriaTabs {
 		return SephiriaTab.values().length * TabButton.SIZE + (SephiriaTab.values().length - 1) * GAP;
 	}
 
-	/** 切界面后重新对齐一次鼠标：26.3 从容器界面切到普通界面会把逻辑光标拉回中心。 */
 	private static void show(Minecraft client, Screen screen) {
-		client.setScreenAndShow(screen);
-		client.mouseHandler.resyncMousePosition();
-		// 下一帧再对齐一次：容器界面关闭后的那次光标回中在 setScreen 之后才生效
-		client.execute(() -> client.mouseHandler.resyncMousePosition());
+		com.sephiria.client.CursorKeeper.show(client, screen);
 	}
 
 	private static TabButton create(int x, int y, SephiriaTab tab, boolean active) {
