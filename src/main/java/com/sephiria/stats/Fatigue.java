@@ -17,8 +17,12 @@ import net.minecraft.server.level.ServerPlayer;
 public final class Fatigue {
 	public static final int MAX_POINTS = 6000;
 	public static final int REGEN_PER_TICK = 1;
-	/** 每 24 点疲劳提供 1 点额外经验；不满 24 点不给。 */
-	public static final int POINTS_PER_EXPERIENCE = 24;
+	/** 每 30 点消耗量提供一组额外经验。 */
+	public static final int POINTS_PER_EXPERIENCE = 30;
+	/** 每满一组给 3 点额外经验。 */
+	public static final int EXPERIENCE_PER_GROUP = 3;
+	/** 每次获得经验消耗当前点数的百分比。 */
+	public static final int CONSUME_PERCENT = 40;
 
 	private static final AttachmentType<Integer> POINTS = AttachmentRegistry.<Integer>builder()
 			.persistent(Codec.INT)
@@ -40,8 +44,8 @@ public final class Fatigue {
 	}
 
 	/**
-	 * 获得经验时结算疲劳：消耗当前点数的 5%，消耗量每满 24 点给 1 点额外经验。
-	 * 不满 24 点时仍会消耗这 5%，但额外经验为 0。
+	 * 获得经验时结算疲劳：消耗当前点数的 40%，消耗量每满 30 点给 3 点额外经验。
+	 * 不满 30 点时仍会消耗这 40%，但额外经验为 0。
 	 */
 	public static int claimBonus(ServerPlayer player) {
 		int points = points(player);
@@ -50,8 +54,8 @@ public final class Fatigue {
 			return 0;
 		}
 
-		int consumed = Math.round(points * 0.05F);
-		int bonus = consumed / POINTS_PER_EXPERIENCE;
+		int consumed = Math.round(points * (CONSUME_PERCENT / 100.0F));
+		int bonus = (consumed / POINTS_PER_EXPERIENCE) * EXPERIENCE_PER_GROUP;
 
 		if (consumed > 0) {
 			player.setAttached(POINTS, points - consumed);
