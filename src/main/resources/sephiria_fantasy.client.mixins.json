@@ -13,7 +13,8 @@
 		"MinecraftAttackMixin",
 		"CraftingRecipeBookTabsMixin",
 		"WeaponGlintMixin",
-		"CrossbowArmPoseMixin"
+		"CrossbowArmPoseMixin",
+		"GuiCursorRestoreMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

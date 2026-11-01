@@ -79,6 +79,9 @@ public final class SephiriaTabs {
 	 * <p>离开容器菜单（背包 / 附魔面板 / 商店）前必须先把容器在<b>服务端</b>也关掉：只换客户端界面的话，
 	 * 服务端还认为玩家开着那个菜单，会继续往里同步格子，客户端菜单对不上号就直接崩
 	 * （踩过：服务端按背包菜单发 slot 62，而客户端开着创造物品栏只有 46 格 → IndexOutOfBounds）。
+	 *
+	 * <p>关容器会让原版把光标拉回窗口中心，所以这里在关之前先把当前位置交给 {@link com.sephiria.client.CursorKeeper}，
+	 * 目标界面 setScreen 返回时再放回去（见 GuiCursorRestoreMixin）。
 	 */
 	public static void open(SephiriaTab tab) {
 		Minecraft client = Minecraft.getInstance();
@@ -89,6 +92,14 @@ public final class SephiriaTabs {
 
 		// 目标是容器菜单（背包 / 商店）时不用先关：服务端会用 openMenu 顶掉当前那个
 		boolean containerTarget = tab == SephiriaTab.BACKPACK || tab == SephiriaTab.SHOP;
+
+		if (containerTarget) {
+			// 容器页由服务端回包后才开界面，时间不可控：别让上一次还没兑现的还原落到它头上
+			com.sephiria.client.CursorKeeper.cancel();
+		} else {
+			// 记下关容器 / 换界面前的光标位置（mixin 在 setScreen 返回时还原）
+			com.sephiria.client.CursorKeeper.capture(client);
+		}
 
 		if (!containerTarget && client.player.containerMenu != client.player.inventoryMenu) {
 			// closeContainer() 会发关闭包、顺手关掉当前界面，下面再切到目标界面

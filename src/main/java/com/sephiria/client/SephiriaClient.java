@@ -231,9 +231,10 @@ public class SephiriaClient implements ClientModInitializer {
 				return;
 			}
 
-			// 万一还开着容器菜单（背包 / 商店），先让服务端关掉它，免得它继续同步格子
+			// 万一还开着容器菜单（背包 / 商店），先让服务端关掉它，免得它继续同步格子；
+			// 关容器会把光标拉回中心，所以这次关由 CursorKeeper 包一层，先把位置记下来
 			if (client.player != null && client.player.containerMenu != client.player.inventoryMenu) {
-				client.player.closeContainer();
+				com.sephiria.client.CursorKeeper.closeContainer(client);
 			}
 
 			com.sephiria.client.CursorKeeper.show(client, new CardSelectionScreen());

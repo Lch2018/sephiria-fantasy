@@ -36,5 +36,8 @@ accessible	field	net/minecraft/world/entity/Display$BlockDisplay	DATA_BLOCK_STAT
 accessible	field	net/minecraft/world/entity/Display$ItemDisplay	DATA_ITEM_STACK_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
 accessible	field	net/minecraft/world/entity/Display$ItemDisplay	DATA_ITEM_DISPLAY_ID	Lnet/minecraft/network/syncher/EntityDataAccessor;
 
-# 切界面时阻止原版 releaseMouse 把光标重置到窗口中心
-accessible field net/minecraft/client/MouseHandler mouseGrabbed Z
+# 切标签时保住光标（见 com.sephiria.client.CursorKeeper）：26.3 没有写鼠标位置的公开方法，
+# 关容器 / 开界面时原版 grabMouse、releaseMouse 会把 xpos/ypos 改成屏幕中心。还原要直接写这两个私有字段，
+# 这里放宽成 public；配合 GuiCursorRestoreMixin 在 Gui.setScreen 返回时用。
+accessible	field	net/minecraft/client/MouseHandler	xpos	D
+accessible	field	net/minecraft/client/MouseHandler	ypos	D
