@@ -5,8 +5,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.sdl.SDLMouse;
+import org.lwjgl.sdl.SDLVideo;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 /**
  * 切界面前后保住鼠标位置：26.3 从容器界面切普通界面会把光标拉回窗口中心。
@@ -27,11 +29,14 @@ public final class CursorKeeper {
 	}
 
 	public static void show(Minecraft client, Screen screen) {
-		FloatBuffer x = BufferUtils.createFloatBuffer(1);
-		FloatBuffer y = BufferUtils.createFloatBuffer(1);
-		SDLMouse.SDL_GetMouseState(x, y);
-		pendingX = x.get(0);
-		pendingY = y.get(0);
+		FloatBuffer globalX = BufferUtils.createFloatBuffer(1);
+		FloatBuffer globalY = BufferUtils.createFloatBuffer(1);
+		SDLMouse.SDL_GetGlobalMouseState(globalX, globalY);
+		IntBuffer windowX = BufferUtils.createIntBuffer(1);
+		IntBuffer windowY = BufferUtils.createIntBuffer(1);
+		SDLVideo.SDL_GetWindowPosition(client.getWindow().handle(), windowX, windowY);
+		pendingX = globalX.get(0) - windowX.get(0);
+		pendingY = globalY.get(0) - windowY.get(0);
 		pendingTicks = 3;
 
 		client.setScreenAndShow(screen);

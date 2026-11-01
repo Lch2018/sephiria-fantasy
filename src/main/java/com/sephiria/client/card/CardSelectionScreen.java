@@ -153,6 +153,16 @@ public class CardSelectionScreen extends Screen {
 	}
 
 	@Override
+	public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+		if (net.minecraft.client.Minecraft.getInstance().options.keyInventory.matches(event)) {
+			this.onClose();
+			return true;
+		}
+
+		return super.keyPressed(event);
+	}
+
+	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
 		// 先画底板与卡面，super 里的按钮 / 标签再盖在上面（26.3 的调用顺序就是图层顺序）
 		drawPanel(extractor);
