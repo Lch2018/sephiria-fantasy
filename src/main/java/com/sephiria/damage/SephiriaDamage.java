@@ -378,14 +378,23 @@ public final class SephiriaDamage {
 		};
 
 		boolean critical = PseudoRandom.crit(player, chance);
+		// 巴尔特的工作用单片眼镜：近身时暴伤 -30 个百分点，只在这一下按距离判断
+		double critDamage = PlayerStats.critDamageTotal(player)
+				- ArtifactEffects.closeRangeCritDamagePenalty(player, target);
+		// 贝鲁特之镰：暴击几率超过 100% 的溢出部分单独掷一次「处决」，命中就把暴伤再翻倍
+		double executionChance = ArtifactEffects.executionChance(player, chance);
+		boolean executed = critical && executionChance > 0.0D
+				&& player.getRandom().nextDouble() * 100.0D < executionChance;
 		float result = critical
-				? (float) (amount * PlayerStats.critDamageTotal(player) / 100.0D)
+				? (float) (amount * Math.max(0.0D, critDamage) / 100.0D * (executed ? 2.0D : 1.0D))
 				: amount;
 		// ToroHealth 兼容：在生命值同步前告诉客户端这一下的元素 / 暴击 / 税前伤害
 		// 税前 = 暴击、黄金之手、天赋增伤之后，尚未扣目标护甲 / 减伤
 		float preTax = applyGoldenHands(source, result);
 		preTax *= com.sephiria.talent.Talents.bossDamageMultiplier(player, target);
 		preTax *= com.sephiria.talent.Talents.comboDamageMultiplier(player);
+		// 药水「黎明之露」的所有伤害放大也要进税前显示，不然 ToroHealth 的数字会比实际少
+		preTax *= PlayerStats.allDamageMultiplier(player);
 		com.sephiria.compat.torohealth.ToroHealthCompat.send(player, target, source, critical, preTax);
 
 		if (!critical) {

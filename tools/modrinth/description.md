@@ -4,7 +4,7 @@
 
 **赛菲莉娅幻想**：把《SEPHIRIA（赛菲莉娅）》的**构筑**搬进 Minecraft 的同人模组——选择并组合你自己的神器、石板与连击。本项目**大量使用 AI 生成代码**，仅供学习与个人游玩，**禁止商业行为**。
 
-> A 测阶段：内容已经不少，但大部分还没有经过充分实测，数值与手感仍在调整。当前版本 **0.5.1-a**，对应 **Minecraft 26.3**；1.20.1 / 1.21.1 移植分支不在本说明范围内。
+> A 测阶段：内容已经不少，但大部分还没有经过充分实测，数值与手感仍在调整。当前版本 **0.5.2-a**，对应 **Minecraft 26.3**；1.20.1 / 1.21.1 移植分支不在本说明范围内。
 
 ### 主要内容
 
@@ -25,7 +25,7 @@
 
 #### 神器与连击
 
-**83 件神器、12 种连击**：坚固、风之歌、精密、影子、谈判、元素、魔法科技、余烬、乌云、太阳剑、冰川、冰霜武具（少数神器没有连击）。
+**93 件神器、12 种连击**：坚固、风之歌、精密、影子、谈判、元素、魔法科技、余烬、乌云、太阳剑、冰川、冰霜武具（少数神器没有连击）。
 
 - 把有连击的神器放进**赛菲莉娅背包**（默认 30 格、6 格宽，可用「赛菲莉娅额外背包栏」扩到最多 54 格）后，每件默认提供 1 级对应连击；带【唯一】的同种神器只按等级最高的那件计算；连击在 2 / 4 / 6 / 8 / 10 级逐档生效并累加。
 - 神器分**白 / 蓝 / 黄 / 红 / 彩（羁绊）**五档，自身等级从 0 到各自上限；用**神器附魔币**升级。实际等级 = 自身等级 + 所在格子等级，格子等级为负时该神器失效。
@@ -81,7 +81,7 @@
 - 神器池 / 石板池分开；单抽 1 片四叶草，十连 10 片；按品质权重抽取，同一批允许重复。
 - **锚定**：默认 1 格，意志天赋最多加到 5 格；同一件可以占多格。掷到某一档时，这一档的锚定物共占 `50% × (1 + 品质增量 × 总锚定次数)`（白 5 / 蓝 10 / 黄 15 / 红与最高档 20，最多 100%），没命中才在整档随机。
 - 抽到东西会给**愿力**：神器 2 / 4 / 6 / 8 / 10，石板 3 / 6 / 9 / 12 / 15（按白 / 蓝 / 黄 / 红 / 最高档）。
-- **神铸**：只换黄与红，黄 80 愿力、红 200 愿力。
+- **神铸**：普通 30 / 高级 50 / 黄 80 / 红 200 愿力；羁绊 / 永恒不参与。
 - 界面里可以打开「溢出的升级宝箱自动转化为四叶草」；许愿池等级系统暂未实现。
 
 ![许愿池](图片占位)
@@ -90,7 +90,7 @@
 
 从标签栏的**选卡页**打开。每次给出 3 张同品质神器，只能选 1 张；初始品质在白 / 蓝 / 黄 / 红四档中等概率。每张卡在一次选卡内可刷新 1 次（智慧三阶段 2 次），刷新后仍是神器，5% 概率升一档（红不再升），并尽量避开另外两张。
 
-- 每 2 个游戏日获得 1 次选卡机会，初始 1 次，最多存 10 次。
+- 每 1 个游戏日获得 1 次选卡机会，初始 1 次，最多存 10 次。
 - 不选就关掉不扣次数；选一张才扣次数并给对应神器。
 - 界面显示充能进度；关掉或重进不会重掷同一批；没有机会时仍可打开，但不显示卡。
 
@@ -161,7 +161,7 @@
 
 **Sephiria Fantasy** is an **unofficial fan mod** that brings the **Construct/Constructed buildcraft** of *SEPHIRIA* into Minecraft — choosing and combining your own artifacts, slates and combos. This project makes **heavy use of AI-generated code**; it is shared for learning and personal play only, and **commercial use is not allowed**.
 
-> Alpha stage: there is a decent amount of content, but most of it has not been playtested thoroughly yet — numbers and feel are still being tuned. Current version: **0.5.1-a** for **Minecraft 26.3**. The 1.20.1 / 1.21.1 port branches are not covered by this description.
+> Alpha stage: there is a decent amount of content, but most of it has not been playtested thoroughly yet — numbers and feel are still being tuned. Current version: **0.5.2-a** for **Minecraft 26.3**. The 1.20.1 / 1.21.1 port branches are not covered by this description.
 
 ### Main Content
 
@@ -182,7 +182,7 @@ All six weapons are **unbreakable**; the Blade uses GeckoLib skeletal animation.
 
 #### Artifacts and Combos
 
-**83 artifacts across 12 combos**: Sturdy, Wind Song, Precision, Shadow, Negotiation, Element, Magitech, Embers, Dark Cloud, Sun Sword, Glacier and Frost Armament (a few artifacts have no combo).
+**93 artifacts across 12 combos**: Sturdy, Wind Song, Precision, Shadow, Negotiation, Element, Magitech, Embers, Dark Cloud, Sun Sword, Glacier and Frost Armament (a few artifacts have no combo).
 
 - An artifact with a combo gives 1 level of it by default when placed in the **Sephiria Backpack** (30 slots by default, 6 wide; up to 54 with Extra Backpack Row items). A 【Unique】 artifact only counts once, using its highest-level copy. Combo tiers trigger at 2 / 4 / 6 / 8 / 10 and stack.
 - Artifacts come in five rarities — **Common / Advanced / Rare / Legendary / Bond (rainbow)** — and have their own level from 0 to a per-item cap, raised with an **Artifact Enchant Coin**. Effective level = artifact level + slot level; a negative slot level disables the artifact.
@@ -238,7 +238,7 @@ Craft a Wishing Pool block with **a water bucket + a sapling**, then right-click
 - The artifact pool and slate pool are separate. A single draw costs 1 Clover, a ten-pull costs 10; rarity is rolled by weight, and duplicates within one batch are allowed.
 - **Anchor**: 1 slot by default, up to 5 with the Will talent; the same item can occupy multiple slots. When a rarity is rolled, anchored items of that rarity share `50% × (1 + rarity step × total anchor count)` (Common 5 / Advanced 10 / Rare 15 / Legendary and top tier 20, capped at 100%). Only if that fails is the item picked randomly from the whole tier.
 - Draws grant **Wish Power**: artifacts 2 / 4 / 6 / 8 / 10, slates 3 / 6 / 9 / 12 / 15 (by Common / Advanced / Rare / Legendary / top tier).
-- **Forge**: only Rare and Legendary can be forged, for 80 and 200 Wish Power respectively.
+- **Forge**: Common 30 / Advanced 50 / Rare 80 / Legendary 200 Wish Power; Bond / Eternal are not forgeable.
 - The screen has an option to turn overflowing Upgrade Chests into Clovers automatically. A Wishing Pool level system is not implemented yet.
 
 ![Wishing Pool](image-placeholder)
@@ -247,7 +247,7 @@ Craft a Wishing Pool block with **a water bucket + a sapling**, then right-click
 
 Open it from the **Card Selection tab**. Three artifacts of the same rarity are offered and you pick one; the initial rarity is Common / Advanced / Rare / Legendary at equal odds. Each card can be refreshed once per selection (twice with Wisdom stage 3). A refresh keeps it an artifact, has a 5% chance to upgrade one rarity step (Legendary cannot upgrade), and avoids the other two cards.
 
-- One selection chance is gained every 2 in-game days, starting with 1 and capped at 10 stored.
+- One selection chance is gained every in-game day, starting with 1 and capped at 10 stored.
 - Closing without picking does not consume a chance; picking one consumes it and grants that artifact.
 - The screen shows charge progress; closing or relogging does not reroll the same set. With no chances left it still opens, but shows no cards.
 

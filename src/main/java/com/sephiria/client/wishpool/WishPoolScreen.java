@@ -4,7 +4,9 @@ import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.artifact.SephiriaArtifact;
+import com.sephiria.client.artifact.ArtifactTooltip;
 import com.sephiria.network.WishPoolClickPayload;
+import com.sephiria.network.WishPoolForgePayload;
 import com.sephiria.wishpool.WishPool;
 import com.sephiria.wishpool.WishPoolMenu;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -43,8 +45,8 @@ import java.util.List;
  *   <li>左侧两个卡池标签（神器池 / 石板池），右边是卡池内容；</li>
  *   <li>卡池中间是锚定物品图标与「锚定」按钮，下面「单抽」「十连」，右下角能量与它上面的「神铸」；</li>
  *   <li>锚定 / 神铸的选择页按<b>品质</b>（都是按钮）与<b>连击</b>（神器池才有，用连击图标当按钮）筛；</li>
- *   <li>神铸只列黄与红两档（用户口径「只能换取黄和红品质的神器或石板」，黄 80 / 红 200 能量）；</li>
- *   <li>抽卡动画一张张亮出来，播完自动回到卡池页（点一下可以立刻跳过）。</li>
+ *   <li>神铸列普通 / 高级 / 黄 / 红四档（30 / 50 / 80 / 200 能量；羁绊 / 永恒不参与）；</li>
+ *   <li>抽卡动画一张张亮出来；播完点一下返回来源页（抽卡回卡池页，神铸回神铸页）。</li>
  * </ul>
  *
  * <p>所有数值（能量、四叶草、锚定件）都读菜单同步过来的数据；物品图标一律<b>直接 blit 本模组物品的贴图</b>
@@ -106,6 +108,10 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 	/** 抽卡动画：要展示的东西与已经过去的刻数。 */
 	private List<ItemStack> drawn = List.of();
 	private int drawnTick;
+	/** 服务端算好的实际到账愿力（含锚定加成），结果页直接显示它。 */
+	private int drawnEnergy;
+	/** 抽卡动画播完返回哪一页：抽卡回卡池，神铸回神铸页。 */
+	private Mode drawingReturnMode = Mode.POOL;
 
 	private Button artifactTab;
 	private Button slateTab;
@@ -117,8 +123,10 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 	private Button clearAnchorButton;
 	/** 神铸页的「确认」：点物品只是选中，按它才真的花能量（用户 2026-10-15 要求防误点）。 */
 	private Button confirmButton;
-	/** 神铸页当前选中的那件（null = 没选）。 */
-	private Item forgeSelection;
+	/** 神铸页的「重置」：一键清空当前多选（用户 2026-11-09 要求）。 */
+	private Button resetButton;
+	/** 神铸页当前选中的物品（可多选；同一件只算一次）。 */
+	private final List<Item> forgeSelections = new ArrayList<>();
 	private Button prevPageButton;
 	private Button nextPageButton;
 	private final List<Button> rarityButtons = new ArrayList<>();
@@ -238,12 +246,20 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 				})
 				.bounds(this.leftPos + WishPoolMenu.IMAGE_WIDTH - 26, this.topPos + PICKER_BUTTON_Y, 18, 16)
 				.build();
+		this.resetButton = Button.builder(Component.translatable("screen.sephiria_fantasy.wish_pool.reset"),
+						pressed -> {
+							this.forgeSelections.clear();
+							refreshButtons();
+						})
+				.bounds(this.leftPos + 70, this.topPos + PICKER_BUTTON_Y, 56, 16)
+				.build();
 		this.confirmButton = Button.builder(Component.translatable("screen.sephiria_fantasy.wish_pool.confirm"),
 						pressed -> confirmForge())
-				.bounds(this.leftPos + 70, this.topPos + PICKER_BUTTON_Y, 56, 16)
+				.bounds(this.leftPos + 132, this.topPos + PICKER_BUTTON_Y, 56, 16)
 				.build();
 		addRenderableWidget(this.backButton);
 		addRenderableWidget(this.clearAnchorButton);
+		addRenderableWidget(this.resetButton);
 		addRenderableWidget(this.confirmButton);
 		addRenderableWidget(this.prevPageButton);
 		addRenderableWidget(this.nextPageButton);
@@ -269,7 +285,7 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		this.rarityFilter = null;
 		this.comboFilter = null;
 		this.noComboFilter = false;
-		this.forgeSelection = null;
+		this.forgeSelections.clear();
 		this.page = 0;
 		// 池子换了、品质档位可能不同 → 重建筛选按钮（重新 init 最省事）
 		rebuildWidgets();
@@ -302,10 +318,12 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 
 		this.backButton.visible = picker;
 		this.clearAnchorButton.visible = this.mode == Mode.ANCHOR;
+		this.resetButton.visible = this.mode == Mode.FORGE;
+		this.resetButton.active = this.mode == Mode.FORGE && !this.forgeSelections.isEmpty();
 		this.confirmButton.visible = this.mode == Mode.FORGE;
-		// 没选中、或者能量不够，都不给按（防误点把能量花掉）
-		this.confirmButton.active = this.mode == Mode.FORGE && this.forgeSelection != null
-				&& this.menu.energy() >= WishPool.forgeCost(ArtifactLoot.rarityOf(this.forgeSelection));
+		// 没选中、或者总价超过能量，都不给按（防误点把能量花掉）
+		this.confirmButton.active = this.mode == Mode.FORGE && !this.forgeSelections.isEmpty()
+				&& this.menu.energy() >= forgeTotalCost();
 		this.prevPageButton.visible = picker;
 		this.nextPageButton.visible = picker;
 		int pages = pageCount();
@@ -314,7 +332,18 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		this.nextPageButton.active = this.page + 1 < pages;
 	}
 
-	/** 选择页当前要列出的物品（锚定 = 整个池子；神铸 = 只要黄与红）。 */
+	/** 当前神铸多选的总价（同一件只算一次）。 */
+	private int forgeTotalCost() {
+		int total = 0;
+
+		for (Item item : this.forgeSelections) {
+			total += WishPool.forgeCost(ArtifactLoot.rarityOf(item));
+		}
+
+		return total;
+	}
+
+	/** 选择页当前要列出的物品（锚定 = 整个池子；神铸 = 普通 / 高级 / 黄 / 红）。 */
 	private List<Item> filteredItems() {
 		List<Item> pool = currentPool();
 		List<Item> result = new ArrayList<>();
@@ -378,11 +407,14 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 	public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
 		// 服务端抽完把结果发过来 → 这里接上开始播动画
 		if (this.mode != Mode.DRAWING) {
-			List<ItemStack> pending = ClientWishPool.takePending();
+			ClientWishPool.Result pending = ClientWishPool.takePending();
 
-			if (pending != null && !pending.isEmpty()) {
-				this.drawn = pending;
+			if (pending != null && !pending.items().isEmpty()) {
+				this.drawn = pending.items();
+				this.drawnEnergy = pending.energyGained();
 				this.drawnTick = 0;
+				// 抽卡从卡池页来，神铸从神铸页来：播完回原来那一页
+				this.drawingReturnMode = this.mode;
 				this.mode = Mode.DRAWING;
 				refreshButtons();
 			}
@@ -392,6 +424,8 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		}
 
 		refreshButtons();
+		// 物品完整提示要在 super 之前排队，才能被这一帧的 tooltip 层画出来
+		showItemTooltip(extractor, mouseX, mouseY);
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 	}
 
@@ -553,10 +587,10 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 			drawRarityStrip(extractor, x, y + CELL - 3, CELL - 2, rarity);
 
 			// 锚定页 = 已锚定的物品（框色按锚定次数：1 白 / 2 绿 / 3 蓝 / 4 黄 / 5 红）；
-			// 神铸页 = 刚选中的那件，套白框
+			// 神铸页 = 多选，每件选中的都套白框
 			int anchors = this.mode == Mode.ANCHOR ? this.menu.anchorCount(this.slatePool, item) : 0;
 			boolean selected = this.mode == Mode.ANCHOR ? anchors > 0
-					: this.mode == Mode.FORGE && item == this.forgeSelection;
+					: this.mode == Mode.FORGE && this.forgeSelections.contains(item);
 
 			if (selected) {
 				drawFrame(extractor, x, y, CELL - 2,
@@ -570,9 +604,19 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 				left + WishPoolMenu.IMAGE_WIDTH - 56 - this.font.width(pageText),
 				top + PICKER_BUTTON_Y + 4, DIM_COLOR);
 
+		// 神铸多选总价：下侧正中间；愿力够就绿色，不够红色（用户 2026-11-09 要求）
+		if (this.mode == Mode.FORGE && !this.forgeSelections.isEmpty()) {
+			int total = forgeTotalCost();
+			int colour = this.menu.energy() >= total ? 0xFF55FF55 : 0xFFFF5555;
+			Component totalText = Component.translatable("screen.sephiria_fantasy.wish_pool.forge_total",
+					Component.literal(String.valueOf(total)).withColor(colour));
+			extractor.text(this.font, totalText,
+					left + (WishPoolMenu.IMAGE_WIDTH - this.font.width(totalText)) / 2,
+					top + WishPoolMenu.IMAGE_HEIGHT - 38, TEXT_COLOR);
+		}
 	}
 
-	/** 抽卡动画：一张张亮出来，亮完停一下回卡池页。 */
+	/** 抽卡动画：一张张亮出来；播完点一下回来源页。 */
 	private void renderDrawing(GuiGraphicsExtractor extractor) {
 		int left = this.leftPos;
 		int top = this.topPos;
@@ -613,19 +657,28 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 			drawRarityStrip(extractor, x, y + cell - 5, cell - 4, rarity);
 		}
 
-		// 这一批攒了多少能量
-		int gained = 0;
+		Component energy;
 
-		for (ItemStack stack : this.drawn) {
-			gained += WishPool.energyFor(stack.getItem());
+		if (this.drawingReturnMode == Mode.FORGE) {
+			// 神铸是花愿力，不是攒愿力：显示这一批的总消耗（数字红色）
+			int spent = 0;
+
+			for (ItemStack stack : this.drawn) {
+				spent += WishPool.forgeCost(ArtifactLoot.rarityOf(stack.getItem()));
+			}
+
+			energy = Component.translatable("screen.sephiria_fantasy.wish_pool.forge_spent",
+					Component.literal(String.valueOf(spent)).withColor(0xFFFF5555));
+		} else {
+			// 服务端已经算好实际到账（含锚定加成），这里不能再按基础表重算
+			energy = Component.translatable("screen.sephiria_fantasy.wish_pool.energy_gain",
+					Component.literal(String.valueOf(this.drawnEnergy)).withColor(ENERGY_COLOR));
 		}
 
-		Component energy = Component.translatable("screen.sephiria_fantasy.wish_pool.energy_gain",
-				Component.literal(String.valueOf(gained)).withColor(ENERGY_COLOR));
 		extractor.text(this.font, energy, left + (this.imageWidth - this.font.width(energy)) / 2,
 				top + WishPoolMenu.IMAGE_HEIGHT - 40, TEXT_COLOR);
 
-		// 提示一直显示：动画不会再自动返回，要点一下才回卡池页（用户 2026-10-15）
+		// 提示一直显示：动画不会再自动返回，要点一下才回到来源页（抽卡回卡池 / 神铸回神铸）
 		Component skip = Component.translatable("screen.sephiria_fantasy.wish_pool.drawing_skip");
 		extractor.text(this.font, skip, left + (this.imageWidth - this.font.width(skip)) / 2,
 				top + WishPoolMenu.IMAGE_HEIGHT - 24, DIM_COLOR);
@@ -636,7 +689,7 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 	protected void extractLabels(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
 	}
 
-	/** 悬停浮窗：选择页里显示物品名字（神铸页再带上能量价格）。 */
+	/** 悬停浮窗：连击筛选按钮的说明；物品本身走 {@link #showItemTooltip}。 */
 	@Override
 	protected void extractTooltip(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
 		super.extractTooltip(extractor, mouseX, mouseY);
@@ -658,24 +711,80 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 				return;
 			}
 		}
+	}
 
-		Item hovered = itemAt(mouseX, mouseY);
+	/** 物品本身的完整提示：锚定 / 神铸选择页与获得结果页都走这里。 */
+	private void showItemTooltip(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
+		ItemStack stack = null;
 
-		if (hovered == null) {
+		if (this.mode == Mode.ANCHOR || this.mode == Mode.FORGE) {
+			Item item = itemAt(mouseX, mouseY);
+
+			if (item != null) {
+				stack = new ItemStack(item);
+			}
+		} else if (this.mode == Mode.DRAWING) {
+			stack = drawnAt(mouseX, mouseY);
+		}
+
+		if (stack == null || stack.isEmpty()) {
 			return;
 		}
 
 		List<Component> lines = new ArrayList<>();
-		lines.add(Component.translatable(hovered.getDescriptionId()).withColor(ArtifactLoot.rarityOf(hovered).color()));
+		lines.add(stack.getHoverName());
+		// 许愿池里的物品都是 0 级：临时压掉背包界面残留的格子等级提示
+		ArtifactTooltip.setSlotLevelHint(0);
 
-		if (this.mode == Mode.FORGE) {
-			int cost = WishPool.forgeCost(ArtifactLoot.rarityOf(hovered));
-			lines.add(Component.translatable("screen.sephiria_fantasy.wish_pool.forge_cost",
-					Component.literal(String.valueOf(cost)).withColor(
-							this.menu.energy() >= cost ? ENERGY_COLOR : ArtifactRarity.COMMON.color())));
+		try {
+			List<Component> details = ArtifactTooltip.lines(stack);
+
+			if (!details.isEmpty()) {
+				lines.add(Component.empty());
+				lines.addAll(details);
+			}
+		} finally {
+			ArtifactTooltip.clearSlotLevelHint();
 		}
 
-		renderTooltip(extractor, lines, mouseX, mouseY);
+		if (this.mode == Mode.FORGE) {
+			int cost = WishPool.forgeCost(ArtifactLoot.rarityOf(stack.getItem()));
+			lines.add(Component.translatable("screen.sephiria_fantasy.wish_pool.forge_cost",
+					Component.literal(String.valueOf(cost)).withColor(
+							this.menu.energy() >= cost ? ENERGY_COLOR : 0xFFFF5555)));
+		}
+
+		extractor.setComponentTooltipForNextFrame(this.font, lines, mouseX, mouseY);
+	}
+
+	/** 获得结果页里鼠标下的那一件（只认已经亮出来的）。 */
+	private ItemStack drawnAt(int mouseX, int mouseY) {
+		if (this.drawn.isEmpty()) {
+			return null;
+		}
+
+		int count = this.drawn.size();
+		int columns = count <= 1 ? 1 : Math.min(5, count);
+		int rows = (count + columns - 1) / columns;
+		int cell = count <= 1 ? 56 : 28;
+		int gridWidth = columns * cell;
+		int gridHeight = rows * cell;
+		int originX = this.leftPos + (this.imageWidth - gridWidth) / 2;
+		int originY = this.topPos + (WishPoolMenu.IMAGE_HEIGHT - gridHeight) / 2;
+		int shown = Math.min(count, this.drawnTick / REVEAL_TICKS + 1);
+
+		for (int index = 0; index < shown; index++) {
+			int column = index % columns;
+			int row = index / columns;
+			int x = originX + column * cell;
+			int y = originY + row * cell;
+
+			if (mouseX >= x && mouseX < x + cell - 4 && mouseY >= y && mouseY < y + cell - 4) {
+				return this.drawn.get(index);
+			}
+		}
+
+		return null;
 	}
 
 	/** 网格里鼠标下的物品。 */
@@ -738,8 +847,10 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 			if (this.drawnTick < allShown) {
 				this.drawnTick = allShown;
 			} else {
-				// 全部亮出来之后再点一下才返回（这样玩家能看清抽到了什么）
-				openMode(Mode.POOL);
+				// 全部亮出来之后再点一下才返回（这样玩家能看清抽到了什么）；
+				// 直接切模式而不是 openMode，保留神铸页原来的筛选与页码
+				this.mode = this.drawingReturnMode;
+				refreshButtons();
 			}
 
 			return true;
@@ -792,8 +903,11 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 					ClientPlayNetworking.send(
 							WishPoolClickPayload.anchor(this.slatePool, BuiltInRegistries.ITEM.getId(clicked)));
 				} else {
-					// 神铸：点一下只选中（再点一下取消），真正花能量的是「确认」按钮
-					this.forgeSelection = this.forgeSelection == clicked ? null : clicked;
+					// 神铸：点一下切换选中（可多选），真正花能量的是「确认」按钮
+					if (!this.forgeSelections.remove(clicked)) {
+						this.forgeSelections.add(clicked);
+					}
+
 					refreshButtons();
 				}
 
@@ -804,14 +918,20 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 		return super.mouseClicked(event, doubleClick);
 	}
 
-	/** 神铸页按了「确认」：把选中的那件发过去（够不够能量由服务端再判一次）。 */
+	/** 神铸页按了「确认」：把选中的整批发过去（总价够不够由服务端再判一次）。 */
 	private void confirmForge() {
-		if (this.forgeSelection == null) {
+		if (this.forgeSelections.isEmpty()) {
 			return;
 		}
 
-		ClientPlayNetworking.send(WishPoolClickPayload.forge(BuiltInRegistries.ITEM.getId(this.forgeSelection)));
-		this.forgeSelection = null;
+		List<Integer> ids = new ArrayList<>(this.forgeSelections.size());
+
+		for (Item item : this.forgeSelections) {
+			ids.add(BuiltInRegistries.ITEM.getId(item));
+		}
+
+		ClientPlayNetworking.send(new WishPoolForgePayload(ids));
+		this.forgeSelections.clear();
 		refreshButtons();
 	}
 

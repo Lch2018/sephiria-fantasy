@@ -72,6 +72,8 @@ public class DamageReductionMixin {
 		if (talentAttacker != null) {
 			adjusted *= Talents.bossDamageMultiplier(talentAttacker, self);
 			adjusted *= Talents.comboDamageMultiplier(talentAttacker);
+			// 药水「黎明之露」：所有伤害放大 +4%，与天赋增伤同一层，含真实伤害与减益
+			adjusted *= com.sephiria.stats.PlayerStats.allDamageMultiplier(talentAttacker);
 		}
 
 		return adjusted;

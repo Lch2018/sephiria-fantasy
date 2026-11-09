@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
+import com.sephiria.network.SlateCountPayload;
 import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.util.PlayerItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -90,22 +91,38 @@ public final class PlayerStats {
 	public static final double LUCK_PER_VANILLA_LEVEL = 6.0D;
 
 	/**
+	 * 药水新增的「百分比类」永久加成：最终最大生命值 +5%、所有伤害放大 +4%。
+	 *
+	 * <p>{@link Combat} 已经有 15 个字段，再往它里面加两个就会顶到 RecordCodecBuilder 的
+	 * 16 字段上限，所以这两个同族的药水属性单独打成一个子记录（旧存档没有它时取 0）。
+	 */
+	private record PotionExtra(double maxHpPercent, double allDamagePercent) {
+		static final PotionExtra DEFAULT = new PotionExtra(0.0D, 0.0D);
+
+		static final Codec<PotionExtra> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+				Codec.DOUBLE.optionalFieldOf("max_hp_percent", 0.0D).forGetter(PotionExtra::maxHpPercent),
+				Codec.DOUBLE.optionalFieldOf("all_damage_percent", 0.0D).forGetter(PotionExtra::allDamagePercent)
+		).apply(instance, PotionExtra::new));
+	}
+
+	/**
 	 * 后加的那几项属性单独成一组（战斗那几项 + 药水给的元素强度与连击加成）。
 	 *
 	 * <p>理由很实际：{@code RecordCodecBuilder} 一条记录最多 16 个字段，主记录已经占满了，
 	 * 所以新属性打包成一个可选的子记录——旧存档没有这一组时整组取默认值。
 	 *
 	 * <p>⚠ 这一组的 JSON 键仍叫 {@code combat}（老存档的字段名不能改），但内容是「后加属性的
-	 * 杂物箱」：2026-10-18 往里面加了药水那三项元素强度与连击加成，2026-10-19 又加了幸运值。
+	 * 杂物箱」：2026-10-18 往里面加了药水那三项元素强度与连击加成，2026-10-19 又加了幸运值，
+	 * 2026-11-09 再塞进 {@link PotionExtra}（最终 HP% / 所有伤害放大）。
 	 */
 	private record Combat(double normalAttackDamage, double critChance, double critDamage, double ignoreDefense,
 			double moveSpeed, double dodge, double negotiation, double leafGainPercent, double xpDropPercent,
 			double potionFire, double potionIce, double potionLightning,
-			java.util.Map<String, Integer> comboBonus, double luck, double mpAbsorb) {
+			java.util.Map<String, Integer> comboBonus, double luck, double mpAbsorb, PotionExtra potionExtra) {
 		static final Combat DEFAULT = new Combat(DEFAULT_NORMAL_ATTACK_DAMAGE, DEFAULT_CRIT_CHANCE,
 				DEFAULT_CRIT_DAMAGE, 0.0D, DEFAULT_MOVE_SPEED, 0.0D,
 				DEFAULT_NEGOTIATION, DEFAULT_LEAF_GAIN, DEFAULT_XP_DROP,
-				0.0D, 0.0D, 0.0D, java.util.Map.of(), DEFAULT_LUCK, 0.0D);
+				0.0D, 0.0D, 0.0D, java.util.Map.of(), DEFAULT_LUCK, 0.0D, PotionExtra.DEFAULT);
 
 		static final Codec<Combat> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.DOUBLE.optionalFieldOf("normal_attack_damage", DEFAULT_NORMAL_ATTACK_DAMAGE)
@@ -128,7 +145,9 @@ public final class PlayerStats {
 						.forGetter(Combat::comboBonus),
 				Codec.DOUBLE.optionalFieldOf("luck", DEFAULT_LUCK).forGetter(Combat::luck),
 				// 2026-10-21 智慧一阶段：MP 吸收（与 HP 偷取同一口径，每点 = 0.1%）
-				Codec.DOUBLE.optionalFieldOf("mp_absorb", 0.0D).forGetter(Combat::mpAbsorb)
+				Codec.DOUBLE.optionalFieldOf("mp_absorb", 0.0D).forGetter(Combat::mpAbsorb),
+				// 2026-11-09：最终 HP% 与所有伤害放大（药水新增）
+				PotionExtra.CODEC.optionalFieldOf("potion_extra", PotionExtra.DEFAULT).forGetter(Combat::potionExtra)
 		).apply(instance, Combat::new));
 	}
 
@@ -170,7 +189,8 @@ public final class PlayerStats {
 							values.ignoreDefense, values.moveSpeed, values.dodge,
 							values.negotiation, values.leafGainPercent, values.xpDropPercent,
 							values.potionFire, values.potionIce, values.potionLightning,
-							java.util.Map.copyOf(values.comboBonus), values.luck, values.mpAbsorb));
+							java.util.Map.copyOf(values.comboBonus), values.luck, values.mpAbsorb,
+							new PotionExtra(values.potionMaxHpPercent, values.potionAllDamagePercent)));
 		}
 
 		/** 读档：把存档里的数值填进一份新的 {@link Values}。 */
@@ -186,6 +206,8 @@ public final class PlayerStats {
 			values.potionFire = this.combat.potionFire;
 			values.potionIce = this.combat.potionIce;
 			values.potionLightning = this.combat.potionLightning;
+			values.potionMaxHpPercent = this.combat.potionExtra.maxHpPercent();
+			values.potionAllDamagePercent = this.combat.potionExtra.allDamagePercent();
 			values.comboBonus.putAll(this.combat.comboBonus);
 			values.luck = this.combat.luck;
 			values.mpAbsorb = this.combat.mpAbsorb;
@@ -292,6 +314,34 @@ public final class PlayerStats {
 		return ArtifactEffects.maxHpBonus(player) + com.sephiria.talent.Talents.maxHpFlat(player);
 	}
 
+	/** 药水给的最终最大生命值百分比（5 = +5%）：StatAttributes 用 ADD_MULTIPLIED_TOTAL 挂上去。 */
+	public static double maxHpPercentTotal(ServerPlayer player) {
+		return of(player).potionMaxHpPercent;
+	}
+
+	/** 药水永久 +最终最大生命值百分比（传 5 就是 +5%）。 */
+	public static void addPotionMaxHpPercent(ServerPlayer player, double percent) {
+		of(player).potionMaxHpPercent += percent;
+		sync(player);
+	}
+
+	/** 药水给的「所有伤害放大」百分比（4 = +4%）。 */
+	public static double allDamagePercentTotal(ServerPlayer player) {
+		return of(player).potionAllDamagePercent;
+	}
+
+	/** 所有伤害的倍率（1.0 = 不加成）；由伤害入口统一乘上，含真实伤害与减益。 */
+	public static float allDamageMultiplier(ServerPlayer player) {
+		double percent = allDamagePercentTotal(player) + ArtifactEffects.wingsDamageAmpPercent(player);
+		return 1.0F + (float) (percent / 100.0D);
+	}
+
+	/** 药水永久 +所有伤害放大百分比（传 4 就是 +4%）。 */
+	public static void addPotionAllDamagePercent(ServerPlayer player, double percent) {
+		of(player).potionAllDamagePercent += percent;
+		sync(player);
+	}
+
 	/** 面板上那些实际值的指纹（神器一变它就会变）。 */
 	private static String snapshot(ServerPlayer player) {
 		return meleeRangeTotal(player) + "/" + attackSpeedTotal(player) + "/" + weaponDamageTotal(player)
@@ -333,6 +383,10 @@ public final class PlayerStats {
 		public double potionFire = 0.0D;
 		public double potionIce = 0.0D;
 		public double potionLightning = 0.0D;
+		/** 药水给的最终最大生命值百分比（5 = +5%），见 {@link #maxHpPercentTotal}。 */
+		public double potionMaxHpPercent = 0.0D;
+		/** 药水给的「所有伤害放大」百分比（4 = +4%），见 {@link #allDamageMultiplier}。 */
+		public double potionAllDamagePercent = 0.0D;
 		/** 幸运值（点）：见 {@link #LUCK_SCALE}，影响稀有及以上物品的掉落概率。 */
 		public double luck = DEFAULT_LUCK;
 		/** MP 吸收（点）：每点 = 造成伤害的 0.1% 回蓝，见 {@link #mpAbsorbTotal}。 */
@@ -429,6 +483,7 @@ public final class PlayerStats {
 	 */
 	public static double critChanceTotal(ServerPlayer player) {
 		return of(player).critChance + ArtifactEffects.critChanceBonus(player)
+				+ ArtifactEffects.blackScaleCritChance(player)
 				+ ArtifactEffects.comboCritChancePercent(player)
 				+ com.sephiria.talent.Talents.critChancePercent(player)
 				+ TimedAttributes.statBonusOf(player, com.sephiria.artifact.skill.KeenEyeSkill.CRIT_BONUS_ID);
@@ -478,6 +533,12 @@ public final class PlayerStats {
 	public static double dodgeTotal(ServerPlayer player) {
 		return of(player).dodge + ArtifactEffects.dodgeBonus(player) + ArtifactEffects.comboDodgeBonus(player)
 				+ com.sephiria.talent.Talents.dodgePoints(player);
+	}
+
+	/** 永久 +闪避点数（药水 / 生存的随机属性用）。 */
+	public static void addDodge(ServerPlayer player, double amount) {
+		of(player).dodge += amount;
+		sync(player);
 	}
 
 	/**
@@ -600,7 +661,8 @@ public final class PlayerStats {
 	 * 一层独立减伤结算，吃愤怒三阶段的防御穿透（见 {@code DamageReductionMixin}）。
 	 */
 	public static double defenseTotal(ServerPlayer player) {
-		return of(player).defense + com.sephiria.talent.Talents.defensePoints(player);
+		return of(player).defense + ArtifactEffects.defenseBonus(player)
+				+ com.sephiria.talent.Talents.defensePoints(player);
 	}
 
 	/**
@@ -657,6 +719,32 @@ public final class PlayerStats {
 		}
 
 		sync(player);
+	}
+
+	/**
+	 * 药水永久加「最高元素伤害」：比较四项强度的当前总值，只给最高的那一项。
+	 *
+	 * <p>并列时随机挑一项（用户口径：「并列时仅随机应用于 1 种」）。加成写进对应那一项的
+	 * 药水分段，所以面板上能看出是物理 / 火 / 冰 / 电哪一项涨了。
+	 */
+	public static void addPotionHighestElement(ServerPlayer player, double amount) {
+		double best = Double.NEGATIVE_INFINITY;
+		java.util.List<Element> tied = new java.util.ArrayList<>(4);
+
+		for (Element element : Element.values()) {
+			double total = elementTotal(player, element);
+
+			if (total > best + 1.0E-9D) {
+				best = total;
+				tied.clear();
+				tied.add(element);
+			} else if (Math.abs(total - best) <= 1.0E-9D) {
+				tied.add(element);
+			}
+		}
+
+		Element picked = tied.get(tied.size() == 1 ? 0 : player.getRandom().nextInt(tied.size()));
+		addPotionElement(player, picked, amount);
 	}
 
 	/** 药水「索莱拉的偶然」给的连击加成（连击 → +几级）。 */
@@ -798,6 +886,11 @@ public final class PlayerStats {
 	public static double rangeMultiplier(ServerPlayer player) {
 		return of(player).meleeRange * (1.0D + ArtifactEffects.meleeRangePercent(player) / 100.0D)
 				/ DEFAULT_MELEE_RANGE;
+	}
+
+	/** 武器技能范围倍率：1.0 = 不额外放大；只作用于特殊攻击，不影响普攻。 */
+	public static double skillRangeMultiplier(ServerPlayer player) {
+		return 1.0D + ArtifactEffects.specialAttackRangePercent(player) / 100.0D;
 	}
 
 	/** 攻击速度倍率：1.0 = 默认值 100%。 */
@@ -998,6 +1091,9 @@ public final class PlayerStats {
 				negotiationTotal(player), shopDiscountPercent(player),
 				leafGainPercentTotal(player), xpDropPercentTotal(player), maxMp, luckTotal(player),
 				defenseTotal(player), mpAbsorbTotal(player)));
+		// 黑鳞片的提示框要显示「当前持有石板数量」；这个数量也会随刻印 / 背包变化，
+		// 跟属性一起推，客户端不用自己维护一份背包镜像。
+		ServerPlayNetworking.send(player, new SlateCountPayload(ArtifactEffects.slateCount(player)));
 	}
 
 	/** 进服时推一次，面板才有初始值（顺带把读出来的那份写回附件）。 */

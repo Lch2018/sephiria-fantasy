@@ -81,6 +81,16 @@ import com.sephiria.artifact.ScalesOfOppositionItem;
 import com.sephiria.artifact.EternalWinterItem;
 import com.sephiria.artifact.CryoGuillotineItem;
 import com.sephiria.artifact.FlickeringEyeItem;
+import com.sephiria.artifact.BrokenSapphireItem;
+import com.sephiria.artifact.SharpshooterCrankItem;
+import com.sephiria.artifact.SturdyReloadCrateItem;
+import com.sephiria.artifact.MastersSwordGuardItem;
+import com.sephiria.artifact.RainbowFeatherItem;
+import com.sephiria.artifact.AbsoluteRingItem;
+import com.sephiria.artifact.WingsItem;
+import com.sephiria.artifact.BeirutsScytheItem;
+import com.sephiria.artifact.BartsMonocleItem;
+import com.sephiria.artifact.BlackScaleItem;
 import com.sephiria.artifact.ExorcismScabbardItem;
 import com.sephiria.artifact.BlizzardHammerItem;
 import com.sephiria.artifact.MagicConchItem;
@@ -834,6 +844,56 @@ public final class ModItems {
 			p -> new FlickeringEyeItem(p),
 			new Item.Properties().stacksTo(1));
 
+	/** 破碎的蓝宝石（影子，稀有）：【唯一】闪避 / 防御 +2/4/6，每 16/14/12 秒获得一层必闪帷幕。 */
+	public static final Item BROKEN_SAPPHIRE = register(key("broken_sapphire"),
+			p -> new BrokenSapphireItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 神射手的曲柄（坚固，传说）：【唯一】弩重装速度与弩伤害提升，装填后 10 秒再强化。 */
+	public static final Item SHARPSHOOTER_CRANK = register(key("sharpshooter_crank"),
+			p -> new SharpshooterCrankItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 装填用木箱（坚固，稀有）：【唯一】最大弹匣数量 +0/1/1/2。 */
+	public static final Item STURDY_RELOAD_CRATE = register(key("sturdy_reload_crate"),
+			p -> new SturdyReloadCrateItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 名匠的刀格（坚固，传说）：【唯一】武器伤害 +5/10/15%，刀切换无敌时间 +40/70/120%。 */
+	public static final Item MASTERS_SWORD_GUARD = register(key("masters_sword_guard"),
+			p -> new MastersSwordGuardItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 彩虹羽毛（风之歌，传说）：【唯一】匕首额外专注、特殊攻击伤害与冲刺恢复。 */
+	public static final Item RAINBOW_FEATHER = register(key("rainbow_feather"),
+			p -> new RainbowFeatherItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 绝对戒指（坚固，传说）：【唯一】特殊攻击范围 +30/45/60%、特殊攻击伤害 +10/20/45%。 */
+	public static final Item ABSOLUTE_RING = register(key("absolute_ring"),
+			p -> new AbsoluteRingItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 翅膀（风之歌，传说）：【唯一】攻击速度 +3..18%，额外攻速按档位换所有伤害放大。 */
+	public static final Item WINGS = register(key("wings"),
+			p -> new WingsItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 贝鲁特之镰（精密，传说）：【唯一】暴击几率 +2.5..10%，暴击溢出转处决、处决暴伤翻倍。 */
+	public static final Item BEIRUTS_SCYTHE = register(key("beiruts_scythe"),
+			p -> new BeirutsScytheItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 巴尔特的工作用单片眼镜（精密，传说）：【唯一】暴击几率 +10..45%，近身暴伤 -30%。 */
+	public static final Item BARTS_MONOCLE = register(key("barts_monocle"),
+			p -> new BartsMonocleItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 黑鳞片（精密，传说）：【唯一】每个石板物品给 1/1.5/2/2.5% 暴击几率。 */
+	public static final Item BLACK_SCALE = register(key("black_scale"),
+			p -> new BlackScaleItem(p),
+			new Item.Properties().stacksTo(1));
+
 	/**
 	 * 永恒蚀（太阳剑 + 冰霜武具，羁绊）：【唯一】看它待在背包哪半边——左半边把冰霜武具整套改成
 	 * 火焰属性、右半边把太阳剑改成冰属性；两套的伤害各 +6/13/21/30%；冰霜武具的攻击也触发太阳剑。
@@ -1040,10 +1100,49 @@ public final class ModItems {
 	/** 高泽之晨（蓝）：电元素强度 +2，永久。 */
 	public static final Item GAOZE_MORNING = registerPotion("gaoze_morning", Potions.GAOZE_MORNING,
 			Potions.GAOZE_MORNING_RARITY);
+	/** 马迪朗的平静（蓝）：防御力 +3，永久。 */
+	public static final Item MADIRAN_CALM = registerPotion("madiran_calm", Potions.MADIRAN_CALM,
+			Potions.MADIRAN_CALM_RARITY);
+	/** 格里塞特的浅淡（蓝）：闪避 +3，永久。 */
+	public static final Item GRISETTE_PALE = registerPotion("grisette_pale", Potions.GRISETTE_PALE,
+			Potions.GRISETTE_PALE_RARITY);
+	/** 贵兹的合奏（蓝）：最高元素伤害 +2，永久。 */
+	public static final Item GEWURZ_ENSEMBLE = registerPotion("gewurz_ensemble", Potions.GEWURZ_ENSEMBLE,
+			Potions.GEWURZ_ENSEMBLE_RARITY);
+	/** 内比奥罗的执着（黄）：物理伤害 +4，永久。 */
+	public static final Item NEBBIOLO_PERSISTENCE = registerPotion("nebbiolo_persistence",
+			Potions.NEBBIOLO_PERSISTENCE, Potions.NEBBIOLO_PERSISTENCE_RARITY);
+	/** 乌尼·布兰的雾霭（黄）：冰属性伤害 +4，永久。 */
+	public static final Item UGNI_BLANC_MIST = registerPotion("ugni_blanc_mist", Potions.UGNI_BLANC_MIST,
+			Potions.UGNI_BLANC_MIST_RARITY);
+	/** Tempranillo 的热情（黄）：火焰属性伤害 +4，永久。 */
+	public static final Item TEMPRANILLO_PASSION = registerPotion("tempranillo_passion",
+			Potions.TEMPRANILLO_PASSION, Potions.TEMPRANILLO_PASSION_RARITY);
+	/** 马尔贝克的浓郁（黄）：闪电属性伤害 +4，永久。 */
+	public static final Item MALBEC_RICHNESS = registerPotion("malbec_richness", Potions.MALBEC_RICHNESS,
+			Potions.MALBEC_RICHNESS_RARITY);
+	/** 蘑菇汤（黄）：最高元素伤害 +6，永久；并列时随机只加一种。 */
+	public static final Item MUSHROOM_SOUP = registerPotion("mushroom_soup", Potions.MUSHROOM_SOUP,
+			Potions.MUSHROOM_SOUP_RARITY);
+	/** 马德拉的坚韧（黄）：最终 HP +5%，永久。 */
+	public static final Item MADEIRA_FORTITUDE = registerPotion("madeira_fortitude", Potions.MADEIRA_FORTITUDE,
+			Potions.MADEIRA_FORTITUDE_RARITY);
+	/** 萨格兰蒂诺的忍耐（黄）：防御力 +5，永久。 */
+	public static final Item SAGRANTINO_PATIENCE = registerPotion("sagrantino_patience",
+			Potions.SAGRANTINO_PATIENCE, Potions.SAGRANTINO_PATIENCE_RARITY);
+	/** 普萨的留白（黄）：闪避 +5，永久。 */
+	public static final Item POULSARD_WHITESPACE = registerPotion("poulsard_whitespace",
+			Potions.POULSARD_WHITESPACE, Potions.POULSARD_WHITESPACE_RARITY);
+	/** 黎明之露（红）：所有伤害放大 +4%，永久。 */
+	public static final Item DAWN_DEW = registerPotion("dawn_dew", Potions.DAWN_DEW,
+			Potions.DAWN_DEW_RARITY);
 
 	/** 药水池（商店的两个药水格按品质加权从这里抽）。 */
 	public static final List<Item> POTIONS = List.of(REGENERATION_POTION, APPLE_JUICE, TRAPPIST_SACRED,
-			BIG_DICE_POTION, VAMPIRE_LORD_OATH, SOLERA_CHANCE, MELTZEN_SMOKE, AVANTINUS_CRYSTAL, GAOZE_MORNING);
+			BIG_DICE_POTION, VAMPIRE_LORD_OATH, SOLERA_CHANCE, MELTZEN_SMOKE, AVANTINUS_CRYSTAL, GAOZE_MORNING,
+			MADIRAN_CALM, GRISETTE_PALE, GEWURZ_ENSEMBLE, NEBBIOLO_PERSISTENCE, UGNI_BLANC_MIST,
+			TEMPRANILLO_PASSION, MALBEC_RICHNESS, MUSHROOM_SOUP, MADEIRA_FORTITUDE, SAGRANTINO_PATIENCE,
+			POULSARD_WHITESPACE, DAWN_DEW);
 
 	private ModItems() {
 	}

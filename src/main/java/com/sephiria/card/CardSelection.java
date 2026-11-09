@@ -37,7 +37,7 @@ import java.util.UUID;
  *   <li>只出神器，不出石板，也不出羁绊 / 永恒；</li>
  *   <li>每张卡各有一个刷新按钮，每次选卡每张卡能刷一次；刷新后仍是神器，
  *       有 5% 概率品质升一档（红不再升）；</li>
- *   <li>每 2 个游戏日（48000 刻）获得 1 次选卡机会，首次创建为 1 次；</li>
+ *   <li>每 1 个游戏日（24000 刻）获得 1 次选卡机会，首次创建为 1 次；</li>
  *   <li>不选就关掉不扣次数，下次打开重新发三张；选一张就扣次数并把那张神器给玩家。</li>
  * </ul>
  *
@@ -57,12 +57,12 @@ public final class CardSelection {
 	/**
 	 * 最多攒几次机会。
 	 *
-	 * <p>用户要求「按经过的完整 2 日周期给，但要有个合理上限」：这里是 10 次，
-	 * 相当于最多攒 20 个游戏日；再多也不会继续累加。
+	 * <p>用户要求「按经过的完整 1 日周期给，但要有个合理上限」：这里是 10 次，
+	 * 相当于最多攒 10 个游戏日；再多也不会继续累加。
 	 */
 	public static final int MAX_CHANCES = 10;
-	/** 每 2 个游戏日加一次机会：2 × 24000 刻。 */
-	public static final long AWARD_PERIOD_TICKS = 2L * 24000L;
+	/** 每 1 个游戏日加一次机会：24000 刻。 */
+	public static final long AWARD_PERIOD_TICKS = 1L * 24000L;
 	/**
 	 * 一次结算最多补几次。
 	 *
@@ -176,7 +176,7 @@ public final class CardSelection {
 		}
 	}
 
-	/** 每 2 个游戏日补一次机会；一次最多补 {@link #MAX_AWARDS_PER_CHECK} 次。 */
+	/** 每 1 个游戏日补一次机会；一次最多补 {@link #MAX_AWARDS_PER_CHECK} 次。 */
 	private static void awardIfDue(ServerPlayer player) {
 		long now = player.level().getGameTime();
 		Saved saved = player.getAttached(SAVED);
@@ -299,7 +299,10 @@ public final class CardSelection {
 	}
 
 	/**
-	 * 选择某一张卡：给玩家那件神器、扣一次机会、关界面。
+	 * 选择某一张卡：给玩家那件神器、扣一次机会，然后<b>留在选卡界面</b>。
+	 *
+	 * <p>还有机会就立刻掷下一组三张（选掉的那组作废）；没有机会也发一张空卡面的
+	 * {@code open = true}，让界面停在「选卡次数 0」而不是退回游戏（用户 2026-11-09 口径）。
 	 *
 	 * <p>所有条件都在服务端重新判一遍（有没有这次会话、下标合不合法、还有没有机会），
 	 * 客户端发来的只是「点了哪一张」。
@@ -330,7 +333,15 @@ public final class CardSelection {
 		PlayerItems.give(player, chosen.copy());
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.7F, 1.4F);
-		send(player, null, false);
+
+		// 选完不关界面：还有机会就掷下一组，没有就停在空卡面等玩家自己关
+		if (chances(player) > 0) {
+			Session next = roll(player.getRandom());
+			saveSession(player, next);
+			send(player, next, true);
+		} else {
+			send(player, null, true);
+		}
 	}
 
 	private static int refreshLimit(ServerPlayer player) {

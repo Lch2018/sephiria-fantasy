@@ -139,7 +139,8 @@ public class SephiriaClient implements ClientModInitializer {
 
 		// 许愿池抽卡 / 神铸的结果：交给客户端镜像，界面取走播动画
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.WishPoolResultPayload.TYPE,
-				(payload, context) -> com.sephiria.client.wishpool.ClientWishPool.accept(payload.items()));
+				(payload, context) -> com.sephiria.client.wishpool.ClientWishPool.accept(
+						payload.items(), payload.energyGained()));
 
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
 			if (stack.getItem() instanceof SephiriaWeapon detail) {
@@ -180,9 +181,10 @@ public class SephiriaClient implements ClientModInitializer {
 			}
 
 			if (stack.getItem() instanceof SephiriaCrossbowItem) {
-				lines.add(Component.translatable("tooltip.sephiria_fantasy.magazine",
+				lines.add(Component.translatable("tooltip.sephiria_fantasy.magazine_reserve",
 						Component.literal(format(SkillClientData.current(SephiriaCrossbowItem.STORAGE))),
-						Component.literal(format(SkillClientData.max(SephiriaCrossbowItem.STORAGE)))));
+						Component.literal(format(SkillClientData.max(SephiriaCrossbowItem.STORAGE))),
+						Component.literal(format(SkillClientData.current(SephiriaCrossbowItem.MAGAZINES)))));
 			}
 		});
 
@@ -193,6 +195,9 @@ public class SephiriaClient implements ClientModInitializer {
 				(payload, context) -> InvulnClientData.accept(payload));
 		ClientPlayNetworking.registerGlobalReceiver(StatsSyncPayload.TYPE,
 				(payload, context) -> ClientStats.accept(payload));
+		// 黑鳞片的提示框要显示当前石板数量
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.SlateCountPayload.TYPE,
+				(payload, context) -> ClientSlateCount.accept(payload));
 		// 乌云容量：HUD 的乌云 UI 读它（上限 > 0 才显示）
 		ClientPlayNetworking.registerGlobalReceiver(CloudSyncPayload.TYPE,
 				(payload, context) -> CloudClientData.accept(payload));
@@ -248,6 +253,7 @@ public class SephiriaClient implements ClientModInitializer {
 			ClientDebuffs.reset();
 			SunSwordClientData.reset();
 			FrostClientData.reset();
+			ClientSlateCount.reset();
 			ClientTalents.reset();
 			// 选卡的三张卡也不跨世界：新服由服务端重新掷
 			ClientCardSelection.clear();

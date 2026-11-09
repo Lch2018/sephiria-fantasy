@@ -162,8 +162,9 @@ try {
     # 项目资料（正文 + 摘要 + 分类 + 环境 + 许可证 + 链接）：新建时用一次，之后每次发布再刷新一遍
     $projectPayload = @{
         title         = '赛菲莉娅幻想 (Sephiria Fantasy)'
-        # 摘要中英双语（Modrinth 上限 256 字符，这段 250）
-        description   = '赛菲莉娅幻想：把《SEPHIRIA》的武器系统带进 Minecraft——六把武器、十一套连击、66 件神器、减益与神器技能。大量使用 AI 生成代码，仅供学习交流，禁止商业行为。 Sephiria Fantasy: unofficial SEPHIRIA fan mod for Minecraft — 6 weapons, 11 combos, 66 artifacts, debuffs. Heavy use of AI-generated code; non-commercial.'
+        # 摘要中英双语（Modrinth 上限 256 字符，这段 252）。只在新建项目时使用：
+        # 已有项目的摘要由用户自己在网页维护，发布时不会被 PATCH 覆盖（见下面的循环）。
+        description   = '赛菲莉娅幻想：把《SEPHIRIA》的构筑带进 Minecraft——六把武器、十二套连击、93 件神器、石板、天赋、商店与许愿池。大量使用 AI 生成代码，仅供学习交流，禁止商业行为。 Sephiria Fantasy: unofficial SEPHIRIA fan mod — 6 weapons, 12 combos, 93 artifacts, slates, talents, shop and Wishing Pool. AI-generated code; non-commercial.'
         body          = (Get-Content -Path $description -Raw -Encoding UTF8)
         # 分类上限就是 3 个：给 4 个 API 会回 `field categories failed validation with error: length`
         categories    = @('adventure', 'equipment', 'game-mechanics')
@@ -207,10 +208,12 @@ try {
         # PATCH 里**不带 categories**：Modrinth 重新插入分类会撞它自己的唯一键
         # （`mods_categories_pkey`，2026-10-15 起每次发布都撞），整条 PATCH 会因此回 500、
         # 标题 / 摘要 / 正文 / 链接一个都刷不上去。分类在建项目时就设好了，之后没必要再动。
+        # 也**不带 description**：短描述由用户自己在网页维护（2026-11-09 口径），
+        # 发布脚本只同步正文，避免把用户在线上改好的摘要覆盖回脚本里的旧文案。
         $patchPayload = @{}
 
         foreach ($key in $projectPayload.Keys) {
-            if ($key -ne 'categories') {
+            if ($key -ne 'categories' -and $key -ne 'description') {
                 $patchPayload[$key] = $projectPayload[$key]
             }
         }

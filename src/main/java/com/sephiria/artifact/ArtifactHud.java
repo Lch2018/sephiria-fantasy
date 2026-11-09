@@ -95,6 +95,9 @@ public final class ArtifactHud {
 		addCooldown(entries, player, ModItems.CRYO_GUILLOTINE,
 				CryoGuillotineItem.cooldownLeft(player), CryoGuillotineItem.cooldownTicks(player));
 
+		// 破碎的蓝宝石：帷幕充能（0..1000；已有帷幕 = 1000）
+		addCharge(entries, player, ModItems.BROKEN_SAPPHIRE, BrokenSapphireItem.chargeProgress(player));
+
 		// 闪烁的眼睛是充能神器：0..1000 千分比
 		double charge = FlickeringEyeItem.charge(player);
 

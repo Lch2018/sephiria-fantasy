@@ -617,9 +617,10 @@ public final class SephiriaHud implements HudElement {
 	/** 武器的特有属性行；没有特有属性的武器返回 null（先留空）。 */
 	private static Component propertyLine(ItemStack stack) {
 		if (stack.getItem() instanceof SephiriaCrossbowItem) {
-			return Component.translatable("ui.sephiria_fantasy.magazine",
+			return Component.translatable("ui.sephiria_fantasy.magazine_reserve",
 					format(SkillClientData.current(SephiriaCrossbowItem.STORAGE)),
-					format(SkillClientData.max(SephiriaCrossbowItem.STORAGE)));
+					format(SkillClientData.max(SephiriaCrossbowItem.STORAGE)),
+					format(SkillClientData.current(SephiriaCrossbowItem.MAGAZINES)));
 		}
 
 		if (stack.getItem() instanceof SephiriaGreatswordItem) {

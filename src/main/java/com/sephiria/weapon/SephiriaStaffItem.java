@@ -350,7 +350,8 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 
 		/** 以自身为原点的范围伤害（结算时取自身位置，所以打的是落点）。 */
 		static Pending aura(ServerPlayer player, int delay, float damage, double range, double height) {
-			return new Pending(player, player.level().getGameTime() + delay, damage, range, height, false, 1.0D);
+			double mul = PlayerStats.skillRangeMultiplier(player);
+			return new Pending(player, player.level().getGameTime() + delay, damage, range * mul, height * mul, false, 1.0D);
 		}
 
 		/**

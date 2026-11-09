@@ -1,9 +1,14 @@
 package com.sephiria.artifact;
 
 import com.sephiria.backpack.ArtifactBackpack;
+import com.sephiria.registry.ModItems;
+import com.sephiria.slate.FusedSlateItem;
+import com.sephiria.slate.SlateItem;
 import com.sephiria.stats.PlayerStats;
+import com.sephiria.talent.SlateImprint;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -65,7 +70,7 @@ public final class ArtifactEffects {
 		return total;
 	}
 
-	/** 背包里所有生效神器的攻击速度加成（百分点）。 */
+	/** 神器给的攻击速度加成（百分点）。 */
 	public static double attackSpeedBonus(ServerPlayer player) {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		double total = 0.0D;
@@ -92,9 +97,67 @@ public final class ArtifactEffects {
 		return total;
 	}
 
+	/**
+	 * 翅膀给的全伤害放大（%）：按「额外攻击速度」超过 100% 的部分分段，每段 +1%。
+	 *
+	 * <p>额外攻速取面板总值（含翅膀自己、药水、天赋与连击），段长随翅膀等级
+	 * 25/20/15/9/6/5；不足一段的零头不计。
+	 */
+	public static int wingsDamageAmpPercent(ServerPlayer player) {
+		int level = highestLevelOf(player, ModItems.WINGS);
+
+		if (level < 0) {
+			return 0;
+		}
+
+		double extra = Math.max(0.0D, PlayerStats.attackSpeedTotal(player) - PlayerStats.DEFAULT_ATTACK_SPEED);
+		double step = WingsItem.damageStep(level);
+		return step <= 0.0D ? 0 : (int) Math.floor(extra / step);
+	}
+
 	/** 神器给的「特殊攻击伤害」加成总和（%）。 */
 	public static double specialAttackBonus(ServerPlayer player) {
 		return sumAffix(player, (artifact, level) -> artifact.specialAttackBonus(level));
+	}
+
+	/** 神器给的「特殊攻击范围」加成总和（%）：只作用于武器技能。 */
+	public static double specialAttackRangePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::specialAttackRangePercentBonus);
+	}
+
+	/** 神器给的「武器伤害」加成总和（%）：普攻与武器技能都吃。 */
+	public static double weaponDamagePercentBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::weaponDamagePercentBonus);
+	}
+
+	/** 神器给的弩重装速度加成总和（%）。 */
+	public static double crossbowReloadSpeedPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::crossbowReloadSpeedPercent);
+	}
+
+	/** 神器给的弩攻击伤害加成总和（%）。 */
+	public static double crossbowDamagePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::crossbowDamagePercent);
+	}
+
+	/** 神器给的「装填完成后 10 秒弩伤害」加成（%）。 */
+	public static double crossbowReloadBuffPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::crossbowReloadBuffPercent);
+	}
+
+	/** 神器给的最大弹匣数量加成（个，基础 1）。 */
+	public static int maxMagazinesBonus(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::maxMagazinesBonus);
+	}
+
+	/** 神器给的刀切换无敌时间加成（%）。 */
+	public static double katanaSwitchInvulnPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::katanaSwitchInvulnPercent);
+	}
+
+	/** 神器给的匕首额外专注获取（层）。 */
+	public static int daggerFocusBonus(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::daggerFocusBonus);
 	}
 
 	/** 神器给的「近战攻击范围」加成总和（%）。 */
@@ -132,6 +195,75 @@ public final class ArtifactEffects {
 		return sumAffix(player, SephiriaArtifact::critDamageBonus);
 	}
 
+	/**
+	 * 巴尔特的工作用单片眼镜：目标在 3 格以内时的暴击伤害扣减（百分点）。
+	 *
+	 * <p>按<b>攻击瞬间</b>双方的距离判断，所以同一件神器打远处目标不扣。
+	 */
+	public static double closeRangeCritDamagePenalty(ServerPlayer player, LivingEntity target) {
+		double range = BartsMonocleItem.CLOSE_RANGE;
+
+		if (player.distanceToSqr(target) > range * range) {
+			return 0.0D;
+		}
+
+		return sumAffix(player, SephiriaArtifact::closeRangeCritDamagePenalty);
+	}
+
+	/**
+	 * 贝鲁特之镰：暴击几率超过 100% 时，溢出部分作为处决触发几率（%）。
+	 *
+	 * <p>没有镰刀时恒为 0；处决本身在 {@code SephiriaDamage#applyCrit} 里结算。
+	 */
+	public static double executionChance(ServerPlayer player, double critChance) {
+		if (critChance <= 100.0D) {
+			return 0.0D;
+		}
+
+		boolean hasScythe = sumAffix(player,
+				(artifact, level) -> artifact.executionEnabled(level) ? 1.0D : 0.0D) > 0.0D;
+		return hasScythe ? critChance - 100.0D : 0.0D;
+	}
+
+	/**
+	 * 黑鳞片：每持有 1 个石板给的暴击几率，乘当前石板数量。
+	 *
+	 * <p>没有黑鳞片时直接返回 0，不扫描背包——这个值在每次伤害结算都会被问到。
+	 */
+	public static double blackScaleCritChance(ServerPlayer player) {
+		double perSlate = sumAffix(player, SephiriaArtifact::critChancePerSlate);
+		return perSlate <= 0.0D ? 0.0D : perSlate * slateCount(player);
+	}
+
+	/**
+	 * 当前持有的「石板物品」数量：赛菲莉娅背包里的 + 已刻印保留的，合成石板算 2 块。
+	 *
+	 * <p>原版背包里的石板不算（与神器只认赛菲莉娅背包同一条口径）。
+	 */
+	public static int slateCount(ServerPlayer player) {
+		int count = 0;
+		ArtifactBackpack backpack = ArtifactBackpack.of(player);
+
+		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
+			count += slateWeight(backpack.getItem(slot));
+		}
+
+		for (SlateImprint.Entry entry : SlateImprint.entries(player)) {
+			count += slateWeight(entry.stack());
+		}
+
+		return count;
+	}
+
+	/** 一张石板算几块：合成石板（由两块合成）算 2，其余石板 1。 */
+	private static int slateWeight(ItemStack stack) {
+		if (stack.getItem() instanceof FusedSlateItem) {
+			return 2;
+		}
+
+		return stack.getItem() instanceof SlateItem ? 1 : 0;
+	}
+
 	/** 神器给的「无视防御伤害」总和（点）。 */
 	public static double ignoreDefenseBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::ignoreDefenseBonus);
@@ -150,6 +282,11 @@ public final class ArtifactEffects {
 	/** 神器给的闪避总和（点）。 */
 	public static double dodgeBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::dodgeBonus);
+	}
+
+	/** 神器给的防御力总和（点）。 */
+	public static double defenseBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::defenseBonus);
 	}
 
 	/** 闪避触发时恢复的冲刺次数（弹力带）。 */
@@ -231,9 +368,9 @@ public final class ArtifactEffects {
 		return total;
 	}
 
-	/** 连击给的武器伤害加成总和（%）。 */
+	/** 连击给的武器伤害加成总和（%）；同时加上神器自己的「武器伤害」词条。 */
 	public static double weaponDamagePercent(ServerPlayer player) {
-		double total = 0.0D;
+		double total = sumAffix(player, SephiriaArtifact::weaponDamagePercentBonus);
 
 		for (Map.Entry<ArtifactCombo, Integer> entry : comboLevels(player).entrySet()) {
 			total += entry.getKey().weaponDamagePercent(entry.getValue());
@@ -430,6 +567,11 @@ public final class ArtifactEffects {
 	/** 有没有「海市蜃楼」充能机制（闪烁的眼睛）。 */
 	public static boolean flickeringEye(ServerPlayer player) {
 		return sumAffix(player, (artifact, level) -> artifact.flickeringEye(level) ? 1.0D : 0.0D) > 0.0D;
+	}
+
+	/** 闪烁的眼睛的混沌伤害倍率（%）：按【唯一】取生效等级。 */
+	public static double flickeringEyeDamagePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::flickeringEyeDamagePercent);
 	}
 
 	/** 神器给的「火元素强度」加成总和（点）：索利斯那两枚徽章 + 对立之秤按左右半边给的差额。 */

@@ -80,6 +80,41 @@ public interface SephiriaArtifact extends Quality {
 		return 0.0D;
 	}
 
+	/** 该等级给的特殊攻击范围加成（%）：只放大武器技能的范围，不影响普攻。 */
+	default double specialAttackRangePercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的武器伤害加成（%）：普攻与武器技能都吃。 */
+	default double weaponDamagePercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的弩重装速度加成（%）：实际装填刻数 = 基础刻数 ÷ (1 + 加成)。 */
+	default double crossbowReloadSpeedPercent(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的弩攻击伤害加成（%）：只影响弩矢。 */
+	default double crossbowDamagePercent(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级「装填完成后的 10 秒弩伤害」加成（%）。 */
+	default double crossbowReloadBuffPercent(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的最大弹匣数量加成（个）：基础 1 个弹匣。 */
+	default int maxMagazinesBonus(int level) {
+		return 0;
+	}
+
+	/** 该等级给的刀收刀 / 拔刀无敌时间加成（%）。 */
+	default double katanaSwitchInvulnPercent(int level) {
+		return 0.0D;
+	}
+
 	/** 该等级给的近战攻击范围加成（百分点，100 = 100%）。 */
 	default double meleeRangePercentBonus(int level) {
 		return 0.0D;
@@ -119,6 +154,26 @@ public interface SephiriaArtifact extends Quality {
 		return 0.0D;
 	}
 
+	/** 该等级「敌人距离 3 格以内时暴击伤害降低」的百分点（巴尔特的工作用单片眼镜）。 */
+	default double closeRangeCritDamagePenalty(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级是否把「暴击几率超过 100% 的溢出部分」转成处决几率（贝鲁特之镰）。 */
+	default boolean executionEnabled(int level) {
+		return false;
+	}
+
+	/**
+	 * 该等级每持有 1 个石板物品给的暴击几率（百分点）。
+	 *
+	 * <p>不是直接加暴击——实际加成 = 这个值 × 当前石板数量（黑鳞片）；石板数量的口径见
+	 * {@code ArtifactEffects#slateCount}。
+	 */
+	default double critChancePerSlate(int level) {
+		return 0.0D;
+	}
+
 	/**
 	 * 该等级给的「无视防御伤害」（点）。
 	 *
@@ -141,6 +196,16 @@ public interface SephiriaArtifact extends Quality {
 	/** 该等级给的闪避（点）：按 0.8×(1−e^(−闪避/43.28)) 折算成闪避率。 */
 	default double dodgeBonus(int level) {
 		return 0.0D;
+	}
+
+	/** 该等级给的防御力（点）。 */
+	default double defenseBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级「匕首获取专注时额外获取」的层数（0/1）。 */
+	default int daggerFocusBonus(int level) {
+		return 0;
 	}
 
 	/**
@@ -607,13 +672,16 @@ public interface SephiriaArtifact extends Quality {
 	}
 
 	/**
-	 * 该等级是否提供「海市蜃楼」充能机制（闪烁的眼睛）。
-	 *
-	 * <p>它没有按等级变化的数值，等级只影响合并 / 连击；状态在
-	 * {@code FlickeringEyeItem} 的运行时表里。
+	 * 该等级是否提供「海市蜃楼」充能机制（闪烁的眼睛）；伤害倍率见
+	 * {@link #flickeringEyeDamagePercent(int)}，状态在 {@code FlickeringEyeItem} 的运行时表里。
 	 */
 	default boolean flickeringEye(int level) {
 		return false;
+	}
+
+	/** 闪烁的眼睛的混沌伤害倍率（%）：伤害 = 当前闪避点数 × 它。 */
+	default double flickeringEyeDamagePercent(int level) {
+		return 0.0D;
 	}
 
 	/**

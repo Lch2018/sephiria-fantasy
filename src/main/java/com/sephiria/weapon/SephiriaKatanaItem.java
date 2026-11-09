@@ -312,13 +312,21 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 		// 状态换了、物品上的属性修饰符也换了，立刻重算一次属性换算，不必等定期检查
 		WeaponStats.refresh(player);
 		player.getCooldowns().addCooldown(stack, SWITCH_TICKS);
-		Invulnerability.grant(player, BLOCK_TICKS);
+		// 「名匠的刀格」会按等级延长这一段无敌 / 格挡窗口
+		int blockTicks = switchInvulnTicks(player);
+		Invulnerability.grant(player, blockTicks);
 		// 无敌窗口同时也算是"格挡窗口"：这段时间里挨到攻击会补 50 层剑意
-		SWITCH_GUARD_UNTIL.put(player.getUUID(), player.level().getGameTime() + BLOCK_TICKS);
+		SWITCH_GUARD_UNTIL.put(player.getUUID(), player.level().getGameTime() + blockTicks);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.ARMOR_EQUIP_IRON, SoundSource.PLAYERS, 1.0F, sheathed ? 0.8F : 1.2F);
 		// 客户端要拿实例 id 找自己的动画管理器（老存档里的刀可能还没有这个组件）
 		GeoItem.getOrAssignId(stack, (ServerLevel) player.level());
+	}
+
+	/** 收刀 / 拔刀的无敌刻数：基础 {@value #BLOCK_TICKS}，再乘「名匠的刀格」的加成。 */
+	private static int switchInvulnTicks(ServerPlayer player) {
+		double percent = com.sephiria.artifact.ArtifactEffects.katanaSwitchInvulnPercent(player);
+		return Math.max(1, (int) Math.round(BLOCK_TICKS * (1.0D + percent / 100.0D)));
 	}
 
 	@Override
@@ -589,7 +597,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				return;
 			}
 
-			double mul = PlayerStats.rangeMultiplier(player);
+			double mul = PlayerStats.rangeMultiplier(player) * PlayerStats.skillRangeMultiplier(player);
 			AABB area = player.getBoundingBox().inflate(range * mul, height * mul, range * mul);
 			DamageSource source = level.damageSources().playerAttack(player);
 

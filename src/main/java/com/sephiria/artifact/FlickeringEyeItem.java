@@ -28,15 +28,15 @@ import java.util.UUID;
  * <p>海市蜃楼：每次暴击默认 +1%，至少 +1%；每 0.1 秒没有获得层数，下次暴击的增量 +1%
  * （上限 10%）；反之（0.1 秒内又暴击）增量 -2%（下限 1%）。满 100% 后不再涨，等一次伤害触发。
  *
- * <p>混沌伤害 = 被闪避那一下的<b>税前伤害</b> × 150%（见 {@link #onIncomingDamage}），
- * 视为物理 / 火 / 冰 / 电四属性；这里只额外吃「物理伤害增幅」这一条通用物理加成，
- * 其余元素加成在税前伤害里已经算过了。
+ * <p>混沌伤害 = 当前<b>闪避点数</b> × 150/300/500/900/1500%（0..4 级，见
+ * {@link #onIncomingDamage}），视为物理 / 火 / 冰 / 电四属性。倍率随神器等级走，
+ * 所以它现在可以用神器附魔币一路升到 4 级。
  */
 public class FlickeringEyeItem extends ArtifactItem {
 	/** 海市蜃楼满值。 */
 	private static final double FULL = 100.0D;
-	/** 触发时的混沌伤害倍率（%）：被闪避那一下的税前伤害 × 它。 */
-	private static final double DAMAGE_PERCENT = 150.0D;
+	/** 各等级的混沌伤害倍率（%）：当前闪避点数 × 它。 */
+	private static final double[] DAMAGE_PERCENT_BY_LEVEL = { 150.0D, 300.0D, 500.0D, 900.0D, 1500.0D };
 	/** 外圈半径（格）：混沌伤害与黑色特效。 */
 	private static final double RADIUS = 8.0D;
 	/** 内圈半径（格）：金色特效。 */
@@ -86,7 +86,7 @@ public class FlickeringEyeItem extends ArtifactItem {
 
 	@Override
 	public int maxLevel() {
-		return 0;
+		return DAMAGE_PERCENT_BY_LEVEL.length - 1;
 	}
 
 	@Override
@@ -95,9 +95,15 @@ public class FlickeringEyeItem extends ArtifactItem {
 	}
 
 	@Override
+	public double flickeringEyeDamagePercent(int level) {
+		return valueAt(DAMAGE_PERCENT_BY_LEVEL, level);
+	}
+
+	@Override
 	public java.util.List<Component> affixLines(int level) {
 		Component charge = Component.literal(Numbers.format(FULL)).withColor(COLOUR_BONUS);
-		Component damage = Component.literal(Numbers.format(DAMAGE_PERCENT)).withColor(COLOUR_BONUS);
+		Component damage = Component.literal(Numbers.format(this.flickeringEyeDamagePercent(level)))
+				.withColor(COLOUR_BONUS);
 
 		return java.util.List.of(
 				Component.translatable("artifact.sephiria_fantasy.affix.flickering_eye_charge", charge),
@@ -141,7 +147,7 @@ public class FlickeringEyeItem extends ArtifactItem {
 	/**
 	 * 受到伤害前的检查：海市蜃楼满了就闪避这一次，并释放混沌伤害。
 	 *
-	 * @param amount 这一下在进入护甲 / 减伤之前的值（税前伤害）
+	 * @param amount 这一下在进入护甲 / 减伤之前的值；现在只用来判空，伤害改成按闪避点数结算
 	 * @return true 表示这次伤害已被闪避、调用方应取消原伤害
 	 */
 	public static boolean onIncomingDamage(ServerPlayer player, float amount) {
@@ -165,9 +171,10 @@ public class FlickeringEyeItem extends ArtifactItem {
 			return true;
 		}
 
-		double multiplier = 1.0D + (PlayerStats.physicalAmpPercent(player)
-				+ ArtifactEffects.comboAllElementPercent(player)) / 100.0D;
-		float chaos = (float) (amount * DAMAGE_PERCENT / 100.0D * multiplier);
+		// 新口径：伤害 = 当前闪避点数 × 本等级的倍率（150/300/500/900/1500%）
+		double dodge = PlayerStats.dodgeTotal(player);
+		double percent = ArtifactEffects.flickeringEyeDamagePercent(player);
+		float chaos = (float) (dodge * percent / 100.0D);
 		Vec3 center = player.position();
 
 		for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class,

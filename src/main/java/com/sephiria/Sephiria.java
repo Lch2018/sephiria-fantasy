@@ -50,6 +50,7 @@ import com.sephiria.network.CastArtifactSkillPayload;
 import com.sephiria.difficulty.RootRetreatMenu;
 import com.sephiria.network.RootRetreatClickPayload;
 import com.sephiria.network.WishPoolClickPayload;
+import com.sephiria.network.WishPoolForgePayload;
 import com.sephiria.network.WishPoolResultPayload;
 import com.sephiria.network.OpenArtifactSkillsPayload;
 import com.sephiria.registry.ModCreativeTabs;
@@ -189,6 +190,8 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.frost.FrostArmament.registerTicker();
 		// 永恒的冬日：普通攻击命中时按概率追加物理 + 冰属性伤害
 		com.sephiria.artifact.EternalWinterItem.register();
+		// 破碎的蓝宝石：每 16/14/12 秒获得一层必闪帷幕
+		com.sephiria.artifact.BrokenSapphireItem.register();
 		// 酷寒断头台：每 6 秒召唤冰雷巨剑；触电伤害会缩短它的冷却
 		com.sephiria.artifact.CryoGuillotineItem.registerTicker();
 		// 技能 HUD / 神器 HUD：每 10 刻把冷却与充能推给客户端
@@ -224,6 +227,7 @@ public class Sephiria implements ModInitializer {
 		PayloadTypeRegistry.serverboundPlay().register(UpgradeArtifactPayload.TYPE, UpgradeArtifactPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RootRetreatClickPayload.TYPE, RootRetreatClickPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(WishPoolClickPayload.TYPE, WishPoolClickPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(WishPoolForgePayload.TYPE, WishPoolForgePayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(WishPoolResultPayload.TYPE, WishPoolResultPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(com.sephiria.network.FatigueSyncPayload.TYPE,
 				com.sephiria.network.FatigueSyncPayload.STREAM_CODEC);
@@ -235,6 +239,8 @@ public class Sephiria implements ModInitializer {
 				com.sephiria.network.FrostSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(com.sephiria.network.SlateCountPayload.TYPE,
+				com.sephiria.network.SlateCountPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TalentClickPayload.TYPE, TalentClickPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TalentSyncRequestPayload.TYPE,
 				TalentSyncRequestPayload.STREAM_CODEC);
@@ -386,7 +392,13 @@ public class Sephiria implements ModInitializer {
 					}
 				});
 
-		// 石板刻印：客户端长按进度满后发过来。只带菜单格子编号，其余全部服务端再判一次
+		// 神铸批量购买：一次扣总价、一次把整批结果发回去
+		ServerPlayNetworking.registerGlobalReceiver(WishPoolForgePayload.TYPE,
+				(payload, context) -> {
+					if (context.player().containerMenu instanceof com.sephiria.wishpool.WishPoolMenu menu) {
+						menu.forgeIds(payload.itemIds());
+					}
+				});
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.SlateImprintPayload.TYPE,
 				(payload, context) -> {
 					ServerPlayer player = context.player();
@@ -511,6 +523,8 @@ public class Sephiria implements ModInitializer {
 			WeaponStats.refresh(handler.player);
 			StatAttributes.refresh(handler.player);
 			com.sephiria.artifact.ArtifactHud.send(handler.player);
+			// 弩的备用弹匣数（HUD 的「（m）」）不在 SkillStorage 里，单独推一次
+			SephiriaCrossbowItem.syncMagazines(handler.player);
 		});
 
 		// 退出时把背包与属性从缓存里放掉（附件里已经是最新状态，下次进来重新读）
@@ -527,6 +541,8 @@ public class Sephiria implements ModInitializer {
 			com.sephiria.artifact.ProshiumRingItem.forget(handler.player);
 			com.sephiria.artifact.CryoGuillotineItem.forget(handler.player);
 			com.sephiria.artifact.FlickeringEyeItem.forget(handler.player);
+			com.sephiria.artifact.BrokenSapphireItem.forget(handler.player);
+			SephiriaCrossbowItem.forget(handler.player);
 			com.sephiria.frost.FrostArmament.forget(handler.player);
 			CombatState.forget(handler.player);
 			com.sephiria.cloud.DarkCloud.forget(handler.player);

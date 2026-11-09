@@ -3,6 +3,7 @@ package com.sephiria.client.card;
 import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.card.CardSelection;
+import com.sephiria.client.artifact.ArtifactTooltip;
 import com.sephiria.client.tabs.SephiriaTab;
 import com.sephiria.client.tabs.SephiriaTabs;
 import com.sephiria.network.CardRefreshPayload;
@@ -152,6 +153,43 @@ public class CardSelectionScreen extends Screen {
 		ClientPlayNetworking.send(new CardRefreshPayload(index));
 	}
 
+	/** 光标停在已翻开的卡上时，显示和物品图标一样的完整神器提示框。 */
+	private void showCardTooltip(GuiGraphicsExtractor extractor, int mouseX, int mouseY) {
+		if (this.chances <= 0 || this.selecting) {
+			return;
+		}
+
+		int index = cardAt(mouseX, mouseY);
+
+		if (index < 0 || this.reveal[index] < FLIP_TICKS) {
+			return;
+		}
+
+		ItemStack stack = this.cards.get(index);
+
+		if (stack.isEmpty()) {
+			return;
+		}
+
+		// 卡面里的神器都是 0 级：临时把格子等级压成 0，避免沿用背包界面残留的悬停格等级
+		ArtifactTooltip.setSlotLevelHint(0);
+
+		try {
+			List<Component> lines = new ArrayList<>();
+			lines.add(stack.getHoverName());
+			List<Component> artifactLines = ArtifactTooltip.lines(stack);
+
+			if (!artifactLines.isEmpty()) {
+				lines.add(Component.empty());
+				lines.addAll(artifactLines);
+			}
+
+			extractor.setComponentTooltipForNextFrame(this.font, lines, mouseX, mouseY);
+		} finally {
+			ArtifactTooltip.clearSlotLevelHint();
+		}
+	}
+
 	@Override
 	public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
 		if (net.minecraft.client.Minecraft.getInstance().options.keyInventory.matches(event)) {
@@ -168,6 +206,8 @@ public class CardSelectionScreen extends Screen {
 		drawPanel(extractor);
 		drawCards(extractor, mouseX, mouseY);
 		drawHeaderAndHint(extractor);
+		// 先排入物品 tooltip，再让 super 画按钮 / 标签；与天赋页的 tooltip 同一条路径
+		showCardTooltip(extractor, mouseX, mouseY);
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 	}
 
@@ -203,6 +243,12 @@ public class CardSelectionScreen extends Screen {
 			Component hint = Component.translatable("screen.sephiria_fantasy.card.hint");
 			extractor.centeredText(this.font, hint, this.width / 2, this.panelTop + PANEL_HEIGHT - 50,
 					DIM_COLOR);
+		} else {
+			// 选完最后一张后界面会留在这一页（用户 2026-11-09 要求不退回游戏），
+			// 空卡面这里给一句说明，玩家自己按 Esc / 背包键关
+			extractor.centeredText(this.font,
+					Component.translatable("screen.sephiria_fantasy.card.no_chance"),
+					this.width / 2, cardsTop() + CARD_HEIGHT / 2, DIM_COLOR);
 		}
 
 		if (this.selecting) {

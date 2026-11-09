@@ -204,13 +204,23 @@ public final class RootRetreat {
 	 *
 	 * @param trueDamage 这一下是不是「无视防御伤害」（真实伤害）：决定要不要算防护铠甲那层
 	 */
+	/**
+	 * 「顽强之躯」的伤害倍率：1.0 = 没有这一项；等级越高越接近 0.1。
+	 *
+	 * <p>拆出来是因为 HP 偷取 / MP 吸收要把这一层单独加回去（见 {@code Lifesteal}），
+	 * 而「防护铠甲」那一层要保留在最终伤害里。
+	 */
+	public static double tenaciousBodyMultiplier(ServerPlayer player) {
+		return 1.0D - DifficultyOption.TENACIOUS_BODY.effectAt(
+				levelOf(player, DifficultyOption.TENACIOUS_BODY)) / 100.0D;
+	}
+
 	public static float outgoingDamageMultiplier(LivingEntity victim, DamageSource source, boolean trueDamage) {
 		if (victim instanceof Player || !(source.getEntity() instanceof ServerPlayer attacker)) {
 			return 1.0F;
 		}
 
-		double tenacious = 1.0D - DifficultyOption.TENACIOUS_BODY.effectAt(
-				levelOf(attacker, DifficultyOption.TENACIOUS_BODY)) / 100.0D;
+		double tenacious = tenaciousBodyMultiplier(attacker);
 		double armor = 1.0D;
 
 		if (!trueDamage) {

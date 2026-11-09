@@ -17,14 +17,17 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
  * <p>做法与 {@link WeaponStats} 一致：给玩家挂一条临时修饰符，每几 tick 对一次账，
  * 而且以属性表上的当前值为准（复活会换实体，只比自家缓存的话复活后就再也补不回来）。
  * 移动速度按基础值缩放，所以加速药水、疾跑这些原版加成照旧叠加在上面；
- * 最大生命值直接加固定点数（索利斯·弗拉克托那类「最大HP +N」），上限提高后当前血量不跟着涨，
- * 那部分血要自己回满——和原版加血量上限的观感一致。
+ * 最大生命值：神器 / 天赋给固定点数（ADD_VALUE），药水给最终百分比（ADD_MULTIPLIED_TOTAL）；
+ * 上限提高后当前血量不跟着涨，那部分血要自己回满——和原版加血量上限的观感一致。
  */
 public final class StatAttributes {
 	private static final Identifier MOVE_SPEED_MODIFIER =
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_move_speed");
 	private static final Identifier MAX_HP_MODIFIER =
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_max_hp");
+	/** 药水「最终 HP +5%」用的百分比修饰符（ADD_MULTIPLIED_TOTAL，叠在固定值之后）。 */
+	private static final Identifier MAX_HP_PERCENT_MODIFIER =
+			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "attr_max_hp_percent");
 	/** 检查间隔（tick）：属性变化后最多等这么久就会重算。 */
 	private static final int CHECK_INTERVAL = 4;
 	/** 原版「幸运」buff 每次续多久（刻）：每 4 刻对账一次，时长比它大就不会闪断。 */
@@ -112,29 +115,42 @@ public final class StatAttributes {
 		}
 	}
 
-	/** 最大生命值：神器给的固定点数直接加（0 就把修饰符摘掉）。 */
+	/**
+	 * 最大生命值：固定点数用 ADD_VALUE，药水的「最终 HP +5%」用 ADD_MULTIPLIED_TOTAL。
+	 *
+	 * <p>百分比放在固定值之后结算，所以多瓶叠加时每瓶都是按「加上其它加成后的最终上限」乘，
+	 * 与描述里的「最终 HP」一致。0 时把对应修饰符摘掉。
+	 */
 	private static void applyMaxHp(ServerPlayer player) {
-		double amount = PlayerStats.maxHpBonus(player);
 		AttributeInstance instance = player.getAttribute(Attributes.MAX_HEALTH);
 
 		if (instance == null) {
 			return;
 		}
 
-		AttributeModifier current = instance.getModifier(MAX_HP_MODIFIER);
+		double flat = PlayerStats.maxHpBonus(player);
+		AttributeModifier currentFlat = instance.getModifier(MAX_HP_MODIFIER);
 
-		if (amount == 0.0D) {
-			if (current != null) {
+		if (flat == 0.0D) {
+			if (currentFlat != null) {
 				// 摘掉修饰符会顺手把当前血量夹回新上限，不会留下超上限的血
 				instance.removeModifier(MAX_HP_MODIFIER);
 			}
-
-			return;
+		} else if (currentFlat == null || currentFlat.amount() != flat) {
+			instance.addOrUpdateTransientModifier(
+					new AttributeModifier(MAX_HP_MODIFIER, flat, AttributeModifier.Operation.ADD_VALUE));
 		}
 
-		if (current == null || current.amount() != amount) {
+		double percent = PlayerStats.maxHpPercentTotal(player) / 100.0D;
+		AttributeModifier currentPercent = instance.getModifier(MAX_HP_PERCENT_MODIFIER);
+
+		if (percent == 0.0D) {
+			if (currentPercent != null) {
+				instance.removeModifier(MAX_HP_PERCENT_MODIFIER);
+			}
+		} else if (currentPercent == null || currentPercent.amount() != percent) {
 			instance.addOrUpdateTransientModifier(
-					new AttributeModifier(MAX_HP_MODIFIER, amount, AttributeModifier.Operation.ADD_VALUE));
+					new AttributeModifier(MAX_HP_PERCENT_MODIFIER, percent, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
 		}
 	}
 }

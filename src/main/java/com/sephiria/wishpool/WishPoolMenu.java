@@ -5,6 +5,7 @@ import com.sephiria.network.WishPoolResultPayload;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,8 +19,11 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -251,11 +255,12 @@ public class WishPoolMenu extends AbstractContainerMenu {
 			return;
 		}
 
-		List<ItemStack> drawn = WishPool.draw(this.owner, slatePool, count);
+		WishPool.DrawResult result = WishPool.draw(this.owner, slatePool, count);
+		List<ItemStack> drawn = result.items();
 		scatter(drawn);
 
 		if (!drawn.isEmpty()) {
-			ServerPlayNetworking.send(this.owner, new WishPoolResultPayload(drawn));
+			ServerPlayNetworking.send(this.owner, new WishPoolResultPayload(drawn, result.energyGained()));
 		}
 
 		this.broadcastChanges();
@@ -330,25 +335,77 @@ public class WishPoolMenu extends AbstractContainerMenu {
 	}
 
 	/**
-	 * 神铸：花能量换一件指定物品（只能换黄与红两档，见 {@link WishPool#forgeCost}）。
+	 * 神铸单件：兼容旧的单件包路径。
 	 *
 	 * <p>换到的东西同样从许愿池弹出去（与抽卡一个观感）。
 	 */
-	public void forge(net.minecraft.world.item.Item item) {
-		if (this.owner == null || item == null) {
+	public void forge(Item item) {
+		if (item != null) {
+			forgeItems(List.of(item));
+		}
+	}
+
+	/** 客户端批量神铸：只带物品数字 id，服务端重新查物品与价格。 */
+	public void forgeIds(List<Integer> itemIds) {
+		if (this.owner == null || itemIds == null || itemIds.isEmpty()) {
 			return;
 		}
 
-		int cost = WishPool.forgeCost(com.sephiria.artifact.ArtifactLoot.rarityOf(item));
+		List<Item> items = new ArrayList<>(itemIds.size());
 
-		if (cost <= 0 || WishPool.energy(this.owner) < cost) {
+		for (int id : itemIds) {
+			if (id <= 0) {
+				continue;
+			}
+
+			Item item = BuiltInRegistries.ITEM.byId(id);
+
+			if (item != Items.AIR) {
+				items.add(item);
+			}
+		}
+
+		forgeItems(items);
+	}
+
+	/**
+	 * 批量神铸：同一件只算一次；总价 = 各件品质价格之和，一次扣、一次发结果。
+	 *
+	 * <p>服务端先重新过滤不可神铸的品质（羁绊 / 永恒），再判总价够不够；客户端选中状态只是显示。
+	 */
+	public void forgeItems(List<Item> items) {
+		if (this.owner == null || items == null || items.isEmpty()) {
 			return;
 		}
 
-		WishPool.addEnergy(this.owner, -cost);
-		List<ItemStack> forged = List.of(new ItemStack(item));
+		// 去重：客户端选中的是不同的物品格；重复 id 不应该重复扣费 / 重复发货
+		LinkedHashSet<Item> unique = new LinkedHashSet<>(items);
+		List<Item> forgeable = new ArrayList<>(unique.size());
+		int total = 0;
+
+		for (Item item : unique) {
+			int cost = WishPool.forgeCost(com.sephiria.artifact.ArtifactLoot.rarityOf(item));
+
+			if (cost > 0) {
+				total += cost;
+				forgeable.add(item);
+			}
+		}
+
+		if (forgeable.isEmpty() || WishPool.energy(this.owner) < total) {
+			return;
+		}
+
+		WishPool.addEnergy(this.owner, -total);
+		List<ItemStack> forged = new ArrayList<>(forgeable.size());
+
+		for (Item item : forgeable) {
+			forged.add(new ItemStack(item));
+		}
+
 		scatter(forged);
-		ServerPlayNetworking.send(this.owner, new WishPoolResultPayload(forged));
+		// 神铸是消耗愿力，不会返还；结果页自己按物品表算「消耗 x 愿力」
+		ServerPlayNetworking.send(this.owner, new WishPoolResultPayload(forged, 0));
 		this.broadcastChanges();
 	}
 

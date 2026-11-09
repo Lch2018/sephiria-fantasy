@@ -146,8 +146,9 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	/** 注册专注存储、结算推进器与招架判定（招架窗口内的伤害由本处理器直接取消，与注册顺序无关）。 */
 	public static void register() {
 		// 开局 0 层专注（用户 2026-10-21：以前是 1 层，一进来右键就是狂怒）。
-		// 专注不自动回复，只能靠招架攒
+		// 专注不自动回复，只能靠招架攒；「彩虹羽毛」会同时抬高上限与每次获取量。
 		SkillStorage.registerManual(FOCUS, FOCUS_MAX, 0.0D);
+		SkillStorage.registerMaxBonus(FOCUS, player -> com.sephiria.artifact.ArtifactEffects.daggerFocusBonus(player));
 		ServerTickEvents.END_SERVER_TICK.register(SephiriaDaggerItem::tick);
 
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
@@ -228,7 +229,8 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	 * 冷却清掉之后可以立刻接狂怒，形成招架→狂怒的连段。
 	 */
 	private static void rewardParry(ServerPlayer player) {
-		SkillStorage.regenerate(player, FOCUS, FOCUS_MAX);
+		double extra = com.sephiria.artifact.ArtifactEffects.daggerFocusBonus(player);
+		SkillStorage.regenerate(player, FOCUS, FOCUS_MAX + extra);
 		// 完美招架：把招架先收的 7 点里的 2 点退回去（净 5 点）
 		PlayerStats.refundMp(player, PARRY_MP_COST - PERFECT_PARRY_MP_COST);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -322,7 +324,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 
 		/** 以自身为中心的一块区域（结算时跟随自身位置）。 */
 		static Pending aura(ServerPlayer player, int delay, float damage, double range, double height) {
-			double mul = PlayerStats.rangeMultiplier(player);
+			double mul = PlayerStats.rangeMultiplier(player) * PlayerStats.skillRangeMultiplier(player);
 			return new Pending(player, player.level().getGameTime() + delay, damage, null, true, range * mul, height * mul);
 		}
 
@@ -330,7 +332,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 		static Pending path(ServerPlayer player, Vec3 direction, double distance, int delay, float damage, double radius) {
 			Vec3 start = player.position();
 			Vec3 end = start.add(direction.scale(distance));
-			double mul = PlayerStats.rangeMultiplier(player);
+			double mul = PlayerStats.rangeMultiplier(player) * PlayerStats.skillRangeMultiplier(player);
 			AABB area = new AABB(start, end).inflate(radius * mul, 1.5D * mul, radius * mul);
 			return new Pending(player, player.level().getGameTime() + delay, damage, area, false, 0.0D, 0.0D);
 		}

@@ -73,6 +73,13 @@ public final class ArtifactTooltip {
 
 		lines.addAll(artifact.affixLines(level));
 
+		// 黑鳞片：当前石板数量由服务端随属性同步推过来（合成石板算 2 块）
+		if (artifact instanceof com.sephiria.artifact.BlackScaleItem) {
+			lines.add(Component.translatable("artifact.sephiria_fantasy.affix.black_scale_count",
+					Component.literal(String.valueOf(com.sephiria.client.ClientSlateCount.count()))
+							.withColor(COLOUR_BONUS)));
+		}
+
 		// 「增加连击数量」：每条连击写一行「「坚固」+x」。
 		// 每件神器**默认就是 +1**（它自己就提供 1 级连击），合并过一次变 +2（封顶）——
 		// 所以这一行永远有，用户 2026-10-24 要的就是「所有神器都有这条属性」。
@@ -103,7 +110,8 @@ public final class ArtifactTooltip {
 		lines.add(Component.translatable("artifact.sephiria_fantasy.rarity_line",
 						Component.translatable(artifact.rarity().translationKey()).withColor(artifact.rarity().color()))
 				.withStyle(ChatFormatting.GRAY));
-		lines.add(Component.translatable("artifact.sephiria_fantasy.level_line", Numbers.format(level))
+		lines.add(Component.translatable("artifact.sephiria_fantasy.level_line",
+						Numbers.format(level) + "/" + Numbers.format(artifact.maxLevel()))
 				.withStyle(ChatFormatting.DARK_GRAY));
 		// 风味文本可以为空（用户还没给文案的神器）：空字符串就不写这一行，免得留一条空白斜体行
 		MutableComponent flavor = Component.translatable(artifact.flavorKey());

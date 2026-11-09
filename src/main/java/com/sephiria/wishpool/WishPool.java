@@ -35,7 +35,7 @@ import java.util.Map;
  *       {@code 50% × (1 + 品质增量% × 总次数)}（白 5 / 蓝 10 / 黄 15 / 红与彩 20，最多 100%），
  *       命中后按各物品的次数比例分；没命中才在整档里随机；</li>
  *   <li>抽卡积蓄<b>能量</b>：白 1 / 蓝 2 / 黄 4 / 红 8 / 彩 10（石板最高是「永恒」，按彩那一档给）；</li>
- *   <li><b>神铸</b>：只能换<b>黄与红</b>两档，黄 80 / 红 200 能量；</li>
+ *   <li><b>神铸</b>：普通 30 / 高级 50 / 黄 80 / 红 200 能量；羁绊 / 永恒不参与；</li>
  *   <li>「许愿池等级越高、能锚定 / 能换的品质越高」这条<b>暂时不做</b>（用户明说）。</li>
  * </ul>
  *
@@ -53,6 +53,13 @@ public final class WishPool {
 	public static final int DEFAULT_ANCHOR_SLOTS = 1;
 	/** 锚定格上限（意志点满：默认 1 + 一阶段 1 + 三阶段 3 = 5）。 */
 	public static final int MAX_ANCHOR_SLOTS = 5;
+	/**
+	 * 抽到已锚定物品时愿力的额外加成（%）：按该物品的锚定次数取 60/70/80/90/100%。
+	 *
+	 * <p>用户 2026-11-09 的口径：锚定次数 1..5 对应这五档，抽到的是锚定物才吃；
+	 * 结果向下取整，不出现小数。
+	 */
+	private static final int[] ANCHOR_ENERGY_BONUS_PERCENT = { 60, 70, 80, 90, 100 };
 
 	/**
 	 * 存档：四叶草 + 能量 + 两个卡池的锚定件列表 + 「溢出转化」开关。
@@ -367,13 +374,33 @@ public final class WishPool {
 		};
 	}
 
-	/** 神铸换一件要多少能量；<b>只有黄与红能换</b>（其它档返回 0 = 换不了）。 */
+	/** 神铸换一件要多少能量；普通 30 / 高级 50 / 黄 80 / 红 200，羁绊 / 永恒返回 0 = 换不了。 */
 	public static int forgeCost(ArtifactRarity rarity) {
 		return switch (rarity) {
+			case COMMON -> 30;
+			case ADVANCED -> 50;
 			case RARE -> 80;
 			case LEGENDARY -> 200;
-			default -> 0;
+			case BOND, ETERNAL -> 0;
 		};
+	}
+
+	/**
+	 * 抽到某一件实际到账的愿力：基础愿力 ×（1 + 锚定加成），整数除法即向下取整。
+	 *
+	 * <p>只有<b>抽卡</b>走这里；神铸是消耗愿力换物品，不会返还愿力。
+	 */
+	private static int energyForDraw(ServerPlayer player, boolean slatePool, Item item) {
+		int base = energyFor(item);
+		int anchors = anchorCount(player, slatePool, item);
+
+		if (anchors <= 0) {
+			return base;
+		}
+
+		int percent = ANCHOR_ENERGY_BONUS_PERCENT[
+				Math.min(anchors, ANCHOR_ENERGY_BONUS_PERCENT.length) - 1];
+		return base * (100 + percent) / 100;
 	}
 
 	// ------------------------------------------------------------------ 抽卡
@@ -447,12 +474,17 @@ public final class WishPool {
 		return new ItemStack(tier.get(random.nextInt(tier.size())));
 	}
 
+	/** 一次抽卡的结果：物品清单 + 实际到账的愿力（含锚定加成）。 */
+	public record DrawResult(List<ItemStack> items, int energyGained) {
+	}
+
 	/**
 	 * 抽 {@code count} 件并把这一批的能量记到玩家头上（服务端调用）。
 	 *
-	 * <p>返回的就是要弹出去 / 播动画的那一批（空的那几件是异常兜底，正常不会出现）。
+	 * <p>返回的就是要弹出去 / 播动画的那一批（空的那几件是异常兜底，正常不会出现），
+	 * 以及实际到账的愿力；结果页显示的就是这个数，不能再用基础表重算。
 	 */
-	public static List<ItemStack> draw(ServerPlayer player, boolean slatePool, int count) {
+	public static DrawResult draw(ServerPlayer player, boolean slatePool, int count) {
 		RandomSource random = player.getRandom();
 		List<Item> anchors = anchors(player, slatePool);
 		List<ItemStack> drawn = new ArrayList<>(count);
@@ -465,12 +497,12 @@ public final class WishPool {
 				continue;
 			}
 
-			gained += energyFor(stack.getItem());
+			gained += energyForDraw(player, slatePool, stack.getItem());
 			drawn.add(stack);
 		}
 
 		addEnergy(player, gained);
-		return drawn;
+		return new DrawResult(List.copyOf(drawn), gained);
 	}
 
 	// ------------------------------------------------------------------ 四叶草
