@@ -12,7 +12,7 @@ import com.sephiria.registry.ModItems;
 import com.sephiria.registry.ModParticleTypes;
 import com.sephiria.stats.CombatState;
 import com.sephiria.stats.PlayerStats;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import com.sephiria.compat.DamageEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;

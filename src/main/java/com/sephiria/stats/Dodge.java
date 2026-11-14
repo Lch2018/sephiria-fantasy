@@ -1,9 +1,11 @@
 package com.sephiria.stats;
 
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+
 import com.sephiria.ability.DashSkill;
 import com.sephiria.ability.SkillStorage;
 import com.sephiria.artifact.ArtifactEffects;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import com.sephiria.compat.DamageEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;

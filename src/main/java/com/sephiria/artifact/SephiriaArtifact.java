@@ -51,6 +51,16 @@ public interface SephiriaArtifact extends Quality {
 	 */
 	java.util.List<Component> affixLines(int level);
 
+	/**
+	 * 技能页悬停时显示的技能说明行（不含技能名标题与等级行）。
+	 *
+	 * <p>默认就是 {@link #affixLines}；魔法书这类「获得技能」词条会把第一行标题去掉，
+	 * 避免技能页已经画了「技能名」标题、下面又出现一行「获得技能…」。
+	 */
+	default java.util.List<Component> skillDescriptionLines(int level) {
+		return affixLines(level);
+	}
+
 	/** 该等级给的物理强度加成（背包里按【唯一】规则汇总）。 */
 	default double physicalBonus(int level) {
 		return 0.0D;
@@ -80,6 +90,41 @@ public interface SephiriaArtifact extends Quality {
 		return 0.0D;
 	}
 
+	/** 该等级给的特殊攻击范围加成（%）：只放大武器技能的范围，不影响普攻。 */
+	default double specialAttackRangePercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的武器伤害加成（%）：普攻与武器技能都吃。 */
+	default double weaponDamagePercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的弩重装速度加成（%）：实际装填刻数 = 基础刻数 ÷ (1 + 加成)。 */
+	default double crossbowReloadSpeedPercent(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的弩攻击伤害加成（%）：只影响弩矢。 */
+	default double crossbowDamagePercent(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级「装填完成后的 10 秒弩伤害」加成（%）。 */
+	default double crossbowReloadBuffPercent(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的最大弹匣数量加成（个）：基础 1 个弹匣。 */
+	default int maxMagazinesBonus(int level) {
+		return 0;
+	}
+
+	/** 该等级给的刀收刀 / 拔刀无敌时间加成（%）。 */
+	default double katanaSwitchInvulnPercent(int level) {
+		return 0.0D;
+	}
+
 	/** 该等级给的近战攻击范围加成（百分点，100 = 100%）。 */
 	default double meleeRangePercentBonus(int level) {
 		return 0.0D;
@@ -100,6 +145,11 @@ public interface SephiriaArtifact extends Quality {
 		return 0.0D;
 	}
 
+	/** 该等级给的「所有伤害放大」百分比：与药水「黎明之露」同一层，含真实伤害与减益。 */
+	default double allDamagePercentBonus(int level) {
+		return 0.0D;
+	}
+
 	/** 该等级给的暴击几率加成（百分点）：任何由玩家造成的伤害都吃。 */
 	default double critChanceBonus(int level) {
 		return 0.0D;
@@ -116,6 +166,26 @@ public interface SephiriaArtifact extends Quality {
 
 	/** 该等级给的暴击伤害加成（百分点），加在默认的 150% 上。 */
 	default double critDamageBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级「敌人距离 3 格以内时暴击伤害降低」的百分点（巴尔特的工作用单片眼镜）。 */
+	default double closeRangeCritDamagePenalty(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级是否把「暴击几率超过 100% 的溢出部分」转成处决几率（贝鲁特之镰）。 */
+	default boolean executionEnabled(int level) {
+		return false;
+	}
+
+	/**
+	 * 该等级每持有 1 个石板物品给的暴击几率（百分点）。
+	 *
+	 * <p>不是直接加暴击——实际加成 = 这个值 × 当前石板数量（黑鳞片）；石板数量的口径见
+	 * {@code ArtifactEffects#slateCount}。
+	 */
+	default double critChancePerSlate(int level) {
 		return 0.0D;
 	}
 
@@ -141,6 +211,16 @@ public interface SephiriaArtifact extends Quality {
 	/** 该等级给的闪避（点）：按 0.8×(1−e^(−闪避/43.28)) 折算成闪避率。 */
 	default double dodgeBonus(int level) {
 		return 0.0D;
+	}
+
+	/** 该等级给的防御力（点）。 */
+	default double defenseBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级「匕首获取专注时额外获取」的层数（0/1）。 */
+	default int daggerFocusBonus(int level) {
+		return 0;
 	}
 
 	/**
@@ -424,6 +504,121 @@ public interface SephiriaArtifact extends Quality {
 		return 0.0D;
 	}
 
+	/** 该等级给的「魔法书加速」（点）：每 1 点让魔法书技能的冷却速度 +1%。 */
+	default double magicBookHasteBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「魔法书 MP 消耗减少」（%）：雷伊星碎片用在左侧格子的书上。 */
+	default double magicBookMpReductionBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级是否让「火焰 / 寒冰 / 闪电魔弹」追踪准星附近最近的敌人（鼠魔法师的吊坠）。 */
+	default boolean magicBoltTracking(int level) {
+		return false;
+	}
+
+	/** 该等级给的「奖励中出现魔法书的几率」加成（%）。 */
+	default double magicBookRewardChanceBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「最终最大生命值」百分比加成（%）。 */
+	default double maxHpPercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「MP 吸收」加成（点）。 */
+	default double mpAbsorbBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「消耗 MP 的能力伤害」加成（%）。 */
+	default double mpAbilityDamageBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的海之眷顾等级（0 = 没有）。 */
+	default int fishingLuckBonus(int level) {
+		return 0;
+	}
+
+	/** 该等级给的饵钓等级（0 = 没有）。 */
+	default int fishingLureBonus(int level) {
+		return 0;
+	}
+
+	/** 乔洛的浇水壶：额外施放魔法书所需的最大 MP 门槛；0 = 没有这个效果。 */
+	default int wateringCanMaxMpThreshold(int level) {
+		return 0;
+	}
+
+	/** 该等级给的「魔法书伤害」加成（%）。 */
+	default double magicBookDamageBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 学院钢笔：按当前闪避点数换算出的魔法书伤害加成（%）。 */
+	default double magicBookDamageFromDodge(int level, double dodge) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「魔法书的暴击率」加成（%）。 */
+	default double magicBookCritChanceBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给所有魔法书的 MP 消耗减少（%）：莱莉的怀表这类全局词条。 */
+	default double magicBookMpReductionGlobalBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给「右边格子的魔法书」的魔法书加速（点）：发光的沙漏。 */
+	default double rightMagicBookHasteBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级占用的最大 MP（点）：渴望宝珠。 */
+	default double mpReservedBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「最终 MP」百分比加成（%）：空剑柄。 */
+	default double maxMpPercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 闪避成功时，让所有魔法书剩余冷却加速的百分比（%）。 */
+	default double magicBookCooldownOnDodgePercent(int level) {
+		return 0.0D;
+	}
+
+	/** 双角管：魔弹分三路时每一路的伤害减少（%）。 */
+	default double magicBoltSplitDamageReduction(int level) {
+		return 0.0D;
+	}
+
+	/** 双角管：魔弹的 MP 消耗增加（%）。 */
+	default double magicBoltMpCostIncreasePercent(int level) {
+		return 0.0D;
+	}
+
+	/** 音叉：是否启用「声波」层数机制。 */
+	default boolean tuningForkEnabled(int level) {
+		return false;
+	}
+
+	/** 书库之阳：太阳剑是否按「魔法书伤害」等比放大。 */
+	default boolean librarySunEnabled(int level) {
+		return false;
+	}
+
+	/** 书库之阳：造成魔法书伤害时太阳剑额外触发几次。 */
+	default int librarySunExtraTriggers(int level) {
+		return 0;
+	}
+
 	/**
 	 * 该等级给的「战斗中乌云恢复速度」加成（%）。
 	 *
@@ -607,13 +802,16 @@ public interface SephiriaArtifact extends Quality {
 	}
 
 	/**
-	 * 该等级是否提供「海市蜃楼」充能机制（闪烁的眼睛）。
-	 *
-	 * <p>它没有按等级变化的数值，等级只影响合并 / 连击；状态在
-	 * {@code FlickeringEyeItem} 的运行时表里。
+	 * 该等级是否提供「海市蜃楼」充能机制（闪烁的眼睛）；伤害倍率见
+	 * {@link #flickeringEyeDamagePercent(int)}，状态在 {@code FlickeringEyeItem} 的运行时表里。
 	 */
 	default boolean flickeringEye(int level) {
 		return false;
+	}
+
+	/** 闪烁的眼睛的混沌伤害倍率（%）：伤害 = 当前闪避点数 × 它。 */
+	default double flickeringEyeDamagePercent(int level) {
+		return 0.0D;
 	}
 
 	/**

@@ -278,7 +278,7 @@ public final class DarkCloud {
 	 * <p>有的话暴风雪云这一轮不改造地面（雪粒子照常下），避免冻住红石农场的水、往箱子上积雪
 	 * 或把红石线路埋掉。方块扫一遍 20 格半径，外加掉落的红石物品、物品展示框、运输矿车 / 箱船。
 	 */
-	private static boolean isBlizzardBlocked(ServerLevel level, ServerPlayer player) {
+	public static boolean isBlizzardBlocked(ServerLevel level, ServerPlayer player) {
 		AABB area = player.getBoundingBox().inflate(BLIZZARD_PROTECTION_RADIUS);
 
 		if (level.getBlockStates(area).anyMatch(DarkCloud::isProtectedBlock)) {
@@ -337,7 +337,7 @@ public final class DarkCloud {
 	 * </ul>
 	 * 只改<b>能看见天空</b>的目标，室内 / 洞穴 / 屋檐下不会凭空积雪或结冰。
 	 */
-	private static void applyBlizzardGround(ServerLevel level, ServerPlayer player) {
+	public static void applyBlizzardGround(ServerLevel level, ServerPlayer player) {
 		for (int attempt = 0; attempt < BLIZZARD_WATER_ATTEMPTS; attempt++) {
 			freezeBlizzardWater(level, player);
 		}

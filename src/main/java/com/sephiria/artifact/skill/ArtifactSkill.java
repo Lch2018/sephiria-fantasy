@@ -20,6 +20,21 @@ public interface ArtifactSkill {
 	/** 蓝耗（点）：按神器等级算，0 表示不耗蓝（发动型神器不耗蓝）。 */
 	double mpCost(int level);
 
+	/** 实际冷却（tick）：默认就是基础值；满果实水桶这类会按属性现算的技能覆盖它。 */
+	default int cooldownTicks(ServerPlayer player, int level) {
+		return cooldownTicks();
+	}
+
+	/** 实际蓝耗：默认按等级；水之精灵这类按最大 MP 百分比的技能覆盖它。 */
+	default double mpCost(ServerPlayer player, int level) {
+		return mpCost(level);
+	}
+
+	/** 施放前的额外条件（需要看准星目标等）；默认没有。 */
+	default boolean canCast(ServerPlayer player, int level) {
+		return true;
+	}
+
 	/** 释放（服务端）。调用前已经检查过冷却与蓝量。 */
 	void cast(ServerPlayer player, int level);
 }

@@ -44,6 +44,9 @@ public final class ModParticleTypes {
 	 */
 	public static final SimpleParticleType PLASMA = register("plasma");
 
+	/** 冰风暴的静止冰晶高光：与原版 END_ROD 同样的 glitter 贴图，但客户端重力为 0。 */
+	public static final SimpleParticleType ICE_GLINT = register("ice_glint");
+
 	/** 太阳剑的剑痕：一道笔直的发光划痕（贴图 textures/particle/sun_slash_0.png）。 */
 	public static final ParticleType<SunSlashOptions> SUN_SLASH = registerSunSlash();
 

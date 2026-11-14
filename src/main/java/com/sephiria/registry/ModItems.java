@@ -129,6 +129,73 @@ import java.util.function.Function;
  * <p>要注意传进 {@code sword()} 的是「原版参数」，不是工具栏里显示的数字：
  * 显示的伤害 = 1（玩家基础）+ 材质加成 + 传入值，显示的攻速 = 4（玩家基础）+ 传入值。
  */
+import com.sephiria.artifact.AbsoluteRingItem;
+import com.sephiria.artifact.AcademyChainmailItem;
+import com.sephiria.artifact.AcademyPenItem;
+import com.sephiria.artifact.ArrowRainItem;
+import com.sephiria.artifact.BartsMonocleItem;
+import com.sephiria.artifact.BattleMageGlovesItem;
+import com.sephiria.artifact.BeastHeartItem;
+import com.sephiria.artifact.BeirutsScytheItem;
+import com.sephiria.artifact.BlackScaleItem;
+import com.sephiria.artifact.BrokenMirrorItem;
+import com.sephiria.artifact.BrokenRootItem;
+import com.sephiria.artifact.BrokenSapphireItem;
+import com.sephiria.artifact.ClothArmorItem;
+import com.sephiria.artifact.CrabappleItem;
+import com.sephiria.artifact.DoubleHornPipeItem;
+import com.sephiria.artifact.EmptyHiltItem;
+import com.sephiria.artifact.EndoditePaperweightItem;
+import com.sephiria.artifact.FireBoltItem;
+import com.sephiria.artifact.FireCircusItem;
+import com.sephiria.artifact.FlameArrowItem;
+import com.sephiria.artifact.FrostKnifeItem;
+import com.sephiria.artifact.FullFruitBucketItem;
+import com.sephiria.artifact.GlowingHourglassItem;
+import com.sephiria.artifact.HeartCarrotItem;
+import com.sephiria.artifact.IceBoltItem;
+import com.sephiria.artifact.IceStormItem;
+import com.sephiria.artifact.JewelArmorItem;
+import com.sephiria.artifact.JoloWateringCanItem;
+import com.sephiria.artifact.LeilisPocketWatchItem;
+import com.sephiria.artifact.LibrarySunItem;
+import com.sephiria.artifact.LightningBoltItem;
+import com.sephiria.artifact.LightningBoomerangItem;
+import com.sephiria.artifact.LizardPlateArmorItem;
+import com.sephiria.artifact.LureBaitItem;
+import com.sephiria.artifact.MagiciansCoinItem;
+import com.sephiria.artifact.MastersSwordGuardItem;
+import com.sephiria.artifact.MeditationBookItem;
+import com.sephiria.artifact.MeteorShowerItem;
+import com.sephiria.artifact.MouseMagicianPendantItem;
+import com.sephiria.artifact.ObrasBloodItem;
+import com.sephiria.artifact.OrbOfDesireItem;
+import com.sephiria.artifact.PearlPowderItem;
+import com.sephiria.artifact.PlitviceWaterDropItem;
+import com.sephiria.artifact.PotLidItem;
+import com.sephiria.artifact.RainbowFeatherItem;
+import com.sephiria.artifact.RayStarFragmentItem;
+import com.sephiria.artifact.RockElephantItem;
+import com.sephiria.artifact.ScarecrowDollItem;
+import com.sephiria.artifact.SerensLetterItem;
+import com.sephiria.artifact.SharpshooterCrankItem;
+import com.sephiria.artifact.ShieldBagItem;
+import com.sephiria.artifact.ShieldBookItem;
+import com.sephiria.artifact.ShieldEarringItem;
+import com.sephiria.artifact.SmallMirrorItem;
+import com.sephiria.artifact.StarRubyItem;
+import com.sephiria.artifact.StarSeaSapphireItem;
+import com.sephiria.artifact.StoneSpindleItem;
+import com.sephiria.artifact.SturdyReloadCrateItem;
+import com.sephiria.artifact.ThornShellItem;
+import com.sephiria.artifact.ThunderArmorItem;
+import com.sephiria.artifact.TuningForkItem;
+import com.sephiria.artifact.WaterBagItem;
+import com.sephiria.artifact.WaterSpiritItem;
+import com.sephiria.artifact.WhiteBranchItem;
+import com.sephiria.artifact.WhiteEdgeBreadItem;
+import com.sephiria.artifact.WiltedFlowerItem;
+import com.sephiria.artifact.WingsItem;
 public final class ModItems {
 	/** 玩家空手的基础攻击力，原版 Player#createAttributes 里是 1.0。 */
 	private static final float PLAYER_BASE_ATTACK_DAMAGE = 1.0F;
@@ -1006,6 +1073,281 @@ public final class ModItems {
 	/** 药水池（商店的两个药水格按品质加权从这里抽）。 */
 	public static final List<Item> POTIONS = List.of(REGENERATION_POTION, APPLE_JUICE, TRAPPIST_SACRED,
 			BIG_DICE_POTION, VAMPIRE_LORD_OATH, SOLERA_CHANCE, MELTZEN_SMOKE, AVANTINUS_CRYSTAL, GAOZE_MORNING);
+
+	/** 26.1.2 0.5.3.8 移植：FIRE_BOLT。 */
+	public static final Item FIRE_BOLT = register(key("fire_bolt"),
+			p -> new FireBoltItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：ICE_BOLT。 */
+	public static final Item ICE_BOLT = register(key("ice_bolt"),
+			p -> new IceBoltItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：LIGHTNING_BOLT。 */
+	public static final Item LIGHTNING_BOLT = register(key("lightning_bolt"),
+			p -> new LightningBoltItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：FLAME_ARROW。 */
+	public static final Item FLAME_ARROW = register(key("flame_arrow"),
+			p -> new FlameArrowItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：FROST_KNIFE。 */
+	public static final Item FROST_KNIFE = register(key("frost_knife"),
+			p -> new FrostKnifeItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：LIGHTNING_BOOMERANG。 */
+	public static final Item LIGHTNING_BOOMERANG = register(key("lightning_boomerang"),
+			p -> new LightningBoomerangItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：FIRE_CIRCUS。 */
+	public static final Item FIRE_CIRCUS = register(key("fire_circus"),
+			p -> new FireCircusItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：ARROW_RAIN。 */
+	public static final Item ARROW_RAIN = register(key("arrow_rain"),
+			p -> new ArrowRainItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：THUNDER_ARMOR。 */
+	public static final Item THUNDER_ARMOR = register(key("thunder_armor"),
+			p -> new ThunderArmorItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：METEOR_SHOWER。 */
+	public static final Item METEOR_SHOWER = register(key("meteor_shower"),
+			p -> new MeteorShowerItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：ICE_STORM。 */
+	public static final Item ICE_STORM = register(key("ice_storm"),
+			p -> new IceStormItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：MAGICIANS_COIN。 */
+	public static final Item MAGICIANS_COIN = register(key("magicians_coin"),
+			p -> new MagiciansCoinItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：RAY_STAR_FRAGMENT。 */
+	public static final Item RAY_STAR_FRAGMENT = register(key("ray_star_fragment"),
+			p -> new RayStarFragmentItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：MOUSE_MAGICIAN_PENDANT。 */
+	public static final Item MOUSE_MAGICIAN_PENDANT = register(key("mouse_magician_pendant"),
+			p -> new MouseMagicianPendantItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：PEARL_POWDER。 */
+	public static final Item PEARL_POWDER = register(key("pearl_powder"),
+			p -> new PearlPowderItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：ORB_OF_DESIRE。 */
+	public static final Item ORB_OF_DESIRE = register(key("orb_of_desire"),
+			p -> new OrbOfDesireItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：CRABAPPLE。 */
+	public static final Item CRABAPPLE = register(key("crabapple"),
+			p -> new CrabappleItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：DOUBLE_HORN_PIPE。 */
+	public static final Item DOUBLE_HORN_PIPE = register(key("double_horn_pipe"),
+			p -> new DoubleHornPipeItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：TUNING_FORK。 */
+	public static final Item TUNING_FORK = register(key("tuning_fork"),
+			p -> new TuningForkItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：JEWEL_ARMOR。 */
+	public static final Item JEWEL_ARMOR = register(key("jewel_armor"),
+			p -> new JewelArmorItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：GLOWING_HOURGLASS。 */
+	public static final Item GLOWING_HOURGLASS = register(key("glowing_hourglass"),
+			p -> new GlowingHourglassItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：BATTLE_MAGE_GLOVES。 */
+	public static final Item BATTLE_MAGE_GLOVES = register(key("battle_mage_gloves"),
+			p -> new BattleMageGlovesItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：MEDITATION_BOOK。 */
+	public static final Item MEDITATION_BOOK = register(key("meditation_book"),
+			p -> new MeditationBookItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：ACADEMY_PEN。 */
+	public static final Item ACADEMY_PEN = register(key("academy_pen"),
+			p -> new AcademyPenItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：LIBRARY_SUN。 */
+	public static final Item LIBRARY_SUN = register(key("library_sun"),
+			p -> new LibrarySunItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：EMPTY_HILT。 */
+	public static final Item EMPTY_HILT = register(key("empty_hilt"),
+			p -> new EmptyHiltItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：LEILIS_POCKET_WATCH。 */
+	public static final Item LEILIS_POCKET_WATCH = register(key("leilis_pocket_watch"),
+			p -> new LeilisPocketWatchItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：WILTED_FLOWER。 */
+	public static final Item WILTED_FLOWER = register(key("wilted_flower"),
+			p -> new WiltedFlowerItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：ENDODITE_PAPERWEIGHT。 */
+	public static final Item ENDODITE_PAPERWEIGHT = register(key("endodite_paperweight"),
+			p -> new EndoditePaperweightItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：SCARECROW_DOLL。 */
+	public static final Item SCARECROW_DOLL = register(key("scarecrow_doll"),
+			p -> new ScarecrowDollItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：STAR_RUBY。 */
+	public static final Item STAR_RUBY = register(key("star_ruby"),
+			p -> new StarRubyItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：STAR_SEA_SAPPHIRE。 */
+	public static final Item STAR_SEA_SAPPHIRE = register(key("star_sea_sapphire"),
+			p -> new StarSeaSapphireItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：WATER_BAG。 */
+	public static final Item WATER_BAG = register(key("water_bag"),
+			p -> new WaterBagItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：LURE_BAIT。 */
+	public static final Item LURE_BAIT = register(key("lure_bait"),
+			p -> new LureBaitItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：OBRAS_BLOOD。 */
+	public static final Item OBRAS_BLOOD = register(key("obras_blood"),
+			p -> new ObrasBloodItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：BROKEN_ROOT。 */
+	public static final Item BROKEN_ROOT = register(key("broken_root"),
+			p -> new BrokenRootItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：HEART_CARROT。 */
+	public static final Item HEART_CARROT = register(key("heart_carrot"),
+			p -> new HeartCarrotItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：WHITE_BRANCH。 */
+	public static final Item WHITE_BRANCH = register(key("white_branch"),
+			p -> new WhiteBranchItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：STONE_SPINDLE。 */
+	public static final Item STONE_SPINDLE = register(key("stone_spindle"),
+			p -> new StoneSpindleItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：FULL_FRUIT_BUCKET。 */
+	public static final Item FULL_FRUIT_BUCKET = register(key("full_fruit_bucket"),
+			p -> new FullFruitBucketItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：JOLO_WATERING_CAN。 */
+	public static final Item JOLO_WATERING_CAN = register(key("jolo_watering_can"),
+			p -> new JoloWateringCanItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：WATER_SPIRIT。 */
+	public static final Item WATER_SPIRIT = register(key("water_spirit"),
+			p -> new WaterSpiritItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：PRITVICE_WATER_DROP。 */
+	public static final Item PRITVICE_WATER_DROP = register(key("plitvice_water_drop"),
+			p -> new PlitviceWaterDropItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：CLOTH_ARMOR。 */
+	public static final Item CLOTH_ARMOR = register(key("cloth_armor"),
+			p -> new ClothArmorItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：SHIELD_BOOK。 */
+	public static final Item SHIELD_BOOK = register(key("shield"),
+			p -> new ShieldBookItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：SHIELD_EARRING。 */
+	public static final Item SHIELD_EARRING = register(key("shield_earring"),
+			p -> new ShieldEarringItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：BROKEN_MIRROR。 */
+	public static final Item BROKEN_MIRROR = register(key("broken_mirror"),
+			p -> new BrokenMirrorItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：THORN_SHELL。 */
+	public static final Item THORN_SHELL = register(key("thorn_shell"),
+			p -> new ThornShellItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：SERENS_LETTER。 */
+	public static final Item SERENS_LETTER = register(key("serens_letter"),
+			p -> new SerensLetterItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：POT_LID。 */
+	public static final Item POT_LID = register(key("pot_lid"),
+			p -> new PotLidItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：ACADEMY_CHAINMAIL。 */
+	public static final Item ACADEMY_CHAINMAIL = register(key("academy_chainmail"),
+			p -> new AcademyChainmailItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：LIZARD_PLATE_ARMOR。 */
+	public static final Item LIZARD_PLATE_ARMOR = register(key("lizard_plate_armor"),
+			p -> new LizardPlateArmorItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：SMALL_MIRROR。 */
+	public static final Item SMALL_MIRROR = register(key("small_mirror"),
+			p -> new SmallMirrorItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：WHITE_EDGE_BREAD。 */
+	public static final Item WHITE_EDGE_BREAD = register(key("white_edge_bread"),
+			p -> new WhiteEdgeBreadItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：BEAST_HEART。 */
+	public static final Item BEAST_HEART = register(key("beast_heart"),
+			p -> new BeastHeartItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：SHIELD_BAG。 */
+	public static final Item SHIELD_BAG = register(key("shield_bag"),
+			p -> new ShieldBagItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：ROCK_ELEPHANT。 */
+	public static final Item ROCK_ELEPHANT = register(key("rock_elephant"),
+			p -> new RockElephantItem(p), new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：BROKEN_SAPPHIRE。 */
+	public static final Item BROKEN_SAPPHIRE = register(key("broken_sapphire"),
+			p -> new BrokenSapphireItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：SHARPSHOOTER_CRANK。 */
+	public static final Item SHARPSHOOTER_CRANK = register(key("sharpshooter_crank"),
+			p -> new SharpshooterCrankItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：STURDY_RELOAD_CRATE。 */
+	public static final Item STURDY_RELOAD_CRATE = register(key("sturdy_reload_crate"),
+			p -> new SturdyReloadCrateItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：MASTERS_SWORD_GUARD。 */
+	public static final Item MASTERS_SWORD_GUARD = register(key("masters_sword_guard"),
+			p -> new MastersSwordGuardItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：RAINBOW_FEATHER。 */
+	public static final Item RAINBOW_FEATHER = register(key("rainbow_feather"),
+			p -> new RainbowFeatherItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：ABSOLUTE_RING。 */
+	public static final Item ABSOLUTE_RING = register(key("absolute_ring"),
+			p -> new AbsoluteRingItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：WINGS。 */
+	public static final Item WINGS = register(key("wings"),
+			p -> new WingsItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：BEIRUTS_SCYTHE。 */
+	public static final Item BEIRUTS_SCYTHE = register(key("beiruts_scythe"),
+			p -> new BeirutsScytheItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：BARTS_MONOCLE。 */
+	public static final Item BARTS_MONOCLE = register(key("barts_monocle"),
+			p -> new BartsMonocleItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：BLACK_SCALE。 */
+	public static final Item BLACK_SCALE = register(key("black_scale"),
+			p -> new BlackScaleItem(p),
+			new Item.Properties().stacksTo(1));
+	/** 26.1.2 0.5.3.8 移植：MADIRAN_CALM。 */
+	public static final Item MADIRAN_CALM = registerPotion("madiran_calm", Potions.MADIRAN_CALM,
+			Potions.MADIRAN_CALM_RARITY);
+	/** 26.1.2 0.5.3.8 移植：GRISETTE_PALE。 */
+	public static final Item GRISETTE_PALE = registerPotion("grisette_pale", Potions.GRISETTE_PALE,
+			Potions.GRISETTE_PALE_RARITY);
+	/** 26.1.2 0.5.3.8 移植：GEWURZ_ENSEMBLE。 */
+	public static final Item GEWURZ_ENSEMBLE = registerPotion("gewurz_ensemble", Potions.GEWURZ_ENSEMBLE,
+			Potions.GEWURZ_ENSEMBLE_RARITY);
+	/** 26.1.2 0.5.3.8 移植：NEBBIOLO_PERSISTENCE。 */
+	public static final Item NEBBIOLO_PERSISTENCE = registerPotion("nebbiolo_persistence",
+			Potions.NEBBIOLO_PERSISTENCE, Potions.NEBBIOLO_PERSISTENCE_RARITY);
+	/** 26.1.2 0.5.3.8 移植：UGNI_BLANC_MIST。 */
+	public static final Item UGNI_BLANC_MIST = registerPotion("ugni_blanc_mist", Potions.UGNI_BLANC_MIST,
+			Potions.UGNI_BLANC_MIST_RARITY);
+	/** 26.1.2 0.5.3.8 移植：TEMPRANILLO_PASSION。 */
+	public static final Item TEMPRANILLO_PASSION = registerPotion("tempranillo_passion",
+			Potions.TEMPRANILLO_PASSION, Potions.TEMPRANILLO_PASSION_RARITY);
+	/** 26.1.2 0.5.3.8 移植：MALBEC_RICHNESS。 */
+	public static final Item MALBEC_RICHNESS = registerPotion("malbec_richness", Potions.MALBEC_RICHNESS,
+			Potions.MALBEC_RICHNESS_RARITY);
+	/** 26.1.2 0.5.3.8 移植：MUSHROOM_SOUP。 */
+	public static final Item MUSHROOM_SOUP = registerPotion("mushroom_soup", Potions.MUSHROOM_SOUP,
+			Potions.MUSHROOM_SOUP_RARITY);
+	/** 26.1.2 0.5.3.8 移植：MADEIRA_FORTITUDE。 */
+	public static final Item MADEIRA_FORTITUDE = registerPotion("madeira_fortitude", Potions.MADEIRA_FORTITUDE,
+			Potions.MADEIRA_FORTITUDE_RARITY);
+	/** 26.1.2 0.5.3.8 移植：SAGRANTINO_PATIENCE。 */
+	public static final Item SAGRANTINO_PATIENCE = registerPotion("sagrantino_patience",
+			Potions.SAGRANTINO_PATIENCE, Potions.SAGRANTINO_PATIENCE_RARITY);
+	/** 26.1.2 0.5.3.8 移植：POULSARD_WHITESPACE。 */
+	public static final Item POULSARD_WHITESPACE = registerPotion("poulsard_whitespace",
+			Potions.POULSARD_WHITESPACE, Potions.POULSARD_WHITESPACE_RARITY);
+	/** 26.1.2 0.5.3.8 移植：DAWN_DEW。 */
+	public static final Item DAWN_DEW = registerPotion("dawn_dew", Potions.DAWN_DEW,
+			Potions.DAWN_DEW_RARITY);
 
 	private ModItems() {
 	}

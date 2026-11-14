@@ -32,6 +32,16 @@ public record PotionEffect(Kind kind, double amount, int seconds) {
 		ICE,
 		/** 永久 +amount 电元素强度（算「药水」那一份来源）。 */
 		LIGHTNING,
+		/** 永久 +amount 防御力。 */
+		DEFENSE,
+		/** 永久 +amount 闪避点数。 */
+		DODGE,
+		/** 永久给当前最高的那一项强度 +amount；并列时随机挑一种。 */
+		HIGHEST_ELEMENT,
+		/** 永久 +amount% 最终最大生命值（amount 存百分数，5 = +5%）。 */
+		MAX_HP_PERCENT,
+		/** 永久 +amount% 所有伤害放大（amount 存百分数，4 = +4%）。 */
+		ALL_DAMAGE_AMP,
 		/** 随机挑一种连击，永久 +amount 级（连击面板与连击效果都会跟着涨）。 */
 		COMBO,
 		/** 立即获得 amount 个骰子。 */
@@ -49,6 +59,11 @@ public record PotionEffect(Kind kind, double amount, int seconds) {
 			case FIRE -> PlayerStats.addPotionElement(player, PlayerStats.Element.FIRE, this.amount);
 			case ICE -> PlayerStats.addPotionElement(player, PlayerStats.Element.ICE, this.amount);
 			case LIGHTNING -> PlayerStats.addPotionElement(player, PlayerStats.Element.LIGHTNING, this.amount);
+			case DEFENSE -> PlayerStats.addDefense(player, this.amount);
+			case DODGE -> PlayerStats.addDodge(player, this.amount);
+			case HIGHEST_ELEMENT -> PlayerStats.addPotionHighestElement(player, this.amount);
+			case MAX_HP_PERCENT -> PlayerStats.addPotionMaxHpPercent(player, this.amount);
+			case ALL_DAMAGE_AMP -> PlayerStats.addPotionAllDamagePercent(player, this.amount);
 			case COMBO -> grantComboBonus(player);
 			case LIFESTEAL -> PlayerStats.addPotionLifesteal(player, this.amount);
 			// 交付走 PlayerItems.give：背包满时掉在脚下（别用 Inventory#add 的返回值判断，见它顶部）
@@ -75,6 +90,11 @@ public record PotionEffect(Kind kind, double amount, int seconds) {
 			case FIRE -> Component.translatable("potion.sephiria_fantasy.fire", num(this.amount));
 			case ICE -> Component.translatable("potion.sephiria_fantasy.ice", num(this.amount));
 			case LIGHTNING -> Component.translatable("potion.sephiria_fantasy.lightning", num(this.amount));
+			case DEFENSE -> Component.translatable("potion.sephiria_fantasy.defense", num(this.amount));
+			case DODGE -> Component.translatable("potion.sephiria_fantasy.dodge", num(this.amount));
+			case HIGHEST_ELEMENT -> Component.translatable("potion.sephiria_fantasy.highest_element", num(this.amount));
+			case MAX_HP_PERCENT -> Component.translatable("potion.sephiria_fantasy.max_hp_percent", num(this.amount));
+			case ALL_DAMAGE_AMP -> Component.translatable("potion.sephiria_fantasy.all_damage_amp", num(this.amount));
 			case COMBO -> Component.translatable("potion.sephiria_fantasy.combo", num(this.amount));
 			case DICE -> Component.translatable("potion.sephiria_fantasy.dice", num(this.amount));
 			case LIFESTEAL -> Component.translatable("potion.sephiria_fantasy.lifesteal", num(this.amount));

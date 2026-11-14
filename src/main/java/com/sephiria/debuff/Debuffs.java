@@ -1,5 +1,7 @@
 package com.sephiria.debuff;
 
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+
 import com.sephiria.Sephiria;
 import com.sephiria.compat.AttributeIds;
 import com.sephiria.compat.Modifiers;
@@ -11,7 +13,7 @@ import com.sephiria.registry.ModSounds;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import com.sephiria.compat.DamageEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;

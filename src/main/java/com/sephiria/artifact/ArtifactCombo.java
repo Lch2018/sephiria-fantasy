@@ -166,6 +166,47 @@ public enum ArtifactCombo {
 			Tier.frostArmament(6, "artifact.sephiria_fantasy.combo.frost_armament.t6", 0.0D, 6.0D, 0),
 			Tier.frostArmament(8, "artifact.sephiria_fantasy.combo.frost_armament.t8", 0.0D, 8.0D, 0),
 			Tier.frostArmament(10, "artifact.sephiria_fantasy.combo.frost_armament.t10", 0.0D, 0.0D, 1)
+	}),
+
+	/**
+	 * 学院：魔法书专精。档位只改「魔法书加速 / 魔法书 MP 消耗 / 魔法书伤害 / MP 再生」，
+	 * 具体数值由下面的专用方法给出（普通 Tier 字段仍留 0，面板靠翻译键显示）。
+	 */
+	/** 湖泊：最大 MP、MP 再生与「消耗 MP 的能力伤害」。档位 3 / 6 / 9。 */
+	LAKE("lake", new Tier[] {
+			new Tier(3, "artifact.sephiria_fantasy.combo.lake.t3", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
+			new Tier(6, "artifact.sephiria_fantasy.combo.lake.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
+			new Tier(9, "artifact.sephiria_fantasy.combo.lake.t9", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false)
+	}),
+
+	ACADEMY("academy", new Tier[] {
+			new Tier(2, "artifact.sephiria_fantasy.combo.academy.t2", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
+			new Tier(4, "artifact.sephiria_fantasy.combo.academy.t4", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
+			new Tier(6, "artifact.sephiria_fantasy.combo.academy.t6", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
+			new Tier(8, "artifact.sephiria_fantasy.combo.academy.t8", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false),
+			new Tier(10, "artifact.sephiria_fantasy.combo.academy.t10", 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false)
+	}),
+
+	/**
+	 * 守护：防御力，10 档额外给「无视防御」。
+	 *
+	 * <p>档位数值由 {@link #defenseFlat} / {@link #defenseIgnorePercent} 给出（与湖泊同一套写法），
+	 * 因为通用 Tier 字段已经很多、这两个词条只有守护用。
+	 */
+	GUARD("guard", new Tier[] {
+			Tier.guard(2, "artifact.sephiria_fantasy.combo.guard.t2"),
+			Tier.guard(4, "artifact.sephiria_fantasy.combo.guard.t4"),
+			Tier.guard(6, "artifact.sephiria_fantasy.combo.guard.t6"),
+			Tier.guard(8, "artifact.sephiria_fantasy.combo.guard.t8"),
+			Tier.guard(10, "artifact.sephiria_fantasy.combo.guard.t10")
 	});
 
 	/**
@@ -278,6 +319,12 @@ public enum ArtifactCombo {
 			return new Tier(level, textKey, 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
 					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false,
 					0, false, false, 0.0D, 0, 0.0D, 0.0D, 0.0D, 0.0D, chargeSpeed, damagePercent, extraTriggers);
+		}
+
+		/** 守护的一档：普通 Tier 字段全留空，数值由连击自己的方法给出。 */
+		public static Tier guard(int level, String textKey) {
+			return new Tier(level, textKey, 0.0D, 0.0D, 0.0D, 0.0D, 0, 0.0D, 0.0D, 0.0D,
+					0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D, false, false);
 		}
 
 		/** 这一档给的说明行。 */
@@ -449,6 +496,44 @@ public enum ArtifactCombo {
 		return (int) sum(comboLevel, Tier::frostExtraTriggers);
 	}
 
+	/** 学院的「魔法书加速」：2/6/8 档分别 +12/+16/+20，累加。 */
+	public double magicBookHastePercent(int comboLevel) {
+		if (this != ACADEMY) {
+			return 0.0D;
+		}
+
+		double total = 0.0D;
+
+		if (comboLevel >= 2) {
+			total += 12.0D;
+		}
+
+		if (comboLevel >= 6) {
+			total += 16.0D;
+		}
+
+		if (comboLevel >= 8) {
+			total += 20.0D;
+		}
+
+		return total;
+	}
+
+	/** 学院的「魔法书 MP 消耗减少」：4 档 +15%。 */
+	public double magicBookMpReductionPercent(int comboLevel) {
+		return this == ACADEMY && comboLevel >= 4 ? 15.0D : 0.0D;
+	}
+
+	/** 学院的「魔法书伤害」：10 档 +15%。 */
+	public double magicBookDamagePercent(int comboLevel) {
+		return this == ACADEMY && comboLevel >= 10 ? 15.0D : 0.0D;
+	}
+
+	/** 学院的「MP 再生」：10 档 +8（每 10 秒的显示口径）。 */
+	public double magicBookMpRegenPoints(int comboLevel) {
+		return this == ACADEMY && comboLevel >= 10 ? 8.0D : 0.0D;
+	}
+
 	/**
 	 * 「灼伤的基础伤害倍率」（%）：没到 10 档返回 0，表示「沿用默认值」（见 {@code Debuffs.BURN_BASE_PERCENT}）；
 	 * 10 档返回 18，把默认的 8 换掉（换、不是加，所以这里只取档位给的数值）。
@@ -518,6 +603,94 @@ public enum ArtifactCombo {
 		}
 
 		return false;
+	}
+
+	/** 湖泊：最大 MP 固定加成（3/6/9 档分别 +20/+30/+40，逐档累加）。 */
+	public double maxMpFlat(int comboLevel) {
+		if (this != LAKE) {
+			return 0.0D;
+		}
+
+		double total = 0.0D;
+
+		if (comboLevel >= 3) {
+			total += 20.0D;
+		}
+
+		if (comboLevel >= 6) {
+			total += 30.0D;
+		}
+
+		if (comboLevel >= 9) {
+			total += 40.0D;
+		}
+
+		return total;
+	}
+
+	/** 湖泊：MP 再生 +5（只在 3 档给一次）。 */
+	public double mpRegenPoints(int comboLevel) {
+		return this == LAKE && comboLevel >= 3 ? 5.0D : 0.0D;
+	}
+
+	/** 湖泊：消耗 MP 的能力伤害加成（6 档 +10%、9 档再 +25%，逐档累加）。 */
+	public double mpAbilityDamagePercent(int comboLevel) {
+		if (this != LAKE) {
+			return 0.0D;
+		}
+
+		double total = 0.0D;
+
+		if (comboLevel >= 6) {
+			total += 10.0D;
+		}
+
+		if (comboLevel >= 9) {
+			total += 25.0D;
+		}
+
+		return total;
+	}
+
+	/** 守护：防御力固定加成（2/4/6/8/10 档分别 +6/+7/+8/+10/+12，逐档累加）。 */
+	public double defenseFlat(int comboLevel) {
+		if (this != GUARD) {
+			return 0.0D;
+		}
+
+		double total = 0.0D;
+
+		if (comboLevel >= 2) {
+			total += 6.0D;
+		}
+
+		if (comboLevel >= 4) {
+			total += 7.0D;
+		}
+
+		if (comboLevel >= 6) {
+			total += 8.0D;
+		}
+
+		if (comboLevel >= 8) {
+			total += 10.0D;
+		}
+
+		if (comboLevel >= 10) {
+			total += 12.0D;
+		}
+
+		return total;
+	}
+
+	/**
+	 * 守护：无视防御（%），10 档 +5。
+	 *
+	 * <p>与「防御穿透」为乘算（剩余防御 = 1 × (1−穿透) × (1−无视防御)），
+	 * 且两者都只作用于原版护甲与「防御力」两层。
+	 */
+	public double defenseIgnorePercent(int comboLevel) {
+		return this == GUARD && comboLevel >= 10 ? 5.0D : 0.0D;
 	}
 
 	/** 当前等级已经吃到的物理强度：<b>各档累加</b>（8 级就是 2+4+6+8 = +20）。 */

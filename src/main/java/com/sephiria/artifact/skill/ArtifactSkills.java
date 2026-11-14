@@ -59,8 +59,8 @@ public final class ArtifactSkills {
 		return stack.getItem() instanceof com.sephiria.artifact.SephiriaArtifact artifact ? artifact.skill() : null;
 	}
 
-	/** 一条可用技能：神器物品（图标与名字都用它）+ 实际等级 + 技能。 */
-	public record Available(Item item, int level, ArtifactSkill skill) {
+	/** 一条可用技能：神器物品（图标与名字都用它）+ 实际等级 + 技能 + 所在背包格。 */
+	public record Available(Item item, int level, ArtifactSkill skill, int slot) {
 	}
 
 	/**
@@ -83,7 +83,9 @@ public final class ArtifactSkills {
 				continue;
 			}
 
-			list.add(new Available(stack.getItem(), level, artifact.skill()));
+			// 技能等级不能超过神器自身的最高等级（格子等级可能把它顶上去）。
+			level = Math.min(level, artifact.maxLevel());
+			list.add(new Available(stack.getItem(), level, artifact.skill(), slot));
 		}
 
 		return list;
@@ -141,6 +143,107 @@ public final class ArtifactSkills {
 		return (int) Math.max(0L, slots[slot] - player.level().getGameTime());
 	}
 
+	/** 这一条技能的实际冷却（魔法书吃「魔法书加速」：速度 +x% → 时间 ÷(1+x%)）。 */
+	public static int cooldownTicksFor(ServerPlayer player, Available resolved) {
+		int base = resolved.skill().cooldownTicks(player, resolved.level());
+
+		if (resolved.item() instanceof com.sephiria.artifact.MagicBook) {
+			double haste = com.sephiria.artifact.ArtifactEffects.magicBookHastePercent(player, resolved.slot());
+
+			if (haste > 0.0D) {
+				base = Math.max(1, (int) Math.round(base / (1.0D + haste / 100.0D)));
+			}
+		}
+
+		return base;
+	}
+
+	/** 这一条技能的实际蓝耗（魔法书吃学院 / 雷伊星碎片 / 怀表的减耗，魔弹再吃双角管的增加）。 */
+	public static double mpCostFor(ServerPlayer player, Available resolved) {
+		double base = resolved.skill().mpCost(player, resolved.level());
+		double reduction = com.sephiria.artifact.ArtifactEffects.magicBookMpReductionPercent(player, resolved.slot());
+
+		if (reduction > 0.0D) {
+			base = Math.max(0.0D, base * (1.0D - reduction / 100.0D));
+		}
+
+		if (resolved.skill() instanceof com.sephiria.artifact.skill.MagicBoltSkill) {
+			double increase = com.sephiria.artifact.ArtifactEffects.magicBoltMpCostIncreasePercent(player);
+
+			if (increase > 0.0D) {
+				base *= 1.0D + increase / 100.0D;
+			}
+		}
+
+		return base;
+	}
+
+	/** 闪避成功时让所有魔法书的剩余冷却加速（学院钢笔）。 */
+	public static void accelerateMagicBooks(ServerPlayer player, double percent) {
+		if (percent <= 0.0D) {
+			return;
+		}
+
+		long[] slots = COOLDOWNS.get(player.getUUID());
+
+		if (slots == null) {
+			return;
+		}
+
+		List<String> entries = SkillSlots.of(player);
+		long now = player.level().getGameTime();
+		double factor = 1.0D / (1.0D + Math.max(0.0D, percent) / 100.0D);
+		boolean changed = false;
+
+		for (int slot = 0; slot < SkillSlots.COUNT && slot < slots.length; slot++) {
+			if (slots[slot] <= now) {
+				continue;
+			}
+
+			Available resolved = resolve(player, entries.get(slot));
+
+			if (resolved != null && resolved.item() instanceof com.sephiria.artifact.MagicBook) {
+				long remaining = slots[slot] - now;
+				slots[slot] = now + Math.max(0L, Math.round(remaining * factor));
+				changed = true;
+			}
+		}
+
+		if (changed) {
+			com.sephiria.artifact.ArtifactHud.send(player);
+		}
+	}
+
+	/** 给玩家所有装着指定技能的栏位减冷却（雷电回旋镖接住时用）。 */
+	public static void reduceCooldown(ServerPlayer player, ArtifactSkill skill, int ticks) {
+		long[] slots = COOLDOWNS.get(player.getUUID());
+
+		if (slots == null || ticks <= 0) {
+			return;
+		}
+
+		List<String> entries = SkillSlots.of(player);
+		long now = player.level().getGameTime();
+		boolean changed = false;
+
+		for (int slot = 0; slot < SkillSlots.COUNT && slot < slots.length; slot++) {
+			if (slots[slot] <= now) {
+				continue;
+			}
+
+			Available resolved = resolve(player, entries.get(slot));
+
+			if (resolved != null && resolved.skill() == skill) {
+				slots[slot] = Math.max(now, slots[slot] - ticks);
+				changed = true;
+			}
+		}
+
+		if (changed) {
+			com.sephiria.artifact.ArtifactHud.send(player);
+		}
+	}
+
 	/**
 	 * 按下第 {@code slot} 号技能栏。
 	 *
@@ -159,19 +262,24 @@ public final class ArtifactSkills {
 			return;
 		}
 
+		if (!resolved.skill().canCast(player, resolved.level())) {
+			refuse(player);
+			return;
+		}
+
 		if (cooldownLeft(player, slot) > 0) {
 			refuse(player);
 			return;
 		}
 
-		if (!PlayerStats.spendMp(player, resolved.skill().mpCost(resolved.level()))) {
+		if (!PlayerStats.spendMp(player, resolved.skill().mpCost(player, resolved.level()))) {
 			refuse(player);
 			return;
 		}
 
 		resolved.skill().cast(player, resolved.level());
 		COOLDOWNS.computeIfAbsent(player.getUUID(), uuid -> new long[SkillSlots.COUNT])[slot] =
-				player.level().getGameTime() + resolved.skill().cooldownTicks();
+				player.level().getGameTime() + resolved.skill().cooldownTicks(player, resolved.level());
 		// 冷却刚上：立刻推一次 HUD，别等下一个 10 刻周期
 		com.sephiria.artifact.ArtifactHud.send(player);
 	}

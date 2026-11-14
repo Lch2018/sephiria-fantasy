@@ -1,9 +1,14 @@
 package com.sephiria.artifact;
 
 import com.sephiria.backpack.ArtifactBackpack;
+import com.sephiria.registry.ModItems;
+import com.sephiria.slate.FusedSlateItem;
+import com.sephiria.slate.SlateItem;
 import com.sephiria.stats.PlayerStats;
+import com.sephiria.talent.SlateImprint;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -65,7 +70,7 @@ public final class ArtifactEffects {
 		return total;
 	}
 
-	/** 背包里所有生效神器的攻击速度加成（百分点）。 */
+	/** 神器给的攻击速度加成（百分点）。 */
 	public static double attackSpeedBonus(ServerPlayer player) {
 		ArtifactBackpack backpack = ArtifactBackpack.of(player);
 		double total = 0.0D;
@@ -92,9 +97,67 @@ public final class ArtifactEffects {
 		return total;
 	}
 
+	/**
+	 * 翅膀给的全伤害放大（%）：按「额外攻击速度」超过 100% 的部分分段，每段 +1%。
+	 *
+	 * <p>额外攻速取面板总值（含翅膀自己、药水、天赋与连击），段长随翅膀等级
+	 * 25/20/15/9/6/5；不足一段的零头不计。
+	 */
+	public static int wingsDamageAmpPercent(ServerPlayer player) {
+		int level = highestLevelOf(player, ModItems.WINGS);
+
+		if (level < 0) {
+			return 0;
+		}
+
+		double extra = Math.max(0.0D, PlayerStats.attackSpeedTotal(player) - PlayerStats.DEFAULT_ATTACK_SPEED);
+		double step = WingsItem.damageStep(level);
+		return step <= 0.0D ? 0 : (int) Math.floor(extra / step);
+	}
+
 	/** 神器给的「特殊攻击伤害」加成总和（%）。 */
 	public static double specialAttackBonus(ServerPlayer player) {
 		return sumAffix(player, (artifact, level) -> artifact.specialAttackBonus(level));
+	}
+
+	/** 神器给的「特殊攻击范围」加成总和（%）：只作用于武器技能。 */
+	public static double specialAttackRangePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::specialAttackRangePercentBonus);
+	}
+
+	/** 神器给的「武器伤害」加成总和（%）：普攻与武器技能都吃。 */
+	public static double weaponDamagePercentBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::weaponDamagePercentBonus);
+	}
+
+	/** 神器给的弩重装速度加成总和（%）。 */
+	public static double crossbowReloadSpeedPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::crossbowReloadSpeedPercent);
+	}
+
+	/** 神器给的弩攻击伤害加成总和（%）。 */
+	public static double crossbowDamagePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::crossbowDamagePercent);
+	}
+
+	/** 神器给的「装填完成后 10 秒弩伤害」加成（%）。 */
+	public static double crossbowReloadBuffPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::crossbowReloadBuffPercent);
+	}
+
+	/** 神器给的最大弹匣数量加成（个，基础 1）。 */
+	public static int maxMagazinesBonus(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::maxMagazinesBonus);
+	}
+
+	/** 神器给的刀切换无敌时间加成（%）。 */
+	public static double katanaSwitchInvulnPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::katanaSwitchInvulnPercent);
+	}
+
+	/** 神器给的匕首额外专注获取（层）。 */
+	public static int daggerFocusBonus(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::daggerFocusBonus);
 	}
 
 	/** 神器给的「近战攻击范围」加成总和（%）。 */
@@ -132,6 +195,75 @@ public final class ArtifactEffects {
 		return sumAffix(player, SephiriaArtifact::critDamageBonus);
 	}
 
+	/**
+	 * 巴尔特的工作用单片眼镜：目标在 3 格以内时的暴击伤害扣减（百分点）。
+	 *
+	 * <p>按<b>攻击瞬间</b>双方的距离判断，所以同一件神器打远处目标不扣。
+	 */
+	public static double closeRangeCritDamagePenalty(ServerPlayer player, LivingEntity target) {
+		double range = BartsMonocleItem.CLOSE_RANGE;
+
+		if (player.distanceToSqr(target) > range * range) {
+			return 0.0D;
+		}
+
+		return sumAffix(player, SephiriaArtifact::closeRangeCritDamagePenalty);
+	}
+
+	/**
+	 * 贝鲁特之镰：暴击几率超过 100% 时，溢出部分作为处决触发几率（%）。
+	 *
+	 * <p>没有镰刀时恒为 0；处决本身在 {@code SephiriaDamage#applyCrit} 里结算。
+	 */
+	public static double executionChance(ServerPlayer player, double critChance) {
+		if (critChance <= 100.0D) {
+			return 0.0D;
+		}
+
+		boolean hasScythe = sumAffix(player,
+				(artifact, level) -> artifact.executionEnabled(level) ? 1.0D : 0.0D) > 0.0D;
+		return hasScythe ? critChance - 100.0D : 0.0D;
+	}
+
+	/**
+	 * 黑鳞片：每持有 1 个石板给的暴击几率，乘当前石板数量。
+	 *
+	 * <p>没有黑鳞片时直接返回 0，不扫描背包——这个值在每次伤害结算都会被问到。
+	 */
+	public static double blackScaleCritChance(ServerPlayer player) {
+		double perSlate = sumAffix(player, SephiriaArtifact::critChancePerSlate);
+		return perSlate <= 0.0D ? 0.0D : perSlate * slateCount(player);
+	}
+
+	/**
+	 * 当前持有的「石板物品」数量：赛菲莉娅背包里的 + 已刻印保留的，合成石板算 2 块。
+	 *
+	 * <p>原版背包里的石板不算（与神器只认赛菲莉娅背包同一条口径）。
+	 */
+	public static int slateCount(ServerPlayer player) {
+		int count = 0;
+		ArtifactBackpack backpack = ArtifactBackpack.of(player);
+
+		for (int slot = 0; slot < backpack.getContainerSize(); slot++) {
+			count += slateWeight(backpack.getItem(slot));
+		}
+
+		for (SlateImprint.Entry entry : SlateImprint.entries(player)) {
+			count += slateWeight(entry.stack());
+		}
+
+		return count;
+	}
+
+	/** 一张石板算几块：合成石板（由两块合成）算 2，其余石板 1。 */
+	private static int slateWeight(ItemStack stack) {
+		if (stack.getItem() instanceof FusedSlateItem) {
+			return 2;
+		}
+
+		return stack.getItem() instanceof SlateItem ? 1 : 0;
+	}
+
 	/** 神器给的「无视防御伤害」总和（点）。 */
 	public static double ignoreDefenseBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::ignoreDefenseBonus);
@@ -142,6 +274,11 @@ public final class ArtifactEffects {
 		return sumAffix(player, SephiriaArtifact::normalAttackDamagePercentBonus);
 	}
 
+	/** 神器给的「所有伤害放大」总和（%）：与药水那一条同一层。 */
+	public static double allDamagePercentBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::allDamagePercentBonus);
+	}
+
 	/** 神器给的移动速度加成总和（%）。 */
 	public static double moveSpeedPercent(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::moveSpeedPercentBonus);
@@ -150,6 +287,11 @@ public final class ArtifactEffects {
 	/** 神器给的闪避总和（点）。 */
 	public static double dodgeBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::dodgeBonus);
+	}
+
+	/** 神器给的防御力总和（点）。 */
+	public static double defenseBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::defenseBonus);
 	}
 
 	/** 闪避触发时恢复的冲刺次数（弹力带）。 */
@@ -193,6 +335,23 @@ public final class ArtifactEffects {
 		return total;
 	}
 
+	/** 连击「守护」给的防御力（点）。 */
+	public static double comboDefenseBonus(ServerPlayer player) {
+		return ArtifactCombo.GUARD.defenseFlat(
+				comboLevels(player).getOrDefault(ArtifactCombo.GUARD, 0));
+	}
+
+	/**
+	 * 连击「守护」给的「无视防御」（%）。
+	 *
+	 * <p>与天赋「愤怒」的防御穿透是<b>乘算</b>（不是相加）：两者都只削原版护甲与「防御力」，
+	 * 结算见 {@code DamageReductionMixin} 与 {@code RootRetreat.outgoingDamageMultiplier}。
+	 */
+	public static double defenseIgnorePercent(ServerPlayer player) {
+		return ArtifactCombo.GUARD.defenseIgnorePercent(
+				comboLevels(player).getOrDefault(ArtifactCombo.GUARD, 0));
+	}
+
 	/** 暴击溅射比例（%）：0 表示没有这个词条。 */
 	public static double critSplashPercent(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::critSplashPercent);
@@ -231,9 +390,9 @@ public final class ArtifactEffects {
 		return total;
 	}
 
-	/** 连击给的武器伤害加成总和（%）。 */
+	/** 连击给的武器伤害加成总和（%）；同时加上神器自己的「武器伤害」词条。 */
 	public static double weaponDamagePercent(ServerPlayer player) {
-		double total = 0.0D;
+		double total = sumAffix(player, SephiriaArtifact::weaponDamagePercentBonus);
 
 		for (Map.Entry<ArtifactCombo, Integer> entry : comboLevels(player).entrySet()) {
 			total += entry.getKey().weaponDamagePercent(entry.getValue());
@@ -432,6 +591,11 @@ public final class ArtifactEffects {
 		return sumAffix(player, (artifact, level) -> artifact.flickeringEye(level) ? 1.0D : 0.0D) > 0.0D;
 	}
 
+	/** 闪烁的眼睛的混沌伤害倍率（%）：按【唯一】取生效等级。 */
+	public static double flickeringEyeDamagePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::flickeringEyeDamagePercent);
+	}
+
 	/** 神器给的「火元素强度」加成总和（点）：索利斯那两枚徽章 + 对立之秤按左右半边给的差额。 */
 	public static double fireElementBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::fireElementBonus)
@@ -566,6 +730,215 @@ public final class ArtifactEffects {
 	/** 神器给的 MP再生加成总和（内部点/秒；显示与战斗结算在 mpRegenTotal 里 ×10）。 */
 	public static double mpRegenBonus(ServerPlayer player) {
 		return sumAffix(player, SephiriaArtifact::mpRegenBonus);
+	}
+
+	/** 学院 / 魔法师的硬币 / 海棠果 / 冥想书：魔法书加速（点，每点 = 冷却速度 +1%）。 */
+	public static double magicBookHastePercent(ServerPlayer player) {
+		int combo = comboLevels(player).getOrDefault(ArtifactCombo.ACADEMY, 0);
+		// 负词条（蜥蜴板甲）最多把加速压到 0，低于默认值按默认值算
+		return Math.max(0.0D, ArtifactCombo.ACADEMY.magicBookHastePercent(combo)
+				+ sumAffix(player, SephiriaArtifact::magicBookHasteBonus));
+	}
+
+	/**
+	 * 某一格魔法书实际吃到的魔法书加速：全局那一份 + 左边格子「发光的沙漏」加给它的那一份。
+	 *
+	 * <p>沙漏的规则是「右边格子的魔法书」，所以从书这一格看，沙漏在<b>左边</b>。
+	 */
+	public static double magicBookHastePercent(ServerPlayer player, int slot) {
+		double total = magicBookHastePercent(player);
+		ArtifactBackpack backpack = ArtifactBackpack.of(player);
+
+		if (slot >= 0 && slot < backpack.getContainerSize()
+				&& slot % ArtifactBackpack.WIDTH != 0) {
+			ItemStack left = backpack.getItem(slot - 1);
+			int level = effectiveLevel(left, backpack.slotLevel(slot - 1));
+
+			if (left.getItem() instanceof SephiriaArtifact artifact && level >= 0) {
+				total += artifact.rightMagicBookHasteBonus(level);
+			}
+		}
+
+		return total;
+	}
+
+	/**
+	 * 某个背包格子里的魔法书实际吃到的 MP 消耗减少（%）。
+	 *
+	 * <p>学院连击的减耗对所有魔法书生效；莱莉的怀表这类词条给全局减耗；
+	 * 雷伊星碎片只对它<b>左边同一行</b>的那本魔法书生效，所以从书这一格看，碎片在<b>右边</b>
+	 * （书在左、碎片在右）。三者相加，最多 100%。
+	 */
+	public static double magicBookMpReductionPercent(ServerPlayer player, int slot) {
+		ArtifactBackpack backpack = ArtifactBackpack.of(player);
+		ItemStack book = backpack.getItem(slot);
+
+		if (!(book.getItem() instanceof MagicBook)) {
+			return 0.0D;
+		}
+
+		int combo = comboLevels(player).getOrDefault(ArtifactCombo.ACADEMY, 0);
+		double total = ArtifactCombo.ACADEMY.magicBookMpReductionPercent(combo)
+				+ sumAffix(player, SephiriaArtifact::magicBookMpReductionGlobalBonus);
+
+		if (slot >= 0 && slot < backpack.getContainerSize()
+				&& slot % ArtifactBackpack.WIDTH != ArtifactBackpack.WIDTH - 1) {
+			ItemStack right = backpack.getItem(slot + 1);
+			int level = effectiveLevel(right, backpack.slotLevel(slot + 1));
+
+			if (right.getItem() instanceof RayStarFragmentItem fragment && level >= 0) {
+				total += fragment.magicBookMpReductionBonus(level);
+			}
+		}
+
+		return Math.min(100.0D, total);
+	}
+
+	/** 所有魔法书共用的「全局 MP 消耗减少」（%）：莱莉的怀表。 */
+	public static double magicBookMpReductionGlobalPercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::magicBookMpReductionGlobalBonus);
+	}
+
+	/** 魔法书伤害加成（%）：学院 10 档 + 神器词条 + 学院钢笔按闪避换算。 */
+	public static double magicBookDamagePercent(ServerPlayer player) {
+		int combo = comboLevels(player).getOrDefault(ArtifactCombo.ACADEMY, 0);
+		double dodge = PlayerStats.dodgeTotal(player);
+		return ArtifactCombo.ACADEMY.magicBookDamagePercent(combo)
+				+ sumAffix(player, (artifact, level) -> artifact.magicBookDamageBonus(level)
+						+ artifact.magicBookDamageFromDodge(level, dodge));
+	}
+
+	/** 魔法书伤害倍率（默认 1.0）。 */
+	public static double magicBookDamageMultiplier(ServerPlayer player) {
+		return 1.0D + magicBookDamagePercent(player) / 100.0D;
+	}
+
+	/** 魔法书的暴击率加成（%）：宝石盔甲。 */
+	public static double magicBookCritChancePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::magicBookCritChanceBonus);
+	}
+
+	/** 占用最大 MP（点）：渴望宝珠。这部分 MP 不能使用，但上限本身不减少。 */
+	public static double mpReserved(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::mpReservedBonus);
+	}
+
+	/** 「最终 MP」百分比加成（%）：空剑柄。 */
+	public static double maxMpPercentBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::maxMpPercentBonus);
+	}
+
+	/** 闪避成功时让所有魔法书剩余冷却加速的百分比（%）：学院钢笔。 */
+	public static double magicBookCooldownOnDodgePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::magicBookCooldownOnDodgePercent);
+	}
+
+	/** 双角管：魔弹是否分三路。 */
+	public static boolean magicBoltSplit(ServerPlayer player) {
+		return sumAffix(player, (artifact, level) -> artifact.magicBoltSplitDamageReduction(level) > 0.0D
+				|| artifact.magicBoltMpCostIncreasePercent(level) > 0.0D ? 1.0D : 0.0D) > 0.0D;
+	}
+
+	/** 双角管：分三路后每一路的伤害倍率。 */
+	public static double magicBoltSplitDamageMultiplier(ServerPlayer player) {
+		double reduction = sumAffix(player, SephiriaArtifact::magicBoltSplitDamageReduction);
+		return Math.max(0.0D, 1.0D - reduction / 100.0D);
+	}
+
+	/** 双角管：魔弹的 MP 消耗增加（%）。 */
+	public static double magicBoltMpCostIncreasePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::magicBoltMpCostIncreasePercent);
+	}
+
+	/** 音叉：是否启用「声波」层数。 */
+	public static boolean tuningForkEnabled(ServerPlayer player) {
+		return sumAffix(player, (artifact, level) -> artifact.tuningForkEnabled(level) ? 1.0D : 0.0D) > 0.0D;
+	}
+
+	/** 书库之阳：太阳剑是否按魔法书伤害等比放大。 */
+	public static boolean librarySunEnabled(ServerPlayer player) {
+		return sumAffix(player, (artifact, level) -> artifact.librarySunEnabled(level) ? 1.0D : 0.0D) > 0.0D;
+	}
+
+	/** 书库之阳：造成魔法书伤害时太阳剑额外触发几次。 */
+	public static int librarySunExtraTriggers(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::librarySunExtraTriggers);
+	}
+
+	/** 湖泊：最大 MP 固定加成。 */
+	public static double lakeMaxMpFlat(ServerPlayer player) {
+		int combo = comboLevels(player).getOrDefault(ArtifactCombo.LAKE, 0);
+		return ArtifactCombo.LAKE.maxMpFlat(combo);
+	}
+
+	/** 湖泊：MP 再生（每 10 秒）。 */
+	public static double lakeMpRegenPoints(ServerPlayer player) {
+		int combo = comboLevels(player).getOrDefault(ArtifactCombo.LAKE, 0);
+		return ArtifactCombo.LAKE.mpRegenPoints(combo);
+	}
+
+	/** 湖泊 + 石纺锤：消耗 MP 的能力伤害加成（%）。 */
+	public static double mpAbilityDamagePercent(ServerPlayer player) {
+		int combo = comboLevels(player).getOrDefault(ArtifactCombo.LAKE, 0);
+		return ArtifactCombo.LAKE.mpAbilityDamagePercent(combo)
+				+ sumAffix(player, SephiriaArtifact::mpAbilityDamageBonus);
+	}
+
+	/** 神器给的「最终最大生命值」百分比加成（%）。 */
+	public static double maxHpPercentBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::maxHpPercentBonus);
+	}
+
+	/** 神器给的 MP 吸收加成（点）。 */
+	public static double mpAbsorbBonus(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::mpAbsorbBonus);
+	}
+
+	/** 诱惑的鱼饵：海之眷顾等级（取生效神器的总和）。 */
+	public static int fishingLuckBonus(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::fishingLuckBonus);
+	}
+
+	/** 诱惑的鱼饵：饵钓等级（取生效神器的总和）。 */
+	public static int fishingLureBonus(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::fishingLureBonus);
+	}
+
+	/** 乔洛的浇水壶：当前生效等级的最大 MP 门槛（0 = 没有）。 */
+	public static int wateringCanThreshold(ServerPlayer player) {
+		return (int) sumAffix(player, SephiriaArtifact::wateringCanMaxMpThreshold);
+	}
+
+	/** 乔洛的浇水壶：最大 MP 达到门槛时，魔法书额外无蓝耗施放一次。 */
+	public static boolean wateringCanExtraCast(ServerPlayer player) {
+		int threshold = wateringCanThreshold(player);
+		return threshold > 0 && PlayerStats.maxMpTotal(player) >= threshold;
+	}
+
+	/** 消耗 MP 的能力伤害倍率（默认 1.0）。 */
+	public static double mpAbilityDamageMultiplier(ServerPlayer player) {
+		return 1.0D + mpAbilityDamagePercent(player) / 100.0D;
+	}
+
+	/** 魔法书技能伤害倍率：魔法书自身加成 × 湖泊的「消耗 MP 能力伤害」加成。 */
+	public static double magicBookSkillDamageMultiplier(ServerPlayer player) {
+		return magicBookDamageMultiplier(player) * mpAbilityDamageMultiplier(player);
+	}
+
+	/** 学院 10 档：MP 再生 +8（每 10 秒的显示口径）。 */
+	public static double magicBookComboMpRegen(ServerPlayer player) {
+		int combo = comboLevels(player).getOrDefault(ArtifactCombo.ACADEMY, 0);
+		return ArtifactCombo.ACADEMY.magicBookMpRegenPoints(combo);
+	}
+
+	/** 魔法师的硬币：奖励中出现魔法书的额外概率（%）。 */
+	public static double magicBookRewardChancePercent(ServerPlayer player) {
+		return sumAffix(player, SephiriaArtifact::magicBookRewardChanceBonus);
+	}
+
+	/** 鼠魔法师的吊坠：三枚魔弹是否追踪敌人。 */
+	public static boolean magicBoltTracking(ServerPlayer player) {
+		return sumAffix(player, (artifact, level) -> artifact.magicBoltTracking(level) ? 1.0D : 0.0D) > 0.0D;
 	}
 
 	/** 神器给的「战斗中乌云恢复速度」加成总和（%）：战斗中每 5 秒的回复量乘 (1 + 加成)。 */

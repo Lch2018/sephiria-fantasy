@@ -517,6 +517,31 @@ public final class ArtifactLoot {
 		return null;
 	}
 
+	/** 在同一品质里按权重挑一件；魔法书的权重乘 {@code magicBookMultiplier}。 */
+	public static Item pickFromTier(RandomSource random, List<Item> tier, double magicBookMultiplier) {
+		double total = 0.0D;
+
+		for (Item item : tier) {
+			total += item instanceof MagicBook ? magicBookMultiplier : 1.0D;
+		}
+
+		if (total <= 0.0D) {
+			return tier.isEmpty() ? null : tier.get(random.nextInt(tier.size()));
+		}
+
+		double roll = random.nextDouble() * total;
+
+		for (Item item : tier) {
+			roll -= item instanceof MagicBook ? magicBookMultiplier : 1.0D;
+
+			if (roll < 0.0D) {
+				return item;
+			}
+		}
+
+		return tier.get(tier.size() - 1);
+	}
+
 	/** 物品的品质（没有品质的东西按普通算）。 */
 	public static ArtifactRarity rarityOf(Item item) {
 		return item instanceof Quality quality ? quality.rarity() : ArtifactRarity.COMMON;

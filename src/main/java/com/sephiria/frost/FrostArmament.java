@@ -750,7 +750,7 @@ public final class FrostArmament {
 	 *
 	 * <p>现查背包（{@link EternalEclipseItem#sideOf}）而不是看物品组件：组件只管图标颜色。
 	 */
-	private static boolean flameMode(ServerPlayer player) {
+	public static boolean flameMode(ServerPlayer player) {
 		return EternalEclipseItem.sideOf(player) == EternalEclipseItem.Side.LEFT;
 	}
 

@@ -2,7 +2,7 @@ package com.sephiria.artifact;
 
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.util.Numbers;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import com.sephiria.compat.DamageEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;

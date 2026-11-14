@@ -2,6 +2,7 @@ package com.sephiria.artifact;
 
 import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.damage.SephiriaDamage;
+import com.sephiria.stats.PlayerStats;
 import com.sephiria.util.Numbers;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -38,6 +39,9 @@ public class BookItem extends ArtifactItem {
 
 	/** 铁砧合并一次至少收的经验等级（原版铁砧最低也是 1 级）。 */
 	public static final int MIN_MERGE_COST = 1;
+
+	/** 「效率」的上限（原版效率 V）。 */
+	private static final int MAX_EFFICIENCY_LEVEL = 5;
 
 	/** 词条数字的颜色：绿色（与其它神器一致）。 */
 	private static final int COLOUR_BONUS = 0xFF55FF55;
@@ -113,6 +117,22 @@ public class BookItem extends ArtifactItem {
 	/** 背包里「书」的抢夺等级（0 = 没有；掉落结算那一步用）。 */
 	public static int lootingLevel(ServerPlayer player) {
 		return backpackLevel(player, Enchantments.MOB_LOOTING);
+	}
+
+	/**
+	 * 书「效率」给当前玩家的挖掘速度倍率（客户端预测方块破坏进度用）：
+	 * 把攻速超过 100% 的部分按效率进度缩放。
+	 */
+	public static float miningSpeedFactor(ServerPlayer player) {
+		int level = backpackLevel(player, Enchantments.BLOCK_EFFICIENCY);
+
+		if (level <= 0) {
+			return 1.0F;
+		}
+
+		double extra = Math.max(0.0D, PlayerStats.attackSpeedMultiplier(player) - 1.0D);
+		double progress = Math.min(level, MAX_EFFICIENCY_LEVEL) / (double) MAX_EFFICIENCY_LEVEL;
+		return (float) (1.0D + extra * progress);
 	}
 
 	/** 取背包里「书」身上某个附魔的最高等级（【唯一】：多本书也只取最高那级）。 */

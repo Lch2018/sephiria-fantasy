@@ -1,8 +1,10 @@
 package com.sephiria.artifact;
 
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+
 import com.sephiria.registry.ModItems;
 import com.sephiria.talent.Talents;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import com.sephiria.compat.DamageEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 

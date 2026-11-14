@@ -1,5 +1,7 @@
 package com.sephiria.progress;
 
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
@@ -10,7 +12,7 @@ import com.sephiria.registry.ModItems;
 import com.sephiria.slate.SlateItem;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import com.sephiria.compat.DamageEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.core.registries.BuiltInRegistries;

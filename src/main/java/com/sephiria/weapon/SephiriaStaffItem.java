@@ -1,5 +1,7 @@
 package com.sephiria.weapon;
 
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+
 import com.sephiria.compat.WeaponAttributes;
 import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
@@ -7,7 +9,7 @@ import com.sephiria.ability.Dash;
 import com.sephiria.ability.Invulnerability;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import com.sephiria.compat.DamageEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.core.particles.ParticleTypes;

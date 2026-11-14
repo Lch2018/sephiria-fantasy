@@ -1,6 +1,8 @@
 package com.sephiria.compat;
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+
+import com.sephiria.compat.DamageEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 
