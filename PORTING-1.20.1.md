@@ -36,6 +36,11 @@
 - 服务端补：铁砧「书 + 附魔书」合并（1.20.1 NBT 版）、书效率/抢夺、鱼饵、天国石板、成就四叶草
 - 0.5.x HUD：魔法书实际冷却、破碎蓝宝石帷幕充能进入神器 HUD
 - 背包 / 附魔页长按 F 石板刻印（客户端 NBT 进度 + 服务端接收）
+- 太刀完整 0.5.x 玩法：剑意（命中积累 / 满值强力斩）、出鞘·横扫、入鞘·格挡，
+  攻击力/攻速随状态切换（`KatanaAttributesMixin` 改 `ItemStack#getAttributeModifiers`），
+  GeckoLib 4 控制器与 `to_sheathed` / `to_unsheathered` / `attack_sheathed` 动画
+- 弩完整 0.5.x 弹匣系统：多弹匣 + 备用弹匣、换弹 BUFF（10 秒伤害加成）、
+  弹匣耗尽自动切换备用、HUD 同步；弩箭伤害吃神器伤害加成
 
 ## 实测记录
 
@@ -43,18 +48,21 @@
 - `gradlew runServer`：`Done (6.956s)`，无注册表 / 数据包 / mixin 应用错误
 - 已加载 7 张配方、1271 个进度；赛菲莉娅概率覆盖正常载入
 
-### 客户端（1.20.1-Fabric 0.20.1 实例，2026-11-15 02:34）
-- 用实例的 1.20.1 classpath + Java 21 启动，日志到
+### 客户端（1.20.1-Fabric 0.20.1 实例，2026-11-15 02:54 / 02:55）
+- 02:54 用实例的 1.20.1 classpath + Java 21 冷启动到主菜单，日志到
   `Sound engine started`、全部原版 atlas 创建完成
-- **无 Mixin apply 失败、无模型加载失败**
+- 02:55 追加 `--quickPlaySingleplayer 新的世界` 直接进存档：`Preparing start region`、
+  加载 7 张配方 / 1271 个进度，窗口标题进入「单人游戏」，世界内运行约 1 分钟
+- **无 Mixin apply 失败、无模型加载失败、无运行时异常**；主动关窗后所有维度正常存盘退出
 - 仅有的日志异常是离线启动的认证 401、自定义实体 data fixer 警告、
-  原版山羊角音效缺失（与本模组无关）
+  两张贴图尺寸非 2 的幂导致的 mip 警告（与本模组功能无关）
 
 ## 仍未完成
 
 - 属性页 / 天赋页 / 背包页的 0.5.x 全量视觉与交互（当前是 1.20.1 已有版本）
-- 新粒子类（BlueSpark / FrostQi / Snowfall 等）的逐类视觉还原；
+- 新粒子类（BlueSpark / FrostQi / IceGlint / Plasma / Snowfall / SunSlash）的逐类视觉还原；
   目前新粒子统一走 `SephiriaParticle` 通用实现
-- GeckoLib 4 下刀/武器的完整骨骼动画与自定义 glint
-- 部分客户端 mixin：冰冻染色、弩第三人称姿势、减益脚下标签、配方书页签
-- 尚未在游戏内逐项操作许愿池 / 技能页 / 新神器（启动层已通过）
+- GeckoLib 4 下武器的自定义 glint（26.x 的 `WeaponGlint` 管线）
+- 设置 / 伤害显示 / HUD 统一缩放三个 0.5.x 配置界面，以及 `CursorKeeper` 光标保持
+- 冰冻染色、配方书页签（1.20.1 的配方书 API 与 26.x 差别较大）
+- 尚未在游戏内逐项操作许愿池 / 技能页 / 新神器（启动与进存档已通过，交互未逐项点过）

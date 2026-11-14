@@ -59,7 +59,7 @@ public class SephiriaBoltArrow extends Arrow implements SephiriaDamage.Source {
 		Entity owner = this.getOwner();
 		// 固定伤害指"不随飞行速度变化"，仍按物理强度换算（默认 20 时倍率 1.0，即 1.82）
 		float damage = owner instanceof ServerPlayer shooter
-				? (float) (FIXED_DAMAGE * PlayerStats.normalAttackMultiplier(shooter))
+				? (float) (FIXED_DAMAGE * PlayerStats.normalAttackMultiplier(shooter) * (1.0D + SephiriaCrossbowItem.damageBonusPercent(shooter) / 100.0D))
 				: FIXED_DAMAGE;
 
 		// 与原版箭走同一条 hurtOrSimulate：末地水晶不是 LivingEntity，末影龙要靠部位转发给本体，

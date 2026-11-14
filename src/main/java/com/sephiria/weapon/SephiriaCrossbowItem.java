@@ -1,6 +1,11 @@
 package com.sephiria.weapon;
 
 import com.sephiria.compat.WeaponAttributes;
+import com.sephiria.artifact.ArtifactEffects;
+import com.sephiria.network.SkillSyncPayload;
+import io.netty.buffer.Unpooled;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionResultHolder;
 import com.sephiria.Sephiria;
 import com.sephiria.ability.SkillStorage;
@@ -57,6 +62,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon {
 	/** 弹药在技能存储里的 id（HUD 也读它）。 */
 	public static final ResourceLocation STORAGE = new ResourceLocation(Sephiria.MOD_ID, "crossbow");
+	/** 备用弹匣数量在技能存储里的 id（HUD 的「（m）」读它）。 */
+	public static final ResourceLocation MAGAZINES = new ResourceLocation(Sephiria.MOD_ID, "crossbow_magazines");
 	private static final String AMMO_KEY = "sephiria_crossbow_ammo";
 
 	/** 弹匣容量，同时是存储总量。 */
@@ -75,6 +82,10 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 
 	/** 正在装填的玩家：记录装填结束的游戏刻。 */
 	private static final Map<UUID, Long> RELOADS = new ConcurrentHashMap<>();
+	private static final Map<UUID, Integer> RESERVE_MAGAZINES = new ConcurrentHashMap<>();
+	private static final Map<UUID, Long> RELOAD_BUFF_UNTIL = new ConcurrentHashMap<>();
+	private static final int RELOAD_BUFF_TICKS = 200;
+	private static int magazineSyncTicker;
 
 	private final WeaponBranch branch;
 
@@ -115,11 +126,64 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 		// 弹匣不随时间自动回复：只有 R 装填完成时才调 regenerate 加回整个弹匣
 		SkillStorage.registerManual(STORAGE, MAGAZINE_SIZE);
 		ServerTickEvents.END_SERVER_TICK.register(SephiriaCrossbowItem::tickReloads);
+		ServerTickEvents.END_SERVER_TICK.register(SephiriaCrossbowItem::tickMagazines);
 	}
 
 	/** 弹匣里现有的弹药数（读技能存储，只在服务端有意义）。 */
 	public static int ammoCount(ServerPlayer player) {
 		return (int) Math.round(SkillStorage.current(player, STORAGE));
+	}
+
+	/** 最大弹匣数：默认 1 + 神器「装填用木箱坚固」的加成。 */
+	public static int maxMagazines(ServerPlayer player) {
+		return 1 + ArtifactEffects.maxMagazinesBonus(player);
+	}
+
+	/** 备用弹匣数（不含当前弹匣）；缺省值 = 最大弹匣数 - 1。 */
+	public static int reserveMagazines(ServerPlayer player) {
+		int max = maxMagazines(player);
+		int value = RESERVE_MAGAZINES.getOrDefault(player.getUUID(), max - 1);
+		int clamped = Math.max(0, Math.min(max - 1, value));
+		RESERVE_MAGAZINES.put(player.getUUID(), clamped);
+		return clamped;
+	}
+
+	/** 把备用弹匣数推给客户端（HUD 的「（m）」）。 */
+	public static void syncMagazines(ServerPlayer player) {
+		FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+		SkillSyncPayload.write(buffer,
+				new SkillSyncPayload(MAGAZINES, reserveMagazines(player), maxMagazines(player)));
+		ServerPlayNetworking.send(player, SkillSyncPayload.CHANNEL, buffer);
+	}
+
+	/** 当前实际装填刻数：受「神射手的曲柄」重装速度加成。 */
+	public static int reloadTicks(ServerPlayer player) {
+		double bonus = ArtifactEffects.crossbowReloadSpeedPercent(player);
+		return Math.max(1, (int) Math.ceil(RELOAD_TICKS * 100.0D / (100.0D + bonus)));
+	}
+
+	/** 当前弩矢伤害加成（%）：神器常驻部分 + 装填完成后的 10 秒 buff。 */
+	public static double damageBonusPercent(ServerPlayer player) {
+		double total = ArtifactEffects.crossbowDamagePercent(player);
+		Long until = RELOAD_BUFF_UNTIL.get(player.getUUID());
+
+		if (until != null && player.level().getGameTime() < until) {
+			total += ArtifactEffects.crossbowReloadBuffPercent(player);
+		}
+
+		return total;
+	}
+
+	private static void tickMagazines(MinecraftServer server) {
+		if (++magazineSyncTicker % 20 != 0) {
+			return;
+		}
+
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			if (heldCrossbow(player) != null) {
+				syncMagazines(player);
+			}
+		}
 	}
 
 	/** 右击：有弹药就射一发。空匣什么都不做，装填走 R 键。 */
@@ -153,7 +217,8 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 	 * {@link #tickReloads} 触发一次"回复存储总量"。
 	 */
 	public static void tryReload(ServerPlayer player) {
-		if (SkillStorage.current(player, STORAGE) >= MAGAZINE_SIZE) {
+		if (SkillStorage.current(player, STORAGE) >= MAGAZINE_SIZE
+				&& reserveMagazines(player) >= maxMagazines(player) - 1) {
 			return;
 		}
 
@@ -163,8 +228,9 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 			return;
 		}
 
-		RELOADS.put(player.getUUID(), player.level().getGameTime() + RELOAD_TICKS);
-		player.getCooldowns().addCooldown(crossbow.getItem(), RELOAD_TICKS);
+		int ticks = reloadTicks(player);
+		RELOADS.put(player.getUUID(), player.level().getGameTime() + ticks);
+		player.getCooldowns().addCooldown(crossbow.getItem(), ticks);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.CROSSBOW_LOADING_START, SoundSource.PLAYERS, 1.0F, 1.0F);
 	}
@@ -193,6 +259,9 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 			}
 
 			SkillStorage.regenerate(player, STORAGE, MAGAZINE_SIZE);
+			RESERVE_MAGAZINES.put(player.getUUID(), Math.max(0, maxMagazines(player) - 1));
+			RELOAD_BUFF_UNTIL.put(player.getUUID(), now + RELOAD_BUFF_TICKS);
+			syncMagazines(player);
 			player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 					SoundEvents.CROSSBOW_LOADING_END, SoundSource.PLAYERS, 1.0F, 1.0F);
 
@@ -212,6 +281,20 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 
 		level.playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.CROSSBOW_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F);
+
+		if (ammoCount(player) <= 0) {
+			int reserve = reserveMagazines(player);
+
+			if (reserve > 0) {
+				RESERVE_MAGAZINES.put(player.getUUID(), reserve - 1);
+				SkillStorage.regenerate(player, STORAGE, MAGAZINE_SIZE);
+				syncDisplay(crossbow, MAGAZINE_SIZE);
+				level.playSound(null, player.getX(), player.getY(), player.getZ(),
+						SoundEvents.CROSSBOW_LOADING_MIDDLE, SoundSource.PLAYERS, 0.7F, 1.2F);
+			}
+
+			syncMagazines(player);
+		}
 	}
 
 	private static void shoot(ServerLevel level, ServerPlayer player, ItemStack crossbow, ItemStack projectileStack) {

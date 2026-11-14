@@ -36,6 +36,7 @@
 		"RootRetreatNameMixin",
 		"RootRetreatDeathMixin",
 		"AnvilMenuMixin",
-		"ItemCombinerMenuAccessor"
+		"ItemCombinerMenuAccessor",
+		"KatanaAttributesMixin"
 	]
 }
