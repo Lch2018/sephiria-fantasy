@@ -45,7 +45,7 @@ public class OffHandHideMixin {
 
 	@ModifyVariable(method = "renderArmWithItem", at = @At("HEAD"), argsOnly = true)
 	private ItemStack sephiria$virtualOffHandShield(ItemStack stack, AbstractClientPlayer player,
-			float swing, float equip, InteractionHand hand, ItemStack original, float partial,
+			float swing, float equip, InteractionHand hand, float partial, ItemStack original, float pitch,
 			PoseStack poseStack, SubmitNodeCollector collector, int light) {
 		// 主手是剑盾时，副手一律渲染剑盾本身（走 *_lefthand 分支 = 盾牌）。
 		// 副手原有的真实物品因此不再被渲染——配合 OffHandGuard 的功能禁用，
