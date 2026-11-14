@@ -105,7 +105,7 @@ public abstract class HealthChangeParticleMixin implements ToroHealthCritAccess 
 				| (((int) (((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$red() * 255.0F) & 0xFF) << 16)
 				| (((int) (((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$green() * 255.0F) & 0xFF) << 8)
 				| ((int) (((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$blue() * 255.0F) & 0xFF);
-		color = ToroHealthTextRenderer.brighten(color, ToroHealthTextRenderer.DEFAULT_BRIGHTNESS);
+		color = ToroHealthTextRenderer.brighten(color, ToroHealthTextRenderer.brightness());
 		int light = ToroHealth.getConfig().particleOptions.particleLightMode
 				== ModConfig.ParticleLightMode.FULL_BRIGHT
 						? 0xF000F0

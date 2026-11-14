@@ -49,7 +49,7 @@ public abstract class ToroHealthHudMixin {
 		Font font = Minecraft.getInstance().font;
 		String text = Integer.toString(Math.abs(healthChange));
 		int color = ToroHealthTextRenderer.brighten(
-				0xFF000000 | info.displayColor(), ToroHealthTextRenderer.DEFAULT_BRIGHTNESS);
+				0xFF000000 | info.displayColor(), ToroHealthTextRenderer.brightness());
 		int textX = x + (this.at_left ? -font.width(text) : 2);
 		int textY = this.at_top ? y : y - 8;
 
