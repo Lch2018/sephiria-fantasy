@@ -170,6 +170,32 @@ public final class SephiriaClient implements ClientModInitializer {
 							com.sephiria.network.DebuffSyncPayload.read(buffer);
 					client.execute(() -> ClientDebuffs.accept(payload));
 				});
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.CardSelectionPayload.CHANNEL,
+				(client, handler, buffer, sender) -> {
+					com.sephiria.network.CardSelectionPayload payload =
+							com.sephiria.network.CardSelectionPayload.read(buffer);
+					client.execute(() -> {
+						com.sephiria.client.card.ClientCardSelection.accept(payload);
+
+						if (!payload.open()) {
+							if (client.screen instanceof com.sephiria.client.card.CardSelectionScreen screen) {
+								screen.onClose();
+							}
+
+							return;
+						}
+
+						if (com.sephiria.client.card.ClientCardSelection.autoOpenSuppressed()) {
+							return;
+						}
+
+						if (client.screen instanceof com.sephiria.client.card.CardSelectionScreen screen) {
+							screen.syncFromCache(false);
+						} else {
+							client.setScreen(new com.sephiria.client.card.CardSelectionScreen());
+						}
+					});
+				});
 		ClientPlayNetworking.registerGlobalReceiver(HudSyncPayload.CHANNEL,
 				(client, handler, buffer, sender) -> {
 					HudSyncPayload payload = HudSyncPayload.read(buffer);
