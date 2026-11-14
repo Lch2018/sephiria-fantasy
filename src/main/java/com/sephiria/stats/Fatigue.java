@@ -10,9 +10,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * 疲劳：每 tick +1 点，6000 tick 回满；获得经验时把当前点数按 0.08 折算成额外经验。
+ * 经验加加（EXP++，内部标识仍叫 fatigue）：每 tick +1 点，上限 6000；
+ * 获得经验时消耗当前点数的 40%，消耗量每满 30 点给 3 点额外经验。
  *
- * <p>点数只随时间恢复，不在获得经验时消耗（用户口径：「当获取经验时会额外获取当前点数的经验值」）。
+ * <p>点数只随时间恢复；40% 的消耗发生在获得经验结算那一下（见 {@link #claimBonus}）。
  */
 public final class Fatigue {
 	public static final int MAX_POINTS = 6000;
@@ -44,7 +45,7 @@ public final class Fatigue {
 	}
 
 	/**
-	 * 获得经验时结算疲劳：消耗当前点数的 40%，消耗量每满 30 点给 3 点额外经验。
+	 * 获得经验时结算经验加加：消耗当前点数的 40%，消耗量每满 30 点给 3 点额外经验。
 	 * 不满 30 点时仍会消耗这 40%，但额外经验为 0。
 	 */
 	public static int claimBonus(ServerPlayer player) {

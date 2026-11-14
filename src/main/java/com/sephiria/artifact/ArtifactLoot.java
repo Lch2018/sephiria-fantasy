@@ -327,7 +327,7 @@ public final class ArtifactLoot {
 	private static List<Item> artifacts() {
 		return List.of(ModItems.CHARM_OF_STRENGTH, ModItems.WARRIORS_PROOF, ModItems.SHIELD_TEXTBOOK,
 				ModItems.SWORD_TEXTBOOK, ModItems.WIND_SCORE, ModItems.PRESSURE_BANDAGE, ModItems.GOLDEN_CLOAK,
-				ModItems.WANDERER_NECKLACE, ModItems.PROJECTION_SWORD, ModItems.COLORLESS_CUBE, ModItems.SILVER_PLATE, ModItems.ENCOURAGEMENT_BANNER, ModItems.HASTE_GRIMOIRE, ModItems.RED_DEW, ModItems.LONGING_AMULET, ModItems.FAULT_PROBE, ModItems.DEFT_AMULET, ModItems.PINWHEEL, ModItems.SPECIMEN_BEAK, ModItems.EVERGREEN_CLOAK, ModItems.RESISTANCE_BAND, ModItems.WARM_STONE,
+				ModItems.WANDERER_NECKLACE, ModItems.PROJECTION_SWORD, ModItems.COLORLESS_CUBE, ModItems.SILVER_PLATE, ModItems.ENCOURAGEMENT_BANNER, ModItems.HASTE_GRIMOIRE, ModItems.FIRE_BOLT, ModItems.ICE_BOLT, ModItems.LIGHTNING_BOLT, ModItems.FLAME_ARROW, ModItems.FROST_KNIFE, ModItems.LIGHTNING_BOOMERANG, ModItems.FIRE_CIRCUS, ModItems.ARROW_RAIN, ModItems.THUNDER_ARMOR, ModItems.METEOR_SHOWER, ModItems.ICE_STORM, ModItems.MAGICIANS_COIN, ModItems.RAY_STAR_FRAGMENT, ModItems.MOUSE_MAGICIAN_PENDANT, ModItems.PEARL_POWDER, ModItems.ORB_OF_DESIRE, ModItems.CRABAPPLE, ModItems.DOUBLE_HORN_PIPE, ModItems.TUNING_FORK, ModItems.JEWEL_ARMOR, ModItems.GLOWING_HOURGLASS, ModItems.BATTLE_MAGE_GLOVES, ModItems.MEDITATION_BOOK, ModItems.ACADEMY_PEN, ModItems.LIBRARY_SUN, ModItems.EMPTY_HILT, ModItems.LEILIS_POCKET_WATCH, ModItems.WILTED_FLOWER, ModItems.ENDODITE_PAPERWEIGHT, ModItems.SCARECROW_DOLL, ModItems.STAR_RUBY, ModItems.STAR_SEA_SAPPHIRE, ModItems.WATER_BAG, ModItems.LURE_BAIT, ModItems.OBRAS_BLOOD, ModItems.BROKEN_ROOT, ModItems.HEART_CARROT, ModItems.WHITE_BRANCH, ModItems.STONE_SPINDLE, ModItems.FULL_FRUIT_BUCKET, ModItems.JOLO_WATERING_CAN, ModItems.WATER_SPIRIT, ModItems.PRITVICE_WATER_DROP,  ModItems.RED_DEW, ModItems.LONGING_AMULET, ModItems.FAULT_PROBE, ModItems.DEFT_AMULET, ModItems.PINWHEEL, ModItems.SPECIMEN_BEAK, ModItems.EVERGREEN_CLOAK, ModItems.RESISTANCE_BAND, ModItems.WARM_STONE,
 				ModItems.CRITTONS_SEAL, ModItems.LUCKY_MEDAL, ModItems.GOLDEN_MAPLE_LEAF,
 				ModItems.SWORD_EARRING, ModItems.KEEN_EYE,
 				ModItems.MAGIC_CARROT, ModItems.SHARP_FLINT, ModItems.RESONANCE_STONE,
@@ -358,6 +358,11 @@ public final class ArtifactLoot {
 				ModItems.ETERNAL_ECLIPSE,
 				ModItems.EXORCISM_SCABBARD, ModItems.BLIZZARD_HAMMER, ModItems.MAGIC_CONCH,
 				ModItems.ICE_WINGS, ModItems.FROZEN_HEART, ModItems.VOLSPA, ModItems.ICE_BOW,
+				ModItems.CLOTH_ARMOR, ModItems.SHIELD_BOOK, ModItems.SHIELD_EARRING,
+				ModItems.BROKEN_MIRROR, ModItems.THORN_SHELL, ModItems.SERENS_LETTER,
+				ModItems.POT_LID, ModItems.ACADEMY_CHAINMAIL, ModItems.LIZARD_PLATE_ARMOR,
+				ModItems.SMALL_MIRROR, ModItems.WHITE_EDGE_BREAD, ModItems.BEAST_HEART,
+				ModItems.SHIELD_BAG, ModItems.ROCK_ELEPHANT,
 				ModItems.BOOK, ModItems.SIX_LEAF_CLOVER);
 	}
 
@@ -425,6 +430,17 @@ public final class ArtifactLoot {
 	 * 石板、石板却比格数少）就用另一侧补，别空着格子。
 	 */
 	public static List<ItemStack> rollMixed(RandomSource random, int count, double slatePercent, Weights weights) {
+		return rollMixed(random, count, slatePercent, weights, 1.0D);
+	}
+
+	/**
+	 * 同上，但同一个品质内部把「魔法书」的权重乘 {@code magicBookMultiplier}。
+	 *
+	 * <p>魔法师的硬币：奖励中出现魔法书的几率 ×(1 + 25%)；这里只改同一档里的相对权重，
+	 * 品质档位的概率不变。
+	 */
+	public static List<ItemStack> rollMixed(RandomSource random, int count, double slatePercent, Weights weights,
+			double magicBookMultiplier) {
 		List<Item> artifacts = new ArrayList<>(artifacts());
 		List<Item> slates = new ArrayList<>(slates());
 		List<ItemStack> result = new ArrayList<>();
@@ -441,7 +457,7 @@ public final class ArtifactLoot {
 				break;
 			}
 
-			Item picked = pickByRarity(random, pool, weights);
+			Item picked = pickByRarity(random, pool, weights, magicBookMultiplier);
 
 			if (picked == null) {
 				break;
@@ -461,11 +477,17 @@ public final class ArtifactLoot {
 
 	/** 从给定池子里按品质加权抽 {@code count} 件，互不重复。 */
 	public static List<ItemStack> rollFrom(RandomSource random, int count, List<Item> pool, Weights weights) {
+		return rollFrom(random, count, pool, weights, 1.0D);
+	}
+
+	/** 同上，但同品质内魔法书权重乘 {@code magicBookMultiplier}（魔法师的硬币）。 */
+	public static List<ItemStack> rollFrom(RandomSource random, int count, List<Item> pool, Weights weights,
+			double magicBookMultiplier) {
 		List<ItemStack> result = new ArrayList<>();
 		List<Item> remaining = new ArrayList<>(pool);
 
 		while (result.size() < count && !remaining.isEmpty()) {
-			Item picked = pickByRarity(random, remaining, weights);
+			Item picked = pickByRarity(random, remaining, weights, magicBookMultiplier);
 
 			if (picked == null) {
 				break;
@@ -480,6 +502,11 @@ public final class ArtifactLoot {
 
 	/** 先按品质权重抽一档，再从这一档里随机挑一件；这一档没有货就整体降级重试。 */
 	private static Item pickByRarity(RandomSource random, List<Item> candidates, Weights weights) {
+		return pickByRarity(random, candidates, weights, 1.0D);
+	}
+
+	private static Item pickByRarity(RandomSource random, List<Item> candidates, Weights weights,
+			double magicBookMultiplier) {
 		// 先掷「档位」（权重 = 这一档的概率份数，**不乘件数**），再在这一档里随机挑一件；
 		// 掷到的档没货就不会被掷到（归堆时就排掉了），等价于外层重试时整体降级
 		List<ArtifactRarity> available = new ArrayList<>();
@@ -512,12 +539,36 @@ public final class ArtifactLoot {
 			roll -= weights.weightOf(available.get(index));
 
 			if (roll < 0) {
-				List<Item> tier = tierItems.get(index);
-				return tier.get(random.nextInt(tier.size()));
+				return pickFromTier(random, tierItems.get(index), magicBookMultiplier);
 			}
 		}
 
 		return null;
+	}
+
+	/** 在同一品质里按权重挑一件；魔法书的权重乘 {@code magicBookMultiplier}。 */
+	public static Item pickFromTier(RandomSource random, List<Item> tier, double magicBookMultiplier) {
+		double total = 0.0D;
+
+		for (Item item : tier) {
+			total += item instanceof MagicBook ? magicBookMultiplier : 1.0D;
+		}
+
+		if (total <= 0.0D) {
+			return tier.isEmpty() ? null : tier.get(random.nextInt(tier.size()));
+		}
+
+		double roll = random.nextDouble() * total;
+
+		for (Item item : tier) {
+			roll -= item instanceof MagicBook ? magicBookMultiplier : 1.0D;
+
+			if (roll < 0.0D) {
+				return item;
+			}
+		}
+
+		return tier.get(tier.size() - 1);
 	}
 
 	/** 物品的品质（没有品质的东西按普通算）。 */

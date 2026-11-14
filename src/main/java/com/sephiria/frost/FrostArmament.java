@@ -751,8 +751,9 @@ public final class FrostArmament {
 	 * 永恒蚀是不是在赛菲莉娅背包的<b>左半边</b>（在 = 冰霜武具整套改成火焰属性）。
 	 *
 	 * <p>现查背包（{@link EternalEclipseItem#sideOf}）而不是看物品组件：组件只管图标颜色。
+	 * <p>普利特维采的水滴也按这一套换属性，所以是 public。
 	 */
-	private static boolean flameMode(ServerPlayer player) {
+	public static boolean flameMode(ServerPlayer player) {
 		return EternalEclipseItem.sideOf(player) == EternalEclipseItem.Side.LEFT;
 	}
 
@@ -764,6 +765,11 @@ public final class FrostArmament {
 	 * 触发者掉线时 {@code owner} 可以是 null（伤害照打，只是没有归属）。
 	 */
 	private static DamageSource damageSource(ServerLevel level, ServerPlayer owner, boolean flame) {
+		if (owner != null) {
+			// 普利特维采的水滴：冰霜武具命中时消耗 MP 召唤旋转冰剑
+			com.sephiria.artifact.PlitviceWaterDropItem.onFrostArmamentHit(owner);
+		}
+
 		return flame ? SephiriaDamage.fireAttack(level, owner) : SephiriaDamage.iceAttack(level, owner);
 	}
 

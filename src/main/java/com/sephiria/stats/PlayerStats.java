@@ -5,6 +5,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.artifact.ArtifactEffects;
+import com.sephiria.artifact.BookItem;
+import com.sephiria.network.BookEffectPayload;
 import com.sephiria.network.SlateCountPayload;
 import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.util.PlayerItems;
@@ -272,10 +274,10 @@ public final class PlayerStats {
 						continue;
 					}
 
-					double maxMp = maxMpTotal(player);
+					double maxMp = usableMpTotal(player);
 
 					if (of(player).mp < maxMp) {
-						gainMp(player, maxMp * 0.125D);
+						gainMp(player, maxMpTotal(player) * 0.125D);
 					}
 				}
 			}
@@ -283,7 +285,7 @@ public final class PlayerStats {
 			// 战斗：每 10 秒回「MP再生」那一份（基础 10 + 神器 + 智慧天赋每点 +1）
 			if (server.getTickCount() % com.sephiria.talent.Talents.WISDOM_MP_REGEN_INTERVAL_TICKS == 0) {
 				for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-					if (!CombatState.isInCombat(player) || of(player).mp >= maxMpTotal(player)) {
+					if (!CombatState.isInCombat(player) || of(player).mp >= usableMpTotal(player)) {
 						continue;
 					}
 
@@ -306,7 +308,9 @@ public final class PlayerStats {
 	 */
 	public static double mpRegenTotal(ServerPlayer player) {
 		return (of(player).mpRegen + ArtifactEffects.mpRegenBonus(player)) * 10.0D
-				+ com.sephiria.talent.Talents.wisdomMpRegenPoints(player);
+				+ com.sephiria.talent.Talents.wisdomMpRegenPoints(player)
+				+ ArtifactEffects.magicBookComboMpRegen(player)
+				+ ArtifactEffects.lakeMpRegenPoints(player);
 	}
 
 	/** 神器给的「最大生命值」加成（点）：StatAttributes 把它挂成原版属性修饰符。 */
@@ -316,7 +320,7 @@ public final class PlayerStats {
 
 	/** 药水给的最终最大生命值百分比（5 = +5%）：StatAttributes 用 ADD_MULTIPLIED_TOTAL 挂上去。 */
 	public static double maxHpPercentTotal(ServerPlayer player) {
-		return of(player).potionMaxHpPercent;
+		return of(player).potionMaxHpPercent + ArtifactEffects.maxHpPercentBonus(player);
 	}
 
 	/** 药水永久 +最终最大生命值百分比（传 5 就是 +5%）。 */
@@ -332,7 +336,8 @@ public final class PlayerStats {
 
 	/** 所有伤害的倍率（1.0 = 不加成）；由伤害入口统一乘上，含真实伤害与减益。 */
 	public static float allDamageMultiplier(ServerPlayer player) {
-		double percent = allDamagePercentTotal(player) + ArtifactEffects.wingsDamageAmpPercent(player);
+		double percent = allDamagePercentTotal(player) + ArtifactEffects.wingsDamageAmpPercent(player)
+				+ ArtifactEffects.allDamagePercentBonus(player);
 		return 1.0F + (float) (percent / 100.0D);
 	}
 
@@ -590,9 +595,10 @@ public final class PlayerStats {
 		return of(player).meleeRange * (1.0D + ArtifactEffects.meleeRangePercent(player) / 100.0D);
 	}
 
-	/** 移动速度的实际值（%）：面板值 × (1 + 神器加成)。 */
+	/** 移动速度的实际值（%）：面板值 × (1 + 神器加成)；低于默认 100% 时按 100% 算（蜥蜴板甲口径）。 */
 	public static double moveSpeedPercentTotal(ServerPlayer player) {
-		return of(player).moveSpeed * (1.0D + ArtifactEffects.moveSpeedPercent(player) / 100.0D);
+		return Math.max(DEFAULT_MOVE_SPEED,
+				of(player).moveSpeed * (1.0D + ArtifactEffects.moveSpeedPercent(player) / 100.0D));
 	}
 
 	/** 移动速度倍率：1.0 = 默认值 100%。 */
@@ -662,6 +668,8 @@ public final class PlayerStats {
 	 */
 	public static double defenseTotal(ServerPlayer player) {
 		return of(player).defense + ArtifactEffects.defenseBonus(player)
+				+ ArtifactEffects.comboDefenseBonus(player)
+				+ com.sephiria.artifact.PotLidItem.buffDefense(player)
 				+ com.sephiria.talent.Talents.defensePoints(player);
 	}
 
@@ -687,7 +695,8 @@ public final class PlayerStats {
 	 * <p>与 HP 偷取同一口径：每点 = 造成伤害的 0.1% 回蓝，见 {@code Lifesteal}。
 	 */
 	public static double mpAbsorbTotal(ServerPlayer player) {
-		return of(player).mpAbsorb + com.sephiria.talent.Talents.mpAbsorbBonus(player);
+		return of(player).mpAbsorb + com.sephiria.talent.Talents.mpAbsorbBonus(player)
+				+ ArtifactEffects.mpAbsorbBonus(player);
 	}
 
 	/** 永久 +MP 吸收（生存的随机属性用）。 */
@@ -829,6 +838,8 @@ public final class PlayerStats {
 		// 跟物理那条链（physicalBreakdown 的百分比段）算法一致；物理已经在那条链里乘过，直接复用。
 		double multiplier = 1.0D + ArtifactEffects.comboAllElementPercent(player) / 100.0D;
 		double flat = 0.0D;
+		// 盾牌包：每 10 点防御力，火 / 冰 / 电各加一份元素强度
+		double bag = com.sephiria.artifact.ShieldBagItem.elementBonus(player, element);
 
 		if (element != Element.PHYSICAL && highestElement(player) == element) {
 			flat = ArtifactEffects.highestElementBonus(player) + ArtifactEffects.comboHighestElementBonus(player);
@@ -840,17 +851,17 @@ public final class PlayerStats {
 			// 与药水（梅尔岑之烟）
 			case FIRE -> (of(player).fire + of(player).potionFire + flat
 					+ ArtifactEffects.fireElementBonus(player)
-					+ ArtifactEffects.comboFireElement(player)) * multiplier;
+					+ ArtifactEffects.comboFireElement(player) + bag) * multiplier;
 			// 冰元素强度有三类固定值来源：神器（睿智护符 / 蓝爪的「冰属性伤害」；麒麟的角是负的）、
 			// 连击（冰川 4/8 档）与药水（阿凡提努斯的水晶）；扣完夹在 0 以上
 			case ICE -> Math.max(0.0D, of(player).ice + of(player).potionIce + flat
 					+ ArtifactEffects.iceElementBonus(player)
-					+ ArtifactEffects.comboIceElement(player)) * multiplier;
+					+ ArtifactEffects.comboIceElement(player) + bag) * multiplier;
 			// 电元素强度有三类固定值来源：连击（魔法科技 4/8 档）、神器（护符 / 耳环 / 指南针 / 萤火虫）
 			// 与药水（高泽之晨）
 			case LIGHTNING -> (of(player).lightning + of(player).potionLightning + flat
 					+ ArtifactEffects.comboLightningElement(player)
-					+ ArtifactEffects.lightningElementBonus(player)) * multiplier;
+					+ ArtifactEffects.lightningElementBonus(player) + bag) * multiplier;
 		};
 	}
 
@@ -898,11 +909,11 @@ public final class PlayerStats {
 		return attackSpeedTotal(player) / DEFAULT_ATTACK_SPEED;
 	}
 
-	/** 攻击速度的实际值（%）：面板值 + 神器加成。 */
+	/** 攻击速度的实际值（%）：面板值 + 神器加成；低于默认 100% 时按 100% 算（蜥蜴板甲口径）。 */
 	public static double attackSpeedTotal(ServerPlayer player) {
-		return of(player).attackSpeed + ArtifactEffects.attackSpeedBonus(player)
+		return Math.max(DEFAULT_ATTACK_SPEED, of(player).attackSpeed + ArtifactEffects.attackSpeedBonus(player)
 				+ ArtifactEffects.comboAttackSpeedPercent(player)
-				+ com.sephiria.talent.Talents.attackSpeedPercent(player);
+				+ com.sephiria.talent.Talents.attackSpeedPercent(player));
 	}
 
 	/** 当前蓝量。 */
@@ -918,8 +929,20 @@ public final class PlayerStats {
 	 * 与属性页对不上（用户报的）。
 	 */
 	public static double maxMpTotal(ServerPlayer player) {
-		return Math.max(1.0D, DEFAULT_MP + ArtifactEffects.maxMpBonus(player)
-				+ com.sephiria.talent.Talents.maxMpFlat(player));
+		double base = Math.max(1.0D, DEFAULT_MP + ArtifactEffects.maxMpBonus(player)
+				+ com.sephiria.talent.Talents.maxMpFlat(player) + ArtifactEffects.lakeMaxMpFlat(player)
+				+ com.sephiria.artifact.WaterBagItem.bonusFor(player));
+		return Math.max(1.0D, base * (1.0D + ArtifactEffects.maxMpPercentBonus(player) / 100.0D));
+	}
+
+	/**
+	 * 实际可用的 MP 上限：最大 MP 减去被占用的部分（渴望宝珠）。
+	 *
+	 * <p>上限本身的显示值不减少——HUD 仍画到 {@link #maxMpTotal}，占用的那一段单独上色；
+	 * 消耗与回复都以这个可用值为界。
+	 */
+	public static double usableMpTotal(ServerPlayer player) {
+		return Math.max(0.0D, maxMpTotal(player) - ArtifactEffects.mpReserved(player));
 	}
 
 	/** 花蓝；不够返回 false（技能释放前先问一次，不够就不放、也不扣）。 */
@@ -931,6 +954,8 @@ public final class PlayerStats {
 		}
 
 		values.mp -= amount;
+		com.sephiria.artifact.WaterBagItem.onMpSpent(player, amount);
+		com.sephiria.artifact.SerensLetterItem.onMpSpent(player, amount);
 		sync(player);
 		return true;
 	}
@@ -947,7 +972,7 @@ public final class PlayerStats {
 		}
 
 		Values values = of(player);
-		values.mp = Math.min(maxMpTotal(player), values.mp + amount);
+		values.mp = Math.min(usableMpTotal(player), values.mp + amount);
 		sync(player);
 	}
 
@@ -1069,11 +1094,13 @@ public final class PlayerStats {
 	public static void sync(ServerPlayer player) {
 		Values values = of(player);
 		double maxMp = maxMpTotal(player);
+		double usableMp = usableMpTotal(player);
 
 		// 上限被削（剑耳环 / 天赋重置）时把超出的蓝收回来：HUD 与属性页读的是同一份当前值，
 		// 不收会出现「当前 59 / 上限 34」这种对不上的显示（用户 2026-10-21 报的）。
-		if (values.mp > maxMp) {
-			values.mp = maxMp;
+		// 被渴望宝珠占用的那一截也不可持有，当前值只能到「上限 − 占用」。
+		if (values.mp > usableMp) {
+			values.mp = usableMp;
 		}
 
 		// 所有改动都会走到这里，所以存档只在这一个地方写——属性存在附件里，重登/重启都不丢
@@ -1090,10 +1117,17 @@ public final class PlayerStats {
 				dodgeTotal(player), dodgeRatePercent(player), meleeRangeTotal(player),
 				negotiationTotal(player), shopDiscountPercent(player),
 				leafGainPercentTotal(player), xpDropPercentTotal(player), maxMp, luckTotal(player),
-				defenseTotal(player), mpAbsorbTotal(player)));
+				defenseTotal(player), mpAbsorbTotal(player), ArtifactEffects.magicBookHastePercent(player),
+				ArtifactEffects.magicBookMpReductionGlobalPercent(player),
+				ArtifactEffects.magicBoltMpCostIncreasePercent(player), ArtifactEffects.mpReserved(player)));
+		// 魔法书提示框的实际冷却 / 蓝耗：客户端没有完整背包，随属性一起推一份快照
+		ServerPlayNetworking.send(player, com.sephiria.network.MagicBookStatsPayload.of(player));
 		// 黑鳞片的提示框要显示「当前持有石板数量」；这个数量也会随刻印 / 背包变化，
 		// 跟属性一起推，客户端不用自己维护一份背包镜像。
 		ServerPlayNetworking.send(player, new SlateCountPayload(ArtifactEffects.slateCount(player)));
+		// 书「效率」的挖掘速度倍率：客户端预测方块破坏进度要用；横扫之刃的冷却倍率在
+		// ATTACK_SPEED 属性上，原版属性同步会跟着过去，不需要再发。
+		ServerPlayNetworking.send(player, new BookEffectPayload(BookItem.miningSpeedFactor(player)));
 	}
 
 	/** 进服时推一次，面板才有初始值（顺带把读出来的那份写回附件）。 */

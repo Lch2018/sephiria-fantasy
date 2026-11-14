@@ -270,16 +270,20 @@ public final class Debuffs {
 					|| source.is(SephiriaDamage.ICE_SUN_SWORD);
 			// 酷寒断头台：冰 + 电双属性，两条之触都算
 			boolean cryoAttack = kind == SephiriaDamage.Kind.CRYO;
+			// 永恒蚀左半边：火 + 电双属性，触发灼伤与触电，不触发冻伤
+			boolean fireCryoAttack = kind == SephiriaDamage.Kind.CRYO_FIRE;
+			// 雷霜蝶暴风雪云：每一段都是冰 + 电双属性，两段都触发触电与冻伤
+			boolean blizzardAttack = kind == SephiriaDamage.Kind.BLIZZARD;
 
-			if (weaponOrArtifact || electricAttack || cryoAttack) {
+			if (weaponOrArtifact || electricAttack || cryoAttack || fireCryoAttack || blizzardAttack) {
 				tryApplyShock(entity, player);
 			}
 
-			if (weaponOrArtifact || fireAttack) {
+			if (weaponOrArtifact || fireAttack || fireCryoAttack) {
 				tryApplyBurn(entity, player);
 			}
 
-			if (weaponOrArtifact || iceAttack || cryoAttack) {
+			if (weaponOrArtifact || iceAttack || cryoAttack || blizzardAttack) {
 				tryApplyFrostbite(entity, player);
 			}
 		});
@@ -1055,9 +1059,8 @@ public final class Debuffs {
 	 * <p>倍率与强度都在结算那一刻现查，与触电同口径（换装、连击等级变了就跟着走）。
 	 *
 	 * <p><b>蓝色灼伤</b>（封印的特加斯）在这一跳上多两件事：强度换成「火元素强度 + 冰元素强度」，
-	 * 伤害的元素类型按两者里更高的那个定——火 ≥ 冰走火（{@code sephiria:burn}，{@code Kind.FIRE}），
-	 * 冰更高走冰（{@code sephiria:blue_burn}，{@code Kind.ICE}）。两者都是减益伤害，
-	 * 所以减伤 / 黄金之手 / 「造成伤害时」那几套口径完全一样，只有元素类型不同。
+	 * 伤害类型统一为 {@code sephiria:blue_burn}（{@code Kind.BLUE_BURN}，火 + 冰双属性）。
+	 * 它仍是减益伤害，所以减伤 / 黄金之手 / 「造成伤害时」那几套口径与普通灼伤完全一样。
 	 */
 	private static void activateBurn(ServerLevel level, LivingEntity target, UUID attackerId, int stacks,
 			boolean blue) {
@@ -1076,7 +1079,8 @@ public final class Debuffs {
 		}
 
 		SephiriaDamage.clearDamageCooldown(target);
-		target.hurtServer(level, ice > fire ? SephiriaDamage.blueBurn(level, player)
+		// 蓝色灼伤：火 + 冰双属性，统一走 blue_burn；普通灼伤仍走 burn
+		target.hurtServer(level, blue ? SephiriaDamage.blueBurn(level, player)
 				: SephiriaDamage.burn(level, player), (float) damage);
 		// 这一跳的爆点浓度与身上那圈火苗同一个倍率，层数越高烧得越旺
 		double factor = burnParticleFactor(stacks);

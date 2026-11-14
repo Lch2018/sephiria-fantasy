@@ -51,6 +51,13 @@ public final class Dodge {
 				SkillStorage.regenerate(player, DashSkill.STORAGE, restore);
 			}
 
+			// 学院钢笔：闪避成功时让所有魔法书的剩余冷却加速
+			double accelerate = ArtifactEffects.magicBookCooldownOnDodgePercent(player);
+
+			if (accelerate > 0.0D) {
+				com.sephiria.artifact.skill.ArtifactSkills.accelerateMagicBooks(player, accelerate);
+			}
+
 			long now = player.level().getGameTime();
 			Long last = LAST_SOUND.get(player.getUUID());
 

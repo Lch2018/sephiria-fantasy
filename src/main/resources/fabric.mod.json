@@ -3,7 +3,7 @@
 	"id": "sephiria_fantasy",
 	"version": "${version}",
 	"name": "赛菲莉娅幻想",
-	"description": "把《SEPHIRIA（赛菲莉娅）》的武器系统带进 Minecraft。非官方同人模组，大量使用 AI 生成代码，仅供学习交流，禁止商业行为；完整条款见仓库 LICENSE。",
+	"description": "把《SEPHIRIA》的 build 带进 Minecraft——武器、连击神器、石板。大量使用 AI 生成代码，仅供学习交流，禁止商业行为。",
 	"authors": [
 		"Lch2018"
 	],

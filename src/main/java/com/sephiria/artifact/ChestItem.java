@@ -199,7 +199,7 @@ public class ChestItem extends Item {
 	 * @param choices 这一箱开几选 1（基础 5；急智二阶段 6）
 	 */
 	public static List<ItemStack> rewardsOf(ItemStack chest, RandomSource random, Kind kind, double luck,
-			int choices) {
+			int choices, double magicBookRewardChance) {
 		List<ItemStack> stored = chest.get(ROLLED);
 
 		if (stored != null) {
@@ -209,12 +209,14 @@ public class ChestItem extends Item {
 		// 幸运值：稀有及以上的概率按曲线放大（用户 2026-10-18 的「幸运值」口径）
 		ArtifactLoot.Weights weights = ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.CHEST, luck);
 		int count = Math.min(Math.max(1, choices), Math.min(MAX_REWARDS, ArtifactLoot.MAX_ROLL));
+		double magicBookMultiplier = 1.0D + magicBookRewardChance / 100.0D;
 
 		// 稀有宝箱：池子先过滤成稀有及以上，再按同一组品质权重抽；普通 / 高级根本不在池里
 		List<ItemStack> rolled = kind.rareOnly()
 				? List.copyOf(ArtifactLoot.rollFrom(random, count,
-						ArtifactLoot.rarePool(kind == Kind.RARE_SLATE), weights))
-				: List.copyOf(ArtifactLoot.rollMixed(random, count, kind.slatePercent(), weights));
+						ArtifactLoot.rarePool(kind == Kind.RARE_SLATE), weights, magicBookMultiplier))
+				: List.copyOf(ArtifactLoot.rollMixed(random, count, kind.slatePercent(), weights,
+						magicBookMultiplier));
 		chest.set(ROLLED, rolled);
 		return rolled;
 	}
@@ -225,9 +227,9 @@ public class ChestItem extends Item {
 	 * @return 新的一批奖励
 	 */
 	public static List<ItemStack> reroll(ItemStack chest, RandomSource random, Kind kind, double luck,
-			int choices) {
+			int choices, double magicBookRewardChance) {
 		chest.remove(ROLLED);
-		return rewardsOf(chest, random, kind, luck, choices);
+		return rewardsOf(chest, random, kind, luck, choices, magicBookRewardChance);
 	}
 
 	/** 这一箱的免费刷新用过了吗。 */

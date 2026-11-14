@@ -7,7 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
-/** 服务端 → 客户端：疲劳点数（HUD 显示）。 */
+/** 服务端 → 客户端：经验加加（EXP++）点数（HUD 显示）。 */
 public record FatigueSyncPayload(int points) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<FatigueSyncPayload> TYPE =
 			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "fatigue_sync"));

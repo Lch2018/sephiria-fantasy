@@ -169,7 +169,8 @@ public class ChestMenu extends AbstractContainerMenu {
 		int choices = ChestItem.choicesFor(player);
 
 		java.util.List<ItemStack> rolled = ChestItem.rewardsOf(chest, player.getRandom(), kind,
-				com.sephiria.stats.PlayerStats.luckTotal(player), choices);
+				com.sephiria.stats.PlayerStats.luckTotal(player), choices,
+				com.sephiria.artifact.ArtifactEffects.magicBookRewardChancePercent(player));
 
 		for (int index = 0; index < rolled.size(); index++) {
 			rewards.setItem(index, rolled.get(index));
@@ -256,7 +257,8 @@ public class ChestMenu extends AbstractContainerMenu {
 		}
 
 		java.util.List<ItemStack> rolled = ChestItem.reroll(this.chest, player.getRandom(), item.kind(),
-				com.sephiria.stats.PlayerStats.luckTotal(player), rewardCount());
+				com.sephiria.stats.PlayerStats.luckTotal(player), rewardCount(),
+				com.sephiria.artifact.ArtifactEffects.magicBookRewardChancePercent(player));
 
 		for (int index = 0; index < ChestItem.MAX_REWARDS; index++) {
 			this.rewards.setItem(index, index < rolled.size() ? rolled.get(index) : ItemStack.EMPTY);

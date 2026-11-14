@@ -24,13 +24,16 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Unit;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -140,7 +143,19 @@ public final class SunSword {
 	}
 
 	private static final Map<UUID, State> STATES = new HashMap<>();
+	/**
+	 * 下一 tick 才真正结算的太阳剑伤害。
+	 *
+	 * <p>如果和触发它的武器伤害在同一 tick 里 hurtServer，原版只会同步一次血量，
+	 * ToroHealth 也只会生成一个数字。延后一刻结算，匕首的物理伤害与太阳剑的火/冰伤害
+	 * 就会是两个独立数字。
+	 */
+	private static final List<PendingHit> PENDING = new ArrayList<>();
 	private static int triggerLogs;
+
+	private record PendingHit(ServerLevel level, UUID ownerId, UUID targetId, float damage, boolean ice,
+			long dueTick) {
+	}
 
 	private SunSword() {
 	}
@@ -162,6 +177,7 @@ public final class SunSword {
 
 	/** 注册触发器与推进器（由 {@link Sephiria#onInitialize()} 调用）。 */
 	public static void register() {
+		ServerTickEvents.START_SERVER_TICK.register(SunSword::applyPending);
 		// 没有永恒蚀时只认赛菲莉娅的武器攻击：普通攻击 / 横扫 / 弩矢 / 武器技能。
 		// 神器 / 魔法书 / 真实伤害 / 减益 / 永恒冬日这些 Kind.WEAPON 之外的伤害，
 		// 以及同属 Kind.WEAPON 但不是武器攻击的永恒冬日，都不再触发。
@@ -172,6 +188,23 @@ public final class SunSword {
 			}
 
 			SephiriaDamage.Kind kind = SephiriaDamage.kindOf(source);
+
+			// 书库之阳：造成魔法书伤害时，太阳剑立刻额外触发 0/0/1/1/2 次
+			if (SephiriaDamage.isMagicBook(source)) {
+				if (entity instanceof Player || !entity.isAlive()) {
+					return;
+				}
+
+				int extra = ArtifactEffects.librarySunExtraTriggers(player);
+
+				for (int index = 0; index < extra; index++) {
+					if (!throwSword(player, entity)) {
+						break;
+					}
+				}
+
+				return;
+			}
 
 			if (kind == SephiriaDamage.Kind.WEAPON && triggerLogs < 10) {
 				triggerLogs++;
@@ -208,6 +241,39 @@ public final class SunSword {
 		});
 	}
 
+	/** 下一 tick 结算上一 tick 排队的太阳剑伤害：让本体与太阳剑成为两个独立伤害数字。 */
+	private static void applyPending(MinecraftServer server) {
+		if (PENDING.isEmpty()) {
+			return;
+		}
+
+		List<PendingHit> hits = new ArrayList<>(PENDING);
+		PENDING.clear();
+
+		long now = server.overworld().getGameTime();
+
+		for (PendingHit hit : hits) {
+			// 再多等一刻：确保上一 tick 的武器血量同步已经发出去，两个数字不会挤在同一次同步里
+			if (hit.dueTick() > now) {
+				PENDING.add(hit);
+				continue;
+			}
+
+			Entity entity = hit.level().getEntityInAnyDimension(hit.targetId());
+
+			if (!(entity instanceof LivingEntity target) || entity.level() != hit.level() || !target.isAlive()) {
+				continue;
+			}
+
+			ServerPlayer owner = server.getPlayerList().getPlayer(hit.ownerId());
+			SephiriaDamage.clearDamageCooldown(target);
+			target.hurtServer(hit.level(), hit.ice()
+							? SephiriaDamage.iceSunSword(hit.level(), owner)
+							: SephiriaDamage.sunSword(hit.level(), owner),
+					hit.damage());
+		}
+	}
+
 	/**
 	 * <b>冰霜武具的攻击也触发太阳剑</b>（永恒蚀的词条）：{@code frost.FrostArmament} 的四处结算
 	 * （剑气 / 锤击 / 冰长矛 / 冰弓箭矢）每打中一个目标都调一次这里。
@@ -238,6 +304,7 @@ public final class SunSword {
 	/** 玩家退出时收掉状态（地上的剑留着，重登回来还能捡）。 */
 	public static void forget(ServerPlayer player) {
 		STATES.remove(player.getUUID());
+		PENDING.removeIf(hit -> hit.ownerId().equals(player.getUUID()));
 	}
 
 	/** 数量上限：基础 5 支 + 连击各档 + 神器的「太阳剑数量上限」（索利斯·帕尔沃）。 */
@@ -406,6 +473,11 @@ public final class SunSword {
 				* (1.0D + ArtifactCombo.SUN_SWORD.sunSwordDamagePercent(comboLevel) / 100.0D)
 				* (1.0D + ArtifactEffects.sunSwordDamagePercentBonus(player) / 100.0D);
 
+		// 书库之阳：每 1% 魔法书伤害，太阳剑伤害 +1%
+		if (ArtifactEffects.librarySunEnabled(player)) {
+			damage *= 1.0D + ArtifactEffects.magicBookDamagePercent(player) / 100.0D;
+		}
+
 		if (damage <= 0.0D) {
 			return false;
 		}
@@ -423,10 +495,9 @@ public final class SunSword {
 
 		state.current -= 1.0D;
 
-		// 直接打在敌人身上（不是从玩家那儿飞过去的实体），所以先清无敌帧，保证这一下落地
-		SephiriaDamage.clearDamageCooldown(target);
-		target.hurtServer(level, ice ? SephiriaDamage.iceSunSword(level, player) : SephiriaDamage.sunSword(level, player),
-				(float) damage);
+		// 延后到下一 tick 结算：与本体的物理伤害分开成两个独立数字
+		PENDING.add(new PendingHit(level, player.getUUID(), target.getUUID(), (float) damage, ice,
+				level.getGameTime() + 2L));
 		slash(level, target, player, enlarged, ice);
 		drop(level, player, ArtifactEffects.sunSwordDropNearPlayer(player) ? player.position() : target.position(),
 				ice);

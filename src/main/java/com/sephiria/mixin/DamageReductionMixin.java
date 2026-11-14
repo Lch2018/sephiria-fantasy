@@ -42,7 +42,8 @@ public class DamageReductionMixin {
 		if (kind == SephiriaDamage.Kind.TRUE) {
 			result = SephiriaDamage.applyGoldenHands(source, SephiriaDamage.applyCrit(self, source, amount));
 		} else if (kind == SephiriaDamage.Kind.ELECTRIC || kind == SephiriaDamage.Kind.FIRE
-				|| kind == SephiriaDamage.Kind.ICE || kind == SephiriaDamage.Kind.PLASMA) {
+				|| kind == SephiriaDamage.Kind.ICE || kind == SephiriaDamage.Kind.BLUE_BURN
+				|| kind == SephiriaDamage.Kind.PLASMA) {
 			// 电属性伤害、火/冰/等离子体减益伤害同样不吃减伤与黄金之手，但照掷暴击：
 			// 电属性与等离子体是「通用 + 电属性攻击的暴击几率（麒麟的角）」，火/冰减益只用通用那一项
 			result = SephiriaDamage.applyCrit(self, source, amount);
@@ -77,6 +78,28 @@ public class DamageReductionMixin {
 		}
 
 		return adjusted;
+	}
+
+	/**
+	 * 护盾吸收：挂在 {@code getDamageAfterArmorAbsorb} 的入口，而不是 {@code hurtServer} 的 HEAD。
+	 *
+	 * <p>放在这里有两个好处：
+	 * <ul>
+	 *   <li>{@code hurtServer} 已经做完了无敌帧 / 格挡等“这一下到底算不算”的判断，
+	 *       不会出现「明明闪掉了却扣了盾」；</li>
+	 *   <li>原版还没开始算护甲，扣完盾的剩余伤害正好继续走护甲 / 防御力。</li>
+	 * </ul>
+	 * 护盾本身不吃任何减伤，扣多少点就是多少点。
+	 */
+	@ModifyVariable(method = "getDamageAfterArmorAbsorb", at = @At("HEAD"), argsOnly = true)
+	private float sephiria$absorbShield(float amount, DamageSource source) {
+		LivingEntity self = (LivingEntity) (Object) this;
+
+		if (self instanceof ServerPlayer player) {
+			return (float) com.sephiria.stats.ShieldSystem.absorb(player, amount);
+		}
+
+		return amount;
 	}
 
 	/**
@@ -116,23 +139,35 @@ public class DamageReductionMixin {
 		ServerPlayer attacker = Talents.attackerOf(source);
 
 		if (attacker != null) {
-			defense *= 1.0D - Talents.defensePenetrationPercent(attacker) / 100.0D;
+			defense *= remainingDefenseMultiplier(attacker);
 		}
 
 		return (float) (1.0D - com.sephiria.stats.PlayerStats.defenseReduction(defense));
 	}
 
 	/**
-	 * 天赋「愤怒」三阶段的防御穿透：无视目标 20% 的**护甲值**。
+	 * 攻击方结算后目标防御力剩余的比例：防御穿透与「无视防御」<b>乘算</b>。
+	 *
+	 * <p>两者都只作用于原版护甲与「防御力」两层；守护连击 10 档的无视防御也走这里，
+	 * 所以 20% 穿透 + 5% 无视防御 = 剩下 0.8 × 0.95 = 76%，而不是 75%。
+	 */
+	private static double remainingDefenseMultiplier(ServerPlayer attacker) {
+		double penetration = Talents.defensePenetrationPercent(attacker) / 100.0D;
+		double ignore = com.sephiria.artifact.ArtifactEffects.defenseIgnorePercent(attacker) / 100.0D;
+		return (1.0D - penetration) * (1.0D - ignore);
+	}
+
+	/**
+	 * 攻击方的防御穿透 / 无视防御：按比例削目标这一次结算读到的**护甲值**。
 	 *
 	 * <p>原版在 {@code getDamageAfterArmorAbsorb} 里把 {@code getArmorValue()} 的结果直接交给
 	 * 护甲减伤公式，所以这里只改<b>这一次结算</b>读到的护甲值——装备本身、护甲耐久都不变。
 	 * 护甲被削到 0 以下没有意义，夹在 0。玩家自己的「防御力」不再并进这里（它有自己的
-	 * x/(x+80) 减伤，穿透在 {@link #defenseMultiplier} 里扣）。
+	 * x/(x+80) 减伤，穿透在 {@link #remainingDefenseMultiplier} 里扣）。
 	 */
 	@Redirect(method = "getDamageAfterArmorAbsorb",
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getArmorValue()I"))
-	private int sephiria$talentArmorPenetration(LivingEntity instance, DamageSource source) {
+	private int sephiria$armorPenetration(LivingEntity instance, DamageSource source) {
 		int armor = instance.getArmorValue();
 
 		ServerPlayer attacker = Talents.attackerOf(source);
@@ -141,13 +176,13 @@ public class DamageReductionMixin {
 			return armor;
 		}
 
-		double penetration = Talents.defensePenetrationPercent(attacker);
+		double remaining = remainingDefenseMultiplier(attacker);
 
-		if (penetration <= 0.0D) {
+		if (remaining >= 1.0D) {
 			return armor;
 		}
 
-		return Math.max(0, (int) Math.round(armor * (1.0D - penetration / 100.0D)));
+		return Math.max(0, (int) Math.round(armor * remaining));
 	}
 
 	@Inject(method = "hurtServer", at = @At("TAIL"))

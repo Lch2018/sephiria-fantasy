@@ -195,9 +195,14 @@ public class SephiriaClient implements ClientModInitializer {
 				(payload, context) -> InvulnClientData.accept(payload));
 		ClientPlayNetworking.registerGlobalReceiver(StatsSyncPayload.TYPE,
 				(payload, context) -> ClientStats.accept(payload));
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.MagicBookStatsPayload.TYPE,
+				(payload, context) -> ClientBookStats.accept(payload));
 		// 黑鳞片的提示框要显示当前石板数量
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.SlateCountPayload.TYPE,
 				(payload, context) -> ClientSlateCount.accept(payload));
+		// 书的「效率」挖掘速度倍率：客户端预测方块破坏时也要用
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.BookEffectPayload.TYPE,
+				(payload, context) -> com.sephiria.artifact.BookEffectData.accept(payload));
 		// 乌云容量：HUD 的乌云 UI 读它（上限 > 0 才显示）
 		ClientPlayNetworking.registerGlobalReceiver(CloudSyncPayload.TYPE,
 				(payload, context) -> CloudClientData.accept(payload));
@@ -254,6 +259,8 @@ public class SephiriaClient implements ClientModInitializer {
 			SunSwordClientData.reset();
 			FrostClientData.reset();
 			ClientSlateCount.reset();
+			ClientBookStats.reset();
+			com.sephiria.artifact.BookEffectData.reset();
 			ClientTalents.reset();
 			// 选卡的三张卡也不跨世界：新服由服务端重新掷
 			ClientCardSelection.clear();

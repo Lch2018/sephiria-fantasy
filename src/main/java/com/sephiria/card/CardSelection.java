@@ -229,7 +229,8 @@ public final class CardSelection {
 		Session session = session(player);
 
 		if (session == null) {
-			session = roll(player.getRandom());
+			session = roll(player.getRandom(),
+				com.sephiria.artifact.ArtifactEffects.magicBookRewardChancePercent(player));
 			saveSession(player, session);
 		}
 
@@ -287,7 +288,8 @@ public final class CardSelection {
 			avoid.add(old.getItem());
 		}
 
-		Item picked = pick(pool, avoid, player.getRandom());
+		Item picked = pick(pool, avoid, player.getRandom(),
+				com.sephiria.artifact.ArtifactEffects.magicBookRewardChancePercent(player));
 
 		if (picked != null) {
 			session.cards.set(index, new ItemStack(picked));
@@ -336,7 +338,8 @@ public final class CardSelection {
 
 		// 选完不关界面：还有机会就掷下一组，没有就停在空卡面等玩家自己关
 		if (chances(player) > 0) {
-			Session next = roll(player.getRandom());
+			Session next = roll(player.getRandom(),
+				com.sephiria.artifact.ArtifactEffects.magicBookRewardChancePercent(player));
 			saveSession(player, next);
 			send(player, next, true);
 		} else {
@@ -381,7 +384,7 @@ public final class CardSelection {
 	// ------------------------------------------------------------------ 掷卡
 
 	/** 掷一次界面：先定品质（四档等概率），再在同一档里抽三件不重复的神器。 */
-	private static Session roll(RandomSource random) {
+	private static Session roll(RandomSource random, double magicBookRewardChance) {
 		ArtifactRarity rarity = BASE_RARITIES[random.nextInt(BASE_RARITIES.length)];
 		List<Item> pool = new ArrayList<>(ArtifactLoot.ofRarity(ArtifactLoot.artifactPool(), rarity));
 
@@ -397,7 +400,9 @@ public final class CardSelection {
 				remaining = new ArrayList<>(pool);
 			}
 
-			Item item = remaining.remove(random.nextInt(remaining.size()));
+			Item item = ArtifactLoot.pickFromTier(random, remaining,
+					1.0D + magicBookRewardChance / 100.0D);
+			remaining.remove(item);
 			cards.add(new ItemStack(item));
 		}
 
@@ -410,7 +415,8 @@ public final class CardSelection {
 	}
 
 	/** 从池子里挑一件，尽量避开当前这张（只有一件时只能不变）。 */
-	private static Item pick(List<Item> pool, java.util.Set<Item> avoid, RandomSource random) {
+	private static Item pick(List<Item> pool, java.util.Set<Item> avoid, RandomSource random,
+			double magicBookRewardChance) {
 		if (pool.isEmpty()) {
 			return null;
 		}
@@ -423,12 +429,14 @@ public final class CardSelection {
 			}
 		}
 
+		double multiplier = 1.0D + magicBookRewardChance / 100.0D;
+
 		if (!fresh.isEmpty()) {
-			return fresh.get(random.nextInt(fresh.size()));
+			return ArtifactLoot.pickFromTier(random, fresh, multiplier);
 		}
 
 		// 池子太小、所有候选都被占时只能接受重复
-		return pool.get(random.nextInt(pool.size()));
+		return ArtifactLoot.pickFromTier(random, pool, multiplier);
 	}
 
 	/** 品质升一档；红色（传说）不再升，也不进入羁绊 / 永恒。 */

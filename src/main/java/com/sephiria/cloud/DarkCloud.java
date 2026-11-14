@@ -274,7 +274,12 @@ public final class DarkCloud {
 	 * 或把红石线路埋掉。方块扫一遍 20 格半径，外加掉落的红石物品、物品展示框、运输矿车 / 箱船。
 	 */
 	private static boolean isBlizzardBlocked(ServerLevel level, ServerPlayer player) {
-		AABB area = player.getBoundingBox().inflate(BLIZZARD_PROTECTION_RADIUS);
+		return isBlizzardBlocked(level, player.position());
+	}
+
+	/** 以某个中心点判定半径 20 格内有没有红石元件 / 容器 / 红石物品。冰风暴也复用它。 */
+	public static boolean isBlizzardBlocked(ServerLevel level, Vec3 center) {
+		AABB area = new AABB(center, center).inflate(BLIZZARD_PROTECTION_RADIUS);
 
 		if (level.getBlockStates(area).anyMatch(DarkCloud::isProtectedBlock)) {
 			return true;
@@ -334,18 +339,27 @@ public final class DarkCloud {
 	 * 只改<b>能看见天空</b>的目标，室内 / 洞穴 / 屋檐下不会凭空积雪或结冰。
 	 */
 	private static void applyBlizzardGround(ServerLevel level, ServerPlayer player) {
+		applyBlizzardGround(level, player.blockPosition());
+	}
+
+	/** 以某个中心点做一轮暴风雪地面改造；冰风暴也复用它。 */
+	public static void applyBlizzardGround(ServerLevel level, Vec3 center) {
+		applyBlizzardGround(level, BlockPos.containing(center));
+	}
+
+	private static void applyBlizzardGround(ServerLevel level, BlockPos origin) {
 		for (int attempt = 0; attempt < BLIZZARD_WATER_ATTEMPTS; attempt++) {
-			freezeBlizzardWater(level, player);
+			freezeBlizzardWater(level, origin);
 		}
 
 		for (int attempt = 0; attempt < BLIZZARD_SNOW_ATTEMPTS; attempt++) {
-			snowBlizzardGround(level, player);
+			snowBlizzardGround(level, origin);
 		}
 	}
 
 	/** 随机一列：露天水源 → 冰。 */
-	private static void freezeBlizzardWater(ServerLevel level, ServerPlayer player) {
-		BlockPos pos = randomSurface(level, player);
+	private static void freezeBlizzardWater(ServerLevel level, BlockPos origin) {
+		BlockPos pos = randomSurface(level, origin);
 
 		if (pos == null) {
 			return;
@@ -359,8 +373,8 @@ public final class DarkCloud {
 	}
 
 	/** 随机一列：露天实心方块上方铺雪；已有雪层则叠高。 */
-	private static void snowBlizzardGround(ServerLevel level, ServerPlayer player) {
-		BlockPos pos = randomSurface(level, player);
+	private static void snowBlizzardGround(ServerLevel level, BlockPos origin) {
+		BlockPos pos = randomSurface(level, origin);
 
 		if (pos == null) {
 			return;
@@ -388,11 +402,10 @@ public final class DarkCloud {
 	}
 
 	/**
-	 * 在玩家周围半径 4 格里随机挑一列，从脚上一格往下找到第一块非空气方块；
-	 * 玩家自己那一列（dx = dz = 0）跳过，避免把玩家冻在水里或顶起来。
+	 * 在中心点周围半径 4 格里随机挑一列，从脚上一格往下找到第一块非空气方块；
+	 * 正中心那一列（dx = dz = 0）跳过，避免把玩家冻在水里或顶起来。
 	 */
-	private static BlockPos randomSurface(ServerLevel level, ServerPlayer player) {
-		BlockPos origin = player.blockPosition();
+	private static BlockPos randomSurface(ServerLevel level, BlockPos origin) {
 		var random = level.getRandom();
 
 		for (int tries = 0; tries < 8; tries++) {
@@ -528,20 +541,20 @@ public final class DarkCloud {
 		if (blizzard) {
 			double lightning = PlayerStats.elementTotal(player, PlayerStats.Element.LIGHTNING);
 			double ice = PlayerStats.elementTotal(player, PlayerStats.Element.ICE);
-			boolean lightningHigher = lightning >= ice;
 			double higher = Math.max(lightning, ice);
 			double lower = Math.min(lightning, ice);
 
-			hasElectric = lightning > 0.0D;
-			hasIce = ice > 0.0D;
+			// 双属性：两段都同时带冰与电，不再一段电一段冰
+			hasElectric = true;
+			hasIce = true;
+			DamageSource source = SephiriaDamage.blizzard(level, player);
 
-			// 两段都先按普通乌云的 20% 折算，再分别 ×110% / ×15%。
-			// 较高属性那一行走它自己的元素类型；较低属性走另一边的元素类型。
-			// 两段各自清无敌帧，所以都会落地；各自也会触发对应元素的减益守门。
+			// 两段都先按普通乌云的 20% 折算，再分别 ×110% / ×15%；
+			// 各自清无敌帧，所以都会落地；红宝石胸针的灼伤只在第一段补一次。
 			hit |= hit(level, player, target,
-					higher * normalPercent * 1.10D * multiplier, lightningHigher);
+					higher * normalPercent * 1.10D * multiplier, source, true);
 			hit |= hit(level, player, target,
-					lower * normalPercent * 0.15D * multiplier, !lightningHigher);
+					lower * normalPercent * 0.15D * multiplier, source, false);
 		}
 		else {
 			hasElectric = true;
@@ -551,7 +564,8 @@ public final class DarkCloud {
 					* normalPercent * multiplier;
 
 			if (damage > 0.0D) {
-				hit = hit(level, player, target, damage, true);
+				hit = hit(level, player, target, damage,
+						SephiriaDamage.electricAttack(level, player), true);
 			}
 		}
 
@@ -604,21 +618,18 @@ public final class DarkCloud {
 				SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, STRIKE_VOLUME, 1.4F);
 	}
 
-	/** 打一段伤害；{@code electric} 决定伤害类型与是否触发红宝石胸针的灼伤。 */
+	/** 打一段伤害；{@code applyBurn} 决定这一下是否触发红宝石胸针的灼伤。 */
 	private static boolean hit(ServerLevel level, ServerPlayer player, LivingEntity target,
-			double damage, boolean electric) {
+			double damage, DamageSource source, boolean applyBurn) {
 		if (damage <= 0.0D || !target.isAlive()) {
 			return false;
 		}
 
-		DamageSource source = electric
-				? SephiriaDamage.electricAttack(level, player)
-				: SephiriaDamage.iceAttack(level, player);
 		// 每段都要落地：清掉无敌帧（与触电结算同一套手法）
 		SephiriaDamage.clearDamageCooldown(target);
 		target.hurtServer(level, source, (float) damage);
 
-		if (electric && ArtifactEffects.cloudAppliesBurn(player) && target.isAlive()) {
+		if (applyBurn && ArtifactEffects.cloudAppliesBurn(player) && target.isAlive()) {
 			Debuffs.applyBurn(target, player);
 		}
 

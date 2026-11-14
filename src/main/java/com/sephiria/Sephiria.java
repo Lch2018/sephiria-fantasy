@@ -175,6 +175,16 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.artifact.FireflyItem.register();
 		com.sephiria.artifact.SandeEarringsItem.registerTicker();
 		com.sephiria.artifact.skill.ThunderVerdictSkill.register();
+		com.sephiria.artifact.skill.MagicBoltSkill.register();
+		com.sephiria.artifact.skill.FlameArrowSkill.register();
+		com.sephiria.artifact.skill.FrostKnifeSkill.register();
+		com.sephiria.artifact.skill.LightningBoomerangSkill.register();
+		com.sephiria.artifact.skill.FireCircusSkill.register();
+		com.sephiria.artifact.skill.ArrowRainSkill.register();
+		com.sephiria.artifact.skill.ThunderArmorSkill.register();
+		com.sephiria.artifact.skill.MeteorShowerSkill.register();
+		com.sephiria.artifact.skill.IceStormSkill.register();
+		com.sephiria.artifact.skill.WaterGrabSkill.register();
 		// 脱战/战斗状态（乌云容量回复用）与「乌云」连击（头顶乌云 + 周期雷击）；台风的武器附加闪电
 		CombatState.register();
 		com.sephiria.cloud.DarkCloud.registerTicker();
@@ -198,6 +208,15 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.artifact.ArtifactHud.registerTicker();
 		// 特别神器「书」：书上附了火焰附加时，神器 / 连击的伤害点燃目标（抢夺在掉落结算那一侧接入）
 		com.sephiria.artifact.BookItem.register();
+		// 音叉：魔法书施放攒「声波」，武器攻击消耗层数打混沌伤害
+		com.sephiria.artifact.TuningFork.register();
+		com.sephiria.artifact.PlitviceWaterDropItem.registerTicker();
+		// 守护：护盾系统、破碎的镜子（脱战给盾）、荆棘壳（反伤）、岩象（岩石矛推进）
+		com.sephiria.stats.ShieldSystem.register();
+		com.sephiria.artifact.BrokenMirrorItem.register();
+		com.sephiria.artifact.ThornShellItem.register();
+		com.sephiria.artifact.WhiteEdgeBreadItem.register();
+		com.sephiria.artifact.skill.RockElephantSkill.register();
 
 		PayloadTypeRegistry.serverboundPlay().register(DashPayload.TYPE, DashPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(com.sephiria.network.FrostQiPayload.TYPE,
@@ -239,8 +258,13 @@ public class Sephiria implements ModInitializer {
 				com.sephiria.network.FrostSyncPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(InvulnerablePayload.TYPE, InvulnerablePayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(StatsSyncPayload.TYPE, StatsSyncPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(
+				com.sephiria.network.MagicBookStatsPayload.TYPE,
+				com.sephiria.network.MagicBookStatsPayload.STREAM_CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(com.sephiria.network.SlateCountPayload.TYPE,
 				com.sephiria.network.SlateCountPayload.STREAM_CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(com.sephiria.network.BookEffectPayload.TYPE,
+				com.sephiria.network.BookEffectPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TalentClickPayload.TYPE, TalentClickPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TalentSyncRequestPayload.TYPE,
 				TalentSyncRequestPayload.STREAM_CODEC);
@@ -547,6 +571,14 @@ public class Sephiria implements ModInitializer {
 			CombatState.forget(handler.player);
 			com.sephiria.cloud.DarkCloud.forget(handler.player);
 			com.sephiria.sun.SunSword.forget(handler.player);
+			com.sephiria.artifact.TuningFork.forget(handler.player);
+			com.sephiria.artifact.WaterBagItem.forget(handler.player);
+			com.sephiria.artifact.PlitviceWaterDropItem.forget(handler.player);
+			com.sephiria.stats.ShieldSystem.clear(handler.player);
+			com.sephiria.artifact.BrokenMirrorItem.forget(handler.player);
+			com.sephiria.artifact.SmallMirrorItem.forget(handler.player);
+			com.sephiria.artifact.SerensLetterItem.forget(handler.player);
+			com.sephiria.artifact.PotLidItem.forget(handler.player);
 			ArtifactSkills.forget(handler.player);
 			Dodge.forget(handler.player);
 			ShopStock.forget(handler.player);
@@ -561,7 +593,9 @@ public class Sephiria implements ModInitializer {
 
 		for (ArtifactSkills.Available available : ArtifactSkills.available(player)) {
 			skills.add(new ArtifactSkillsPayload.Entry(
-					net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(available.item()), available.level()));
+					net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(available.item()), available.level(),
+					ArtifactSkills.cooldownTicksFor(player, available),
+					ArtifactSkills.mpCostFor(player, available)));
 		}
 
 		ServerPlayNetworking.send(player, new ArtifactSkillsPayload(skills, java.util.List.copyOf(SkillSlots.of(player))));

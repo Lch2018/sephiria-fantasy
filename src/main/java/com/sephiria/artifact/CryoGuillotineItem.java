@@ -375,10 +375,10 @@ public class CryoGuillotineItem extends ArtifactItem {
 		if (owner != null && target != null && target.isAlive() && !target.isRemoved()
 				&& target.distanceToSqr(blade.impact()) <= 36.0D) {
 			SephiriaDamage.clearDamageCooldown(target);
-			// 火焰模式跟剑 / 锤 / 矛一样换成 fire_attack（火属性，触发灼伤）；
+			// 火焰模式：火 + 电双属性（fire_cryo_guillotine），触发灼伤与触电；
 			// 默认仍是冰 + 电的 cryo_guillotine
 			damaged = target.hurtServer(level, blade.flame()
-							? SephiriaDamage.fireAttack(level, owner)
+							? SephiriaDamage.fireCryoGuillotine(level, owner)
 							: SephiriaDamage.cryoGuillotine(level, owner),
 					blade.damage());
 		}

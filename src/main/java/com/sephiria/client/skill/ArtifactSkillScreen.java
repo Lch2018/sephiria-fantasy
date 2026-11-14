@@ -65,10 +65,18 @@ public class ArtifactSkillScreen extends Screen {
 			all.add(ClientSkills.encode(entry));
 		}
 
-		// 已经放进技能栏的技能不再出现在左边（同名多份时按份数扣，扣掉一份只等于少一格）
+		// 已经放进技能栏的技能不再出现在左边（同名多份时按份数扣，扣掉一份只等于少一格）；
+		// 旧栏位里超上限的等级按封顶后的等级匹配，避免同一个技能同时出现在两边。
 		for (String slotEntry : ClientSkills.slots()) {
-			if (!slotEntry.isEmpty()) {
-				all.remove(slotEntry);
+			if (slotEntry.isEmpty()) {
+				continue;
+			}
+
+			for (int index = 0; index < all.size(); index++) {
+				if (ClientSkills.sameEntry(all.get(index), slotEntry)) {
+					all.remove(index);
+					break;
+				}
 			}
 		}
 
@@ -99,6 +107,18 @@ public class ArtifactSkillScreen extends Screen {
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
+		// tooltip 必须赶在 super 之前排队，才会被这一帧的 tooltip 层画出来；
+		// 用真正的 tooltip 层也顺便解决了「后面的技能图标把文字盖住」的问题。
+		String hovered = hoveredEntry(mouseX, mouseY);
+
+		if (hovered != null && !hovered.isEmpty()) {
+			List<Component> lines = ClientSkills.tooltip(hovered);
+
+			if (!lines.isEmpty()) {
+				extractor.setComponentTooltipForNextFrame(this.font, lines, mouseX, mouseY);
+			}
+		}
+
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 
 		for (int index = 0; index < this.listRects.size(); index++) {
@@ -107,10 +127,6 @@ public class ArtifactSkillScreen extends Screen {
 			drawCell(extractor, this.listRects.get(index), ClientSkills.slots().contains(entry) ? 0xFF2F4A34 : 0xFF202030,
 					inside(this.listRects.get(index), mouseX, mouseY));
 			drawIcon(extractor, ClientSkills.itemOf(entry), this.listRects.get(index));
-
-			if (inside(this.listRects.get(index), mouseX, mouseY)) {
-				extractor.text(this.font, ClientSkills.slotLabel(entry), mouseX + 10, mouseY + 8, 0xFFFFFFFF);
-			}
 		}
 
 		for (int slot = 0; slot < this.slotRects.size(); slot++) {
@@ -120,16 +136,30 @@ public class ArtifactSkillScreen extends Screen {
 			drawIcon(extractor, ClientSkills.itemOf(entry), this.slotRects.get(slot));
 			extractor.text(this.font, Component.translatable("screen.sephiria_fantasy.artifact_skills.slot", slot + 1),
 					this.slotRects.get(slot)[0] + CELL + 6, this.slotRects.get(slot)[1] + 6, 0xFFAAAAAA);
-
-			if (inside(this.slotRects.get(slot), mouseX, mouseY) && !entry.isEmpty()) {
-				extractor.text(this.font, ClientSkills.slotLabel(entry), mouseX + 10, mouseY + 8, 0xFFFFFFFF);
-			}
 		}
 
 		// 手上那个跟着鼠标
 		if (this.held != null) {
 			drawIcon(extractor, ClientSkills.itemOf(this.held), mouseX - 7, mouseY - 7);
 		}
+	}
+
+	/** 鼠标下的技能栏字符串；没悬停在技能图标上返回 null。 */
+	private String hoveredEntry(double mouseX, double mouseY) {
+		for (int index = 0; index < this.listRects.size(); index++) {
+			if (inside(this.listRects.get(index), mouseX, mouseY)) {
+				return this.entries.get(index);
+			}
+		}
+
+		for (int slot = 0; slot < this.slotRects.size(); slot++) {
+			if (inside(this.slotRects.get(slot), mouseX, mouseY)) {
+				String entry = ClientSkills.slots().size() > slot ? ClientSkills.slots().get(slot) : "";
+				return entry.isEmpty() ? null : entry;
+			}
+		}
+
+		return null;
 	}
 
 	private void drawCell(GuiGraphicsExtractor extractor, int[] rect, int colour, boolean hovered) {

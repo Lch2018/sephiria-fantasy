@@ -51,6 +51,16 @@ public interface SephiriaArtifact extends Quality {
 	 */
 	java.util.List<Component> affixLines(int level);
 
+	/**
+	 * 技能页悬停时显示的技能说明行（不含技能名标题与等级行）。
+	 *
+	 * <p>默认就是 {@link #affixLines}；魔法书这类「获得技能」词条会把第一行标题去掉，
+	 * 避免技能页已经画了「技能名」标题、下面又出现一行「获得技能…」。
+	 */
+	default java.util.List<Component> skillDescriptionLines(int level) {
+		return affixLines(level);
+	}
+
 	/** 该等级给的物理强度加成（背包里按【唯一】规则汇总）。 */
 	default double physicalBonus(int level) {
 		return 0.0D;
@@ -132,6 +142,11 @@ public interface SephiriaArtifact extends Quality {
 
 	/** 该等级给的「普通攻击伤害」加成（百分点，100 = 100%）：只加成普通攻击，技能不吃。 */
 	default double normalAttackDamagePercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「所有伤害放大」百分比：与药水「黎明之露」同一层，含真实伤害与减益。 */
+	default double allDamagePercentBonus(int level) {
 		return 0.0D;
 	}
 
@@ -487,6 +502,121 @@ public interface SephiriaArtifact extends Quality {
 	/** 该等级给的 MP再生加成（内部点/秒；显示与战斗结算 ×10 成每 10 秒）。 */
 	default double mpRegenBonus(int level) {
 		return 0.0D;
+	}
+
+	/** 该等级给的「魔法书加速」（点）：每 1 点让魔法书技能的冷却速度 +1%。 */
+	default double magicBookHasteBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「魔法书 MP 消耗减少」（%）：雷伊星碎片用在左侧格子的书上。 */
+	default double magicBookMpReductionBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级是否让「火焰 / 寒冰 / 闪电魔弹」追踪准星附近最近的敌人（鼠魔法师的吊坠）。 */
+	default boolean magicBoltTracking(int level) {
+		return false;
+	}
+
+	/** 该等级给的「奖励中出现魔法书的几率」加成（%）。 */
+	default double magicBookRewardChanceBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「最终最大生命值」百分比加成（%）。 */
+	default double maxHpPercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「MP 吸收」加成（点）。 */
+	default double mpAbsorbBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「消耗 MP 的能力伤害」加成（%）。 */
+	default double mpAbilityDamageBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的海之眷顾等级（0 = 没有）。 */
+	default int fishingLuckBonus(int level) {
+		return 0;
+	}
+
+	/** 该等级给的饵钓等级（0 = 没有）。 */
+	default int fishingLureBonus(int level) {
+		return 0;
+	}
+
+	/** 乔洛的浇水壶：额外施放魔法书所需的最大 MP 门槛；0 = 没有这个效果。 */
+	default int wateringCanMaxMpThreshold(int level) {
+		return 0;
+	}
+
+	/** 该等级给的「魔法书伤害」加成（%）。 */
+	default double magicBookDamageBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 学院钢笔：按当前闪避点数换算出的魔法书伤害加成（%）。 */
+	default double magicBookDamageFromDodge(int level, double dodge) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「魔法书的暴击率」加成（%）。 */
+	default double magicBookCritChanceBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给所有魔法书的 MP 消耗减少（%）：莱莉的怀表这类全局词条。 */
+	default double magicBookMpReductionGlobalBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给「右边格子的魔法书」的魔法书加速（点）：发光的沙漏。 */
+	default double rightMagicBookHasteBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级占用的最大 MP（点）：渴望宝珠。 */
+	default double mpReservedBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 该等级给的「最终 MP」百分比加成（%）：空剑柄。 */
+	default double maxMpPercentBonus(int level) {
+		return 0.0D;
+	}
+
+	/** 闪避成功时，让所有魔法书剩余冷却加速的百分比（%）。 */
+	default double magicBookCooldownOnDodgePercent(int level) {
+		return 0.0D;
+	}
+
+	/** 双角管：魔弹分三路时每一路的伤害减少（%）。 */
+	default double magicBoltSplitDamageReduction(int level) {
+		return 0.0D;
+	}
+
+	/** 双角管：魔弹的 MP 消耗增加（%）。 */
+	default double magicBoltMpCostIncreasePercent(int level) {
+		return 0.0D;
+	}
+
+	/** 音叉：是否启用「声波」层数机制。 */
+	default boolean tuningForkEnabled(int level) {
+		return false;
+	}
+
+	/** 书库之阳：太阳剑是否按「魔法书伤害」等比放大。 */
+	default boolean librarySunEnabled(int level) {
+		return false;
+	}
+
+	/** 书库之阳：造成魔法书伤害时太阳剑额外触发几次。 */
+	default int librarySunExtraTriggers(int level) {
+		return 0;
 	}
 
 	/**

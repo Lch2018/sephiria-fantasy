@@ -19,7 +19,7 @@ import java.util.List;
  * <p>每 5 刻重推一次：冷却在服务端是 gameTime 表，客户端没有同步源；5 刻一包很小，
  * 客户端在两包之间自己按客户端刻数平滑。
  */
-public record HudSyncPayload(List<Entry> skills, List<Entry> artifacts) implements CustomPacketPayload {
+public record HudSyncPayload(List<Entry> skills, List<Entry> artifacts, int shield) implements CustomPacketPayload {
 	/**
 	 * 一条 HUD 图标。
 	 *
@@ -41,8 +41,10 @@ public record HudSyncPayload(List<Entry> skills, List<Entry> artifacts) implemen
 			(FriendlyByteBuf buffer, HudSyncPayload payload) -> {
 				writeEntries(buffer, payload.skills());
 				writeEntries(buffer, payload.artifacts());
+				buffer.writeVarInt(Math.max(0, payload.shield()));
 			},
-			(FriendlyByteBuf buffer) -> new HudSyncPayload(readEntries(buffer), readEntries(buffer)));
+			(FriendlyByteBuf buffer) -> new HudSyncPayload(readEntries(buffer), readEntries(buffer),
+					buffer.readVarInt()));
 
 	private static void writeEntries(FriendlyByteBuf buffer, List<Entry> entries) {
 		buffer.writeVarInt(entries.size());

@@ -16,6 +16,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 BASE = Path(r"C:\Users\28237\.zcode\cli\image-cache\session_855df452020fe2e95669613fb9ab60a1")
+DESKTOP = Path(r"C:\Users\28237\Desktop\赛菲莉亚素材\赛菲莉娅神器")
 TEXTURES = Path("src/main/resources/assets/sephiria_fantasy/textures/item")
 ITEMS = Path("src/main/resources/assets/sephiria_fantasy/items")
 MODELS = Path("src/main/resources/assets/sephiria_fantasy/models/item")
@@ -32,6 +33,65 @@ ICONS = {
     "beiruts_scythe": "image-7c9493f7921b8d8e9de1244c315a617c.png",
     "barts_monocle": "image-a79d6d574607a62174f5591af5759684.png",
     "black_scale": "image-44cda4dea2335965abee972a6edced80.png",
+    "fire_bolt": "image-54908545213259ce7a7d380c39eaab61.png",
+    "ice_bolt": "image-804ea0aa3049381be60678a24a9cf419.png",
+    "lightning_bolt": "image-bf7b60f73fc2c3983f422dd55b70c82f.png",
+    "flame_arrow": "image-ced7e4534279e05e788ca2e3c071e49b.png",
+    "frost_knife": "image-ce54c09d4e02b717d53c7d0de9adcc7c.png",
+    "lightning_boomerang": "image-e8994d1edc23d15c11bf9886539178e7.png",
+    "fire_circus": "image-11c99559133a7bdd8f4d219e397cb96b.png",
+    "arrow_rain": "image-fe21ae384465a76ccd92fbeee76707b0.png",
+    "thunder_armor": "image-e368dbeec547f59a63e9afac3470dc27.png",
+    "meteor_shower": "image-b9f47fb07974887f78f6ef23ed52cf1d.png",
+    "ice_storm": "image-09a05255d42ef036face3306c131a18a.png",
+    "thunder_verdict": "image-2770d68e0f8db6ae4a5bb7b40e6a9da6.png",
+    "magicians_coin": "image-163f3402336e191c39f2cb41d21c63a5.png",
+    "ray_star_fragment": "image-906946b6d6b7d288db41f64d4695448d.png",
+    "mouse_magician_pendant": "image-476b356ade8299ac58a8f17196df5323.png",
+    # 学院第二批（2026-11-13）：素材直接来自桌面文件夹
+    "pearl_powder": DESKTOP / "珍珠粉.png",
+    "orb_of_desire": DESKTOP / "渴望宝珠.png",
+    "crabapple": DESKTOP / "海棠果.png",
+    "double_horn_pipe": DESKTOP / "双角管.png",
+    "tuning_fork": DESKTOP / "音叉.png",
+    "jewel_armor": DESKTOP / "宝石盔甲.png",
+    "glowing_hourglass": DESKTOP / "发光的沙漏.png",
+    "battle_mage_gloves": DESKTOP / "战斗法师的手套.png",
+    "meditation_book": DESKTOP / "冥想书.png",
+    "academy_pen": DESKTOP / "学院钢笔.png",
+    "library_sun": DESKTOP / "书库之阳.png",
+    "empty_hilt": DESKTOP / "空剑柄.png",
+    "leilis_pocket_watch": DESKTOP / "莱莉的怀表.png",
+    "wilted_flower": DESKTOP / "枯萎的花.png",
+    "endodite_paperweight": DESKTOP / "恩多迪特的镇纸.png",
+    "scarecrow_doll": DESKTOP / "稻草人偶.png",
+    "star_ruby": DESKTOP / "星红宝石.png",
+    "star_sea_sapphire": DESKTOP / "星海蓝宝石.png",
+    "water_bag": DESKTOP / "水袋.png",
+    "lure_bait": DESKTOP / "诱惑的鱼饵.png",
+    "obras_blood": DESKTOP / "奥布拉斯之血.png",
+    "broken_root": DESKTOP / "破碎的树根.png",
+    "heart_carrot": DESKTOP / "心形胡萝卜.png",
+    "white_branch": DESKTOP / "白色树枝.png",
+    "stone_spindle": DESKTOP / "石纺锤.png",
+    "full_fruit_bucket": DESKTOP / "饱满果实桶.png",
+    "jolo_watering_can": DESKTOP / "乔洛的浇水壶.png",
+    "water_spirit": DESKTOP / "水之精灵.png",
+    "plitvice_water_drop": DESKTOP / "普利特维采的水滴.png",
+    "cloth_armor": DESKTOP / "布甲.png",
+    "shield": DESKTOP / "护盾.png",
+    "shield_earring": DESKTOP / "盾牌耳环.png",
+    "broken_mirror": DESKTOP / "破碎的镜子.png",
+    "thorn_shell": DESKTOP / "荆棘壳.png",
+    "serens_letter": DESKTOP / "瑟伦潦草的信.png",
+    "pot_lid": DESKTOP / "锅盖.png",
+    "academy_chainmail": DESKTOP / "学院锁子甲.png",
+    "lizard_plate_armor": DESKTOP / "蜥蜴板甲.png",
+    "small_mirror": DESKTOP / "小镜子.png",
+    "white_edge_bread": DESKTOP / "白边面包.png",
+    "beast_heart": DESKTOP / "野兽之心.png",
+    "shield_bag": DESKTOP / "盾牌包.png",
+    "rock_elephant": DESKTOP / "岩象.png",
 }
 
 OUTER = (34, 32, 52)   # 源图外框 #222034
@@ -87,7 +147,7 @@ def main() -> None:
     sheet = Image.new("RGBA", (16 * len(ICONS), 16), (245, 245, 245, 255))
 
     for index, (item_id, filename) in enumerate(ICONS.items()):
-        icon = process(BASE / filename)
+        icon = process(filename if isinstance(filename, Path) else BASE / filename)
         icon.save(TEXTURES / f"{item_id}.png")
         sheet.alpha_composite(icon, (index * 16, 0))
 

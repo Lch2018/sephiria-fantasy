@@ -14,6 +14,13 @@
     "sephiria_fantasy:cryo_guillotine",
     "sephiria_fantasy:chaos",
     "sephiria_fantasy:eternal_winter",
-    "sephiria_fantasy:true_damage"
+    "sephiria_fantasy:true_damage",
+    "sephiria_fantasy:magic_fire_attack",
+    "sephiria_fantasy:magic_ice_attack",
+    "sephiria_fantasy:magic_electric_attack",
+    "sephiria_fantasy:magic_chaos",
+    "sephiria_fantasy:blizzard",
+    "sephiria_fantasy:fire_cryo_guillotine",
+    "sephiria_fantasy:water_grab"
   ]
 }

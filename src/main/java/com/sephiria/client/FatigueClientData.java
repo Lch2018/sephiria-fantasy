@@ -1,6 +1,6 @@
 package com.sephiria.client;
 
-/** 客户端疲劳镜像。 */
+/** 客户端「经验加加（EXP++）」镜像。 */
 public final class FatigueClientData {
 	private static int points;
 

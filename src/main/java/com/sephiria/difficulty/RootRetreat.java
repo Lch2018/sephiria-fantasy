@@ -226,8 +226,11 @@ public final class RootRetreat {
 		if (!trueDamage) {
 			double defence = DifficultyOption.PROTECTIVE_ARMOR.effectAt(
 					levelOf(attacker, DifficultyOption.PROTECTIVE_ARMOR));
+			// 防御穿透与「无视防御」乘算，且都只削「防御力」这一层
+			double remaining = (1.0D - com.sephiria.talent.Talents.defensePenetrationPercent(attacker) / 100.0D)
+					* (1.0D - com.sephiria.artifact.ArtifactEffects.defenseIgnorePercent(attacker) / 100.0D);
 			// 与玩家「防御力」同一条公式：x / (x + 80)
-			armor = 1.0D - com.sephiria.stats.PlayerStats.defenseReduction(defence);
+			armor = 1.0D - com.sephiria.stats.PlayerStats.defenseReduction(defence * remaining);
 		}
 
 		return (float) (tenacious * armor);

@@ -21,12 +21,18 @@ public class HudConfigScreen extends Screen {
 
 	@Override
 	protected void init() {
+		// 最上方是「统一调整」：一次改所有模块的缩放；下面是各模块自己的位置 / 缩放。
+		addRenderableWidget(Button.builder(Component.translatable("screen.sephiria_fantasy.hud.uniform"),
+						button -> Minecraft.getInstance().setScreenAndShow(new HudUniformScaleScreen(this)))
+				.bounds(this.width / 2 - 100, 30, 200, 20)
+				.build());
+
 		// 模块多了以后单列在 240 高的 GUI 上放不下：超过 7 个就自动排两列
 		int columns = HudConfig.MODULES.size() > 7 ? 2 : 1;
 		int width = columns == 1 ? 200 : 150;
 		int gap = 8;
 		int left = Math.max(8, this.width / 2 - (columns * width + (columns - 1) * gap) / 2);
-		int y = 30;
+		int y = 56;
 
 		for (int index = 0; index < HudConfig.MODULES.size(); index++) {
 			String key = HudConfig.MODULES.get(index);
@@ -40,8 +46,14 @@ public class HudConfigScreen extends Screen {
 					.build());
 		}
 
+		int bottom = this.height - 40;
+		int half = 98;
+		addRenderableWidget(Button.builder(Component.translatable("screen.sephiria_fantasy.hud.reset"),
+						button -> HudConfig.resetAll())
+				.bounds(this.width / 2 - 100, bottom, half, 20)
+				.build());
 		addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> onClose())
-				.bounds(this.width / 2 - 100, this.height - 40, 200, 20)
+				.bounds(this.width / 2 - 100 + half + 4, bottom, half, 20)
 				.build());
 	}
 

@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -53,7 +54,7 @@ public final class SephiriaHud implements HudElement {
 	private static final int NAME_COLOR = 0xFFFFFFFF;
 	private static final int PROPERTY_COLOR = 0xFFB8B8B8;
 	/** 无敌条的整宽与高度（像素），以及颜色。 */
-	private static final int BAR_WIDTH = 60;
+	private static final int BAR_WIDTH = HudConfig.INVULN_WIDTH;
 	private static final int BAR_HEIGHT = 3;
 	private static final int BAR_COLOR = 0xFFFFFFFF;
 	/** 武器面板里的蓄力条宽度（像素）。 */
@@ -155,6 +156,7 @@ public final class SephiriaHud implements HudElement {
 		renderDash(extractor, client);
 		renderFatigue(extractor, client);
 		renderMp(extractor, client);
+		renderShield(extractor, client);
 		renderCloud(extractor, client);
 		renderSunSword(extractor, client);
 		renderFrost(extractor, client);
@@ -163,7 +165,11 @@ public final class SephiriaHud implements HudElement {
 
 	/** 技能 HUD：6 个技能栏的图标；冷却按顺时针从暗到亮扫过，完成时闪一下。 */
 	private void renderSkillHud(GuiGraphicsExtractor extractor, Minecraft client) {
-		renderIconRow(extractor, client, HudConfig.SKILLS, HudClientData.skills(), "s");
+		// 技能栏 1 固定在最左侧、6 在最右侧：行渲染本来是「列表第一项在最右」，
+		// 所以这里把服务端按 1..6 给的列表反过来再画。
+		List<HudSyncPayload.Entry> entries = new ArrayList<>(HudClientData.skills());
+		Collections.reverse(entries);
+		renderIconRow(extractor, client, HudConfig.SKILLS, entries, "s");
 	}
 
 	/** 神器 HUD：有冷却 / 充能的神器图标；画法与技能 HUD 完全一致。 */
@@ -454,6 +460,13 @@ public final class SephiriaHud implements HudElement {
 		int width = Math.max(1, Math.round(BAR_WIDTH * fraction));
 		int left = (BAR_WIDTH - width) / 2;
 		HudConfig.Element config = HudConfig.element(HudConfig.INVULN);
+
+		if (config.centered) {
+			// 每帧按实际屏幕宽度与缩放重算：GUI 宽度为奇数 / 缩放过时也不会偏 1px
+			config.x = Math.ceil(client.getWindow().getGuiScaledWidth() / 2.0D
+					- BAR_WIDTH * config.scale / 2.0D);
+		}
+
 		Matrix3x2fStack pose = beginHud(extractor, client, config, BAR_WIDTH, BAR_HEIGHT, HudAnchor.CENTER);
 
 		extractor.fill(left, 0, left + width, BAR_HEIGHT, BAR_COLOR);
@@ -521,6 +534,7 @@ public final class SephiriaHud implements HudElement {
 		Font font = client.font;
 		double current = ClientStats.mp();
 		double max = ClientStats.maxMp();
+		double reserved = Math.min(Math.max(0.0D, ClientStats.mpReserved()), max);
 		float fraction = (float) Math.clamp(max <= 0.0D ? 0.0D : current / max, 0.0D, 1.0D);
 		String numbers = format(current) + "/" + format(max);
 		int textWidth = Math.max(font.width(numbers), font.width("MP"));
@@ -535,7 +549,42 @@ public final class SephiriaHud implements HudElement {
 		int barX = PAD * 2 + textWidth;
 		int barY = PAD + 2;
 		extractor.fill(barX, barY, barX + barWidth, barY + 8, 0xFF202020);
-		extractor.fill(barX, barY, barX + (int) (barWidth * fraction), barY + 8, 0xFF3B6BE8);
+		// 占用段固定在右侧（#A80085），当前 MP 只能填到它左边；消耗时填充边缘从占用段左侧往左退
+		int reservedWidth = (int) Math.round(barWidth * (max <= 0.0D ? 0.0D : reserved / max));
+		int usableWidth = barWidth - reservedWidth;
+		int filled = Math.min((int) (barWidth * fraction), usableWidth);
+		extractor.fill(barX, barY, barX + filled, barY + 8, 0xFF3B6BE8);
+
+		if (reservedWidth > 0) {
+			extractor.fill(barX + barWidth - reservedWidth, barY, barX + barWidth, barY + 8, 0xFFA80085);
+		}
+
+		pose.popMatrix();
+	}
+
+	/** 护盾 HUD：{@code 护盾：x}；没有护盾时不画。 */
+	private void renderShield(GuiGraphicsExtractor extractor, Minecraft client) {
+		int shield = HudClientData.shield();
+
+		if (shield <= 0) {
+			return;
+		}
+
+		Font font = client.font;
+		Component text = Component.translatable("ui.sephiria_fantasy.shield",
+				Component.literal(String.valueOf(shield)));
+		int width = font.width(text) + PAD * 2;
+		int height = LINE + PAD * 2;
+		HudConfig.Element config = HudConfig.element(HudConfig.SHIELD);
+
+		if (!config.visible) {
+			return;
+		}
+
+		Matrix3x2fStack pose = beginHud(extractor, client, config, width, height, HudAnchor.LEFT);
+
+		extractor.fill(0, 0, width, height, PANEL_COLOR);
+		extractor.text(font, text, PAD, PAD, NAME_COLOR, true);
 		pose.popMatrix();
 	}
 

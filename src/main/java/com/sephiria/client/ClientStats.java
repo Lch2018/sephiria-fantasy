@@ -28,6 +28,10 @@ public final class ClientStats {
 	private static double specialAttack = PlayerStats.DEFAULT_SPECIAL_ATTACK;
 	private static double lifesteal = 0.0D;
 	private static double mpAbsorb = 0.0D;
+	private static double mpReserved = 0.0D;
+	private static double magicBookHaste = 0.0D;
+	private static double magicBookMpReduction = 0.0D;
+	private static double magicBoltMpCostIncrease = 0.0D;
 	private static double normalAttackDamage = PlayerStats.DEFAULT_NORMAL_ATTACK_DAMAGE;
 	private static double critChance = PlayerStats.DEFAULT_CRIT_CHANCE;
 	private static double critDamage = PlayerStats.DEFAULT_CRIT_DAMAGE;
@@ -65,6 +69,10 @@ public final class ClientStats {
 		specialAttack = payload.specialAttack();
 		lifesteal = payload.lifesteal();
 		mpAbsorb = payload.mpAbsorb();
+		mpReserved = payload.mpReserved();
+		magicBookHaste = payload.magicBookHaste();
+		magicBookMpReduction = payload.magicBookMpReduction();
+		magicBoltMpCostIncrease = payload.magicBoltMpCostIncrease();
 		normalAttackDamage = payload.normalAttackDamage();
 		critChance = payload.critChance();
 		critDamage = payload.critDamage();
@@ -80,6 +88,8 @@ public final class ClientStats {
 				payload.potionFlat(), payload.artifactPercent(), payload.potionPercent());
 		attackBreakdown = new PlayerStats.PhysicalBreakdown(payload.attackBase(), payload.attackArtifactFlat(),
 				payload.attackPotionFlat(), payload.attackArtifactPercent(), payload.attackPotionPercent());
+		// 魔法书提示框要显示实际冷却：把服务端算好的「魔法书加速」存进提示框上下文
+		com.sephiria.artifact.skill.SkillTooltipContext.setHastePercent(payload.magicBookHaste());
 	}
 
 	/** 普通攻击倍率：与服务端公式一致（物理强度 ×（1 + 物理伤害增幅）× 武器伤害 × 普通攻击伤害）。 */
@@ -206,6 +216,26 @@ public final class ClientStats {
 	/** 最大蓝量（点）：被剑耳环削过的话 HUD 与技能蓝耗校验都用它。 */
 	public static double maxMp() {
 		return maxMp;
+	}
+
+	/** 被渴望宝珠占用的 MP（点）：HUD 右侧单独上色，不能使用。 */
+	public static double mpReserved() {
+		return mpReserved;
+	}
+
+	/** 魔法书加速（点）：提示框按它把冷却换算成实际值。 */
+	public static double magicBookHaste() {
+		return magicBookHaste;
+	}
+
+	/** 全局魔法书 MP 消耗减少（%）：莱莉的怀表这类词条。 */
+	public static double magicBookMpReduction() {
+		return magicBookMpReduction;
+	}
+
+	/** 魔弹的 MP 消耗增加（%）：双角管。 */
+	public static double magicBoltMpCostIncrease() {
+		return magicBoltMpCostIncrease;
 	}
 
 	/** 幸运值（点）：属性页那一行显示点数，悬停时按公式换算成「稀有及以上 +y%」。 */

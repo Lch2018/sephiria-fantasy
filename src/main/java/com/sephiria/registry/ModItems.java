@@ -5,6 +5,63 @@ import com.sephiria.artifact.ColorlessCubeItem;
 import com.sephiria.artifact.SilverPlateItem;
 import com.sephiria.artifact.EncouragementBannerItem;
 import com.sephiria.artifact.HasteGrimoireItem;
+import com.sephiria.artifact.FireBoltItem;
+import com.sephiria.artifact.IceBoltItem;
+import com.sephiria.artifact.LightningBoltItem;
+import com.sephiria.artifact.FlameArrowItem;
+import com.sephiria.artifact.FrostKnifeItem;
+import com.sephiria.artifact.LightningBoomerangItem;
+import com.sephiria.artifact.FireCircusItem;
+import com.sephiria.artifact.ArrowRainItem;
+import com.sephiria.artifact.ThunderArmorItem;
+import com.sephiria.artifact.MeteorShowerItem;
+import com.sephiria.artifact.IceStormItem;
+import com.sephiria.artifact.MagiciansCoinItem;
+import com.sephiria.artifact.RayStarFragmentItem;
+import com.sephiria.artifact.MouseMagicianPendantItem;
+import com.sephiria.artifact.PearlPowderItem;
+import com.sephiria.artifact.OrbOfDesireItem;
+import com.sephiria.artifact.CrabappleItem;
+import com.sephiria.artifact.DoubleHornPipeItem;
+import com.sephiria.artifact.TuningForkItem;
+import com.sephiria.artifact.JewelArmorItem;
+import com.sephiria.artifact.GlowingHourglassItem;
+import com.sephiria.artifact.BattleMageGlovesItem;
+import com.sephiria.artifact.MeditationBookItem;
+import com.sephiria.artifact.AcademyPenItem;
+import com.sephiria.artifact.LibrarySunItem;
+import com.sephiria.artifact.EmptyHiltItem;
+import com.sephiria.artifact.LeilisPocketWatchItem;
+import com.sephiria.artifact.WiltedFlowerItem;
+import com.sephiria.artifact.EndoditePaperweightItem;
+import com.sephiria.artifact.ScarecrowDollItem;
+import com.sephiria.artifact.StarRubyItem;
+import com.sephiria.artifact.StarSeaSapphireItem;
+import com.sephiria.artifact.WaterBagItem;
+import com.sephiria.artifact.LureBaitItem;
+import com.sephiria.artifact.ObrasBloodItem;
+import com.sephiria.artifact.BrokenRootItem;
+import com.sephiria.artifact.HeartCarrotItem;
+import com.sephiria.artifact.WhiteBranchItem;
+import com.sephiria.artifact.StoneSpindleItem;
+import com.sephiria.artifact.FullFruitBucketItem;
+import com.sephiria.artifact.JoloWateringCanItem;
+import com.sephiria.artifact.WaterSpiritItem;
+import com.sephiria.artifact.PlitviceWaterDropItem;
+import com.sephiria.artifact.ClothArmorItem;
+import com.sephiria.artifact.ShieldBookItem;
+import com.sephiria.artifact.ShieldEarringItem;
+import com.sephiria.artifact.BrokenMirrorItem;
+import com.sephiria.artifact.ThornShellItem;
+import com.sephiria.artifact.SerensLetterItem;
+import com.sephiria.artifact.PotLidItem;
+import com.sephiria.artifact.AcademyChainmailItem;
+import com.sephiria.artifact.LizardPlateArmorItem;
+import com.sephiria.artifact.SmallMirrorItem;
+import com.sephiria.artifact.WhiteEdgeBreadItem;
+import com.sephiria.artifact.BeastHeartItem;
+import com.sephiria.artifact.ShieldBagItem;
+import com.sephiria.artifact.RockElephantItem;
 import com.sephiria.artifact.RedDewItem;
 import com.sephiria.artifact.LongingAmuletItem;
 import com.sephiria.artifact.FaultProbeItem;
@@ -543,6 +600,263 @@ public final class ModItems {
 	public static final Item HASTE_GRIMOIRE = register(key("haste_grimoire"),
 			p -> new HasteGrimoireItem(p),
 			new Item.Properties().stacksTo(1));
+
+	/** 火焰魔弹（余烬，普通，魔法书）：【唯一】获得技能「火焰魔弹」。 */
+	public static final Item FIRE_BOLT = register(key("fire_bolt"),
+			p -> new FireBoltItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 寒冰魔弹（冰川，普通，魔法书）：【唯一】获得技能「寒冰魔弹」。 */
+	public static final Item ICE_BOLT = register(key("ice_bolt"),
+			p -> new IceBoltItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 闪电魔弹（魔法科技，普通，魔法书）：【唯一】获得技能「闪电魔弹」。 */
+	public static final Item LIGHTNING_BOLT = register(key("lightning_bolt"),
+			p -> new LightningBoltItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 火焰箭（余烬，高级，魔法书）：【唯一】获得技能「火焰箭」。 */
+	public static final Item FLAME_ARROW = register(key("flame_arrow"),
+			p -> new FlameArrowItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 霜刀（冰川，高级，魔法书）：【唯一】获得技能「霜刀」。 */
+	public static final Item FROST_KNIFE = register(key("frost_knife"),
+			p -> new FrostKnifeItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 雷电回旋镖（魔法科技，高级，魔法书）：【唯一】获得技能「雷电回旋镖」。 */
+	public static final Item LIGHTNING_BOOMERANG = register(key("lightning_boomerang"),
+			p -> new LightningBoomerangItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 火焰马戏团（余烬，稀有，魔法书）：【唯一】获得技能「火焰马戏团」。 */
+	public static final Item FIRE_CIRCUS = register(key("fire_circus"),
+			p -> new FireCircusItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 箭雨（冰川，稀有，魔法书）：【唯一】获得技能「箭雨」。 */
+	public static final Item ARROW_RAIN = register(key("arrow_rain"),
+			p -> new ArrowRainItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 雷霆之甲（魔法科技，稀有，魔法书）：【唯一】获得技能「雷霆之甲」。 */
+	public static final Item THUNDER_ARMOR = register(key("thunder_armor"),
+			p -> new ThunderArmorItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 陨石雨（余烬，传说，魔法书）：【唯一】获得技能「陨石雨」。 */
+	public static final Item METEOR_SHOWER = register(key("meteor_shower"),
+			p -> new MeteorShowerItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 冰风暴（冰川，传说，魔法书）：【唯一】获得技能「冰风暴」。 */
+	public static final Item ICE_STORM = register(key("ice_storm"),
+			p -> new IceStormItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 魔法师的硬币（学院，普通）：【唯一】魔法书加速 +15/20/30，奖励中魔法书概率 +25%。 */
+	public static final Item MAGICIANS_COIN = register(key("magicians_coin"),
+			p -> new MagiciansCoinItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 雷伊星碎片（学院，高级）：左侧格子的魔法书 MP 消耗 -30/35/42/55%。 */
+	public static final Item RAY_STAR_FRAGMENT = register(key("ray_star_fragment"),
+			p -> new RayStarFragmentItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 鼠魔法师的吊坠（学院，高级）：【唯一】三枚魔弹追踪敌人，MP 再生 +2/5。 */
+	public static final Item MOUSE_MAGICIAN_PENDANT = register(key("mouse_magician_pendant"),
+			p -> new MouseMagicianPendantItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 珍珠粉（学院，高级）：魔法书伤害 +8/10/12%。 */
+	public static final Item PEARL_POWDER = register(key("pearl_powder"),
+			p -> new PearlPowderItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 渴望宝珠（学院，高级，【唯一】）：占用 15 MP，魔法书伤害 +10/12/15/18%。 */
+	public static final Item ORB_OF_DESIRE = register(key("orb_of_desire"),
+			p -> new OrbOfDesireItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 海棠果（学院，高级）：魔法书加速 +6/10/14，冲刺恢复速度 +5/8/12%。 */
+	public static final Item CRABAPPLE = register(key("crabapple"),
+			p -> new CrabappleItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 双角管（学院，稀有，【唯一】）：魔弹分三路，伤害 -69…39%，MP 消耗 +0…125%。 */
+	public static final Item DOUBLE_HORN_PIPE = register(key("double_horn_pipe"),
+			p -> new DoubleHornPipeItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 音叉（学院 + 坚固，羁绊，【唯一】）：魔法书攒声波层数，武器攻击消耗并打出混沌伤害。 */
+	public static final Item TUNING_FORK = register(key("tuning_fork"),
+			p -> new TuningForkItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 宝石盔甲（学院，稀有，【唯一】）：魔法书暴击率 +10/20/30%，MP再生 +4/6/8，物理伤害 -3/5/7。 */
+	public static final Item JEWEL_ARMOR = register(key("jewel_armor"),
+			p -> new JewelArmorItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 发光的沙漏（学院，稀有）：右边格子的魔法书加速 +60/100/140%。 */
+	public static final Item GLOWING_HOURGLASS = register(key("glowing_hourglass"),
+			p -> new GlowingHourglassItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 战斗法师的手套（学院，稀有，【唯一】）：魔法书伤害 +10/12/15/20%，移动速度 +3/4/5/6%。 */
+	public static final Item BATTLE_MAGE_GLOVES = register(key("battle_mage_gloves"),
+			p -> new BattleMageGlovesItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 冥想书（学院，稀有，【唯一】）：魔法书伤害 +6/8/11/14%，加速 +6/8/11/14。 */
+	public static final Item MEDITATION_BOOK = register(key("meditation_book"),
+			p -> new MeditationBookItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 学院钢笔（影子 + 学院，羁绊，【唯一】）：闪避换魔法书伤害；闪避成功加速魔法书冷却。 */
+	public static final Item ACADEMY_PEN = register(key("academy_pen"),
+			p -> new AcademyPenItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 书库之阳（太阳剑 + 学院，羁绊，【唯一】）：魔法书伤害放大太阳剑；书伤触发额外太阳剑。 */
+	public static final Item LIBRARY_SUN = register(key("library_sun"),
+			p -> new LibrarySunItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 空剑柄（学院，传说，【唯一】）：魔法书伤害 +5…30%，最终 MP +7…20%，MP再生 +2…6。 */
+	public static final Item EMPTY_HILT = register(key("empty_hilt"),
+			p -> new EmptyHiltItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 莱莉的怀表（学院，传说，【唯一】）：魔法书加速 +40/60/80，暴击伤害 +8/14/20%，MP 消耗 -5/5/10%。 */
+	public static final Item LEILIS_POCKET_WATCH = register(key("leilis_pocket_watch"),
+			p -> new LeilisPocketWatchItem(p),
+			new Item.Properties().stacksTo(1));
+
+	/** 枯萎的花（湖泊，普通）：暴击几率 +2/4/6%、最大MP +2/4/6。 */
+	public static final Item WILTED_FLOWER = register(key("wilted_flower"),
+			p -> new WiltedFlowerItem(p), new Item.Properties().stacksTo(1));
+
+	/** 恩多迪特的镇纸（湖泊，普通）：MP再生 +3/6/9、最大MP +3/6/9。 */
+	public static final Item ENDODITE_PAPERWEIGHT = register(key("endodite_paperweight"),
+			p -> new EndoditePaperweightItem(p), new Item.Properties().stacksTo(1));
+
+	/** 稻草人偶（湖泊，普通）：MP再生 +3/6/9、暴击伤害 +2/3/5%。 */
+	public static final Item SCARECROW_DOLL = register(key("scarecrow_doll"),
+			p -> new ScarecrowDollItem(p), new Item.Properties().stacksTo(1));
+
+	/** 星红宝石（湖泊，高级）：最终HP +5/10/20%。 */
+	public static final Item STAR_RUBY = register(key("star_ruby"),
+			p -> new StarRubyItem(p), new Item.Properties().stacksTo(1));
+
+	/** 星海蓝宝石（湖泊，高级）：最终MP +10/20/33%。 */
+	public static final Item STAR_SEA_SAPPHIRE = register(key("star_sea_sapphire"),
+			p -> new StarSeaSapphireItem(p), new Item.Properties().stacksTo(1));
+
+	/** 水袋（湖泊，高级，【唯一】）：消耗MP时最大MP +1，上限 10/15/20/25。 */
+	public static final Item WATER_BAG = register(key("water_bag"),
+			p -> new WaterBagItem(p), new Item.Properties().stacksTo(1));
+
+	/** 诱惑的鱼饵（湖泊+元素，高级，【唯一】）：海之眷顾/饵钓、MP再生、四项属性 +1/1/2。 */
+	public static final Item LURE_BAIT = register(key("lure_bait"),
+			p -> new LureBaitItem(p), new Item.Properties().stacksTo(1));
+
+	/** 奥布拉斯之血（湖泊，高级，【唯一】）：MP吸收 +3/6/9/12。 */
+	public static final Item OBRAS_BLOOD = register(key("obras_blood"),
+			p -> new ObrasBloodItem(p), new Item.Properties().stacksTo(1));
+
+	/** 破碎的树根（湖泊，稀有，【唯一】）：最大MP +5/10/20/35/60。 */
+	public static final Item BROKEN_ROOT = register(key("broken_root"),
+			p -> new BrokenRootItem(p), new Item.Properties().stacksTo(1));
+
+	/** 心形胡萝卜（湖泊，稀有，【唯一】）：最大HP +1/2/3/4/5、最大MP +5/10/15/20/30。 */
+	public static final Item HEART_CARROT = register(key("heart_carrot"),
+			p -> new HeartCarrotItem(p), new Item.Properties().stacksTo(1));
+
+	/** 白色树枝（湖泊，稀有，【唯一】）：MP再生 +5/9/15/22/30。 */
+	public static final Item WHITE_BRANCH = register(key("white_branch"),
+			p -> new WhiteBranchItem(p), new Item.Properties().stacksTo(1));
+
+	/** 石纺锤（湖泊，稀有，【唯一】）：消耗MP的能力伤害 +6/12/18/24/30%。 */
+	public static final Item STONE_SPINDLE = register(key("stone_spindle"),
+			p -> new StoneSpindleItem(p), new Item.Properties().stacksTo(1));
+
+	/** 饱满果实桶（湖泊，稀有，【唯一】）：发动型，恢复 50/100% MP。 */
+	public static final Item FULL_FRUIT_BUCKET = register(key("full_fruit_bucket"),
+			p -> new FullFruitBucketItem(p), new Item.Properties().stacksTo(1));
+
+	/** 乔洛的浇水壶（湖泊+学院，羁绊，【唯一】）：最大MP达标时魔法书额外施放一次。 */
+	public static final Item JOLO_WATERING_CAN = register(key("jolo_watering_can"),
+			p -> new JoloWateringCanItem(p), new Item.Properties().stacksTo(1));
+
+	/** 水之精灵（湖泊+精密，羁绊，【唯一】）：发动型 WaterGrab。 */
+	public static final Item WATER_SPIRIT = register(key("water_spirit"),
+			p -> new WaterSpiritItem(p), new Item.Properties().stacksTo(1));
+
+	/** 普利特维采的水滴（冰霜武具+湖泊，羁绊，【唯一】）：旋转冰剑。 */
+	public static final Item PRITVICE_WATER_DROP = register(key("plitvice_water_drop"),
+			p -> new PlitviceWaterDropItem(p), new Item.Properties().stacksTo(1));
+
+	// ------------------------------------------------------------------ 守护（2026-11-14）
+
+	/** 布甲（守护，普通）：防御力 +3/6。 */
+	public static final Item CLOTH_ARMOR = register(key("cloth_armor"),
+			p -> new ClothArmorItem(p), new Item.Properties().stacksTo(1));
+
+	/** 护盾（守护，普通，魔法书）：【唯一】获得技能「护盾」。 */
+	public static final Item SHIELD_BOOK = register(key("shield"),
+			p -> new ShieldBookItem(p), new Item.Properties().stacksTo(1));
+
+	/** 盾牌耳环（守护，高级）：【唯一】最大 HP +1..4、闪避 -5..-2。 */
+	public static final Item SHIELD_EARRING = register(key("shield_earring"),
+			p -> new ShieldEarringItem(p), new Item.Properties().stacksTo(1));
+
+	/** 破碎的镜子（守护，高级）：【唯一】防御力 +4/8，脱战后获得 3/6 点护盾。 */
+	public static final Item BROKEN_MIRROR = register(key("broken_mirror"),
+			p -> new BrokenMirrorItem(p), new Item.Properties().stacksTo(1));
+
+	/** 荆棘壳（守护，高级）：【唯一】荆棘 +150/300/450%、防御力 +1/2/3。 */
+	public static final Item THORN_SHELL = register(key("thorn_shell"),
+			p -> new ThornShellItem(p), new Item.Properties().stacksTo(1));
+
+	/** 瑟伦潦草的信（守护，稀有）：【唯一】战斗中每消耗 40 MP 获得 4/6/8 点护盾。 */
+	public static final Item SERENS_LETTER = register(key("serens_letter"),
+			p -> new SerensLetterItem(p), new Item.Properties().stacksTo(1));
+
+	/** 锅盖（守护，稀有）：【唯一】MP再生、闪避，物理暴击叠「忍耐」。 */
+	public static final Item POT_LID = register(key("pot_lid"),
+			p -> new PotLidItem(p), new Item.Properties().stacksTo(1));
+
+	/** 学院锁子甲（守护+学院，稀有）：【唯一】防御力 + 魔法书加速。 */
+	public static final Item ACADEMY_CHAINMAIL = register(key("academy_chainmail"),
+			p -> new AcademyChainmailItem(p), new Item.Properties().stacksTo(1));
+
+	/** 蜥蜴板甲（守护，稀有）：【唯一】防御力 +14..24，移动/攻速/魔法书加速为负。 */
+	public static final Item LIZARD_PLATE_ARMOR = register(key("lizard_plate_armor"),
+			p -> new LizardPlateArmorItem(p), new Item.Properties().stacksTo(1));
+
+	/** 小镜子（守护，稀有）：【唯一】冲刺给 3/3/6 点护盾、防御力 +3/6/9。 */
+	public static final Item SMALL_MIRROR = register(key("small_mirror"),
+			p -> new SmallMirrorItem(p), new Item.Properties().stacksTo(1));
+
+	/** 白边面包（守护，传说）：【唯一】受击无敌时间 +0.4/0.8/1.2 秒。 */
+	public static final Item WHITE_EDGE_BREAD = register(key("white_edge_bread"),
+			p -> new WhiteEdgeBreadItem(p), new Item.Properties().stacksTo(1));
+
+	/** 野兽之心（守护，传说）：【唯一】防御力、所有伤害放大、幸运值。 */
+	public static final Item BEAST_HEART = register(key("beast_heart"),
+			p -> new BeastHeartItem(p), new Item.Properties().stacksTo(1));
+
+	/** 盾牌包（守护+学院，羁绊）：【唯一】每 10 点防御力加火/冰/电属性伤害。 */
+	public static final Item SHIELD_BAG = register(key("shield_bag"),
+			p -> new ShieldBagItem(p), new Item.Properties().stacksTo(1));
+
+	/** 岩象（守护+风之歌，羁绊）：【唯一】发动型岩石矛。 */
+	public static final Item ROCK_ELEPHANT = register(key("rock_elephant"),
+			p -> new RockElephantItem(p), new Item.Properties().stacksTo(1));
 
 	/** 红色露水（精密，普通）：【唯一】暴击时对周围敌人造成最高属性值 10% 的伤害。 */
 	public static final Item RED_DEW = register(key("red_dew"),

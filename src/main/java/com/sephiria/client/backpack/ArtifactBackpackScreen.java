@@ -109,12 +109,16 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
 		ArtifactTooltip.setSlotLevelHint(hoveredSlotLevel(mouseX, mouseY));
+		// 雷伊星碎片 / 魔法书减耗要用「真实背包下标」看左边一格（可视区下标翻页后会变）
+		Slot hovered = backpackSlotAt(mouseX, mouseY);
+		ArtifactTooltip.setBackpackSlotHint(hovered == null ? -1 : this.menu.backpackIndex(hovered));
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 		// 长按 F 刻印：每帧轮询按键（26.3 的 Screen 没有 keyReleased），鼠标指着的那格现算
-		SlateImprintController.tickKey(this.menu, backpackSlotAt(mouseX, mouseY),
+		SlateImprintController.tickKey(this.menu, hovered,
 				InputConstants.isKeyDown(InputConstants.KEY_F));
 		drawImprintBar(extractor);
 		ArtifactTooltip.clearSlotLevelHint();
+		ArtifactTooltip.clearBackpackSlotHint();
 	}
 
 	/**
@@ -302,6 +306,20 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		int x = mouseX + 8;
 		int y = mouseY + 8;
 		int height = lines.size() * 10 + 6;
+		int boxWidth = width + 6;
+
+		// 浮窗要留在屏幕内：贴右边 / 下边时改为向左 / 向上展开
+		if (x + boxWidth > this.width) {
+			x = this.width - boxWidth;
+		}
+
+		if (y + height > this.height) {
+			y = this.height - height;
+		}
+
+		x = Math.max(3, x);
+		y = Math.max(3, y);
+
 		extractor.fill(x - 3, y - 3, x + width + 3, y + height - 3, 0xF0100010);
 		extractor.fill(x - 3, y - 3, x + width + 3, y - 2, 0xFF5050A0);
 
@@ -448,6 +466,11 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		}
 
 		return null;
+	}
+
+	/** 给提示框兜底用：当前真正悬停的背包格（可能晚于 setBackpackSlotHint 的时机）。 */
+	public Slot tooltipBackpackSlot() {
+		return hoveredBackpackSlot();
 	}
 
 	private int hoveredSlotLevel(int mouseX, int mouseY) {

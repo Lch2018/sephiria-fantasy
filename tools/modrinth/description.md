@@ -4,7 +4,7 @@
 
 **赛菲莉娅幻想**：把《SEPHIRIA（赛菲莉娅）》的**构筑**搬进 Minecraft 的同人模组——选择并组合你自己的神器、石板与连击。本项目**大量使用 AI 生成代码**，仅供学习与个人游玩，**禁止商业行为**。
 
-> A 测阶段：内容已经不少，但大部分还没有经过充分实测，数值与手感仍在调整。当前版本 **0.5.2-a**，对应 **Minecraft 26.3**；1.20.1 / 1.21.1 移植分支不在本说明范围内。
+> A 测阶段：内容已经不少，但大部分还没有经过充分实测，数值与手感仍在调整。当前版本 **0.5.3-a**，对应 **Minecraft 26.3**；1.20.1 / 1.21.1 移植分支不在本说明范围内。
 
 ### 主要内容
 
@@ -25,7 +25,7 @@
 
 #### 神器与连击
 
-**93 件神器、12 种连击**：坚固、风之歌、精密、影子、谈判、元素、魔法科技、余烬、乌云、太阳剑、冰川、冰霜武具（少数神器没有连击）。
+**150 件神器、15 种连击**：坚固、风之歌、精密、影子、谈判、元素、魔法科技、余烬、乌云、太阳剑、冰川、冰霜武具、学院、湖泊、守护（少数神器没有连击）。
 
 - 把有连击的神器放进**赛菲莉娅背包**（默认 30 格、6 格宽，可用「赛菲莉娅额外背包栏」扩到最多 54 格）后，每件默认提供 1 级对应连击；带【唯一】的同种神器只按等级最高的那件计算；连击在 2 / 4 / 6 / 8 / 10 级逐档生效并累加。
 - 神器分**白 / 蓝 / 黄 / 红 / 彩（羁绊）**五档，自身等级从 0 到各自上限；用**神器附魔币**升级。实际等级 = 自身等级 + 所在格子等级，格子等级为负时该神器失效。
@@ -46,7 +46,7 @@
 
 ### 变强与获取道具方式
 
-除了下面的五条主要路线，经验获取还会与**疲劳**联动：疲劳每 tick 恢复 1 点、上限 6000；获得经验时消耗当前点数的 40%，每消耗 30 点额外给 3 点经验。每获得 1000 点实际经验还会得到 1 个升级宝箱。
+除了下面的五条主要路线，经验获取还会与**经验加加（EXP++）**联动：它每 tick 恢复 1 点、上限 6000；获得经验时消耗当前点数的 40%，每消耗 30 点额外给 3 点经验。每获得 1000 点实际经验还会得到 1 个升级宝箱。
 
 #### 天赋
 
@@ -161,7 +161,7 @@
 
 **Sephiria Fantasy** is an **unofficial fan mod** that brings the **Construct/Constructed buildcraft** of *SEPHIRIA* into Minecraft — choosing and combining your own artifacts, slates and combos. This project makes **heavy use of AI-generated code**; it is shared for learning and personal play only, and **commercial use is not allowed**.
 
-> Alpha stage: there is a decent amount of content, but most of it has not been playtested thoroughly yet — numbers and feel are still being tuned. Current version: **0.5.2-a** for **Minecraft 26.3**. The 1.20.1 / 1.21.1 port branches are not covered by this description.
+> Alpha stage: there is a decent amount of content, but most of it has not been playtested thoroughly yet — numbers and feel are still being tuned. Current version: **0.5.3-a** for **Minecraft 26.3**. The 1.20.1 / 1.21.1 port branches are not covered by this description.
 
 ### Main Content
 
@@ -182,7 +182,7 @@ All six weapons are **unbreakable**; the Blade uses GeckoLib skeletal animation.
 
 #### Artifacts and Combos
 
-**93 artifacts across 12 combos**: Sturdy, Wind Song, Precision, Shadow, Negotiation, Element, Magitech, Embers, Dark Cloud, Sun Sword, Glacier and Frost Armament (a few artifacts have no combo).
+**150 artifacts, 15 combos**: Sturdy, Wind Song, Precision, Shadow, Negotiation, Element, Magitech, Embers, Dark Cloud, Sun Sword, Glacier, Frost Armament, Academy, Lake and Guardian (a few artifacts have no combo).
 
 - An artifact with a combo gives 1 level of it by default when placed in the **Sephiria Backpack** (30 slots by default, 6 wide; up to 54 with Extra Backpack Row items). A 【Unique】 artifact only counts once, using its highest-level copy. Combo tiers trigger at 2 / 4 / 6 / 8 / 10 and stack.
 - Artifacts come in five rarities — **Common / Advanced / Rare / Legendary / Bond (rainbow)** — and have their own level from 0 to a per-item cap, raised with an **Artifact Enchant Coin**. Effective level = artifact level + slot level; a negative slot level disables the artifact.
@@ -203,7 +203,7 @@ Slates also go into the Sephiria Backpack. They do not add stats directly; they 
 
 ### Getting Stronger and Getting Items
 
-Besides the five main routes below, XP gain also interacts with **Fatigue**: Fatigue regenerates 1 point per tick up to 6000; gaining XP consumes 40% of the current points and grants 3 bonus XP per 30 points consumed. Every 1000 actual XP also grants one Upgrade Chest.
+Besides the five main routes below, XP gain also interacts with **EXP++**: it regenerates 1 point per tick up to 6000; gaining XP consumes 40% of the current points and grants 3 bonus XP per 30 points consumed. Every 1000 actual XP also grants one Upgrade Chest.
 
 #### Talents
 

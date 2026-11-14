@@ -89,6 +89,8 @@ public class HudModuleScreen extends Screen {
 		protected void applyValue() {
 			if (this.horizontal) {
 				HudModuleScreen.this.element.x = currentValue();
+				// 手动拖过 X 就取消自动居中，否则拖不走无敌条
+				HudModuleScreen.this.element.centered = false;
 			}
 			else {
 				HudModuleScreen.this.element.y = currentValue();
@@ -117,7 +119,15 @@ public class HudModuleScreen extends Screen {
 
 		@Override
 		protected void applyValue() {
-			HudModuleScreen.this.element.scale = currentValue();
+			HudConfig.Element element = HudModuleScreen.this.element;
+			double previousScale = element.scale;
+			double center = element.x + HudConfig.INVULN_WIDTH * previousScale / 2.0D;
+			element.scale = currentValue();
+
+			// 无敌条：缩放围绕「中心」而不是左上角，中心位置保持不变
+			if (HudConfig.INVULN.equals(HudModuleScreen.this.module)) {
+				element.x = center - HudConfig.INVULN_WIDTH * element.scale / 2.0D;
+			}
 		}
 
 		private double currentValue() {

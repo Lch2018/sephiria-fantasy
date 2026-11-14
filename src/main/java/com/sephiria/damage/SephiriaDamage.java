@@ -88,8 +88,22 @@ public final class SephiriaDamage {
 	public static final ResourceKey<DamageType> PLASMA = typeKey("plasma");
 	/** 酷寒断头台的冰雷刀刃：冰 + 电双属性的神器攻击。 */
 	public static final ResourceKey<DamageType> CRYO_GUILLOTINE = typeKey("cryo_guillotine");
+	/** 永恒蚀左半边时，酷寒断头台改成火 + 电双属性。 */
+	public static final ResourceKey<DamageType> FIRE_CRYO_GUILLOTINE = typeKey("fire_cryo_guillotine");
+	/** 雷霜蝶的暴风雪云：两段独立伤害，每一段都是冰 + 电双属性。 */
+	public static final ResourceKey<DamageType> BLIZZARD = typeKey("blizzard");
+	/** 水之精灵的水球爆炸：物理属性。 */
+	public static final ResourceKey<DamageType> WATER_GRAB = typeKey("water_grab");
 	/** 闪烁的眼睛「海市蜃楼」的混沌伤害：视为物理 + 火 + 冰 + 电四属性。 */
 	public static final ResourceKey<DamageType> CHAOS = typeKey("chaos");
+	/**
+	 * 魔法书打出的火 / 冰 / 电 / 混沌伤害：与普通元素攻击同口径，额外吃「魔法书的暴击率」，
+	 * 并让书库之阳认得出「造成魔法书伤害时」。
+	 */
+	public static final ResourceKey<DamageType> MAGIC_FIRE_ATTACK = typeKey("magic_fire_attack");
+	public static final ResourceKey<DamageType> MAGIC_ICE_ATTACK = typeKey("magic_ice_attack");
+	public static final ResourceKey<DamageType> MAGIC_ELECTRIC_ATTACK = typeKey("magic_electric_attack");
+	public static final ResourceKey<DamageType> MAGIC_CHAOS = typeKey("magic_chaos");
 	/** 永恒的冬日那一下额外伤害：按普通攻击口径结算（会触发普通攻击的暴击与其它 on-hit）。 */
 	public static final ResourceKey<DamageType> ETERNAL_WINTER = typeKey("eternal_winter");
 	/** 红色露水那类暴击溅射的范围（格）：以被暴击的目标为原点。 */
@@ -144,11 +158,17 @@ public final class SephiriaDamage {
 		 */
 		FIRE_ATTACK,
 		/**
-		 * 冰属性减益伤害（sephiria:freeze 冰冻那一下、sephiria:blue_burn 蓝色灼伤的冰那几跳）：
+		 * 冰属性减益伤害（sephiria:freeze 冰冻那一下）：
 		 * 与 {@link #FIRE} 同型——数值定死、不吃减伤与黄金之手、也不触发任何「造成伤害时」的效果，
 		 * 但吃通用暴击。霜之触的守门按它排除减益伤害（防链式自触）。
 		 */
 		ICE,
+		/**
+		 * 蓝色灼伤：封印的特加斯把灼伤改成冰火双属性后，每一跳同时算火与冰。
+		 *
+		 * <p>仍是减益伤害：只吃暴击，不吃减伤与黄金之手，也不触发火焰 / 霜之触（防链式）。
+		 */
+		BLUE_BURN,
 		/**
 		 * 攻击打出的冰属性伤害（sephiria:ice_attack：普罗修姆戒指的附加冰伤）。
 		 *
@@ -171,6 +191,20 @@ public final class SephiriaDamage {
 		 */
 		CRYO,
 		/**
+		 * 永恒蚀左半边时的酷寒断头台（sephiria:fire_cryo_guillotine）：火 + 电双属性。
+		 *
+		 * <p>按神器攻击处理；触发触电与火焰之触，不再触发冻伤。
+		 */
+		CRYO_FIRE,
+		/**
+		 * 雷霜蝶的暴风雪云（sephiria:blizzard）：每一段都是冰 + 电双属性。
+		 *
+		 * <p>按神器攻击处理；触发触电与冻伤，不触发火焰之触。
+		 */
+		BLIZZARD,
+		/** 水之精灵的水球爆炸：物理属性神器伤害。 */
+		WATER_GRAB,
+		/**
 		 * 闪烁的眼睛「海市蜃楼」的混沌伤害（sephiria:chaos）：视为物理 + 火 + 冰 + 电四属性。
 		 *
 		 * <p>按神器攻击处理（暴击、减伤、黄金之手）；它本身不再触发任何减益，免得一次闪避
@@ -185,6 +219,12 @@ public final class SephiriaDamage {
 		// eternal_winter / true_damage）、实现 Source 标记的投掷物，
 		// 以及拿着本模组武器打人的那一下。其余一律 OTHER（原版武器、环境伤害……）。
 		return kindOf(source) != Kind.OTHER;
+	}
+
+	/** 这发伤害是不是魔法书打出的（魔法书暴击、书库之阳的触发与加成只认它）。 */
+	public static boolean isMagicBook(DamageSource source) {
+		return source.is(MAGIC_FIRE_ATTACK) || source.is(MAGIC_ICE_ATTACK)
+				|| source.is(MAGIC_ELECTRIC_ATTACK) || source.is(MAGIC_CHAOS);
 	}
 
 	/** 这发伤害属于哪一类。 */
@@ -225,16 +265,44 @@ public final class SephiriaDamage {
 			return Kind.CRYO;
 		}
 
-		if (source.is(CHAOS)) {
+		if (source.is(FIRE_CRYO_GUILLOTINE)) {
+			return Kind.CRYO_FIRE;
+		}
+
+		if (source.is(BLIZZARD)) {
+			return Kind.BLIZZARD;
+		}
+
+		if (source.is(WATER_GRAB)) {
+			return Kind.WATER_GRAB;
+		}
+
+		if (source.is(CHAOS) || source.is(MAGIC_CHAOS)) {
 			return Kind.CHAOS;
+		}
+
+		if (source.is(MAGIC_FIRE_ATTACK)) {
+			return Kind.FIRE_ATTACK;
+		}
+
+		if (source.is(MAGIC_ICE_ATTACK)) {
+			return Kind.ICE_ATTACK;
+		}
+
+		if (source.is(MAGIC_ELECTRIC_ATTACK)) {
+			return Kind.ELECTRIC;
 		}
 
 		if (source.is(ETERNAL_WINTER)) {
 			return Kind.WEAPON;
 		}
 
-		// 冰冻与蓝色灼伤的冰那几跳：都是减益伤害，与灼伤 / 触电并列
-		if (source.is(FREEZE) || source.is(BLUE_BURN)) {
+		// 冰冻是单冰减益；蓝色灼伤是火 + 冰双属性减益
+		if (source.is(BLUE_BURN)) {
+			return Kind.BLUE_BURN;
+		}
+
+		if (source.is(FREEZE)) {
 			return Kind.ICE;
 		}
 
@@ -370,17 +438,35 @@ public final class SephiriaDamage {
 
 		double chance = switch (kind) {
 			case WEAPON -> PlayerStats.weaponCritChanceTotal(player);
-			case ELECTRIC, PLASMA, CRYO, CHAOS ->
+			case ELECTRIC, PLASMA, CRYO, CRYO_FIRE, BLIZZARD, CHAOS ->
 					PlayerStats.critChanceTotal(player) + PlayerStats.electricCritChanceTotal(player);
 			// 太阳剑那一下：通用之上再加「太阳剑暴击几率」（索利斯·德克里）
 			case SUN -> PlayerStats.critChanceTotal(player) + ArtifactEffects.sunSwordCritChanceBonus(player);
 			default -> PlayerStats.critChanceTotal(player);
 		};
+		// 宝石盔甲：魔法书打出的伤害额外吃「魔法书的暴击率」
+		if (isMagicBook(source)) {
+			chance += ArtifactEffects.magicBookCritChancePercent(player);
+		}
+		// 水之精灵：水球爆炸按等级额外加暴击率；由技能在单次 hurtServer 外临时挂上
+		if (source.is(WATER_GRAB)) {
+			chance += waterGrabCritAmp(player);
+		}
+
+		// 火焰马戏团：这个技能吃到的暴击率与暴击伤害都额外放大；只对 fire_attack 生效，
+		// 而且由技能用 withFireCircusCrit 在单次 hurtServer 外临时挂上。
+		double circusAmp = kind == Kind.FIRE_ATTACK ? fireCircusCritAmp(player) : 0.0D;
+		if (circusAmp > 0.0D) {
+			chance *= 1.0D + circusAmp / 100.0D;
+		}
 
 		boolean critical = PseudoRandom.crit(player, chance);
 		// 巴尔特的工作用单片眼镜：近身时暴伤 -30 个百分点，只在这一下按距离判断
 		double critDamage = PlayerStats.critDamageTotal(player)
 				- ArtifactEffects.closeRangeCritDamagePenalty(player, target);
+		if (circusAmp > 0.0D) {
+			critDamage *= 1.0D + circusAmp / 100.0D;
+		}
 		// 贝鲁特之镰：暴击几率超过 100% 的溢出部分单独掷一次「处决」，命中就把暴伤再翻倍
 		double executionChance = ArtifactEffects.executionChance(player, chance);
 		boolean executed = critical && executionChance > 0.0D
@@ -403,6 +489,11 @@ public final class SephiriaDamage {
 
 		if (kind == Kind.WEAPON) {
 			critSplash(target, player);
+		}
+
+		// 锅盖：物理暴击（武器攻击或物理神器伤害）叠一层「忍耐」
+		if (kind == Kind.WEAPON || kind == Kind.ARTIFACT) {
+			com.sephiria.artifact.PotLidItem.onPhysicalCrit(player);
 		}
 
 		// 闪烁的眼睛：暴击给「海市蜃楼」充能。混沌伤害自己暴击不再回充，免得一次闪避
@@ -491,7 +582,8 @@ public final class SephiriaDamage {
 
 		// 减益伤害（触电 / 灼伤 / 冰冻 / 等离子体）不吃黄金之手：它们是「数值定死」的那一类
 		if (kind == Kind.OTHER || kind == Kind.ELECTRIC || kind == Kind.FIRE || kind == Kind.ICE
-				|| kind == Kind.PLASMA || !(source.getEntity() instanceof ServerPlayer player)) {
+				|| kind == Kind.BLUE_BURN || kind == Kind.PLASMA
+				|| !(source.getEntity() instanceof ServerPlayer player)) {
 			return amount;
 		}
 
@@ -543,6 +635,15 @@ public final class SephiriaDamage {
 
 	/** 技能在结算前挂上的倍率：只在挂上的那一 tick 内有效（一次技能打多个目标时都算数）。 */
 	private static final Map<UUID, Mark> SKILL_MARK = new HashMap<>();
+	/**
+	 * 火焰马戏团的暴击加成（按玩家临时挂）：只在包住 {@code hurtServer} 的那一小段里生效。
+	 *
+	 * <p>这个技能的暴击率与暴击伤害都要额外乘 (1 + 加成)，但伤害入口只拿得到伤害来源；
+	 * 所以由技能在每一发火球结算前临时挂上、finally 里恢复，别影响同一玩家正常的火属性攻击。
+	 */
+	private static final Map<UUID, Double> FIRE_CIRCUS_CRIT_AMP = new HashMap<>();
+	/** 水之精灵水球爆炸的额外暴击率（%），按玩家临时挂。 */
+	private static final Map<UUID, Double> WATER_GRAB_CRIT_AMP = new HashMap<>();
 
 	private record Mark(long tick, double multiplier) {
 	}
@@ -557,9 +658,57 @@ public final class SephiriaDamage {
 		SKILL_MARK.put(player.getUUID(), new Mark(player.level().getGameTime(), multiplier));
 	}
 
+	/**
+	 * 在 {@code action} 里打出的火属性伤害按火焰马戏团的暴击加成结算。
+	 *
+	 * <p>只包住一次 {@code hurtServer}：暴击几率与暴击伤害都会乘 (1 + percent/100)，
+	 * 结束（包括异常）立刻恢复原来的值，不影响其它火焰伤害。
+	 */
+	public static void withWaterGrabCrit(ServerPlayer player, double percent, Runnable action) {
+		UUID id = player.getUUID();
+		Double previous = WATER_GRAB_CRIT_AMP.put(id, percent);
+
+		try {
+			action.run();
+		} finally {
+			if (previous == null) {
+				WATER_GRAB_CRIT_AMP.remove(id);
+			} else {
+				WATER_GRAB_CRIT_AMP.put(id, previous);
+			}
+		}
+	}
+
+	private static double waterGrabCritAmp(ServerPlayer player) {
+		Double amp = WATER_GRAB_CRIT_AMP.get(player.getUUID());
+		return amp == null ? 0.0D : amp;
+	}
+
+	public static void withFireCircusCrit(ServerPlayer player, double percent, Runnable action) {
+		UUID id = player.getUUID();
+		Double previous = FIRE_CIRCUS_CRIT_AMP.put(id, percent);
+
+		try {
+			action.run();
+		} finally {
+			if (previous == null) {
+				FIRE_CIRCUS_CRIT_AMP.remove(id);
+			} else {
+				FIRE_CIRCUS_CRIT_AMP.put(id, previous);
+			}
+		}
+	}
+
+	private static double fireCircusCritAmp(ServerPlayer player) {
+		Double amp = FIRE_CIRCUS_CRIT_AMP.get(player.getUUID());
+		return amp == null ? 0.0D : amp;
+	}
+
 	/** 玩家退出时清掉标记。 */
 	public static void forget(ServerPlayer player) {
 		SKILL_MARK.remove(player.getUUID());
+		FIRE_CIRCUS_CRIT_AMP.remove(player.getUUID());
+		WATER_GRAB_CRIT_AMP.remove(player.getUUID());
 	}
 
 	/**
@@ -667,6 +816,26 @@ public final class SephiriaDamage {
 		return new DamageSource(lookup(level, FIRE_ATTACK), player, player);
 	}
 
+	/** 魔法书打出的火属性伤害：比普通火属性攻击多一条「魔法书的暴击率」。 */
+	public static DamageSource magicFireAttack(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, MAGIC_FIRE_ATTACK), player, player);
+	}
+
+	/** 魔法书打出的冰属性伤害。 */
+	public static DamageSource magicIceAttack(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, MAGIC_ICE_ATTACK), player, player);
+	}
+
+	/** 魔法书打出的电属性伤害。 */
+	public static DamageSource magicElectricAttack(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, MAGIC_ELECTRIC_ATTACK), player, player);
+	}
+
+	/** 魔法书打出的混沌伤害（音叉）。 */
+	public static DamageSource magicChaos(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, MAGIC_CHAOS), player, player);
+	}
+
 	/**
 	 * 造一个「攻击打出的冰属性伤害」来源（数据包里的 sephiria:ice_attack）。
 	 *
@@ -709,6 +878,21 @@ public final class SephiriaDamage {
 	/** 造一个酷寒断头台的冰雷刀刃伤害来源（数据包里的 sephiria:cryo_guillotine）。 */
 	public static DamageSource cryoGuillotine(ServerLevel level, ServerPlayer player) {
 		return new DamageSource(lookup(level, CRYO_GUILLOTINE), player, player);
+	}
+
+	/** 永恒蚀左半边时的酷寒断头台：火 + 电双属性。 */
+	public static DamageSource fireCryoGuillotine(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, FIRE_CRYO_GUILLOTINE), player, player);
+	}
+
+	/** 雷霜蝶暴风雪云的一段：冰 + 电双属性。 */
+	public static DamageSource blizzard(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, BLIZZARD), player, player);
+	}
+
+	/** 水之精灵的水球爆炸：物理属性。 */
+	public static DamageSource waterGrab(ServerLevel level, ServerPlayer player) {
+		return new DamageSource(lookup(level, WATER_GRAB), player, player);
 	}
 
 	/** 造一个闪烁的眼睛「海市蜃楼」的混沌伤害来源（数据包里的 sephiria:chaos）。 */

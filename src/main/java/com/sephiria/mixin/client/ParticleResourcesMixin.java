@@ -77,6 +77,12 @@ public abstract class ParticleResourcesMixin {
 		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.SNOWFALL),
 				new SnowfallParticle.Provider(snowfall));
 
+		// 冰风暴的静止冰晶高光：END_ROD 的 glitter 外观 + 0 重力
+		MutableSpriteSet iceGlint = new MutableSpriteSet();
+		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.ICE_GLINT), iceGlint);
+		this.providers.put(BuiltInRegistries.PARTICLE_TYPE.getId(ModParticleTypes.ICE_GLINT),
+				new com.sephiria.client.particle.IceGlintParticle.Provider(iceGlint));
+
 		// 等离子体的菱形粒子：一颗白色菱形，颜色在客户端逐颗按 20/60/20 染色
 		MutableSpriteSet plasma = new MutableSpriteSet();
 		this.spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(ModParticleTypes.PLASMA), plasma);

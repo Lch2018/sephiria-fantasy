@@ -1,13 +1,25 @@
 package com.sephiria.client.artifact;
 
+import com.sephiria.artifact.ArtifactCombo;
+import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.artifact.ArtifactItem;
 import com.sephiria.artifact.ArtifactRarity;
 import com.sephiria.artifact.ItemQualities;
+import com.sephiria.artifact.GlowingHourglassItem;
+import com.sephiria.artifact.MagicBoltBookItem;
+import com.sephiria.artifact.MagicBook;
+import com.sephiria.artifact.RayStarFragmentItem;
 import com.sephiria.artifact.SephiriaArtifact;
+import com.sephiria.artifact.skill.SkillTooltipContext;
+import com.sephiria.backpack.ArtifactBackpack;
+import com.sephiria.backpack.ArtifactBackpackMenu;
+import com.sephiria.client.backpack.ArtifactBackpackScreen;
 import com.sephiria.util.Numbers;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -28,6 +40,8 @@ public final class ArtifactTooltip {
 	private static final int COLOUR_IDLE = 0xFFAAAAAA;
 	/** 鼠标下的格子等级；-1 表示不在背包界面里（按 0 算）。 */
 	private static int slotLevelHint = -1;
+	/** 鼠标下的格子真实背包下标；-1 表示不在背包界面里。雷伊星碎片 / 魔法书减耗要用它看左边一格。 */
+	private static int backpackSlotHint = -1;
 
 	private ArtifactTooltip() {
 	}
@@ -39,6 +53,15 @@ public final class ArtifactTooltip {
 
 	public static void clearSlotLevelHint() {
 		slotLevelHint = -1;
+	}
+
+	/** 背包界面渲染前设置：鼠标悬停格子背后的真实背包下标（不是可视区下标）。 */
+	public static void setBackpackSlotHint(int index) {
+		backpackSlotHint = index;
+	}
+
+	public static void clearBackpackSlotHint() {
+		backpackSlotHint = -1;
 	}
 
 	/** 神器 / 石板的提示行（调用方负责在它前面插空行）。 */
@@ -56,6 +79,8 @@ public final class ArtifactTooltip {
 			return quality == null ? List.of() : qualityItemLines(quality);
 		}
 
+		// 兜底：有些渲染路径不会先调 setBackpackSlotHint，按「画的是哪一格的那个 ItemStack」反查一次
+		inferBackpackSlot(stack);
 		int level = Math.min(ArtifactItem.levelOf(stack) + Math.max(0, slotLevelHint), artifact.maxLevel());
 		List<Component> lines = new ArrayList<>();
 
@@ -71,7 +96,51 @@ public final class ArtifactTooltip {
 			lines.add(Component.translatable("artifact.sephiria_fantasy.tag.unique").withColor(COLOUR_TAG));
 		}
 
-		lines.addAll(artifact.affixLines(level));
+		// 雷伊星碎片：在背包里悬停时，把左边格子里那本魔法书的名字带进词条行
+		if (artifact instanceof RayStarFragmentItem) {
+			ItemStack left = leftBackpackNeighbor();
+
+			if (left.getItem() instanceof MagicBook) {
+				RayStarFragmentItem.setLeftBookName(left.getHoverName());
+			}
+		}
+
+		// 发光的沙漏：把右边格子里那本魔法书的名字带进词条行
+		if (artifact instanceof GlowingHourglassItem) {
+			ItemStack right = rightBackpackNeighbor();
+
+			if (right.getItem() instanceof MagicBook) {
+				GlowingHourglassItem.setRightBookName(right.getHoverName());
+			}
+		}
+
+		// 魔法书：按当前悬停的那一格算它实际吃到的加速 / MP 减耗（学院 + 右侧碎片 / 沙漏 + 全局词条）
+		if (artifact instanceof MagicBook) {
+			SkillTooltipContext.setBookHastePercent(com.sephiria.client.ClientStats.magicBookHaste()
+					+ leftNeighborBookHaste());
+			SkillTooltipContext.setMpReductionPercent(mpReductionPercent());
+
+			if (artifact instanceof MagicBoltBookItem) {
+				SkillTooltipContext.setMpCostIncreasePercent(
+						com.sephiria.client.ClientStats.magicBoltMpCostIncrease());
+			}
+
+			// 服务端随属性同步推来的「这本书的实际数值」最准：直接覆盖客户端现算
+			com.sephiria.network.MagicBookStatsPayload.Entry actual =
+					com.sephiria.client.ClientBookStats.find(stack.getItem(), level, backpackSlotHint);
+
+			if (actual != null) {
+				SkillTooltipContext.setActual(actual.cooldownTicks(), actual.mpCost());
+			}
+		}
+
+		try {
+			lines.addAll(artifact.affixLines(level));
+		} finally {
+			RayStarFragmentItem.clearLeftBookName();
+			GlowingHourglassItem.clearRightBookName();
+			SkillTooltipContext.clearBook();
+		}
 
 		// 黑鳞片：当前石板数量由服务端随属性同步推过来（合成石板算 2 块）
 		if (artifact instanceof com.sephiria.artifact.BlackScaleItem) {
@@ -172,6 +241,151 @@ public final class ArtifactTooltip {
 		}
 
 		return lines;
+	}
+
+	/** 当前是否站在赛菲莉娅背包界面里；其它界面拿不到整只背包的格子数据。 */
+	private static ArtifactBackpackMenu backpackMenu() {
+		if (Minecraft.getInstance().player == null) {
+			return null;
+		}
+
+		return Minecraft.getInstance().player.containerMenu instanceof ArtifactBackpackMenu menu ? menu : null;
+	}
+
+	/**
+	 * 没有界面提前塞下标时，按「正在画的是哪个 ItemStack」反查背包格。
+	 *
+	 * <p>普通物品提示框的触发时机在不同渲染路径上略有差别；这一层兜底让沙漏 / 碎片的
+	 * 右侧 / 左侧判定不依赖调用方是否记得先 setBackpackSlotHint。
+	 */
+	private static void inferBackpackSlot(ItemStack stack) {
+		if (backpackSlotHint >= 0) {
+			return;
+		}
+
+		ArtifactBackpackMenu menu = backpackMenu();
+
+		if (menu == null) {
+			return;
+		}
+
+		// 最可靠的一条：直接问背包界面「现在悬停哪一格」（hoveredSlot 在 super 之后仍然有效）
+		if (Minecraft.getInstance().gui.screen() instanceof ArtifactBackpackScreen screen) {
+			Slot hovered = screen.tooltipBackpackSlot();
+
+			if (hovered != null) {
+				int index = menu.backpackIndex(hovered);
+
+				if (index >= 0) {
+					backpackSlotHint = index;
+
+					if (slotLevelHint < 0) {
+						slotLevelHint = menu.slotLevelOf(hovered);
+					}
+				}
+
+				return;
+			}
+		}
+
+		for (Slot slot : menu.slots) {
+			// 优先按对象身份（界面传进来的就是格子里的那份）；渲染层若复制了一份，
+			// 再用 ItemStack.matches 兜底（同名同等级的两本不同书仍可能撞，但至少不缺上下文）
+			if (slot.getItem() == stack || ItemStack.matches(slot.getItem(), stack)) {
+				int index = menu.backpackIndex(slot);
+
+				if (index >= 0) {
+					backpackSlotHint = index;
+
+					if (slotLevelHint < 0) {
+						slotLevelHint = menu.slotLevelOf(slot);
+					}
+				}
+
+				return;
+			}
+		}
+	}
+
+	/** 鼠标下这一格的左边一格（同一行）；不在背包界面 / 已经在第一列 / 没有格子时返回空。 */
+	private static ItemStack leftBackpackNeighbor() {
+		ArtifactBackpackMenu menu = backpackMenu();
+
+		if (menu == null || backpackSlotHint < 0 || backpackSlotHint % ArtifactBackpack.WIDTH == 0) {
+			return ItemStack.EMPTY;
+		}
+
+		Slot left = backpackSlot(menu, backpackSlotHint - 1);
+		return left == null ? ItemStack.EMPTY : left.getItem();
+	}
+
+	/** 真实背包下标 → 菜单里的 Slot；看不见的格子返回 null。 */
+	private static Slot backpackSlot(ArtifactBackpackMenu menu, int realIndex) {
+		for (Slot slot : menu.slots) {
+			if (menu.backpackIndex(slot) == realIndex) {
+				return slot;
+			}
+		}
+
+		return null;
+	}
+
+	/** 鼠标下这一格的右边一格（同一行）；不在背包界面 / 已经在最后一列 / 没有格子时返回空。 */
+	private static ItemStack rightBackpackNeighbor() {
+		ArtifactBackpackMenu menu = backpackMenu();
+
+		if (menu == null || backpackSlotHint < 0
+				|| backpackSlotHint % ArtifactBackpack.WIDTH == ArtifactBackpack.WIDTH - 1) {
+			return ItemStack.EMPTY;
+		}
+
+		Slot right = backpackSlot(menu, backpackSlotHint + 1);
+		return right == null ? ItemStack.EMPTY : right.getItem();
+	}
+
+	/** 发光的沙漏：悬停的这本魔法书左边那格沙漏给它的额外加速（沙漏在书左边）。 */
+	private static double leftNeighborBookHaste() {
+		ArtifactBackpackMenu menu = backpackMenu();
+
+		if (menu == null || backpackSlotHint < 0
+				|| backpackSlotHint % ArtifactBackpack.WIDTH == 0) {
+			return 0.0D;
+		}
+
+		Slot left = backpackSlot(menu, backpackSlotHint - 1);
+
+		if (left == null || !(left.getItem().getItem() instanceof SephiriaArtifact artifact)) {
+			return 0.0D;
+		}
+
+		int level = ArtifactEffects.effectiveLevel(left.getItem(), menu.slotLevelOf(left));
+		return level < 0 ? 0.0D : artifact.rightMagicBookHasteBonus(level);
+	}
+
+	/** 当前悬停的魔法书吃到的 MP 减耗（%）：全局词条 + 学院档位 + 右边那格碎片的档位。 */
+	private static double mpReductionPercent() {
+		double total = com.sephiria.client.ClientStats.magicBookMpReduction();
+		ArtifactBackpackMenu menu = backpackMenu();
+
+		if (menu == null || backpackSlotHint < 0) {
+			return Math.min(100.0D, total);
+		}
+
+		total += ArtifactCombo.ACADEMY.magicBookMpReductionPercent(menu.comboLevel(ArtifactCombo.ACADEMY));
+
+		if (backpackSlotHint % ArtifactBackpack.WIDTH != ArtifactBackpack.WIDTH - 1) {
+			Slot right = backpackSlot(menu, backpackSlotHint + 1);
+
+			if (right != null && right.getItem().getItem() instanceof RayStarFragmentItem fragment) {
+				int rightLevel = ArtifactEffects.effectiveLevel(right.getItem(), menu.slotLevelOf(right));
+
+				if (rightLevel >= 0) {
+					total += fragment.magicBookMpReductionBonus(rightLevel);
+				}
+			}
+		}
+
+		return Math.min(100.0D, total);
 	}
 
 	/** 供神器物品类复用的橙色标签构造。 */

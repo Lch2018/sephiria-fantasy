@@ -11,7 +11,7 @@ import net.minecraft.util.Mth;
  * <p>三张表都是「等级越高越好」：暴击与时长变长，蓝耗变低。技能本体在 {@code artifact.skill.KeenEyeSkill}，
  * 限时暴击加成走 {@code TimedAttributes#grantStat}（暴击几率不是原版属性，挂不进临时修饰符）。
  */
-public class KeenEyeItem extends ArtifactItem {
+public class KeenEyeItem extends ArtifactItem implements MagicBook {
 	/** 各等级的蓝耗（点）。 */
 	private static final double[] MP_COST_BY_LEVEL = { 24.0D, 16.0D, 6.0D };
 	/** 各等级的暴击几率加成（百分点）。 */
@@ -72,10 +72,24 @@ public class KeenEyeItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
+		java.util.List<Component> lines = new java.util.ArrayList<>();
+		lines.add(dashed(skillTitle("keen_eye")));
+		lines.addAll(dashedLines(descriptionLines(level)));
+		return java.util.List.copyOf(lines);
+	}
+
+	@Override
+	public java.util.List<Component> skillDescriptionLines(int level) {
+		return descriptionLines(level);
+	}
+
+	private java.util.List<Component> descriptionLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria_fantasy.affix.keen_eye_skill",
-						Component.literal(Numbers.format(this.critBonusPercent(level))).withColor(COLOUR_BONUS),
-						Component.literal(String.valueOf(durationSeconds(level))),
-						Component.literal(Numbers.format(keenMpCost(level))).withColor(COLOUR_BONUS)));
+				Component.translatable("artifact.sephiria_fantasy.affix.keen_eye_effect",
+						Component.literal(Numbers.format(this.critBonusPercent(level))).withColor(COLOUR_BONUS)),
+				Component.translatable("artifact.sephiria_fantasy.affix.keen_eye_duration",
+						Component.literal(String.valueOf(durationSeconds(level))).withColor(COLOUR_BONUS)),
+				skillCooldown(30),
+				skillMp(keenMpCost(level)));
 	}
 }

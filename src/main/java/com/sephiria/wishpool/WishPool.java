@@ -420,7 +420,8 @@ public final class WishPool {
 	 *
 	 * <p>同一批里允许重复（这是抽卡，也是锚定能刷同一件的意义所在）。
 	 */
-	public static ItemStack drawOne(RandomSource random, boolean slatePool, List<Item> anchors, double luck) {
+	public static ItemStack drawOne(RandomSource random, boolean slatePool, List<Item> anchors, double luck,
+			double magicBookMultiplier) {
 		List<Item> pool = poolOf(slatePool);
 		// 幸运值：稀有及以上的概率按曲线放大（用户 2026-10-18 的「幸运值」口径）
 		ArtifactRarity rarity = ArtifactLoot.rollRarity(random, pool, ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.GACHA, luck));
@@ -471,7 +472,8 @@ public final class WishPool {
 			return ItemStack.EMPTY;
 		}
 
-		return new ItemStack(tier.get(random.nextInt(tier.size())));
+		Item picked = ArtifactLoot.pickFromTier(random, tier, magicBookMultiplier);
+		return picked == null ? ItemStack.EMPTY : new ItemStack(picked);
 	}
 
 	/** 一次抽卡的结果：物品清单 + 实际到账的愿力（含锚定加成）。 */
@@ -489,9 +491,12 @@ public final class WishPool {
 		List<Item> anchors = anchors(player, slatePool);
 		List<ItemStack> drawn = new ArrayList<>(count);
 		int gained = 0;
+		double magicBookMultiplier = 1.0D
+				+ com.sephiria.artifact.ArtifactEffects.magicBookRewardChancePercent(player) / 100.0D;
 
 		for (int index = 0; index < count; index++) {
-			ItemStack stack = drawOne(random, slatePool, anchors, PlayerStats.luckTotal(player));
+			ItemStack stack = drawOne(random, slatePool, anchors, PlayerStats.luckTotal(player),
+					magicBookMultiplier);
 
 			if (stack.isEmpty()) {
 				continue;

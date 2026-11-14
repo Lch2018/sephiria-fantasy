@@ -20,6 +20,25 @@ public interface ArtifactSkill {
 	/** 蓝耗（点）：按神器等级算，0 表示不耗蓝（发动型神器不耗蓝）。 */
 	double mpCost(int level);
 
-	/** 释放（服务端）。调用前已经检查过冷却与蓝量。 */
+	/** 带玩家上下文的实际蓝耗；默认沿用固定值，水之精灵这类按最大 MP 比例扣蓝的会重写。 */
+	default double mpCost(ServerPlayer player, int level) {
+		return mpCost(level);
+	}
+
+	/** 带玩家上下文的实际冷却；默认沿用固定值，饱满果实桶这类吃 MP 再生的会重写。 */
+	default int cooldownTicks(ServerPlayer player, int level) {
+		return cooldownTicks();
+	}
+
+	/**
+	 * 释放前的额外条件（默认恒真）。
+	 *
+	 * <p>箭雨需要准星在 24 格内指到方块或实体；不满足时不应该扣蓝 / 进冷却。
+	 */
+	default boolean canCast(ServerPlayer player, int level) {
+		return true;
+	}
+
+	/** 释放（服务端）。调用前已经检查过冷却、蓝量与 {@link #canCast}。 */
 	void cast(ServerPlayer player, int level);
 }

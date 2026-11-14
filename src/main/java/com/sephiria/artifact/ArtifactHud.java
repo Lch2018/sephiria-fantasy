@@ -49,7 +49,8 @@ public final class ArtifactHud {
 
 	/** 立刻给一个玩家推一份（施放技能 / 改技能栏 / 进服时用）。 */
 	public static void send(ServerPlayer player) {
-		ServerPlayNetworking.send(player, new HudSyncPayload(skills(player), artifacts(player)));
+		ServerPlayNetworking.send(player, new HudSyncPayload(skills(player), artifacts(player),
+				com.sephiria.stats.ShieldSystem.hudAmount(player)));
 	}
 
 	private static List<HudSyncPayload.Entry> skills(ServerPlayer player) {
@@ -64,7 +65,7 @@ public final class ArtifactHud {
 			}
 
 			entries.add(new HudSyncPayload.Entry(BuiltInRegistries.ITEM.getKey(resolved.item()),
-					ArtifactSkills.cooldownLeft(player, slot), resolved.skill().cooldownTicks(), -1));
+					ArtifactSkills.cooldownLeft(player, slot), ArtifactSkills.cooldownTicksFor(player, resolved), -1));
 		}
 
 		return entries;

@@ -84,4 +84,40 @@ public abstract class ArtifactItem extends Item implements SephiriaArtifact, Bac
 	protected static double valueAt(double[] table, int level) {
 		return table[Mth.clamp(level, 0, table.length - 1)];
 	}
+
+	/** 技能提示的统一抬头：「获得技能「X」：」。 */
+	protected static Component skillTitle(String skillId) {
+		return Component.translatable("artifact.sephiria_fantasy.affix.skill_title",
+				Component.translatable("sephiria_fantasy.artifact_skill." + skillId));
+	}
+
+	/** 技能提示的统一冷却行（秒）：显示计入魔法书加速后的实际冷却。 */
+	protected static Component skillCooldown(int seconds) {
+		double actual = com.sephiria.artifact.skill.SkillTooltipContext.cooldownSeconds(seconds);
+		return Component.translatable("artifact.sephiria_fantasy.affix.skill_cooldown",
+				Component.literal(com.sephiria.util.Numbers.format(actual)).withColor(0xFF55FF55));
+	}
+
+	/** 技能提示的统一蓝耗行：显示计入学院 / 雷伊星碎片减耗后的实际蓝耗。 */
+	protected static Component skillMp(double mpCost) {
+		double actual = com.sephiria.artifact.skill.SkillTooltipContext.mpCost(mpCost);
+		return Component.translatable("artifact.sephiria_fantasy.affix.skill_mp",
+				Component.literal(com.sephiria.util.Numbers.format(actual)).withColor(0xFF55FF55));
+	}
+
+	/** 神器提示框的行首标记；技能页的说明不要这个前缀。 */
+	protected static Component dashed(Component line) {
+		return Component.literal("- ").append(line);
+	}
+
+	/** 给一组说明行统一加行首标记。 */
+	protected static java.util.List<Component> dashedLines(java.util.List<Component> lines) {
+		java.util.List<Component> result = new java.util.ArrayList<>(lines.size());
+
+		for (Component line : lines) {
+			result.add(dashed(line));
+		}
+
+		return java.util.List.copyOf(result);
+	}
 }

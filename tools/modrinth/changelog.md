@@ -1,59 +1,76 @@
-版本 `0.5.2-a`：从 `0.5.1-a` 之后的内容更新。
+版本 `0.5.3-a`：从 `0.5.2-a` 之后的全部内容更新。
 
-> 按约定，更新日志从**上一次上传并发布的版本**（`0.5.1-a`）开始写。
+> 按约定，更新日志从**上一次上传并发布的版本**（`0.5.2-a`）开始写。
 
 ## 这一版有什么
 
-### 新神器（10 件）
+### 新连击与神器（93 → 150 件，12 → 15 种连击）
 
-神器池从 **83 件**扩到 **93 件**：
+- **学院**（新增）：2 档魔法书加速 +12；4 档魔法书 MP 消耗 -15%；6 / 8 档加速 +16 / +20；10 档魔法书伤害 +15%、MP再生 +8（加速逐档累加，10 级共 +48）。
+- **湖泊**（新增）：3 / 6 / 9 档分别最大 MP +20 / +30 / +40、MP再生 +5、消耗 MP 的能力伤害 +10% / +25%（逐档累加，9 级共最大 MP +90、能力伤害 +35%）。
+- **守护**（新增）：2 / 4 / 6 / 8 / 10 档防御力 +6 / +7 / +8 / +10 / +12（10 级共 +43）；10 档额外 +5%「无视防御」，与防御穿透乘算，只作用于原版护甲与防御力。
 
-- **破碎的蓝宝石**（影子 / 稀有 / 【唯一】）：闪避 +2/4/6、防御力 +2/4/6；每 16/14/12 秒获得一层「帷幕」，必然闪避下一次有来源实体的攻击。
-- **神射手的曲柄**（坚固 / 传说 / 【唯一】）：弩重装速度 +30/50%、弩攻击伤害 +30/40%；装填完成后 10 秒内弩伤害再 +30/40%。
-- **装填用木箱**（坚固 / 稀有 / 【唯一】）：最大弹匣数量 +0/1/1/2。
-- **名匠的刀格**（坚固 / 传说 / 【唯一】）：武器伤害 +5/10/15%；刀收刀 / 拔刀无敌时间 +40/70/120%。
-- **彩虹羽毛**（风之歌 / 传说 / 【唯一】）：匕首获取专注时额外获取 0/0/1 层；特殊攻击伤害 +10/16/22%；冲刺恢复 +5/5/10%。
-- **绝对戒指**（坚固 / 传说 / 【唯一】）：特殊攻击范围 +30/45/60%、特殊攻击伤害 +10/20/45%。
-- **翅膀**（风之歌 / 传说 / 【唯一】）：攻击速度 +3/6/9/12/15/18%；每 25/20/15/9/6/5% 额外攻击速度，使所有伤害放大 +1%。
-- **贝鲁特之镰**（精密 / 传说 / 【唯一】）：暴击几率 +2.5/5/7.5/10%；攻击暴击几率超过 100% 时，溢出的部分转化为处决几率；处决使该次暴击伤害翻倍。
-- **巴尔特的工作用单片眼镜**（精密 / 传说 / 【唯一】）：暴击几率 +10/19/28/35/45%；敌人距离 3 格以内时，暴击伤害 -30 个百分点。
-- **黑鳞片**（精密 / 传说 / 【唯一】）：每持有 1 个石板物品，暴击几率 +1/1.5/2/2.5%；石板数量包括赛菲莉娅背包与石板刻印，合成石板算 2 块；提示框显示当前持有数量。
+#### 新魔法书（11 本）
 
-### 新药水（12 瓶）
+- **火焰魔弹 / 寒冰魔弹 / 闪电魔弹**（普通）：1 秒冷却、2 MP；寒冰一次两枚，闪电命中点半径 2 格 AOE，投射物沿准星飞 36 格。
+- **火焰箭**（高级）：4 枚火焰箭以 8° 夹角齐射，穿透敌人并结算半径 3 的 AOE，首次命中附加灼伤。
+- **霜刀**（高级）：在玩家周围召唤 4 把霜刃，延迟 1 秒后各自锁定并飞向附近敌人，命中后爆炸。
+- **雷电回旋镖**（高级）：去程飞 18 格后折返；返程被施放者接住时，对应技能栏冷却减半。
+- **火焰马戏团**（稀有）：8 个火球独立爆炸，可重复命中，技能暴击率与暴击伤害额外提高。
+- **箭雨**（稀有）：瞄准 48 格内区域，在半径 8 内降下 45 支冰箭，每支独立结算并有概率附加冻伤。
+- **雷霆之甲**（稀有）：持续 10 秒，周期性对周围敌人释放连锁闪电。
+- **陨石雨**（传说）：在半径 18 的区域降下 30 / 35 / 40 / 45 颗陨石，每颗独立爆炸并带岩浆块本体。
+- **冰风暴**（传说）：在命中点召唤持续 8 秒、会追踪敌人的冰风暴，每 0.25 秒攻击范围内敌人；带下雪粒子与地面结霜。
+- **雷之裁决**（重做）：伤害改为 3 + 闪电 20 / 24 / 28 / 32 / 36%，释放 10 次电击光束，粒子按伤害走廊铺满。
 
-- 蓝：**马迪朗的平静**（防御 +3）、**格里塞特的浅淡**（闪避 +3）、**贵兹的合奏**（最高元素 +2）。
-- 黄：**内比奥罗的执着**（物理 +4）、**乌尼·布兰的雾霭**（冰 +4）、**Tempranillo 的热情**（火 +4）、**马尔贝克的浓郁**（电 +4）、**蘑菇汤**（最高元素 +6，随机一种）、**马德拉的坚韧**（最终生命值 +5%）、**萨格兰蒂诺的忍耐**（防御 +5）、**普萨的留白**（闪避 +5）。
-- 红：**黎明之露**（所有伤害放大 +4%，永久）。
+#### 学院神器（16 件）
 
-新增五种药水效果类型：防御、闪避、最高元素、最终生命值百分比、所有伤害放大。赛菲莉娅宝藏的元素池现在同时包含高级（+2）与稀有（+4）两档，同一元素内等概率。
+魔法师的硬币（书加速 / 书奖励概率）、雷伊星碎片（左侧魔法书的 MP 消耗降低）、鼠魔法师的吊坠（三魔弹追踪、MP再生）、珍珠粉（书伤）、渴望宝珠（占用 MP + 书伤）、海棠果（书加速 + 冲刺恢复）、双角管（魔弹三路分叉，伤害与 MP 消耗联动）、音叉（施放魔法书攒层，武器命中消耗层数打混沌伤害）、宝石盔甲（书暴击 / MP再生 / 物理降低）、发光的沙漏（右侧魔法书加速）、战斗法师的手套（书伤 + 移速）、冥想书（书伤 + 书加速）、学院钢笔（闪避转书伤，闪避成功加速魔法书冷却）、书库之阳（书伤强化并额外触发太阳剑）、空剑柄（书伤 / 最终 MP / MP再生）、莱莉的怀表（书加速 / 暴伤 / 书 MP 降低）。
 
-### 神铸与许愿池
+#### 湖泊神器（16 件）
 
-- 神铸新增普通 / 高级两档：普通 30、高级 50 愿力；稀有 80、传说 200；羁绊 / 永恒不可神铸。
-- 神铸改为多选批量购买：底部正中间显示「需 x 愿力」，愿力足够时数字绿色、不足时红色；新增「重置」按钮清空已选，「确认」移到「重置」右边。
-- 神铸结果页返回神铸界面，不再回到基础许愿池页。
-- 锚定页 / 神铸页 / 抽卡结果页悬停物品都显示完整神器描述。
-- 抽到已锚定物品时，愿力按该物品的锚定次数额外 +60/70/80/90/100%（向下取整）；结果页显示服务端实际到账的愿力。
-- 通过神铸获得物品不再获得愿力。
+枯萎的花、恩多迪特的镇纸、稻草人偶（暴击 / MP再生 / 最大 MP）、星红宝石（最终 HP）、星海蓝宝石（最终 MP）、水袋（消耗 MP 提高最大 MP，有上限与冷却）、诱惑的鱼饵（海之眷顾 / 饵钓）、奥布拉斯之血（MP 吸收）、破碎的树根（最大 MP）、心形胡萝卜（最大 HP / MP）、白色树枝（MP再生）、石纺锤（消耗 MP 的能力伤害）、饱满果实桶（发动型回蓝）、乔洛的浇水壶（最大 MP 达标时魔法书额外施放一次）、水之精灵（发动型 WaterGrab，按最大 MP 结算伤害）、普利特维采的水滴（冰霜武具命中召唤旋转冰剑）。
 
-### 选卡
+#### 守护神器（14 件）
 
-- 选卡充能周期从 2 个游戏日缩短为 **1 个游戏日**，最多仍可存 10 次。
-- 选中一张卡后不再退回游戏：还有机会就立刻展示下一组三张；机会用完也停在选卡界面显示 0 次，由玩家自己关闭。
-- 悬停已翻开的卡会显示完整神器提示框。
+布甲、护盾（魔法书，10 点护盾 6 秒）、盾牌耳环、破碎的镜子（脱战 / 脱战激活时给盾）、荆棘壳（防御力反伤）、瑟伦潦草的信（累计消耗 MP 给盾）、锅盖（物理暴击叠「忍耐」防御）、学院锁子甲、蜥蜴板甲、小镜子（冲刺给盾）、白边面包（受伤后无敌）、野兽之心（防御 / 所有伤害放大 / 幸运）、盾牌包（每 10 点防御力加火冰电伤害）、岩象（发动型岩石矛）。
 
-### 弩与战斗
+### 护盾与防御
 
-- 重型弩改为多弹匣：每个弹匣 10 发，打空后自动换下一个弹匣；按 R 可补满当前弹匣与备用弹匣；HUD / 提示框显示「弹匣：x/10（m）」。
-- 闪烁的眼睛重做：最高等级改为 4；混沌伤害改为「当前闪避点数 × 150/300/500/900/1500%」，不再按税前伤害计算，也不再额外乘物理增幅。
-- HP 偷取 / MP 吸收的伤害基数改为「最终伤害 ÷ 顽强之躯倍率」：只把「顽强之躯」那一层减伤加回去，护甲、防护铠甲等其它减伤仍然保留。
+- 新增通用**护盾系统**：按层记录护盾量、到期时间与可选来源键；受击时先扣护盾，剩余伤害才进入原版护甲 / 防御力减伤。护盾本身不吃任何减伤，临时盾先消耗、永久盾留到最后。
+- 新增**护盾 HUD**：显示「护盾：x」，护盾 > 0 时出现，默认在冲刺 HUD 右侧。
+- 「守护」连击的防御力并入玩家防御力；10 档「无视防御」与防御穿透乘算，同时作用于原版护甲、玩家防御力和根之退「防护铠甲」的敌人防御力。
+- 白边面包的无敌改为通用无敌窗口，受伤后完全免疫后续伤害，并显示无敌条。
 
-### 界面与修复
+### 魔法书系统
 
-- 神器提示框等级行改为「等级 x/y」。
-- 装填用木箱的名字由「装填用木箱坚固」更正为「装填用木箱」，所属连击更正为「坚固」。
-- 新神器图标按统一规则处理：去掉外框与内部背景、保留原图深色边、14×14 居中；药水图标去掉黑边、15×15 居中，均不再额外描边。
-- 神器数量与中英文说明同步更新到 93。
+- 魔法书提示框与技能页显示**实际冷却与实际 MP 消耗**（含学院、雷伊星碎片、发光的沙漏、双角管等修正）。
+- 技能页技能名按神器品质上色；技能 HUD 顺序改为 1 在最左、6 在最右。
+- 新增魔法书暴击率、魔法书伤害、魔法书 MP 减少等统一聚合；音叉、书库之阳、学院钢笔等联动已接入。
+- 魔法书伤害改用独立的 `magic_*` 伤害类型，ToroHealth 能正确显示火 / 冰 / 电单一元素。
+
+### 元素、伤害与特效
+
+- ToroHealth 元素显示修正：普通元素攻击显示单一元素；神器伤害按实际来源显示；蓝色灼伤为火 + 冰，等离子体为火 + 电，两者同时生效时为火 + 冰 + 电；酷寒断头台为冰 + 电（永恒蚀左半边时火 + 电）；雷霜蝶两段独立伤害但每段都是冰 + 电。
+- 太阳剑伤害改为独立结算，避免和武器本体伤害合并成一个数字。
+- 冰风暴最终表现：18 片旋转雪 + 18 片每刻随机散布雪、8 个零重力冰晶高光、随等级增加的下雪粒子与地面结霜。
+- 普利特维采的水滴：旋转冰剑改用冰弓箭模型，缩放 50%、无雪片拖尾；结束时模型飞向 8 格内最近敌人，飞抵后才结算伤害；永恒蚀左半边时整把剑改为火属性。
+- 修复冰弓火焰箭在永恒蚀火模式下错误显示成神器「火焰箭」魔法书图标的问题，新增独立的火焰箭投射物贴图与模型。
+
+### HUD 与界面
+
+- HUD 设置新增「统一调整」（一次调整所有模块缩放）与「重置」（恢复默认布局）。
+- 无敌条默认水平居中，缩放时保持中心不动；「护盾」HUD 默认在冲刺右侧。
+- 书的铁砧合并扩展到效率与横扫之刃；攻速接入非赛菲莉娅武器与挖掘。
+- 原「疲劳」机制改名「经验加加（EXP++）」，内部 id 保持兼容。
+- Mod Menu 简介更新为「把《SEPHIRIA》的 build 带进 Minecraft——武器、连击神器、石板」。
+
+### 其他修正
+
+- 蜥蜴板甲的负词条数字改为红色。
+- 瑟伦潦草的信改为任何状态下累计消耗 40 MP 触发，不再要求战斗中或单次消耗 40 MP。
+- 破碎的镜子在脱战状态下激活时也会直接获得护盾。
+- 湖泊 / 学院 / 守护的图标、语言键、掉落池与创造模式页已补齐。
 
 ## 运行环境
 
@@ -72,62 +89,79 @@ Minecraft 26.3 + Fabric Loader 0.19.5+ + Fabric API + GeckoLib（必需，客户
 
 ## English
 
-Version `0.5.2-a`: content updates after `0.5.1-a`.
+Version `0.5.3-a`: all content updates after `0.5.2-a`.
 
-> By convention this changelog starts from the previously uploaded and released version (`0.5.1-a`).
+> By convention this changelog starts from the previously uploaded and released version (`0.5.2-a`).
 
 ## What's new
 
-### New artifacts (10)
+### New combos and artifacts (93 → 150 artifacts, 12 → 15 combos)
 
-The artifact pool grows from **83 to 93**:
+- **Academy** (new): tier 2 Magic Book Haste +12; tier 4 Magic Book MP cost -15%; tiers 6 / 8 Haste +16 / +20; tier 10 Magic Book damage +15% and MP Regen +8 (Haste stacks; +48 total at level 10).
+- **Lake** (new): tiers 3 / 6 / 9 grant Max MP +20 / +30 / +40, MP Regen +5, and MP-consuming ability damage +10% / +25% (stacking; +90 Max MP and +35% ability damage at level 9).
+- **Guardian** (new): tiers 2 / 4 / 6 / 8 / 10 grant Defense +6 / +7 / +8 / +10 / +12 (+43 total at level 10); tier 10 adds +5% Ignore Defense, multiplicative with Defense Penetration and applying only to vanilla armor and Defense.
 
-- **Broken Sapphire** (Shadow / Rare / [Unique]): Dodge +2/4/6 and Defense +2/4/6; every 16/14/12 seconds, gain a Veil that fully dodges the next attack from an entity.
-- **Sharpshooter's Crank** (Sturdy / Legendary / [Unique]): crossbow reload speed +30/50%, crossbow damage +30/40%; for 10 seconds after reloading, crossbow damage +30/40% more.
-- **Reloading Crate** (Sturdy / Rare / [Unique]): maximum magazines +0/1/1/2.
-- **Master's Sword Guard** (Sturdy / Legendary / [Unique]): weapon damage +5/10/15%; katana sheathe / draw invulnerability +40/70/120%.
-- **Rainbow Feather** (Wind Song / Legendary / [Unique]): dagger focus gain +0/0/1; special attack damage +10/16/22%; dash recovery +5/5/10%.
-- **Absolute Ring** (Sturdy / Legendary / [Unique]): special attack range +30/45/60%; special attack damage +10/20/45%.
-- **Wings** (Wind Song / Legendary / [Unique]): attack speed +3/6/9/12/15/18%; every 25/20/15/9/6/5% extra attack speed grants +1% to all damage.
-- **Beirut's Scythe** (Precision / Legendary / [Unique]): crit chance +2.5/5/7.5/10%; when attack crit chance exceeds 100%, the excess becomes Execution chance; Execution doubles that critical hit's damage.
-- **Bart's Work Monocle** (Precision / Legendary / [Unique]): crit chance +10/19/28/35/45%; crit damage -30 percentage points while the enemy is within 3 blocks.
-- **Black Scale** (Precision / Legendary / [Unique]): crit chance +1/1.5/2/2.5% per slate item held; the count includes slates in the Sephiria backpack and imprinted slates, with Fusion Slates counting as 2; the tooltip shows the current count.
+#### New Magic Books (11)
 
-### New potions (12)
+- **Fire Bolt / Ice Bolt / Lightning Bolt** (Common): 1 s cooldown, 2 MP; Ice fires two projectiles, Lightning has a 2-block AOE at the impact point, all travel 36 blocks along the crosshair.
+- **Flame Arrow** (Advanced): 4 arrows in an 8° spread, piercing enemies with a radius-3 AOE; the first hit applies Burn.
+- **Frost Knife** (Advanced): summons 4 frost blades around the player; after 1 s each locks onto a nearby enemy, flies to it, and explodes.
+- **Lightning Boomerang** (Advanced): flies 18 blocks out and returns; catching it on the return halves that skill slot's cooldown.
+- **Fire Circus** (Rare): 8 independently exploding fireballs that can hit the same enemy repeatedly, with extra skill crit chance and crit damage.
+- **Arrow Rain** (Rare): targets a point within 48 blocks and drops 45 ice arrows over a radius-8 area, each with its own hit and a chance to apply Frostbite.
+- **Thunder Armor** (Rare): lasts 10 s and periodically chains lightning to nearby enemies.
+- **Meteor Shower** (Legendary): drops 30 / 35 / 40 / 45 meteors over a radius-18 area, each with an independent explosion and a magma-block body.
+- **Ice Storm** (Legendary): summons an 8 s tracking storm at the impact point, attacking enemies every 0.25 s, with snowfall particles and ground frost.
+- **Thunder Verdict** (reworked): damage is now 3 + Lightning 20 / 24 / 28 / 32 / 36%, fires 10 lightning beams, with particles covering the damage corridor.
 
-- Blue: **Madiran's Calm** (Defense +3), **Grisette's Paleness** (Dodge +3), **Gewürz's Ensemble** (highest element +2).
-- Yellow: **Nebbiolo's Persistence** (Physical +4), **Ugni Blanc's Mist** (Ice +4), **Tempranillo's Passion** (Fire +4), **Malbec's Richness** (Lightning +4), **Mushroom Soup** (highest element +6, one random element), **Madeira's Fortitude** (final max HP +5%), **Sagrantino's Patience** (Defense +5), **Poulsard's Whitespace** (Dodge +5).
-- Red: **Dawn Dew** (all damage +4%, permanent).
+#### Academy artifacts (16)
 
-Five new potion effect kinds were added: Defense, Dodge, Highest Element, Max HP percent, and All Damage amplification. Sephiria treasure elemental pools now include both Advanced (+2) and Rare (+4) potions, with equal odds within the same element.
+Magician's Coin (book haste / book reward chance), Ray Star Fragment (reduces the MP cost of the book to its left), Mouse Magician Pendant (bolt tracking / MP Regen), Pearl Powder (book damage), Orb of Desire (reserved MP + book damage), Crabapple (book haste + dash recovery), Double Horn Pipe (three-way bolt split with damage / MP tradeoff), Tuning Fork (stores stacks on book casts, weapon hits consume them for chaos damage), Jewel Armor (book crit / MP Regen / physical penalty), Glowing Hourglass (haste for the book to its right), Battle Mage Gloves (book damage + movement speed), Meditation Book (book damage + haste), Academy Pen (dodge converts to book damage; dodging accelerates book cooldowns), Library Sun (book damage strengthens and triggers extra Sun Swords), Empty Hilt (book damage / final MP / MP Regen), Leilis' Pocket Watch (book haste / crit damage / book MP reduction).
 
-### Forge and Wishing Pool
+#### Lake artifacts (16)
 
-- Forge now supports Common and Advanced tiers: Common 30, Advanced 50 Wish Power; Rare 80, Legendary 200; Bond / Eternal cannot be forged.
-- Forge is now a batch multi-select. The bottom center shows "x Wish Power required", with the number green when affordable and red when not. A new Reset button clears the selection, and Confirm moved to its right.
-- The forge result screen returns to the forge page instead of the base Wishing Pool page.
-- Hovering items on the anchor page, forge page, and draw result page now shows the full artifact tooltip.
-- Drawing an anchored item grants extra Wish Power based on its anchor count: +60/70/80/90/100% (rounded down). The result screen shows the actual amount granted by the server.
-- Items obtained through forging no longer grant Wish Power.
+Wilted Flower, Endodite Paperweight, Scarecrow Doll (crit / MP Regen / Max MP), Star Ruby (final HP), Star Sea Sapphire (final MP), Water Bag (spending MP raises Max MP, with a cap and cooldown), Lure Bait (Luck of the Sea / Lure), Obras' Blood (MP Absorb), Broken Root (Max MP), Heart Carrot (Max HP / MP), White Branch (MP Regen), Stone Spindle (MP-consuming ability damage), Full Fruit Bucket (activated MP restore), Jolo's Watering Can (casts a Magic Book an extra time when Max MP is high enough), Water Spirit (activated WaterGrab scaling with Max MP), Plitvice Water Drop (Frost Armament hits summon rotating ice swords).
 
-### Card Selection
+#### Guardian artifacts (14)
 
-- The Card Selection charge period is shortened from 2 in-game days to **1 in-game day**; the cap remains 10.
-- After choosing a card, the screen no longer returns to the game: if chances remain, the next set of three cards is shown immediately; if no chances remain, the screen stays open showing 0 chances and the player closes it manually.
-- Hovering a revealed card shows the full artifact tooltip.
+Cloth Armor, Shield (Magic Book; 10 Shield for 6 s), Shield Earring, Broken Mirror (Shield after leaving combat / when activated out of combat), Thorn Shell (Defense-based thorns), Seren's Hurried Letter (Shield from cumulative MP spending), Pot Lid (physical crits stack Endurance Defense), Academy Chainmail, Lizard Plate Armor, Small Mirror (Shield on dash), White-Edge Bread (invulnerability after being hit), Beast Heart (Defense / all damage amp / Luck), Shield Bag (Fire, Ice and Lightning damage per 10 Defense), Rock Elephant (activated rock spears).
 
-### Crossbow and combat
+### Shield and defense
 
-- The Colossal Crossbow now has multiple magazines: each magazine holds 10 bolts, and the next magazine is loaded automatically when one is empty. Press R to refill the current and reserve magazines. HUD / tooltip show "Magazine: x/10 (m)".
-- Flickering Eye rework: max level is now 4; chaos damage is now "current dodge points × 150/300/500/900/1500%", no longer based on pre-tax damage and no longer multiplied by physical amplification.
-- HP steal / MP absorb now use "final damage ÷ Tenacious Body multiplier" as their base: only the Tenacious Body reduction is added back; armor, Protective Armor, and other reductions remain applied.
+- Added a general **Shield system**: shields are tracked as layers with amount, expiry and an optional source key. Incoming damage consumes Shield first; only the remainder goes through vanilla armor / Defense. Shield itself is not reduced by any mitigation, temporary layers are consumed before permanent ones.
+- Added a **Shield HUD**: shows "Shield: x" only while Shield > 0, defaulting to the right of the Dash HUD.
+- Guardian Defense is added to the player's Defense. Tier-10 Ignore Defense is multiplicative with Defense Penetration and applies to vanilla armor, player Defense and Root Retreat's Protective Armor enemy Defense.
+- White-Edge Bread now uses the general invulnerability window, fully blocking subsequent damage and showing the Invulnerability HUD bar.
 
-### Interface and fixes
+### Magic Book systems
 
-- The artifact tooltip level line now reads "Level x/y".
-- The Reloading Crate's name was corrected from "Sturdy Reloading Crate" to "Reloading Crate", and its combo to Sturdy.
-- New artifact icons follow the unified rules: outer frame and inner background removed, original dark edge kept, fitted to 14×14 and centered. Potion icons have their black border removed, are fitted to 15×15 and centered, with no extra outline.
-- Artifact counts and the Chinese / English descriptions were updated to 93.
+- Magic Book tooltips and the skill page now show **actual cooldown and actual MP cost**, including Academy, Ray Star Fragment, Glowing Hourglass and Double Horn Pipe modifiers.
+- Skill names in the skill page use the artifact rarity color; the skill HUD now orders slot 1 leftmost and slot 6 rightmost.
+- Added unified Magic Book crit chance, damage and MP reduction aggregation; Tuning Fork, Library Sun and Academy Pen interactions are wired in.
+- Magic Book damage now uses dedicated `magic_*` damage types, so ToroHealth shows the correct single Fire / Ice / Lightning element.
+
+### Elements, damage and effects
+
+- ToroHealth element fixes: normal elemental attacks show a single element; artifact damage follows its actual source; Blue Burn is Fire + Ice, Plasma is Fire + Lightning, and both together are Fire + Ice + Lightning; Cryo Guillotine is Ice + Lightning (Fire + Lightning with Eternal Eclipse on the left); Thunderfrost Butterfly deals two independent hits, each Ice + Lightning.
+- Sun Sword damage is now resolved separately from the weapon hit, so it no longer merges into one number.
+- Ice Storm final presentation: 18 rotating snowflakes + 18 randomly scattered each tick, 8 zero-gravity ice glints, level-scaled snowfall and ground frost.
+- Plitvice Water Drop: rotating swords use the ice-bow arrow model at 50% scale with no snowflake trail; on expiry the model flies to the nearest enemy within 8 blocks and deals damage on arrival; Eternal Eclipse on the left turns the whole sword into Fire.
+- Fixed the Ice Bow's fire-mode arrow incorrectly displaying the Flame Arrow artifact's Magic Book icon; added a dedicated fire arrow projectile texture and model.
+
+### HUD and interface
+
+- HUD settings gained **Uniform Scale** (scale every module at once) and **Reset** (restore the default layout).
+- The Invulnerability bar is horizontally centered by default and keeps its center when scaled; the Shield HUD defaults to the right of Dash.
+- Anvil book merging now supports Efficiency and Sweeping Edge; attack speed now affects non-Sephiria weapons and mining.
+- The old Fatigue mechanic is renamed **EXP++**, while internal ids stay compatible.
+- Mod Menu summary updated to "bring the buildcraft of SEPHIRIA into Minecraft — weapons, combo artifacts and slates".
+
+### Other fixes
+
+- Lizard Plate Armor's negative affix numbers are now red.
+- Seren's Hurried Letter now triggers from cumulative MP spending in any state, no longer requiring combat or a single 40 MP spend.
+- Broken Mirror also grants its Shield when activated while out of combat.
+- Lake / Academy / Guardian icons, language keys, loot pools and creative tab entries are complete.
 
 ## Requirements
 

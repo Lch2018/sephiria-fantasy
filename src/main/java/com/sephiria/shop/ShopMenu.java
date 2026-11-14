@@ -237,7 +237,8 @@ public class ShopMenu extends AbstractContainerMenu {
 		} else {
 			return false;
 		}
-		shopStock.refresh(player.getRandom(), PlayerStats.luckTotal(player));
+		shopStock.refresh(player.getRandom(), PlayerStats.luckTotal(player),
+				com.sephiria.artifact.ArtifactEffects.magicBookRewardChancePercent(player));
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.NOTE_BLOCK_BELL, SoundSource.PLAYERS, 0.7F, 0.9F);
 		broadcastChanges();

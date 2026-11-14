@@ -5,7 +5,7 @@
     "component": "sephiria_fantasy:flame_tool",
     "on_true": {
       "type": "minecraft:model",
-      "model": "sephiria_fantasy:item/flame_arrow"
+      "model": "sephiria_fantasy:item/flame_arrow_projectile"
     },
     "on_false": {
       "type": "minecraft:model",

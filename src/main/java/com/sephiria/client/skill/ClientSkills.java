@@ -88,8 +88,71 @@ public final class ClientSkills {
 
 	/** 神器名 + 等级，技能页里每条技能都带上它（两件同种神器要靠等级区分）。 */
 	public static Component label(Item item, int level) {
+		int maxLevel = item instanceof SephiriaArtifact artifact ? artifact.maxLevel() : level;
 		return Component.translatable("screen.sephiria_fantasy.artifact_skills.entry",
-				item.getName(item.getDefaultInstance()), level);
+				item.getName(item.getDefaultInstance()), Math.min(level, maxLevel));
+	}
+
+	/** 技能页里这条技能对应的服务端条目（物品 + 封顶等级；找不到返回 null）。 */
+	private static ArtifactSkillsPayload.Entry find(Item item, int level) {
+		Identifier id = BuiltInRegistries.ITEM.getKey(item);
+
+		for (ArtifactSkillsPayload.Entry entry : skills) {
+			if (entry.item().equals(id) && entry.level() == level) {
+				return entry;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * 技能页悬停时显示的技能说明：标题 + 技能描述 + 等级。
+	 *
+	 * <p>等级按神器最高等级夹住——格子等级可能把实际等级顶到上限以上，但提示框只该显示 x/最高等级。
+	 *
+	 * <p>标题里的技能名按神器品质上色；冷却 / 蓝耗优先用服务端随技能列表推来的实际值
+	 * （已计入魔法书加速与这格书的 MP 减耗）。
+	 */
+	public static List<Component> tooltip(String entry) {
+		Item item = itemOf(entry);
+
+		if (!(item instanceof SephiriaArtifact artifact) || artifact.skill() == null) {
+			return List.of();
+		}
+
+		int level = Math.min(levelOf(entry), artifact.maxLevel());
+		List<Component> lines = new ArrayList<>();
+		Component name = skillName(artifact.skill());
+		name = artifact.rarity() == com.sephiria.artifact.ArtifactRarity.BOND
+				? com.sephiria.util.Colours.rainbow(name.getString())
+				: name.copy().withColor(artifact.rarity().color());
+		lines.add(Component.translatable("screen.sephiria_fantasy.artifact_skills.skill_title", name));
+		com.sephiria.artifact.skill.SkillTooltipContext.clearBook();
+
+		ArtifactSkillsPayload.Entry actual = find(item, level);
+
+		if (actual != null) {
+			com.sephiria.artifact.skill.SkillTooltipContext.setActual(actual.cooldownTicks(), actual.mpCost());
+		} else {
+			// 技能列表里的等级对不上（旧栏位 / 刚升级）时，退回随属性同步的书本快照
+			com.sephiria.network.MagicBookStatsPayload.Entry cached =
+					com.sephiria.client.ClientBookStats.find(item, level, -1);
+
+			if (cached != null) {
+				com.sephiria.artifact.skill.SkillTooltipContext.setActual(cached.cooldownTicks(), cached.mpCost());
+			}
+		}
+
+		try {
+			lines.addAll(artifact.skillDescriptionLines(level));
+		} finally {
+			com.sephiria.artifact.skill.SkillTooltipContext.clearBook();
+		}
+
+		lines.add(Component.translatable("screen.sephiria_fantasy.artifact_skills.skill_level",
+				level, artifact.maxLevel()));
+		return lines;
 	}
 
 	/** 栏位字符串的可读名字；解析不出来时返回空。 */
@@ -101,6 +164,24 @@ public final class ClientSkills {
 		}
 
 		return label(item, levelOf(entry));
+	}
+
+	/**
+	 * 两条技能栏字符串是不是同一件神器、同一个「封顶后」的等级。
+	 *
+	 * <p>旧栏位可能存着超过神器上限的等级（格子等级曾经把它顶上去），左边列表却是封顶后的等级；
+	 * 按原始字符串比对会把同一技能同时显示在栏位和可用列表里，所以这里按物品 + 封顶等级比较。
+	 */
+	public static boolean sameEntry(String left, String right) {
+		Item leftItem = itemOf(left);
+		Item rightItem = itemOf(right);
+
+		if (leftItem == null || leftItem != rightItem) {
+			return false;
+		}
+
+		int maxLevel = leftItem instanceof SephiriaArtifact artifact ? artifact.maxLevel() : Integer.MAX_VALUE;
+		return Math.min(levelOf(left), maxLevel) == Math.min(levelOf(right), maxLevel);
 	}
 
 	/** 当前栏位里已经放了哪些技能（用来在技能列表里标出「已装备」）。 */

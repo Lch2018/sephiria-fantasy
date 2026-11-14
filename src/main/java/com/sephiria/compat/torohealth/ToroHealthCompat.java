@@ -1,6 +1,7 @@
 package com.sephiria.compat.torohealth;
 
 import com.sephiria.Sephiria;
+import com.sephiria.artifact.ArtifactEffects;
 import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -88,13 +89,23 @@ public final class ToroHealthCompat {
 		Elements elements = switch (kind) {
 			case FIRE, FIRE_ATTACK -> single(FIRE);
 			case ICE, ICE_ATTACK -> single(ICE);
+			case BLUE_BURN -> dual(player, FIRE, ICE);
 			case ELECTRIC -> single(LIGHTNING);
 			case SUN -> single(source.is(SephiriaDamage.ICE_SUN_SWORD) ? ICE : FIRE);
 			case CRYO -> dual(player, ICE, LIGHTNING);
-			case PLASMA -> dual(player, FIRE, LIGHTNING);
+			case CRYO_FIRE -> dual(player, FIRE, LIGHTNING);
+			case BLIZZARD -> dual(player, ICE, LIGHTNING);
+			case WATER_GRAB -> single(PHYSICAL);
+			// 蓝色灼伤（封印的特加斯）在等离子体里额外带冰，三属性时取面板值最高的两色做数字主副色，
+			// 整体颜色由 maskOf 的三属性组合色负责
+			case PLASMA -> ArtifactEffects.blueBurn(player)
+					? topTwo(player, FIRE, ICE, LIGHTNING)
+					: dual(player, FIRE, LIGHTNING);
 			// 混沌固定为紫色，不再拆属性
 			case CHAOS -> single(CHAOS);
-			// WEAPON / ARTIFACT / TRUE 以及其余默认按物理
+			// 通用神器伤害目前只有红色露水的暴击溅射：按触发者当前最高的一项属性显示
+			case ARTIFACT -> single(elementOf(PlayerStats.highestElement(player)));
+			// WEAPON / TRUE 以及其余默认按物理
 			default -> single(PHYSICAL);
 		};
 
@@ -114,7 +125,8 @@ public final class ToroHealthCompat {
 	 * 物理 / 火 / 冰 / 电四种可以任意组合，真伤与混沌单独算。
 	 *
 	 * <p>口径：普通攻击 / 神器伤害是物理；纯减益（灼伤 / 冰冻 / 触电持续伤害）是单元素；
-	 * 带固定值的元素攻击（火 / 冰 / 电 attack）按「物理 + 元素」算；双属性神器按两组元素算；
+	 * 带固定值的元素攻击（火 / 冰 / 电 attack）是**单一元素**，不再附带物理；
+	 * 双属性神器按两组元素算；蓝色灼伤是火 + 冰；等离子体在蓝色灼伤时是火 + 冰 + 电；
 	 * 永恒冬日按「物理 + 冰」。
 	 */
 	public static int maskOf(ServerPlayer player, DamageSource source) {
@@ -126,6 +138,11 @@ public final class ToroHealthCompat {
 			return BIT_CHAOS;
 		}
 
+		// 通用神器伤害（红色露水溅射）按触发者当前最高的一项属性显示
+		if (source.is(SephiriaDamage.ARTIFACT_DAMAGE)) {
+			return bitOf(PlayerStats.highestElement(player));
+		}
+
 		if (source.is(SephiriaDamage.ETERNAL_WINTER)) {
 			return BIT_PHYSICAL | BIT_ICE;
 		}
@@ -134,8 +151,26 @@ public final class ToroHealthCompat {
 			return BIT_ICE | BIT_LIGHTNING;
 		}
 
-		if (source.is(SephiriaDamage.PLASMA)) {
+		if (source.is(SephiriaDamage.FIRE_CRYO_GUILLOTINE)) {
 			return BIT_FIRE | BIT_LIGHTNING;
+		}
+
+		if (source.is(SephiriaDamage.BLIZZARD)) {
+			return BIT_ICE | BIT_LIGHTNING;
+		}
+
+		if (source.is(SephiriaDamage.WATER_GRAB)) {
+			return BIT_PHYSICAL;
+		}
+
+		if (source.is(SephiriaDamage.PLASMA)) {
+			int mask = BIT_FIRE | BIT_LIGHTNING;
+
+			if (ArtifactEffects.blueBurn(player)) {
+				mask |= BIT_ICE;
+			}
+
+			return mask;
 		}
 
 		if (source.is(SephiriaDamage.SUN_SWORD)) {
@@ -151,28 +186,49 @@ public final class ToroHealthCompat {
 		}
 
 		if (source.is(SephiriaDamage.ELECTRIC_ATTACK)) {
-			return BIT_LIGHTNING | BIT_PHYSICAL;
+			return BIT_LIGHTNING;
 		}
 
 		if (source.is(SephiriaDamage.BURN)) {
 			return BIT_FIRE;
 		}
 
+		if (source.is(SephiriaDamage.MAGIC_FIRE_ATTACK)) {
+			return BIT_FIRE;
+		}
+
+		if (source.is(SephiriaDamage.MAGIC_ICE_ATTACK)) {
+			return BIT_ICE;
+		}
+
 		if (source.is(SephiriaDamage.FIRE_ATTACK)) {
-			return BIT_FIRE | BIT_PHYSICAL;
+			return BIT_FIRE;
 		}
 
 		if (source.is(SephiriaDamage.ICE_ATTACK)) {
-			return BIT_ICE | BIT_PHYSICAL;
+			return BIT_ICE;
 		}
 
-		if (source.is(SephiriaDamage.FREEZE) || source.is(SephiriaDamage.BLUE_BURN)) {
+		if (source.is(SephiriaDamage.MAGIC_ELECTRIC_ATTACK)) {
+			return BIT_LIGHTNING;
+		}
+
+		if (source.is(SephiriaDamage.MAGIC_CHAOS)) {
+			return BIT_CHAOS;
+		}
+
+		if (source.is(SephiriaDamage.BLUE_BURN)) {
+			return BIT_FIRE | BIT_ICE;
+		}
+
+		if (source.is(SephiriaDamage.FREEZE)) {
 			return BIT_ICE;
 		}
 
 		return switch (SephiriaDamage.kindOf(source)) {
 			case FIRE -> BIT_FIRE;
 			case ICE -> BIT_ICE;
+			case BLUE_BURN -> BIT_FIRE | BIT_ICE;
 			case ELECTRIC -> BIT_LIGHTNING;
 			case CHAOS -> BIT_CHAOS;
 			case TRUE -> BIT_TRUE;
@@ -220,6 +276,43 @@ public final class ToroHealthCompat {
 		return firstValue >= secondValue
 				? new Elements(first, second)
 				: new Elements(second, first);
+	}
+
+	/** 属性 → 显示色编号。 */
+	private static int elementOf(PlayerStats.Element element) {
+		return switch (element) {
+			case PHYSICAL -> PHYSICAL;
+			case FIRE -> FIRE;
+			case ICE -> ICE;
+			case LIGHTNING -> LIGHTNING;
+		};
+	}
+
+	/** 属性 → 元素位。 */
+	private static int bitOf(PlayerStats.Element element) {
+		return switch (element) {
+			case PHYSICAL -> BIT_PHYSICAL;
+			case FIRE -> BIT_FIRE;
+			case ICE -> BIT_ICE;
+			case LIGHTNING -> BIT_LIGHTNING;
+		};
+	}
+
+	/** 三属性时取面板值最高的两色做主 / 副色（整体组合色另由 maskOf 给出）。 */
+	private static Elements topTwo(ServerPlayer player, int first, int second, int third) {
+		double a = elementValue(player, first);
+		double b = elementValue(player, second);
+		double c = elementValue(player, third);
+
+		if (a >= b && a >= c) {
+			return b >= c ? new Elements(first, second) : new Elements(first, third);
+		}
+
+		if (b >= a && b >= c) {
+			return a >= c ? new Elements(second, first) : new Elements(second, third);
+		}
+
+		return a >= b ? new Elements(third, first) : new Elements(third, second);
 	}
 
 	private static double elementValue(ServerPlayer player, int element) {

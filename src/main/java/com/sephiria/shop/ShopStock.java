@@ -144,7 +144,8 @@ public final class ShopStock extends SimpleContainer {
 		}
 
 		ShopStock stock = new ShopStock(player, null);
-		stock.refresh(player.getRandom(), PlayerStats.luckTotal(player));
+		stock.refresh(player.getRandom(), PlayerStats.luckTotal(player),
+				com.sephiria.artifact.ArtifactEffects.magicBookRewardChancePercent(player));
 		STOCKS.put(player.getUUID(), stock);
 		return stock;
 	}
@@ -187,11 +188,12 @@ public final class ShopStock extends SimpleContainer {
 	 * 重新刷一批货：商品按品质加权抽（神器 75% / 石板 25%、稀有及以上吃玩家的幸运值），
 	 * 宝箱固定两种，药水按品质加权抽，购买记录清零。
 	 */
-	public void refresh(RandomSource random, double luck) {
+	public void refresh(RandomSource random, double luck, double magicBookRewardChance) {
 		clearContent();
 
 		List<ItemStack> goods = ArtifactLoot.rollMixed(random, GOOD_SLOTS, SLATE_PERCENT,
-				ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.SHOP, luck));
+				ArtifactLoot.weightsFor(ArtifactLoot.WeightsKind.SHOP, luck),
+				1.0D + magicBookRewardChance / 100.0D);
 
 		for (int index = 0; index < goods.size(); index++) {
 			setItem(index, goods.get(index));

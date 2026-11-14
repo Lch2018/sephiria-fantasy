@@ -43,6 +43,9 @@ public final class ModParticleTypes {
 	 */
 	public static final SimpleParticleType SNOWFALL = register("snowfall");
 
+	/** 冰风暴的静止冰晶高光：与原版 END_ROD 同样的 glitter 贴图，但客户端重力为 0。 */
+	public static final SimpleParticleType ICE_GLINT = register("ice_glint");
+
 	/**
 	 * 等离子体的菱形粒子：贴图是一颗白色菱形，颜色由客户端按 20% 粉 / 60% 白 / 20% 蓝随机染。
 	 *

@@ -19,8 +19,8 @@ import java.util.List;
  * 显示成空的（神器卸下了、或等级因为升级对不上）。
  */
 public record ArtifactSkillsPayload(List<Entry> skills, List<String> slots) implements CustomPacketPayload {
-	/** 一条可用技能：神器物品 id + 实际等级（图标与名字都用这件神器）。 */
-	public record Entry(Identifier item, int level) {
+	/** 一条可用技能：神器物品 id + 实际等级 + 服务端算好的实际冷却 / 蓝耗。 */
+	public record Entry(Identifier item, int level, int cooldownTicks, double mpCost) {
 	}
 
 	public static final CustomPacketPayload.Type<ArtifactSkillsPayload> TYPE =
@@ -33,6 +33,8 @@ public record ArtifactSkillsPayload(List<Entry> skills, List<String> slots) impl
 				for (Entry entry : payload.skills()) {
 					Identifier.STREAM_CODEC.encode(buffer, entry.item());
 					buffer.writeVarInt(entry.level());
+					buffer.writeVarInt(entry.cooldownTicks());
+					buffer.writeDouble(entry.mpCost());
 				}
 
 				buffer.writeVarInt(payload.slots().size());
@@ -46,7 +48,8 @@ public record ArtifactSkillsPayload(List<Entry> skills, List<String> slots) impl
 				List<Entry> skills = new ArrayList<>(count);
 
 				for (int index = 0; index < count; index++) {
-					skills.add(new Entry(Identifier.STREAM_CODEC.decode(buffer), buffer.readVarInt()));
+					skills.add(new Entry(Identifier.STREAM_CODEC.decode(buffer), buffer.readVarInt(),
+							buffer.readVarInt(), buffer.readDouble()));
 				}
 
 				int slots = buffer.readVarInt();
