@@ -1,5 +1,8 @@
 package com.sephiria.client.backpack;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.Minecraft;
+
 import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.backpack.BackpackWindow;
 import com.sephiria.backpack.EnchantMenu;
@@ -93,6 +96,8 @@ public class EnchantScreen extends SephiriaMenuScreen<EnchantMenu> {
 	/** 每个选项能不能用：按「实际能升的级数」判断，够不着就置灰。 */
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		SlateImprintController.tickKey(this.menu, this.hoveredSlot,
+				InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), InputConstants.KEY_F));
 		for (int index = 0; index < this.upgradeButtons.size(); index++) {
 			int levels = EnchantMenu.UPGRADE_STEPS[index];
 			// 只按「附魔币够不够这次所需」置灰：差 2 级满 + 有 2 枚时，「5 级」也是可用的
@@ -102,6 +107,7 @@ public class EnchantScreen extends SephiriaMenuScreen<EnchantMenu> {
 		// 悬停在背包格子上时，把格子等级塞给提示框（神器词条按「自身等级+格子等级」显示）
 		ArtifactTooltip.setSlotLevelHint(hoveredSlotLevel(mouseX, mouseY));
 		super.render(graphics, mouseX, mouseY, partialTick);
+		SlateImprintController.drawBar(graphics, this.leftPos, this.topPos);
 		ArtifactTooltip.clearSlotLevelHint();
 	}
 

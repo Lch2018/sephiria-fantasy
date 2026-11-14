@@ -1,5 +1,8 @@
 package com.sephiria.client.backpack;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.Minecraft;
+
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.backpack.ArtifactBackpack;
@@ -121,9 +124,12 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 	 */
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		SlateImprintController.tickKey(this.menu, this.hoveredSlot,
+				InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), InputConstants.KEY_F));
 		ArtifactTooltip.setSlotLevelHint(hoveredSlotLevel(mouseX, mouseY));
 		super.render(graphics, mouseX, mouseY, partialTick);
 		this.sephiria$redrawBackpackTop(graphics);
+		SlateImprintController.drawBar(graphics, this.leftPos, this.topPos);
 		ArtifactTooltip.clearSlotLevelHint();
 
 		ArtifactCombo hovered = hoveredCombo(mouseX, mouseY);
