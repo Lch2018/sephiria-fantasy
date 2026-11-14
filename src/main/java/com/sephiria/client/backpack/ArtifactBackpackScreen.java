@@ -368,6 +368,13 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 
 	/** 悬停石板按 R 旋转（保持移植版原来的行为：只要指着格子就发，服务端自己校验）。 */
 	@Override
+	public void removed() {
+		// 关界面时把长按刻印的临时进度清掉，免得 NBT 里留一个半截进度
+		SlateImprintController.cancel();
+		super.removed();
+	}
+
+	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
 		Slot hovered = this.hoveredSlot;
 
