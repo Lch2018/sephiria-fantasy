@@ -17,6 +17,7 @@
     "EntityRendererMixin",
     "CursorRestoreMixin",
     "MouseHandlerAccessor",
+    "KatanaItemRendererMixin",
     "FrozenTintMixin",
     "WeaponGlintMixin",
     "ShopSlotOverlayMixin"

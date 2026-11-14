@@ -110,9 +110,11 @@ public final class ScreenTabs {
 			case BACKPACK -> sendEmpty(OpenBackpackPayload.CHANNEL);
 			case ATTRIBUTES -> com.sephiria.client.CursorKeeper.show(client, new StatsScreen());
 			case TALENT -> com.sephiria.client.CursorKeeper.show(client, new TalentScreen());
-			// 技能列表由服务端算（客户端没有背包内容）；ArtifactSkillScreen.init() 会发
-			// OpenArtifactSkillsPayload，这里只负责开页面，别重复发
-			case ARTIFACT_SKILLS -> com.sephiria.client.CursorKeeper.show(client, new ArtifactSkillScreen());
+			// 技能列表由服务端算（客户端没有背包内容）：开页面后发一次请求
+			case ARTIFACT_SKILLS -> {
+				com.sephiria.client.CursorKeeper.show(client, new ArtifactSkillScreen());
+				sendEmpty(com.sephiria.network.OpenArtifactSkillsPayload.CHANNEL);
+			}
 			case SHOP -> sendEmpty(OpenShopPayload.CHANNEL);
 			// 选卡不是容器菜单：清掉「刚关掉」的静默期，让服务端掷好三张卡再推回来打开界面
 			case CARD -> {

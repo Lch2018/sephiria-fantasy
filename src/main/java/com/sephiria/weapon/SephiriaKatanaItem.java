@@ -221,8 +221,9 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 					serverPlayer.level().getGameTime() + blockTicks);
 			level.playSound(null, player.getX(), player.getY(), player.getZ(),
 					SoundEvents.ARMOR_EQUIP_IRON, SoundSource.PLAYERS, 1.0F, sheathed ? 0.8F : 1.2F);
-			this.triggerAnim(serverPlayer, GeoItem.getOrAssignId(stack, (ServerLevel) level),
-					"main", sheathed ? "to_sheathed" : "to_unsheathed");
+			// 动画不在这里播：切换动画由每个客户端按自己看到的视角触发（第一人称动作版 /
+			// 第三人称静止版，见 syncClientHand）。服务端只保证这把刀有一个动画实例 id。
+			GeoItem.getOrAssignId(stack, (ServerLevel) level);
 		}
 
 		return InteractionResultHolder.consume(stack);
@@ -469,8 +470,115 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 						.thenPlay("animation.switch_to_sheathed").thenLoop("animation.idle_sheathed"))
 				.triggerableAnim("to_unsheathed", RawAnimation.begin()
 						.thenPlay("animation.switch_to_unsheathed").thenLoop("animation.idle_unsheathed"))
+				// 第三人称用的「静止版」过渡：播 *_third（同一姿态、没有动作）再进待机
+				.triggerableAnim("to_sheathed_third", RawAnimation.begin()
+						.thenPlay("animation.switch_to_sheathed_third").thenLoop("animation.idle_sheathed"))
+				.triggerableAnim("to_unsheathed_third", RawAnimation.begin()
+						.thenPlay("animation.switch_to_unsheathed_third").thenLoop("animation.idle_unsheathed"))
+				// 首次看到这把刀时只把待机对上（进服时手里拿着一把入鞘的刀）
+				.triggerableAnim("sync_sheathed", RawAnimation.begin().thenLoop("animation.idle_sheathed"))
+				.triggerableAnim("sync_unsheathed", RawAnimation.begin().thenLoop("animation.idle_unsheathed"))
 				.triggerableAnim("attack_sheathed", RawAnimation.begin()
 						.thenPlay("animation.idle_sheathed2").thenLoop("animation.idle_sheathed")));
+	}
+
+	// ------------------------------------------------------------------ 客户端动画同步
+
+	/** 客户端：每把刀「上一次看到的入鞘状态」（键是 GeckoLib 实例 id）。 */
+	private static final Map<Long, Boolean> CLIENT_SHEATHED = new ConcurrentHashMap<>();
+
+	/**
+	 * 客户端：每个「玩家的某只手」上一次对过账的物品栈，**只用来比引用**。
+	 *
+	 * <p>键 = 实体 id × 2 +（副手 1 / 主手 0）。服务端同步物品栏 / 装备时会换成一个新的
+	 * {@code ItemStack} 对象，所以「引用没变」就等于「这把刀没被动过」——每 tick 只花一次
+	 * {@code get} 比较，真正要读 NBT、查实例 id 的对账只在物品栈换对象那一下做。
+	 * 只在客户端 tick 线程访问，用普通 {@code HashMap} 即可。
+	 */
+	private static final Map<Integer, ItemStack> CLIENT_HAND_STACK = new java.util.HashMap<>();
+
+	/** 客户端：自己的刀在第一人称触发了「带动作的过渡」后，允许在这个游戏刻之前被掐掉。 */
+	private static final Map<Long, Long> CLIENT_ANIMATED_UNTIL = new java.util.HashMap<>();
+
+	/**
+	 * 客户端 tick 调用（见 {@code SephiriaClient}）：这只手的物品栈换了对象才去对账。
+	 *
+	 * @param firstPerson 这一侧看到的视角：自己的刀看相机，别人手里的刀永远是第三人称
+	 */
+	public static void syncClientHand(Player player, InteractionHand hand, boolean firstPerson) {
+		ItemStack stack = player.getItemInHand(hand);
+		int key = player.getId() * 2 + (hand == InteractionHand.OFF_HAND ? 1 : 0);
+
+		if (CLIENT_HAND_STACK.get(key) == stack) {
+			return;
+		}
+
+		CLIENT_HAND_STACK.put(key, stack);
+		syncClientAnimation(player, stack, firstPerson);
+	}
+
+	/**
+	 * 第三人称下调用：把还在播的「带动作过渡」掐成待机。
+	 *
+	 * <p>第一人称右键后立刻按 F5，过渡动画还会在第三人称继续播——动画状态按实例 id 记、
+	 * 两个视角共用一条，切视角本身不会重新触发。这里补一刀：如果上一条是带动作的过渡、
+	 * 且还在 0.65 秒（{@link #SWITCH_TICKS}）内，就直接切到对应的静止待机。
+	 */
+	public static void cancelAnimatedSwitch(Player player, ItemStack stack) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof SephiriaKatanaItem item)) {
+			return;
+		}
+
+		long id = GeoItem.getId(stack);
+		Long until = CLIENT_ANIMATED_UNTIL.remove(id);
+
+		if (until != null && player.level().getGameTime() <= until) {
+			triggerClientAnimation(item, id, isSheathed(stack) ? "sync_sheathed" : "sync_unsheathed");
+		}
+	}
+
+	/**
+	 * 客户端：看这把刀的入鞘状态变没变，变了就按 {@code firstPerson} 触发对应动画。
+	 *
+	 * <p>服务端只改 NBT，动画由每个客户端自己触发——「自己第一人称看到的」播带动作的
+	 * {@code to_*}，「第三人称（自己的和别人的）」播静止版 {@code to_*_third}。
+	 * 第一次看到这把刀时只把待机对上（{@code sync_*}，不播过渡）。
+	 */
+	private static void syncClientAnimation(Player player, ItemStack stack, boolean firstPerson) {
+		if (stack.isEmpty() || !(stack.getItem() instanceof SephiriaKatanaItem item)) {
+			return;
+		}
+
+		long id = GeoItem.getId(stack);
+		boolean sheathed = isSheathed(stack);
+		Boolean last = CLIENT_SHEATHED.put(id, sheathed);
+
+		if (last == null) {
+			CLIENT_ANIMATED_UNTIL.remove(id);
+			triggerClientAnimation(item, id, sheathed ? "sync_sheathed" : "sync_unsheathed");
+			return;
+		}
+
+		if (last == sheathed) {
+			return;
+		}
+
+		String animation = sheathed
+				? (firstPerson ? "to_sheathed" : "to_sheathed_third")
+				: (firstPerson ? "to_unsheathed" : "to_unsheathed_third");
+
+		if (firstPerson) {
+			// 带动作的那版：记下窗口，切到第三人称时好在它播完前掐掉
+			CLIENT_ANIMATED_UNTIL.put(id, player.level().getGameTime() + SWITCH_TICKS);
+		} else {
+			CLIENT_ANIMATED_UNTIL.remove(id);
+		}
+
+		triggerClientAnimation(item, id, animation);
+	}
+
+	private static void triggerClientAnimation(SephiriaKatanaItem item, long id, String animation) {
+		item.getAnimatableInstanceCache().getManagerForId(id).tryTriggerAnimation("main", animation);
 	}
 
 	@Override
@@ -479,6 +587,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	}
 
 	private RenderProvider renderProvider;
+	private java.util.function.Supplier<Object> renderProviderSupplier;
 
 	@Override
 	public void createRenderer(java.util.function.Consumer<Object> consumer) {
@@ -487,17 +596,29 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 
 	@Override
 	public java.util.function.Supplier<Object> getRenderProvider() {
-		return () -> {
-			if (this.renderProvider == null) {
-				this.renderProvider = new RenderProvider() {
-					@Override
-					public net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer getCustomRenderer() {
-						return new com.sephiria.client.render.KatanaRenderer();
-					}
-				};
-			}
+		if (this.renderProviderSupplier == null) {
+			// 手持渲染每帧都会走 KatanaItemRendererMixin → getRenderProvider()，
+			// 所以 lambda 与渲染器都只建一次；动画实例缓存本来就挂在物品上。
+			this.renderProviderSupplier = () -> {
+				if (this.renderProvider == null) {
+					this.renderProvider = new RenderProvider() {
+						private net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer renderer;
 
-			return this.renderProvider;
-		};
+						@Override
+						public net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer getCustomRenderer() {
+							if (this.renderer == null) {
+								this.renderer = new com.sephiria.client.render.KatanaRenderer();
+							}
+
+							return this.renderer;
+						}
+					};
+				}
+
+				return this.renderProvider;
+			};
+		}
+
+		return this.renderProviderSupplier;
 	}
 }

@@ -59,6 +59,9 @@ public class TraderScreen extends AbstractContainerScreen<SephiriaTraderMenu> {
 		}
 
 		super.render(graphics, mouseX, mouseY, partialTick);
+
+		// 1.20.1 的容器界面不会自己画悬停提示，得在 super 之后补一次
+		this.renderTooltip(graphics, mouseX, mouseY);
 	}
 
 	@Override

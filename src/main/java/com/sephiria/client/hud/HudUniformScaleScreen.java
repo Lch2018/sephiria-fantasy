@@ -33,6 +33,14 @@ public class HudUniformScaleScreen extends Screen {
 				.build());
 	}
 
+	@Override
+	public void render(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		// 1.20.1 的 Screen.render 不铺背景、也不画标题
+		this.renderBackground(graphics);
+		super.render(graphics, mouseX, mouseY, partialTick);
+		graphics.drawCenteredString(this.font, this.title, this.width / 2, 20, 0xFFFFFFFF);
+	}
+
 	private void back() {
 		HudConfig.save();
 		Minecraft.getInstance().setScreen(this.parent);

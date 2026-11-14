@@ -26,6 +26,13 @@ public class SephiriaBeaconScreen extends AbstractContainerScreen<SephiriaBeacon
 	}
 
 	@Override
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		super.render(graphics, mouseX, mouseY, partialTick);
+		// 1.20.1 的容器界面不会自己画悬停提示
+		this.renderTooltip(graphics, mouseX, mouseY);
+	}
+
+	@Override
 	protected void renderBg(GuiGraphics extractor, float partialTick, int mouseX, int mouseY) {
 		int left = this.leftPos;
 		int top = this.topPos;

@@ -99,13 +99,13 @@ public class ArtifactSkillScreen extends Screen {
 		for (int slot = 0; slot < SkillSlots.COUNT; slot++) {
 			this.slotRects.add(new int[]{ SLOT_X, TOP + slot * ROW });
 		}
-
-		addRenderableWidget(new StringWidget(LIST_X, TOP + SkillSlots.COUNT * ROW + 18, this.width - 2 * LIST_X, 24,
-				Component.translatable("screen.sephiria_fantasy.artifact_skills.hint"), this.font));
 	}
 
 	@Override
 	public void render(GuiGraphics extractor, int mouseX, int mouseY, float partialTick) {
+		// 1.20.1 的 Screen.render 不铺背景：不调这一行的话整个页面会透出世界
+		this.renderBackground(extractor);
+
 		// tooltip 必须赶在 super 之前排队，才会被这一帧的 tooltip 层画出来；
 		// 用真正的 tooltip 层也顺便解决了「后面的技能图标把文字盖住」的问题。
 		String hovered = hoveredEntry(mouseX, mouseY);
@@ -141,6 +141,11 @@ public class ArtifactSkillScreen extends Screen {
 		if (this.held != null) {
 			drawIcon(extractor, ClientSkills.itemOf(this.held), mouseX - 7, mouseY - 7);
 		}
+
+		// 操作说明：StringWidget 不会换行，1.20.1 里长句会被居中裁掉；这里手动折行画
+		int hintY = Math.min(TOP + SkillSlots.COUNT * ROW + 18, this.height - 52);
+		extractor.drawWordWrap(this.font, Component.translatable("screen.sephiria_fantasy.artifact_skills.hint"),
+				LIST_X, hintY, this.width - 2 * LIST_X, 0xFFAAAAAA);
 	}
 
 	/** 鼠标下的技能栏字符串；没悬停在技能图标上返回 null。 */

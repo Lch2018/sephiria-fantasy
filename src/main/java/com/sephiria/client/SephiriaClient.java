@@ -90,6 +90,11 @@ public final class SephiriaClient implements ClientModInitializer {
 		net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
 				com.sephiria.registry.ModEntities.SEPHIRIA_WANDERING_TRADER,
 				com.sephiria.client.trader.SephiriaTraderRenderer::new);
+		// 商队羊驼用原版渲染器（红毯是装备层画的）；不注册的话世界里一出现羊驼就会 NPE
+		net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+				com.sephiria.registry.ModEntities.SEPHIRIA_TRADER_LLAMA,
+				context -> new net.minecraft.client.renderer.entity.LlamaRenderer(context,
+						net.minecraft.client.model.geom.ModelLayers.TRADER_LLAMA));
 		com.sephiria.client.hud.HudConfig.load();
 
 		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.ArtifactBackpackScreen>register(
@@ -127,7 +132,14 @@ public final class SephiriaClient implements ClientModInitializer {
 				(client, handler, buffer, sender) -> {
 					com.sephiria.network.ArtifactSkillsPayload payload =
 							com.sephiria.network.ArtifactSkillsPayload.read(buffer);
-					client.execute(() -> com.sephiria.client.skill.ClientSkills.accept(payload));
+					client.execute(() -> {
+						com.sephiria.client.skill.ClientSkills.accept(payload);
+
+						// 技能页开着就地重建，否则服务端刚推来的新技能列表不会显示
+						if (client.screen instanceof com.sephiria.client.skill.ArtifactSkillScreen screen) {
+							screen.refresh();
+						}
+					});
 				});
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentSyncPayload.CHANNEL,
 				(client, handler, buffer, sender) -> {
@@ -301,6 +313,42 @@ public final class SephiriaClient implements ClientModInitializer {
 			// 实体死亡/卸载后服务端不会再发清除包，靠这里按「实体还在不在」清掉它的减益标签
 			com.sephiria.client.ClientDebuffs.prune(client.level);
 
+			// 刀的收刀 / 拔刀动画：服务端不碰动画，由每个客户端按自己看到的视角触发
+			// （自己的刀看相机；别人手里的刀在这边永远是第三人称）
+			if (client.player != null) {
+				boolean firstPerson = client.options.getCameraType().isFirstPerson();
+
+				com.sephiria.weapon.SephiriaKatanaItem.syncClientHand(client.player,
+						net.minecraft.world.InteractionHand.MAIN_HAND, firstPerson);
+				com.sephiria.weapon.SephiriaKatanaItem.syncClientHand(client.player,
+						net.minecraft.world.InteractionHand.OFF_HAND, firstPerson);
+
+				// 自己这边切到第三人称时，把还在播的「带动作过渡」掐成待机
+				if (!firstPerson) {
+					com.sephiria.weapon.SephiriaKatanaItem.cancelAnimatedSwitch(client.player,
+							client.player.getMainHandItem());
+					com.sephiria.weapon.SephiriaKatanaItem.cancelAnimatedSwitch(client.player,
+							client.player.getOffhandItem());
+				}
+
+				if (client.level != null) {
+					// 别人只扫渲染距离内的：看不见的刀没必要对账
+					double range = client.options.getEffectiveRenderDistance() * 16.0D;
+					double rangeSqr = range * range;
+
+					for (net.minecraft.client.player.AbstractClientPlayer other : client.level.players()) {
+						if (other == client.player || other.distanceToSqr(client.player) > rangeSqr) {
+							continue;
+						}
+
+						com.sephiria.weapon.SephiriaKatanaItem.syncClientHand(other,
+								net.minecraft.world.InteractionHand.MAIN_HAND, false);
+						com.sephiria.weapon.SephiriaKatanaItem.syncClientHand(other,
+								net.minecraft.world.InteractionHand.OFF_HAND, false);
+					}
+				}
+			}
+
 			while (DASH_KEY.consumeClick()) {
 				if (client.player != null) {
 					sendEmpty(com.sephiria.network.DashPayload.CHANNEL);
@@ -324,6 +372,7 @@ public final class SephiriaClient implements ClientModInitializer {
 
 			while (SKILL_PAGE_KEY.consumeClick()) {
 				client.setScreen(new com.sephiria.client.skill.ArtifactSkillScreen());
+				sendEmpty(com.sephiria.network.OpenArtifactSkillsPayload.CHANNEL);
 			}
 
 			while (RELOAD_KEY.consumeClick()) {

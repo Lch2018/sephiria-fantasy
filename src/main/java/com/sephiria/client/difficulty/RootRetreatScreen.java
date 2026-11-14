@@ -136,6 +136,9 @@ public class RootRetreatScreen extends AbstractContainerScreen<RootRetreatMenu> 
 
 		this.clearButton.active = anything;
 		super.render(graphics, mouseX, mouseY, partialTick);
+
+		// 1.20.1 的容器界面不会自己画悬停提示，得在 super 之后补一次
+		this.renderTooltip(graphics, mouseX, mouseY);
 	}
 
 	/** 按当前滚动位置摆按钮，并把滚出可视区的按钮藏起来（原版控件不受裁剪影响）。 */
