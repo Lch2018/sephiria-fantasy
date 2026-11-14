@@ -176,7 +176,9 @@ public class EnchantScreen extends SephiriaMenuScreen<EnchantMenu> {
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
 		Slot hovered = this.hoveredSlot;
 
-		if (keyCode == GLFW.GLFW_KEY_R && hovered != null) {
+		if (keyCode == GLFW.GLFW_KEY_R && hovered != null && this.menu.isBackpackSlot(hovered)
+				&& hovered.getItem().getItem() instanceof com.sephiria.slate.SlateItem slate
+				&& slate.rotatable(hovered.getItem())) {
 			FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
 			RotateSlatePayload.write(buffer, new RotateSlatePayload(hovered.index));
 			ClientPlayNetworking.send(RotateSlatePayload.CHANNEL, buffer);

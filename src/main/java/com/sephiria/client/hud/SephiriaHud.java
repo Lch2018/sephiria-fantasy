@@ -77,6 +77,8 @@ public final class SephiriaHud implements HudRenderCallback {
 	private static final int INVULN_COLOR = 0xFFFFFFFF;
 	/** 各类进度条填充色（与 26.3 同一套）。 */
 	private static final int MP_BAR_COLOR = 0xFF3B6BE8;
+	/** 被神器占用的 MP：紫红色（与 26.x 的 MP 条右侧段一致）。 */
+	private static final int MP_RESERVED_COLOR = 0xFFA80085;
 	private static final int CLOUD_BAR_COLOR = 0xFF7EFAFF;
 	private static final int SUN_SWORD_BAR_COLOR = 0xFFFDF74C;
 	/** 冰霜武具里的两种字色：可用了冰蓝，否则灰。 */
@@ -431,7 +433,7 @@ public final class SephiriaHud implements HudRenderCallback {
 			case HudConfig.WEAPON -> drawWeapon(graphics, client, panel, preview);
 			case HudConfig.DASH -> drawTextPanel(graphics, client.font, panel, dashText(preview));
 			case HudConfig.MP -> drawBarPanel(graphics, client.font, panel, mpText(), client.font.width("MP"),
-					mpFraction(), MP_BAR_COLOR);
+					mpFraction(), MP_BAR_COLOR, mpReservedFraction());
 			case HudConfig.SHIELD -> drawTextPanel(graphics, client.font, panel, shieldText());
 			case HudConfig.FATIGUE -> drawTextPanel(graphics, client.font, panel, fatigueText());
 			case HudConfig.CLOUD -> drawBarPanel(graphics, client.font, panel, cloudText(preview), 0,
@@ -463,16 +465,31 @@ public final class SephiriaHud implements HudRenderCallback {
 	/** 「左边文字 + 右边进度条」的通用画法（MP / 乌云 / 太阳剑共用）。 */
 	private static void drawBarPanel(GuiGraphics graphics, Font font, Panel panel, Component text,
 			int labelMinWidth, float fraction, int colour) {
+		drawBarPanel(graphics, font, panel, text, labelMinWidth, fraction, colour, 0.0F);
+	}
+
+	/**
+	 * 同上，但条右侧留出一段「被占用」的 MP（MP 条专用）。
+	 *
+	 * <p>占用段固定在右侧（#A80085），当前 MP 只能填到它左边——与 26.x 的 MP 条一致。
+	 */
+	private static void drawBarPanel(GuiGraphics graphics, Font font, Panel panel, Component text,
+			int labelMinWidth, float fraction, int colour, float reservedFraction) {
 		graphics.fill(0, 0, panel.width(), panel.height(), PANEL_COLOR);
 		graphics.drawString(font, text, PAD, PAD, NAME_COLOR, true);
 		int barX = PAD * 2 + Math.max(font.width(text), labelMinWidth);
 		int barY = PAD + 1;
 		graphics.fill(barX, barY, barX + BAR_WIDTH, barY + BAR_HEIGHT, BAR_TRACK_COLOR);
-
-		int filled = Math.round(BAR_WIDTH * Mth.clamp(fraction, 0.0F, 1.0F));
+		int reserved = Math.round(BAR_WIDTH * Mth.clamp(reservedFraction, 0.0F, 1.0F));
+		int usable = BAR_WIDTH - reserved;
+		int filled = Math.min(Math.round(BAR_WIDTH * Mth.clamp(fraction, 0.0F, 1.0F)), usable);
 
 		if (filled > 0) {
 			graphics.fill(barX, barY, barX + filled, barY + BAR_HEIGHT, colour);
+		}
+
+		if (reserved > 0) {
+			graphics.fill(barX + usable, barY, barX + BAR_WIDTH, barY + BAR_HEIGHT, MP_RESERVED_COLOR);
 		}
 	}
 
@@ -637,6 +654,13 @@ public final class SephiriaHud implements HudRenderCallback {
 	private static float mpFraction() {
 		double max = ClientStats.maxMp();
 		return max <= 0.0D ? 0.0F : (float) Mth.clamp(ClientStats.mp() / max, 0.0D, 1.0D);
+	}
+
+	/** 被占用的 MP 占上限的比例（MP 条右侧那一截）。 */
+	private static float mpReservedFraction() {
+		double max = ClientStats.maxMp();
+		double reserved = Math.min(Math.max(0.0D, ClientStats.mpReserved()), max);
+		return max <= 0.0D ? 0.0F : (float) (reserved / max);
 	}
 
 	private static Component cloudText(boolean preview) {

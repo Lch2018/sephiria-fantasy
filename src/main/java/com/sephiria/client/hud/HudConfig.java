@@ -2,6 +2,7 @@ package com.sephiria.client.hud;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 import java.io.IOException;
@@ -136,11 +137,7 @@ public final class HudConfig {
 					this.x = screenWidth / 2.0D - DEFAULT_INVULN_WIDTH / 2.0D;
 					this.y = screenHeight / 2.0D + 18.0D;
 				}
-				case SHIELD -> {
-					Element mp = element(MP);
-					this.x = mp.x;
-					this.y = mp.y + 24.0D - extra;
-				}
+				case SHIELD -> placeRightOfDash(this);
 				default -> {
 					this.x = MARGIN + legacyOffsetX;
 					this.y = screenHeight - bottomOf(module) + legacyOffsetY - extra;
@@ -150,6 +147,21 @@ public final class HudConfig {
 			clamp(this, screenWidth, screenHeight, defaultWidth(module), defaultHeight(module));
 			this.placed = true;
 		}
+	}
+
+	/** 把护盾放到冲刺 HUD 右侧：按冲刺面板的实际字体宽度与缩放算，两边留 4px 间距。 */
+	private static void placeRightOfDash(Element element) {
+		Element dash = element(DASH);
+		Minecraft client = Minecraft.getInstance();
+		double dashWidth = 50.0D;
+
+		if (client.font != null) {
+			dashWidth = client.font.width(Component.translatable("ui.sephiria_fantasy.dash", "0", "0"))
+					+ MARGIN;
+		}
+
+		element.x = dash.x + dashWidth * dash.scale + 4.0D;
+		element.y = dash.y;
 	}
 
 	public static Element element(String module) {

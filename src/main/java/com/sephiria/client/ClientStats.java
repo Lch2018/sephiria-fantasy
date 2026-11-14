@@ -43,6 +43,8 @@ public final class ClientStats {
 	private static double magicBookHaste;
 	private static double magicBookMpReduction;
 	private static double magicBoltMpCostIncrease;
+	/** 被神器占用的 MP（MP 条右侧那一截）。 */
+	private static double mpReserved = 0.0D;
 	private static PlayerStats.PhysicalBreakdown attackBreakdown = new PlayerStats.PhysicalBreakdown(
 			PlayerStats.DEFAULT_ATTACK_SPEED, 0.0D, 0.0D, 0.0D, 0.0D);
 	private static PlayerStats.PhysicalBreakdown breakdown = new PlayerStats.PhysicalBreakdown(
@@ -83,6 +85,7 @@ public final class ClientStats {
 		magicBookHaste = payload.magicBookHaste();
 		magicBookMpReduction = payload.magicBookMpReduction();
 		magicBoltMpCostIncrease = payload.magicBoltMpCostIncrease();
+		mpReserved = payload.mpReserved();
 		breakdown = new PlayerStats.PhysicalBreakdown(payload.physicalBase(), payload.artifactFlat(),
 				payload.potionFlat(), payload.artifactPercent(), payload.potionPercent());
 		attackBreakdown = new PlayerStats.PhysicalBreakdown(payload.attackBase(), payload.attackArtifactFlat(),
@@ -100,6 +103,11 @@ public final class ClientStats {
 
 	public static double magicBoltMpCostIncrease() {
 		return magicBoltMpCostIncrease;
+	}
+
+	/** 被神器占用的 MP（HUD 的 MP 条右侧那一截）。 */
+	public static double mpReserved() {
+		return mpReserved;
 	}
 
 	/** 普通攻击倍率：与服务端公式一致（物理强度 ×（1 + 物理伤害增幅）× 武器伤害 × 普通攻击伤害）。 */

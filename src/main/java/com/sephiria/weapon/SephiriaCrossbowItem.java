@@ -122,6 +122,13 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 
 
 	/** 注册存储配置与装填推进器（由 {@link Sephiria#onInitialize()} 调用）。 */
+	/** 玩家退出时清掉装填 / 备用弹匣 / 换弹 BUFF 的运行时表。 */
+	public static void forget(ServerPlayer player) {
+		RESERVE_MAGAZINES.remove(player.getUUID());
+		RELOAD_BUFF_UNTIL.remove(player.getUUID());
+		RELOADS.remove(player.getUUID());
+	}
+
 	public static void register() {
 		// 弹匣不随时间自动回复：只有 R 装填完成时才调 regenerate 加回整个弹匣
 		SkillStorage.registerManual(STORAGE, MAGAZINE_SIZE);
