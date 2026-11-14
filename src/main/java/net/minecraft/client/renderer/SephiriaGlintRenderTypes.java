@@ -16,6 +16,22 @@ public final class SephiriaGlintRenderTypes {
 	private SephiriaGlintRenderTypes() {
 	}
 
+	/** GeckoLib 手持模型的微光：同原版 {@code RenderType.entityGlint()}（实体 UV 动画 + ITEM_ENTITY_TARGET）。 */
+	public static RenderType entityGlint(String name, ResourceLocation texture) {
+		RenderType.CompositeState state = RenderType.CompositeState.builder()
+				.setShaderState(RenderStateShard.RENDERTYPE_ENTITY_GLINT_SHADER)
+				.setTextureState(new RenderStateShard.TextureStateShard(texture, true, false))
+				.setWriteMaskState(RenderStateShard.COLOR_WRITE)
+				.setCullState(RenderStateShard.NO_CULL)
+				.setDepthTestState(RenderStateShard.EQUAL_DEPTH_TEST)
+				.setTransparencyState(RenderStateShard.GLINT_TRANSPARENCY)
+				.setOutputState(RenderStateShard.ITEM_ENTITY_TARGET)
+				.setTexturingState(RenderStateShard.ENTITY_GLINT_TEXTURING)
+				.createCompositeState(false);
+
+		return RenderType.create(name, DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS, 256, state);
+	}
+
 	/** 物品在背包 / 地面 / 展示框里的微光：同原版 {@code RenderType.glint()}。 */
 	public static RenderType itemGlint(String name, ResourceLocation texture, boolean direct) {
 		RenderType.CompositeState state = RenderType.CompositeState.builder()

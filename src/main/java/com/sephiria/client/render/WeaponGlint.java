@@ -32,6 +32,7 @@ public final class WeaponGlint {
 	private static RenderType daggerDirect;
 	private static RenderType blade;
 	private static RenderType bladeDirect;
+	private static RenderType katana;
 
 	private WeaponGlint() {
 	}
@@ -75,6 +76,15 @@ public final class WeaponGlint {
 		}
 
 		return null;
+	}
+
+	/** 刀拿在手里时 GeckoLib 那一遍的微光（实体 UV 动画，见 WeaponGlintLayer）。 */
+	public static RenderType katanaGlint() {
+		if (katana == null) {
+			katana = SephiriaGlintRenderTypes.entityGlint("sephiria_blade_entity_glint", BLADE_GLINT);
+		}
+
+		return katana;
 	}
 
 	private static ResourceLocation id(String path) {

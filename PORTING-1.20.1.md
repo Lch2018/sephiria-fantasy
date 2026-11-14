@@ -69,8 +69,9 @@
   宝箱剩余次数、骰子/出售说明、悬停购买提示、顶部余额
 - 粒子逐类还原：BlueSpark / Plasma / Snowfall / IceGlint / SunSlash / IceSlash /
   FrostQi / FlameQi（FrostQi 按飞行方向自定义四元数摆面，SunSlash 满亮 + 淡出）
-- 匕首 / 刀在物品栏、地面、展示框的自定义微光（`WeaponGlint` + 原版包内
-  `SephiriaGlintRenderTypes`）；刀拿在手里的 GeckoLib 那一遍仍未接
+- 匕首 / 刀的自定义微光：物品栏 / 地面 / 展示框走 `WeaponGlint` +
+  原版包内 `SephiriaGlintRenderTypes`；刀拿在手里的 GeckoLib 模型走
+  `WeaponGlintLayer`（剑意满层时 `reRender` 一遍实体微光）
 - 背包 / 附魔 / 选卡页补上顶部标签栏（此前只有属性 / 天赋 / 技能 / 商店有），
   ModMenu 齿轮也改成打开赛菲莉娅设置页
 
@@ -96,9 +97,12 @@
 ## 仍未完成
 
 - 属性页 / 天赋页 / 背包页的 0.5.x 全量视觉与交互（1.20.1 已有功能，但排版未逐像素对齐）
-- 刀的 GeckoLib 手持模型那一遍自定义 glint（物品栏 / 地面 / 展示框已覆盖）
 - 配方书独立的「赛菲莉娅」页签：1.20.1 没有 `RecipeBookCategory` 注册表，
   配方书页签是写死的枚举（`RecipeBookCategories`），做不到 26.x 的数据驱动自定义分类；
   本模组配方仍按 JSON 的 `CraftingBookCategory` 落在原版「装备 / 杂物」页里
+- ToroHealth 1.5.1 的伤害数字是单色粒子：双属性的副色虽然已经在客户端镜像里，
+  渲染端还没有上下半双色（26.x 的 TextParticleRenderer 才有这个能力）
+- 刀的切换动画按服务端触发（第一/第三人称共用带动作版），26.x 那套「第一人称动作版 /
+  第三人称静止版」的逐观察者分流未移植
 - 尚未在游戏内逐项操作许愿池 / 技能页 / 新神器（启动、进存档、打开设置页已通过，
   商店 / 根之退 / 商人 / 许愿池的鼠标交互未逐项点过）
