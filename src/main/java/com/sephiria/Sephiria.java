@@ -433,6 +433,8 @@ public class Sephiria implements ModInitializer {
 							}
 							case com.sephiria.network.WishPoolClickPayload.ACTION_CLEAR_ANCHORS ->
 									menu.clearAnchors(payload.slatePool());
+							case com.sephiria.network.WishPoolClickPayload.ACTION_CLEAR_ANCHOR_SLOT ->
+									menu.clearAnchor(payload.slatePool(), payload.itemId());
 							case com.sephiria.network.WishPoolClickPayload.ACTION_FORGE -> {
 								if (item != null) {
 									menu.forge(item);
@@ -592,7 +594,9 @@ public class Sephiria implements ModInitializer {
 
 		for (ArtifactSkills.Available available : ArtifactSkills.available(player)) {
 			skills.add(new ArtifactSkillsPayload.Entry(
-					net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(available.item()), available.level()));
+					net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(available.item()), available.level(),
+					ArtifactSkills.cooldownTicksFor(player, available),
+					ArtifactSkills.mpCostFor(player, available)));
 		}
 
 		ArtifactSkillsPayload payload = new ArtifactSkillsPayload(skills,

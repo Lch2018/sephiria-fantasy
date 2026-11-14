@@ -120,7 +120,7 @@ public final class SephiriaClient implements ClientModInitializer {
 				(client, handler, buffer, sender) -> {
 					com.sephiria.network.ArtifactSkillsPayload payload =
 							com.sephiria.network.ArtifactSkillsPayload.read(buffer);
-					client.execute(() -> ClientSkills.accept(payload));
+					client.execute(() -> com.sephiria.client.skill.ClientSkills.accept(payload));
 				});
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.TalentSyncPayload.CHANNEL,
 				(client, handler, buffer, sender) -> {
@@ -132,7 +132,7 @@ public final class SephiriaClient implements ClientModInitializer {
 				(client, handler, buffer, sender) -> {
 					com.sephiria.network.WishPoolResultPayload payload =
 							com.sephiria.network.WishPoolResultPayload.read(buffer);
-					client.execute(() -> com.sephiria.client.wishpool.ClientWishPool.accept(payload.items()));
+					client.execute(() -> com.sephiria.client.wishpool.ClientWishPool.accept(payload.items(), payload.energyGained()));
 				});
 		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.StatsSyncPayload.CHANNEL,
 				(client, handler, buffer, sender) -> {

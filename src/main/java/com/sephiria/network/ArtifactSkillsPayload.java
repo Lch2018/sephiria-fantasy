@@ -9,7 +9,7 @@ import java.util.List;
 
 /** 服务端 → 客户端：技能页的可用技能与 6 个技能栏。 */
 public record ArtifactSkillsPayload(List<Entry> skills, List<String> slots) {
-	public record Entry(ResourceLocation item, int level) {
+	public record Entry(ResourceLocation item, int level, int cooldownTicks, double mpCost) {
 	}
 
 	public static final ResourceLocation CHANNEL = new ResourceLocation(Sephiria.MOD_ID, "artifact_skills");
@@ -20,6 +20,8 @@ public record ArtifactSkillsPayload(List<Entry> skills, List<String> slots) {
 		for (Entry entry : payload.skills()) {
 			buffer.writeResourceLocation(entry.item());
 			buffer.writeVarInt(entry.level());
+			buffer.writeVarInt(entry.cooldownTicks());
+			buffer.writeDouble(entry.mpCost());
 		}
 
 		buffer.writeVarInt(payload.slots().size());
@@ -34,7 +36,8 @@ public record ArtifactSkillsPayload(List<Entry> skills, List<String> slots) {
 		List<Entry> skills = new ArrayList<>(count);
 
 		for (int index = 0; index < count; index++) {
-			skills.add(new Entry(buffer.readResourceLocation(), buffer.readVarInt()));
+			skills.add(new Entry(buffer.readResourceLocation(), buffer.readVarInt(), buffer.readVarInt(),
+					buffer.readDouble()));
 		}
 
 		int slotCount = buffer.readVarInt();

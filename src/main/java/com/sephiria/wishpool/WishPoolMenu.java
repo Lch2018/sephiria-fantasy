@@ -256,14 +256,16 @@ public class WishPoolMenu extends AbstractContainerMenu {
 			return;
 		}
 
+		int energyBefore = WishPool.energy(this.owner);
 		List<ItemStack> drawn = WishPool.draw(this.owner, slatePool, count);
+		int energyGained = Math.max(0, WishPool.energy(this.owner) - energyBefore);
 		scatter(drawn);
 
 		if (!drawn.isEmpty()) {
 			net.minecraft.network.FriendlyByteBuf buffer = new net.minecraft.network.FriendlyByteBuf(
 					io.netty.buffer.Unpooled.buffer());
 			com.sephiria.network.WishPoolResultPayload.write(buffer,
-					new com.sephiria.network.WishPoolResultPayload(List.copyOf(drawn)));
+					new com.sephiria.network.WishPoolResultPayload(List.copyOf(drawn), energyGained));
 			net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(this.owner,
 					com.sephiria.network.WishPoolResultPayload.CHANNEL, buffer);
 		}
@@ -425,7 +427,7 @@ public class WishPoolMenu extends AbstractContainerMenu {
 			return;
 		}
 
-		WishPoolResultPayload payload = new WishPoolResultPayload(forged);
+		WishPoolResultPayload payload = new WishPoolResultPayload(forged, 0);
 		FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
 		WishPoolResultPayload.write(buffer, payload);
 		ServerPlayNetworking.send(this.owner, WishPoolResultPayload.CHANNEL, buffer);

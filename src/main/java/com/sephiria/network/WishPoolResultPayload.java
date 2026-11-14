@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** 服务端 → 客户端：这一抽实际抽到的物品（供翻牌动画显示）。 */
-public record WishPoolResultPayload(List<ItemStack> items) {
+public record WishPoolResultPayload(List<ItemStack> items, int energyGained) {
 	public static final ResourceLocation CHANNEL = new ResourceLocation(Sephiria.MOD_ID, "wish_pool_result");
 
 	public static void write(FriendlyByteBuf buffer, WishPoolResultPayload payload) {
@@ -18,6 +18,8 @@ public record WishPoolResultPayload(List<ItemStack> items) {
 		for (ItemStack stack : payload.items()) {
 			buffer.writeItem(stack);
 		}
+
+		buffer.writeVarInt(Math.max(0, payload.energyGained()));
 	}
 
 	public static WishPoolResultPayload read(FriendlyByteBuf buffer) {
@@ -28,6 +30,6 @@ public record WishPoolResultPayload(List<ItemStack> items) {
 			items.add(buffer.readItem());
 		}
 
-		return new WishPoolResultPayload(items);
+		return new WishPoolResultPayload(items, buffer.readVarInt());
 	}
 }

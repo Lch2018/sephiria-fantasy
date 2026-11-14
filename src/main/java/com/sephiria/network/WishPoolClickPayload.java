@@ -12,6 +12,7 @@ public record WishPoolClickPayload(int action, boolean slatePool, int itemId) {
 	public static final int ACTION_FORGE = 3;
 	public static final int ACTION_TOGGLE_OVERFLOW = 4;
 	public static final int ACTION_CLEAR_ANCHORS = 5;
+	public static final int ACTION_CLEAR_ANCHOR_SLOT = 6;
 
 	public static final ResourceLocation CHANNEL =
 			new ResourceLocation(Sephiria.MOD_ID, "wish_pool_click");
@@ -30,6 +31,10 @@ public record WishPoolClickPayload(int action, boolean slatePool, int itemId) {
 
 	public static WishPoolClickPayload forge(int itemId) {
 		return new WishPoolClickPayload(ACTION_FORGE, false, itemId);
+	}
+
+	public static WishPoolClickPayload clearAnchorSlot(boolean slatePool, int slot) {
+		return new WishPoolClickPayload(ACTION_CLEAR_ANCHOR_SLOT, slatePool, slot);
 	}
 
 	public static WishPoolClickPayload clearAnchors(boolean slatePool) {

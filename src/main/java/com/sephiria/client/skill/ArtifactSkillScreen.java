@@ -1,31 +1,51 @@
 package com.sephiria.client.skill;
 
-import com.sephiria.client.ClientSkills;
-import com.sephiria.client.tabs.ScreenTabs;
+import com.mojang.blaze3d.platform.InputConstants;
+import com.sephiria.artifact.skill.SkillSlots;
 import com.sephiria.client.tabs.SephiriaTab;
+import com.sephiria.client.tabs.ScreenTabs;
 import com.sephiria.network.ArtifactSkillsPayload;
 import com.sephiria.network.AssignArtifactSkillPayload;
-import com.sephiria.network.OpenArtifactSkillsPayload;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
-/** 简易神器技能页：6 个栏位 + 可用技能列表，先选栏位再点技能。 */
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 神器技能页：左边是「可用技能」格子（画的就是对应神器的图标），右边是 6 个技能栏格子。
+ *
+ * <p>操作用的是「拿起来 / 放下」那套：<b>点技能图标把它拿在手上</b>（图标跟着鼠标走），
+ * <b>点技能栏就放进去、立刻生效</b>；栏位里已有技能时放上去就是替换；<b>右键</b>点栏位清空它；
+ * 拿着技能点到空白处等于放回。技能格已经放进某个栏位时底色会变绿，方便看出还剩哪些没用上。
+ *
+ * <p>技能列表由服务端算好推过来（客户端手里没有背包内容），每次改动服务端会重推一次，页面据此重建。
+ */
 public class ArtifactSkillScreen extends Screen {
-	private static final int PANEL = 0xF0101014;
-	private static final int BORDER = 0xFF4A4A52;
-	private static final int PANEL_WIDTH = 320;
-	private static final int PANEL_HEIGHT = 260;
-	/** 面板上沿相对屏幕中心的偏移（现状：上面留 110、下面留 150）。 */
-	private static final int PANEL_TOP_OFFSET = 110;
-	/** 标签条与面板之间的空隙。 */
-	private static final int TAB_GAP = 4;
-	private int selectedSlot;
+	/** 格子边长（与顶部标签栏一致）。 */
+	private static final int CELL = 20;
+	/** 行距。 */
+	private static final int ROW = 24;
+	private static final int LIST_X = 70;
+	private static final int SLOT_X = 230;
+	private static final int TOP = 54;
+
+	/** 左列可用的技能（技能栏里存的那种字符串）。 */
+	private final List<String> entries = new ArrayList<>();
+	/** 每格左上角坐标，用于命中判定与绘制。 */
+	private final List<int[]> listRects = new ArrayList<>();
+	private final List<int[]> slotRects = new ArrayList<>();
+
+	/** 拿在手上的技能；null = 手上没东西。 */
+	private String held;
 
 	public ArtifactSkillScreen() {
 		super(Component.translatable("screen.sephiria_fantasy.artifact_skills"));
@@ -33,90 +53,201 @@ public class ArtifactSkillScreen extends Screen {
 
 	@Override
 	protected void init() {
-		super.init();
-		ClientPlayNetworking.send(OpenArtifactSkillsPayload.CHANNEL, new FriendlyByteBuf(Unpooled.buffer()));
+		ScreenTabs.add(this, SephiriaTab.ARTIFACT_SKILLS);
+		this.entries.clear();
+		this.listRects.clear();
+		this.slotRects.clear();
 
-		int left = panelLeft();
-		int top = panelTop();
-
-		// 顶部标签栏：高亮「神器技能」；放在面板上沿再往上 24 像素处，不压面板内容
-		ScreenTabs.add(this, left + (PANEL_WIDTH - ScreenTabs.width()) / 2,
-				top - ScreenTabs.HEIGHT - TAB_GAP, SephiriaTab.ARTIFACT_SKILLS);
-
-		for (int index = 0; index < 6; index++) {
-			int slot = index;
-			this.addRenderableWidget(Button.builder(slotLabel(index),
-					button -> {
-						this.selectedSlot = slot;
-						refreshButtons();
-					}).bounds(left + 8 + index * 50, top + 28, 48, 20).build());
-		}
-
-		int y = top + 60;
+		List<String> all = new ArrayList<>();
 
 		for (ArtifactSkillsPayload.Entry entry : ClientSkills.skills()) {
-			if (y > top + 210) {
-				break;
-			}
-
-			this.addRenderableWidget(Button.builder(
-					Component.literal(ClientSkills.encode(entry)),
-					button -> assign(ClientSkills.encode(entry)))
-					.bounds(left + 8, y, 304, 18).build());
-			y += 20;
+			all.add(ClientSkills.encode(entry));
 		}
 
-		this.addRenderableWidget(Button.builder(Component.literal("清空栏位"),
-				button -> assign(""))
-				.bounds(left + 8, top + 232, 80, 18).build());
+		// 已经放进技能栏的技能不再出现在左边（同名多份时按份数扣，扣掉一份只等于少一格）；
+		// 旧栏位里超上限的等级按封顶后的等级匹配，避免同一个技能同时出现在两边。
+		for (String slotEntry : ClientSkills.slots()) {
+			if (slotEntry.isEmpty()) {
+				continue;
+			}
+
+			for (int index = 0; index < all.size(); index++) {
+				if (ClientSkills.sameEntry(all.get(index), slotEntry)) {
+					all.remove(index);
+					break;
+				}
+			}
+		}
+
+		this.entries.addAll(all);
+
+		addRenderableWidget(new StringWidget(LIST_X, TOP - 16, 150, 12,
+				Component.translatable("screen.sephiria_fantasy.artifact_skills.available"), this.font));
+		addRenderableWidget(new StringWidget(SLOT_X, TOP - 16, 150, 12,
+				Component.translatable("screen.sephiria_fantasy.artifact_skills.slots"), this.font));
+
+		if (this.entries.isEmpty()) {
+			addRenderableWidget(new StringWidget(LIST_X, TOP, 150, 12,
+					Component.translatable("screen.sephiria_fantasy.artifact_skills.none"), this.font));
+		}
+
+		// 现有技能格：一行 3 个，技能多了往下长（3x3 → 3x4 → …）
+		for (int index = 0; index < this.entries.size(); index++) {
+			this.listRects.add(new int[]{ LIST_X + (index % 3) * ROW, TOP + (index / 3) * ROW });
+		}
+
+		for (int slot = 0; slot < SkillSlots.COUNT; slot++) {
+			this.slotRects.add(new int[]{ SLOT_X, TOP + slot * ROW });
+		}
+
+		addRenderableWidget(new StringWidget(LIST_X, TOP + SkillSlots.COUNT * ROW + 18, this.width - 2 * LIST_X, 24,
+				Component.translatable("screen.sephiria_fantasy.artifact_skills.hint"), this.font));
 	}
 
-	private Component slotLabel(int index) {
-		String entry = index < ClientSkills.slots().size() ? ClientSkills.slots().get(index) : "";
-		Item item = ClientSkills.itemOf(entry);
-		return Component.literal((index + 1) + (item == null ? ": -" : ": " + item.getDescription().getString()));
+	@Override
+	public void render(GuiGraphics extractor, int mouseX, int mouseY, float partialTick) {
+		// tooltip 必须赶在 super 之前排队，才会被这一帧的 tooltip 层画出来；
+		// 用真正的 tooltip 层也顺便解决了「后面的技能图标把文字盖住」的问题。
+		String hovered = hoveredEntry(mouseX, mouseY);
+
+		if (hovered != null && !hovered.isEmpty()) {
+			List<Component> lines = ClientSkills.tooltip(hovered);
+
+			if (!lines.isEmpty()) {
+				extractor.renderComponentTooltip(this.font, lines, mouseX, mouseY);
+			}
+		}
+
+		super.render(extractor, mouseX, mouseY, partialTick);
+
+		for (int index = 0; index < this.listRects.size(); index++) {
+			String entry = this.entries.get(index);
+			// 已经放进某个栏位的技能格底色变绿
+			drawCell(extractor, this.listRects.get(index), ClientSkills.slots().contains(entry) ? 0xFF2F4A34 : 0xFF202030,
+					inside(this.listRects.get(index), mouseX, mouseY));
+			drawIcon(extractor, ClientSkills.itemOf(entry), this.listRects.get(index));
+		}
+
+		for (int slot = 0; slot < this.slotRects.size(); slot++) {
+			String entry = ClientSkills.slots().size() > slot ? ClientSkills.slots().get(slot) : "";
+			drawCell(extractor, this.slotRects.get(slot), entry.isEmpty() ? 0xFF202030 : 0xFF2A3A4A,
+					inside(this.slotRects.get(slot), mouseX, mouseY));
+			drawIcon(extractor, ClientSkills.itemOf(entry), this.slotRects.get(slot));
+			extractor.drawString(this.font, Component.translatable("screen.sephiria_fantasy.artifact_skills.slot", slot + 1),
+					this.slotRects.get(slot)[0] + CELL + 6, this.slotRects.get(slot)[1] + 6, 0xFFAAAAAA);
+		}
+
+		// 手上那个跟着鼠标
+		if (this.held != null) {
+			drawIcon(extractor, ClientSkills.itemOf(this.held), mouseX - 7, mouseY - 7);
+		}
 	}
 
-	/** 面板左边（水平居中，宽 320）。 */
-	private int panelLeft() {
-		return this.width / 2 - PANEL_WIDTH / 2;
+	/** 鼠标下的技能栏字符串；没悬停在技能图标上返回 null。 */
+	private String hoveredEntry(double mouseX, double mouseY) {
+		for (int index = 0; index < this.listRects.size(); index++) {
+			if (inside(this.listRects.get(index), mouseX, mouseY)) {
+				return this.entries.get(index);
+			}
+		}
+
+		for (int slot = 0; slot < this.slotRects.size(); slot++) {
+			if (inside(this.slotRects.get(slot), mouseX, mouseY)) {
+				String entry = ClientSkills.slots().size() > slot ? ClientSkills.slots().get(slot) : "";
+				return entry.isEmpty() ? null : entry;
+			}
+		}
+
+		return null;
+	}
+
+	private void drawCell(GuiGraphics extractor, int[] rect, int colour, boolean hovered) {
+		extractor.fill(rect[0] - 1, rect[1] - 1, rect[0] + CELL - 3, rect[1] + CELL - 3,
+				hovered ? 0xFFE8E8E8 : 0xFF707070);
+		extractor.fill(rect[0], rect[1], rect[0] + CELL - 5, rect[1] + CELL - 5, colour);
+	}
+
+	/** 图标画在格子内沿（用原版物品绘制，走模型与 atlas；自己拼贴图路径会画成紫黑格甚至崩游戏）。 */
+	private void drawIcon(GuiGraphics extractor, Item item, int[] rect) {
+		drawIcon(extractor, item, rect[0], rect[1]);
 	}
 
 	/**
-	 * 面板上沿。屏幕够高时仍是原来的 {@code height / 2 - 110}；
-	 * 太矮时往下挪，保证顶部标签条（{@link ScreenTabs#TOP_MARGIN} + 20 高）放得下、不压到面板。
+	 * 画图标：技能图标都来自本模组物品，贴图就在 {@code textures/item/<id>.png}，直接 blit 是安全的。
+	 *
+	 * <p>曾经换成原版 {@code extractor.item(...)} 想统一走物品模型，结果在这个「收集渲染状态」的阶段
+	 * 调用会崩游戏，所以这里保持直接画贴图（只画本模组物品，路径一定对）。
 	 */
-	private int panelTop() {
-		return Math.max(this.height / 2 - PANEL_TOP_OFFSET,
-				ScreenTabs.TOP_MARGIN + ScreenTabs.HEIGHT + TAB_GAP);
+	private void drawIcon(GuiGraphics extractor, Item item, int x, int y) {
+		if (item != null) {
+			extractor.blit(ClientSkills.iconOf(item), x, y, 0.0F, 0.0F, CELL - 5, CELL - 5, 16, 16);
+		}
 	}
 
-	private void refreshButtons() {
-		this.clearWidgets();
-		this.init();
+	private static boolean inside(int[] rect, double mouseX, double mouseY) {
+		return mouseX >= rect[0] - 1 && mouseX < rect[0] + CELL - 3 && mouseY >= rect[1] - 1 && mouseY < rect[1] + CELL - 3;
 	}
 
-	private void assign(String entry) {
+	/** 左键：拿起 / 放下；右键：清空那一格。 */
+	@Override
+	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+		// 26.1.2 的 button() 是 GLFW 编码（左 0 / 右 1 / 中 2），必须用 InputConstants 常量比较；
+		// 之前写 == 1 会把「放下技能」当成「右键清空」，技能永远放不进栏位。
+		boolean rightClick = button == InputConstants.MOUSE_BUTTON_RIGHT;
+
+		for (int index = 0; index < this.listRects.size(); index++) {
+			if (inside(this.listRects.get(index), mouseX, mouseY)) {
+				this.held = this.entries.get(index);
+				return true;
+			}
+		}
+
+		for (int slot = 0; slot < this.slotRects.size(); slot++) {
+			if (!inside(this.slotRects.get(slot), mouseX, mouseY)) {
+				continue;
+			}
+
+			String current = ClientSkills.slots().size() > slot ? ClientSkills.slots().get(slot) : "";
+
+			if (rightClick) {
+				sendAssign(slot, "");
+				this.held = null;
+			} else if (this.held != null) {
+				sendAssign(slot, this.held);
+				this.held = null;
+			} else if (!current.isEmpty()) {
+				// 从栏位里拿起来：先清空这一格（技能立刻回到左边的现有技能格），再拿在手上
+				sendAssign(slot, "");
+				this.held = current;
+			}
+
+			return true;
+		}
+
+		this.held = null;
+		return super.mouseClicked(mouseX, mouseY, button);
+	}
+
+	private void sendAssign(int slot, String entry) {
 		FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
-		AssignArtifactSkillPayload.write(buffer, new AssignArtifactSkillPayload(this.selectedSlot, entry));
+		AssignArtifactSkillPayload.write(buffer, new AssignArtifactSkillPayload(slot, entry));
 		ClientPlayNetworking.send(AssignArtifactSkillPayload.CHANNEL, buffer);
 	}
 
-	@Override
-	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-		this.renderBackground(graphics);
-		int left = panelLeft();
-		int top = panelTop();
-		graphics.fill(left, top, left + PANEL_WIDTH, top + PANEL_HEIGHT, PANEL);
-		graphics.fill(left, top, left + PANEL_WIDTH, top + 1, BORDER);
-		super.render(graphics, mouseX, mouseY, partialTick);
-		graphics.drawString(this.font, this.title, left + 8, top + 8, 0xFFFFFFFF, false);
-		graphics.drawString(this.font, Component.literal("先选栏位，再点可用技能"), left + 100, top + 244,
-				0xFFA0A0A0, false);
+	/** 服务端回包后重建（栏位内容变了）。 */
+	public void refresh() {
+		this.clearWidgets();
+		this.rebuildWidgets();
 	}
 
+	/** 按「背包键」（默认 E）关掉这一页回到游戏，与另外几页保持一致。 */
 	@Override
-	public boolean isPauseScreen() {
-		return false;
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		if (Minecraft.getInstance().options.keyInventory.matches(keyCode, scanCode)) {
+			this.onClose();
+			return true;
+		}
+
+		return super.keyPressed(keyCode, scanCode, modifiers);
 	}
 }
