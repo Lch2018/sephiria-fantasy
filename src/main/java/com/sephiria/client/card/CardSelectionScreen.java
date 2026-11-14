@@ -72,6 +72,9 @@ public class CardSelectionScreen extends Screen {
 	protected void init() {
 		this.panelLeft = (this.width - PANEL_WIDTH) / 2;
 		this.panelTop = (this.height - PANEL_HEIGHT) / 2;
+		com.sephiria.client.tabs.ScreenTabs.add(this,
+				this.panelLeft + (PANEL_WIDTH - com.sephiria.client.tabs.ScreenTabs.width()) / 2,
+				this.panelTop - 24, com.sephiria.client.tabs.SephiriaTab.CARD);
 
 		for (int index = 0; index < CardSelection.CARDS; index++) {
 			int slot = index;

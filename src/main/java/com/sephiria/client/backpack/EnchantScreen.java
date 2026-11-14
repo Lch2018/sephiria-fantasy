@@ -50,6 +50,7 @@ public class EnchantScreen extends SephiriaMenuScreen<EnchantMenu> {
 	@Override
 	protected void init() {
 		super.init();
+		com.sephiria.client.tabs.ScreenTabs.add(this, this.leftPos, this.topPos - 20, null);
 		this.upgradeButtons.clear();
 
 		for (int index = 0; index < EnchantMenu.UPGRADE_STEPS.length; index++) {

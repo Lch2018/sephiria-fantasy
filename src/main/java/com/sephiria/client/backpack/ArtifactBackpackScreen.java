@@ -57,6 +57,13 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 	/** 连击列表滚到第几行（0 = 从头开始）：装不下时才用得上，滚轮一次一行。 */
 	private int comboScrollRow;
 
+	@Override
+	protected void init() {
+		super.init();
+		com.sephiria.client.tabs.ScreenTabs.add(this, this.leftPos, this.topPos - 20,
+				com.sephiria.client.tabs.SephiriaTab.BACKPACK);
+	}
+
 	public ArtifactBackpackScreen(ArtifactBackpackMenu menu, Inventory inventory, Component title) {
 		super(menu, inventory, title, ArtifactBackpackMenu.IMAGE_WIDTH,
 				ArtifactBackpackMenu.imageHeight(BackpackWindow.ROWS), true);

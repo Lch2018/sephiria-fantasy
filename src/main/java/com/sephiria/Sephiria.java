@@ -278,6 +278,9 @@ public class Sephiria implements ModInitializer {
 
 		// 赛菲莉娅货币进自然生成的箱子（骰子 + 神器附魔币）：所有 minecraft:chests/* 的表
 		// 各加一个 10% 概率的池子
+		com.sephiria.shop.ChestLoot.register();
+		// 不带精准采集挖特定矿石，小概率额外掉对应品质的石板（slate/OreSlateDrops 里的概率表）
+		com.sephiria.slate.OreSlateDrops.register();
 		// 品质概率的唯一入口（宝箱/商店/抽卡/药水四组比值 + config 覆盖）：服务器启动时读覆盖文件
 		ArtifactLoot.register();
 
