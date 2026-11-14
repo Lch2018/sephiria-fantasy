@@ -8,8 +8,7 @@
 		"HealthChangeFactoryMixin",
 		"TextParticleRendererMixin",
 		"LivingEntitySyncMixin",
-		"ToroHealthHudMixin",
-		"LevelRendererTextEarlyMixin"
+		"ToroHealthHudMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

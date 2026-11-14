@@ -42,7 +42,7 @@ public final class ToroHealthTextRenderer {
 		float scale = TOROHEALTH_BASE_SCALE * (float) DamageDisplayConfig.size() * (crit ? 2.0F : 1.0F);
 		PoseStack matrices = new PoseStack();
 		matrices.translate(x, y, z);
-		matrices.rotate(cameraRotation);
+		matrices.mulPose(cameraRotation);
 		matrices.scale(scale, -scale, scale);
 		matrices.translate(-font.width(text) / 2.0F, -font.lineHeight / 2.0F, 0.0F);
 

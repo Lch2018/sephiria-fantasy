@@ -14,7 +14,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -126,7 +126,7 @@ public final class RockElephantSkill implements ArtifactSkill {
 	}
 
 	private static Display.ItemDisplay spawnSpear(ServerLevel level, Vec3 at) {
-		Display.ItemDisplay body = EntityTypes.ITEM_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+		Display.ItemDisplay body = EntityType.ITEM_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
 
 		if (body == null) {
 			return null;

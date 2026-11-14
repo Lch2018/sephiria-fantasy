@@ -36,7 +36,7 @@ public abstract class MinecraftAttackMixin {
 		Minecraft client = (Minecraft) (Object) this;
 		LocalPlayer player = client.player;
 
-		if (player == null || client.gui.screen() != null) {
+		if (player == null || client.screen != null) {
 			return;
 		}
 

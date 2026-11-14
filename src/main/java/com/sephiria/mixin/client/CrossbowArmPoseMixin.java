@@ -36,7 +36,7 @@ public class CrossbowArmPoseMixin {
 			// require = 0：万一以后原版改了方法签名，只是这个姿势失效，不至于让客户端起不来
 			require = 0)
 	private void sephiria$crossbowHold(Avatar avatar, AvatarRenderState state, float partialTick, CallbackInfo info) {
-		if (avatar.isSwinging()) {
+		if (avatar.swinging) {
 			return;
 		}
 

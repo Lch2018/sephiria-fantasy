@@ -81,7 +81,7 @@ public final class SephiriaTabs {
 	 * （踩过：服务端按背包菜单发 slot 62，而客户端开着创造物品栏只有 46 格 → IndexOutOfBounds）。
 	 *
 	 * <p>关容器会让原版把光标拉回窗口中心，所以这里在关之前先把当前位置交给 {@link com.sephiria.client.CursorKeeper}，
-	 * 目标界面 setScreen 返回时再放回去（见 GuiCursorRestoreMixin）。
+	 * 目标界面 setScreen 返回时再放回去（见 CursorRestoreMixin）。
 	 */
 	public static void open(SephiriaTab tab) {
 		Minecraft client = Minecraft.getInstance();

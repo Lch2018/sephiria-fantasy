@@ -12,7 +12,7 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCondition;
 // 26.3 把整数/浮点两类数值提供者拆成了两个包，roll 数是整数版
-import net.minecraft.world.level.storage.loot.providers.number.ints.ConstantValue;
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 
 /**
  * 赛菲莉娅货币进自然箱子：骰子与神器附魔币在所有 {@code minecraft:chests/*} 的表里
@@ -49,7 +49,7 @@ public final class ChestLoot {
 	private static LootPool.Builder currencyPool(Item item) {
 		return LootPool.lootPool()
 				// 26.3 的 setRolls 要 Holder<ContextIntProvider>
-				.setRolls(Holder.direct(new ConstantValue(1)))
+				.setRolls(ConstantValue.exactly(1.0F))
 				.when(LootItemRandomChanceCondition.randomChance(CHANCE))
 				.add(LootItem.lootTableItem(item));
 	}

@@ -7,6 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -48,24 +49,28 @@ public class SephiriaDamageFramesMixin {
 	/**
 	 * 击退冷却：本模组伤害的击退最多每 10 刻一次（与原版受击无敌间隔一致），每个敌人各算各的。
 	 *
-	 * <p>挂的是 6 参的 {@code knockback(DDDLDamageSource;FZ)V}——它是真正的实现，
-	 * 5 参的重载（{@code hurtServer} 用的那个）与 {@code Player#attack} 的冲刺击退都会走到它，
-	 * 所以「一次攻击最多推一下」在这一个点上就管住了。
-	 * 取消掉的只是「推」这个动作（那个方法里只有 {@code setDeltaMovement} 与 {@code needsSync}），
-	 * 受伤的红闪、音效、粒子都在别处，不受影响。
+	 * <p>26.1.2 的 {@code hurtServer} 内部直接调用 {@code knockback(DDD)}，而且这个重载
+	 * 不接收伤害来源，没法在里面判断是不是本模组的伤害；所以在这里把那个调用点换掉：
+	 * 带来源问一次 {@link SephiriaDamage#allowKnockback}，被冷却挡下就整个不推。
+	 * 武器代码在 {@code hurtServer} 之后自己补的那一下走
+	 * {@link SephiriaDamage#knockback(LivingEntity, net.minecraft.world.entity.Entity, double, DamageSource)}，
+	 * 用的是同一道冷却。
+	 *
+	 * <p>受伤的红闪、音效、粒子都在别处，不受影响。
 	 */
-	@Inject(method = "knockback(DDDLnet/minecraft/world/damagesource/DamageSource;FZ)V",
-			at = @At("HEAD"), cancellable = true)
-	private void sephiria$limitKnockback(double strength, double x, double z, DamageSource source, float amount,
-			boolean flag, CallbackInfo callback) {
-		if (!SephiriaDamage.allowKnockback((LivingEntity) (Object) this, source)) {
-			callback.cancel();
+	@Redirect(method = "hurtServer",
+			at = @At(value = "INVOKE",
+					target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"))
+	private static void sephiria$limitHurtKnockback(LivingEntity self, double strength, double x, double z,
+			ServerLevel level, DamageSource source, float amount) {
+		if (SephiriaDamage.allowKnockback(self, source)) {
+			self.knockback(strength, x, z);
 		}
 	}
 
 	/**
 	 * 结算完再把本模组伤害留下的无敌帧清掉——**这一条才是关键**：原版只要走了「正常结算」那一支
-	 * 就会把 {@code damageCooldownTime} 刷成 20 刻（带 bypasses_cooldown 的伤害也一样），而灼伤
+	 * 就会把 {@code invulnerableTime} 刷成 20 刻（带 bypasses_cooldown 的伤害也一样），而灼伤
 	 * 每 10 刻、触电 / 等离子体的触电那一路每 20 / 40 刻就跳一次，于是目标被永久罩在无敌窗里——玩家随后的攻击要么整下被吞、
 	 * 要么只结算「差额」（用户 2026-10 报的「打有减益的敌人打不出伤害」就是这个）。
 	 * 本模组的伤害只在当刻生效，不留帧。

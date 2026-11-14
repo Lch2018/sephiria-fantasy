@@ -215,8 +215,7 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 			}
 
 			if (victim.hurtServer(level, level.damageSources().playerAttack(player), sweepDamage)) {
-				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ(),
-						level.damageSources().playerAttack(player), sweepDamage);
+				SephiriaDamage.knockback(victim, player, 0.4D, level.damageSources().playerAttack(player));
 			}
 		}
 

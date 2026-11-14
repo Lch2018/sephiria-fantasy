@@ -19,7 +19,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
@@ -286,7 +286,7 @@ public class RedSnakeEyeItem extends ArtifactItem {
 	 * 这里靠访问拓宽直接把值写进同步数据——与原版自己装载 Display 的路径一致。
 	 */
 	private static Display.BlockDisplay spawnBody(ServerLevel level, Vec3 at) {
-		Display.BlockDisplay body = EntityTypes.BLOCK_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+		Display.BlockDisplay body = EntityType.BLOCK_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
 
 		if (body == null) {
 			return null;

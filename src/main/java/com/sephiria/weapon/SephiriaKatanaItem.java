@@ -467,7 +467,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 		DamageSource source = level.damageSources().playerAttack(player);
 
 		if (victim.hurtServer(level, source, damage)) {
-			victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ(), source, damage);
+			SephiriaDamage.knockback(victim, player, 0.4D, source);
 		}
 	}
 
@@ -509,7 +509,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				continue;
 			}
 			if (victim.hurtServer(level, source, sweepDamage)) {
-				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ(), source, sweepDamage);
+				SephiriaDamage.knockback(victim, player, 0.4D, source);
 			}
 		}
 
@@ -702,7 +702,7 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 						public void adjustRenderPose(RenderPassInfo<GeoRenderState> passInfo) {
 							super.adjustRenderPose(passInfo);
 							// 出鞘时刀刃朝前：模型长轴是自身的 Y，绕它转 90° 把刀面转到侧面。
-							passInfo.poseStack().rotate(new Quaternionf().rotateY((float) Math.toRadians(90.0D)));
+							passInfo.poseStack().mulPose(new Quaternionf().rotateY((float) Math.toRadians(90.0D)));
 						}
 					};
 					// 剑意满层时的那一遍蓝白微光（GeckoLib 渲染层，见 WeaponGlintLayer）

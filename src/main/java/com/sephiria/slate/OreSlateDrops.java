@@ -3,10 +3,10 @@ package com.sephiria.slate;
 import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.artifact.ArtifactRarity;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
-import net.minecraft.advancements.predicates.DataComponentMatchers;
-import net.minecraft.advancements.predicates.EnchantmentPredicate;
-import net.minecraft.advancements.predicates.ItemPredicate;
-import net.minecraft.advancements.predicates.MinMaxBounds;
+import net.minecraft.advancements.criterion.DataComponentMatchers;
+import net.minecraft.advancements.criterion.EnchantmentPredicate;
+import net.minecraft.advancements.criterion.ItemPredicate;
+import net.minecraft.advancements.criterion.MinMaxBounds;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentExactPredicate;
@@ -23,7 +23,7 @@ import net.minecraft.world.level.storage.loot.predicates.InvertedLootItemConditi
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCondition;
 import net.minecraft.world.level.storage.loot.predicates.MatchTool;
-import net.minecraft.world.level.storage.loot.providers.number.ints.ConstantValue;
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 
 import java.util.List;
 import java.util.Map;
@@ -98,7 +98,7 @@ public final class OreSlateDrops {
 	 */
 	private static LootPool.Builder slatePool(Tier tier, HolderLookup.Provider registries) {
 		LootPool.Builder pool = LootPool.lootPool()
-				.setRolls(Holder.direct(new ConstantValue(1)))
+				.setRolls(ConstantValue.exactly(1.0F))
 				.when(withoutSilkTouch(registries))
 				.when(LootItemRandomChanceCondition.randomChance(tier.chance()));
 

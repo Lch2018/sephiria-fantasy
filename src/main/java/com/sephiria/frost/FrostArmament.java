@@ -35,7 +35,7 @@ import net.minecraft.util.Unit;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -1177,7 +1177,7 @@ public final class FrostArmament {
 	 */
 	private static Display.ItemDisplay spawnBody(ServerLevel level, Vec3 at, Item item, float scale,
 			boolean flame) {
-		Display.ItemDisplay body = EntityTypes.ITEM_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+		Display.ItemDisplay body = EntityType.ITEM_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
 
 		if (body == null) {
 			return null;

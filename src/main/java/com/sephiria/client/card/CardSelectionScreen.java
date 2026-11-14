@@ -397,7 +397,7 @@ public class CardSelectionScreen extends Screen {
 			return true;
 		}
 
-		// 26.3 的 button() 是 HID usage（左 1 / 中 2 / 右 3），不能用 0 当左键
+		// 26.1.2 的 button() 是 GLFW 编码，必须用 InputConstants 常量比较
 		if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
 			return false;
 		}

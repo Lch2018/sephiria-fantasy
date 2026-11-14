@@ -13,7 +13,7 @@ param(
 )
 
 $root = Split-Path -Parent $PSScriptRoot
-$instance = '26.3-Fabric 0.19.5'
+$instance = '26.1.2-Fabric 0.20.1'
 $mods = 'D:\PCL\.minecraft\versions\' + $instance + '\mods'
 
 if (-not (Test-Path $mods)) { throw "mods folder not found: $mods" }

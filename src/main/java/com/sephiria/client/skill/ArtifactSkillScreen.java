@@ -192,8 +192,8 @@ public class ArtifactSkillScreen extends Screen {
 	/** 左键：拿起 / 放下；右键：清空那一格。 */
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		// 26.3 起 button() 的取值换成 HID usage（左 1 / 中 2 / 右 3），裸数字 1 已经是左键了，
-		// 所以必须用常量比较——之前写 == 1 会把「放下技能」当成「右键清空」，技能永远放不进栏位。
+		// 26.1.2 的 button() 是 GLFW 编码（左 0 / 右 1 / 中 2），必须用 InputConstants 常量比较；
+		// 之前写 == 1 会把「放下技能」当成「右键清空」，技能永远放不进栏位。
 		boolean rightClick = event.button() == InputConstants.MOUSE_BUTTON_RIGHT;
 
 		for (int index = 0; index < this.listRects.size(); index++) {

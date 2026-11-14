@@ -1,5 +1,7 @@
 package com.sephiria.client.backpack;
 
+import net.minecraft.client.Minecraft;
+
 import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactCombo;
 import com.sephiria.backpack.ArtifactBackpack;
@@ -85,7 +87,7 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 			return true;
 		}
 
-		// 26.3 移除了 GLFW，键位常量改用 InputConstants（KeyEvent.key() 与
+		// 26.1.2 的键位常量在 InputConstants 上（KeyEvent.key() 与
 		// InputConstants.KEY_* 同一套键码，原版 InputConstants.getKey 也是这么取的）
 		if (event.key() == InputConstants.KEY_R) {
 			Slot hovered = hoveredBackpackSlot();
@@ -115,7 +117,7 @@ public class ArtifactBackpackScreen extends AbstractContainerScreen<ArtifactBack
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 		// 长按 F 刻印：每帧轮询按键（26.3 的 Screen 没有 keyReleased），鼠标指着的那格现算
 		SlateImprintController.tickKey(this.menu, hovered,
-				InputConstants.isKeyDown(InputConstants.KEY_F));
+				InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_F));
 		drawImprintBar(extractor);
 		ArtifactTooltip.clearSlotLevelHint();
 		ArtifactTooltip.clearBackpackSlotHint();

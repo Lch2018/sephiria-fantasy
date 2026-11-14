@@ -351,16 +351,15 @@ public final class SephiriaDamage {
 	/**
 	 * 清掉目标身上的「伤害冷却」（原版受伤后那段 20 刻、前 10 刻只认更重伤害的窗口）。
 	 *
-	 * <p><b>别写成 {@code Entity#setInvulnerableTime}。</b>26.3 里这是两个不同的字段：
-	 * {@code Entity.invulnerableTime}（私有，投掷物 / 掉落物那一套）才是 setInvulnerableTime 写的，
-	 * 而 {@code LivingEntity#hurtServer} 判定用的是 <b>{@code LivingEntity.damageCooldownTime}</b>
-	 * （public 字段、没有访问器）。2026-10 踩过：本模组所有「先清无敌帧」的地方都写着
-	 * {@code setInvulnerableTime(0)}，全是空操作——于是减益每跳把冷却刷成 20 刻之后没人清，
-	 * 玩家紧接着的攻击就被原版按「差额」吞掉一半（用户报的「打有减益的敌人丢伤害」）。
+	 * <p>26.1.2 里 {@code hurtServer} 判定用的就是 {@code Entity.invulnerableTime}
+	 * （public 字段、没有访问器）；26.3 才把它拆成 {@code LivingEntity.damageCooldownTime}。
+	 * 2026-10 踩过：本模组所有「先清无敌帧」的地方都写着 {@code setInvulnerableTime(0)}，
+	 * 全是空操作——于是减益每跳把冷却刷成 20 刻之后没人清，玩家紧接着的攻击就被原版按
+	 * 「差额」吞掉一半（用户报的「打有减益的敌人丢伤害」）。
 	 * 本模组所有「让这一下落地 / 不留无敌窗」的地方都走这里。
 	 */
 	public static void clearDamageCooldown(LivingEntity target) {
-		target.damageCooldownTime = 0;
+		target.invulnerableTime = 0;
 	}
 
 	// ------------------------------------------------------------------ 击退冷却
@@ -384,8 +383,9 @@ public final class SephiriaDamage {
 			Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "last_knockback"));
 
 	/**
-	 * 这一下能不能真的把目标推出去——由 {@code mixin/SephiriaDamageFramesMixin} 挂在
-	 * {@code LivingEntity#knockback} 的 HEAD 上（cancel 掉就是「这一下不推」）。
+	 * 这一下能不能真的把目标推出去——由 {@code mixin/SephiriaDamageFramesMixin} 在
+	 * {@code hurtServer} 内部那次击退调用上判断，武器代码自己补的那一下走
+	 * {@link #knockback(LivingEntity, Entity, double, DamageSource)}。
 	 *
 	 * <p>为什么需要它：本模组的伤害<b>两头清无敌帧</b>（见 {@link #clearDamageCooldown}），
 	 * 于是高攻速下每一发都会推一次——敌人被连续击退、飞出去很远（用户报的）。
@@ -415,6 +415,19 @@ public final class SephiriaDamage {
 
 		target.setAttached(LAST_KNOCKBACK, now);
 		return true;
+	}
+
+	/**
+	 * 本模组武器在 {@code hurtServer} 之后自己补的那一下击退。
+	 *
+	 * <p>26.1.2 的 {@code LivingEntity#knockback(DDD)} 不接收伤害来源，没法在里面判断是不是
+	 * 本模组的伤害；所以直接把来源带进来，先过同一道 {@link #allowKnockback} 冷却。
+	 * {@code hurtServer} 内部那次击退已经占了冷却时，这一下会被跳过，避免一次攻击推两次。
+	 */
+	public static void knockback(LivingEntity target, Entity attacker, double strength, DamageSource source) {
+		if (allowKnockback(target, source)) {
+			target.knockback(strength, attacker.getX() - target.getX(), attacker.getZ() - target.getZ());
+		}
 	}
 
 	// ------------------------------------------------------------------ 暴击

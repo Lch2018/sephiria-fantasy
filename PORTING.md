@@ -3,8 +3,47 @@
 ## 分支 / 工作区
 
 - `main`：26.3，当前发布候选 `0.4.0.58-a`，不在本次移植中改动。
+- `port/26.1.2`：工作区就是本目录（`E:\workspace\Zcode\mcmode`），按 26.1.2 构建。
 - `port/1.21.1`：工作区 `E:\workspace\Zcode\mcmode-1.21.1`。
 - `port/1.20.1`：工作区 `E:\workspace\Zcode\mcmode-1.20.1`。
+
+## 26.1.2（完整移植，已构建并实装；待进游戏实测）
+
+- 构建：Minecraft `26.1.2` + Fabric Loader `0.20.1` + Loom `1.17.21` +
+  Fabric API `0.155.3+26.1.2`，Java 25；GeckoLib `5.5.2` / ModMenu `18.0.2` /
+  ToroHealth `1.5.1` 从 `libs/` 引入，与 PCL 实例里的 mods 版本一致。
+- 版本号 `0.5.3-a-mc26.1.2`；jar 已实装到
+  `D:\PCL\.minecraft\versions\26.1.2-Fabric 0.20.1\mods\sephiria-fantasy-0.5.3-a-mc26.1.2.jar`
+  （1773956 B）。
+- `compileJava` / `build` / `validateAccessWidener` / `modelDecodeCheck` /
+  `tools/check-resources.ps1` 全部通过。
+- 26.3 → 26.1.2 的主要改动：
+  - 注册与数据：`EntityTypes` → `EntityType`；战利品谓词包回到
+    `net.minecraft.advancements.criterion`；`setRolls` 直接收 `NumberProvider`
+    （`ConstantValue.exactly(1.0F)`）；`placeItemBackInInventory` 不带 `Prediction`；
+    `invulnerableTime` 取代 26.3 的 `damageCooldownTime`；`hurtMarked` 取代 `syncVelocity`。
+  - 界面：当前界面用 `Minecraft.screen` 字段（26.3 的 `Gui.screen()` 不存在）；
+    `InputConstants.Type.KEYSYM`；`isKeyDown(Window, int)`；鼠标按键用 `InputConstants`
+    常量（26.1.2 仍是 GLFW 编码：左 0 / 右 1 / 中 2）。
+  - 渲染：26.1.2 的物品光效没有 `ITEM_CUTOUT_GLINT` 管线，`MaterialInfo` 也没有 glint 字段；
+    改成在 `ItemFeatureRenderer.renderItem` 的 `getFoilBuffer` 调用点按 quad 贴图分流，
+    自建 `RenderPipelines.GLINT` 渲染类型。GeckoLib 刀光效用同一管线 +
+    `Sampler0` 微光贴图。
+  - 第一人称：`FirstPersonHandsAndItemsRenderer` 回到 `ItemInHandRenderer`，
+    `submitArmWithItem` 回到 `renderArmWithItem`（参数顺序：player, swing, equip, hand,
+    stack, partial, pose, collector, light）。
+  - 方块实体：`BlockEntityType` 构造函数私有，改用 `FabricBlockEntityTypeBuilder`；
+    `RootRetreatBlock` 补 `codec()`（`simpleCodec`）。
+  - 击退：26.1.2 没有 6 参 `knockback`，改为在 `hurtServer` 内 `knockback(DDD)` 调用点
+    `@Redirect`；武器在 `hurtServer` 之后自己补的击退统一走
+    `SephiriaDamage.knockback(...)`，共用同一道 10 刻冷却。
+  - 光标：SDL 换成 GLFW（`glfwGetCursorPos` / `glfwSetCursorPos`）；mixin 从
+    `Gui.setScreen` 改到 `Minecraft.setScreen`（`CursorRestoreMixin`）。
+  - ToroHealth：1.5.1 自带 26.1.2 的 `renderLevel` 钩子，删掉 26.3 专用的
+    `LevelRendererTextEarlyMixin` / `ToroHealthEarlyText`。
+- **未做**：进游戏实测。所有 mixin 的目标类/方法名已按 26.1.2 逐个核对，
+  `validateAccessWidener` 也通过，但 mixin 是否全部应用成功、HUD / 界面 / GeckoLib
+  光效的实际表现仍需开游戏确认。
 
 ## 1.21.1（核心 + 基础客户端，已实装）
 

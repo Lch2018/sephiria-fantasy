@@ -31,7 +31,7 @@ public class SephiriaTraderLlama extends TraderLlama {
 	public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
 			EntitySpawnReason reason, SpawnGroupData groupData) {
 		SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, groupData);
-		this.setItemSlot(EquipmentSlot.BODY, new ItemStack(Items.CARPET.pick(DyeColor.RED)));
+		this.setItemSlot(EquipmentSlot.BODY, new ItemStack(Items.RED_CARPET));
 		return data;
 	}
 }

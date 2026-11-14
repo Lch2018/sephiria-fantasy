@@ -1,5 +1,7 @@
 package com.sephiria.weapon;
 
+import com.sephiria.damage.SephiriaDamage;
+
 import com.sephiria.ability.SkillStorage;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -73,8 +75,7 @@ public final class WeaponSweep {
 			}
 
 			if (victim.hurtServer(level, level.damageSources().playerAttack(player), sweepDamage)) {
-				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ(),
-						level.damageSources().playerAttack(player), sweepDamage);
+				SephiriaDamage.knockback(victim, player, 0.4D, level.damageSources().playerAttack(player));
 			}
 		}
 

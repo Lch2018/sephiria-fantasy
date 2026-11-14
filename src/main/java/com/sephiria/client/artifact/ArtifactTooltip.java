@@ -270,7 +270,7 @@ public final class ArtifactTooltip {
 		}
 
 		// 最可靠的一条：直接问背包界面「现在悬停哪一格」（hoveredSlot 在 super 之后仍然有效）
-		if (Minecraft.getInstance().gui.screen() instanceof ArtifactBackpackScreen screen) {
+		if (Minecraft.getInstance().screen instanceof ArtifactBackpackScreen screen) {
 			Slot hovered = screen.tooltipBackpackSlot();
 
 			if (hovered != null) {

@@ -89,9 +89,10 @@ public final class EncouragementBannerSkill implements ArtifactSkill {
 
 		// 旗子：一件丢在原地的旗帜物品，无重力、捡不起来、免疫伤害
 		ItemEntity banner = new ItemEntity(level0, player.getX(), player.getY() + HOVER_HEIGHT, player.getZ(),
-				new ItemStack(Items.BANNER.pick(DyeColor.LIME)));
+				new ItemStack(Items.LIME_BANNER));
 		banner.setNoGravity(true);
-		banner.setPermanentlyInvulnerable(true);
+		banner.setInvulnerable(true);
+		banner.setUnlimitedLifetime();
 		banner.setNeverPickUp();
 		banner.setDeltaMovement(0.0D, 0.0D, 0.0D);
 		level0.addFreshEntity(banner);

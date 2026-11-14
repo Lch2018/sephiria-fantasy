@@ -8,7 +8,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
 import net.minecraft.util.Unit;
 import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
@@ -349,13 +348,13 @@ public class ShopMenu extends AbstractContainerMenu {
 		super.removed(player);
 
 		// 关界面时把骰子栏与出售栏里的东西还给玩家，免得凭空消失。
-		// 26.3 的 placeItemBackInInventory 要带 Prediction；照原版铁砧关界面的写法
+		// 26.1.2 的 placeItemBackInInventory 不带 Prediction；照原版铁砧关界面的写法
 		// 只在服务端还东西，客户端等服务器同步
 		for (Container container : new Container[] { this.dice, this.sell }) {
 			ItemStack left = container.removeItemNoUpdate(0);
 
 			if (!left.isEmpty() && player instanceof ServerPlayer) {
-				player.getInventory().placeItemBackInInventory(left, Prediction.SERVER_ONLY);
+				player.getInventory().placeItemBackInInventory(left);
 			}
 		}
 	}

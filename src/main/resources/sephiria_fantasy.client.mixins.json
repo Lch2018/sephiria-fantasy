@@ -14,7 +14,7 @@
 		"CraftingRecipeBookTabsMixin",
 		"WeaponGlintMixin",
 		"CrossbowArmPoseMixin",
-		"GuiCursorRestoreMixin"
+		"CursorRestoreMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

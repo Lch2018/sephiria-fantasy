@@ -1,5 +1,7 @@
 package com.sephiria.client.backpack;
 
+import net.minecraft.client.Minecraft;
+
 import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.backpack.BackpackWindow;
 import com.sephiria.backpack.EnchantMenu;
@@ -85,7 +87,7 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 			return true;
 		}
 
-		// 26.3 移除了 GLFW，键位常量改用 InputConstants（KeyEvent.key() 与
+		// 26.1.2 的键位常量在 InputConstants 上（KeyEvent.key() 与
 		// InputConstants.KEY_* 同一套键码，原版 InputConstants.getKey 也是这么取的）
 		if (event.key() == InputConstants.KEY_R) {
 			Slot hovered = hoveredBackpackSlot();
@@ -119,7 +121,7 @@ public class EnchantScreen extends AbstractContainerScreen<EnchantMenu> {
 		ArtifactTooltip.setSlotLevelHint(hoveredSlotLevel(mouseX, mouseY));
 		super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 		SlateImprintController.tickKey(this.menu, backpackSlotAt(mouseX, mouseY),
-				InputConstants.isKeyDown(InputConstants.KEY_F));
+				InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), InputConstants.KEY_F));
 		drawImprintBar(extractor);
 		ArtifactTooltip.clearSlotLevelHint();
 	}

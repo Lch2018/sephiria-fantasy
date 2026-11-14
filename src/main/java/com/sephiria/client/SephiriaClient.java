@@ -55,7 +55,6 @@ import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.blockentity.BeaconRenderer;
@@ -66,8 +65,8 @@ import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-// 26.3 把 GLFW 从客户端整个移除了，键位常量与按键类型都在 InputConstants 上
-// （Type.KEYSYM → Type.KEYBOARD；鼠标侧键用 InputConstants.MOUSE_BUTTON_4）。
+// 26.1.2 的键位常量与按键类型在 InputConstants 上（键盘类型是 Type.KEYSYM；
+// 鼠标侧键用 InputConstants.MOUSE_BUTTON_4，底层仍是 GLFW 的 3 号键）。
 
 /**
  * 客户端入口：武器提示框、HUD、以及固有技能的按键。
@@ -92,13 +91,13 @@ public class SephiriaClient implements ClientModInitializer {
 
 	private static final KeyMapping RELOAD_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 			"key.sephiria_fantasy.reload",
-			InputConstants.Type.KEYBOARD,
+			InputConstants.Type.KEYSYM,
 			InputConstants.KEY_R,
 			KeyMapping.Category.GAMEPLAY));
 
 	private static final KeyMapping HUD_KEY = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 			"key.sephiria_fantasy.hud",
-			InputConstants.Type.KEYBOARD,
+			InputConstants.Type.KEYSYM,
 			InputConstants.KEY_H,
 			KeyMapping.Category.GAMEPLAY));
 
@@ -112,7 +111,7 @@ public class SephiriaClient implements ClientModInitializer {
 		for (int slot = 0; slot < SKILL_KEYS.length; slot++) {
 			SKILL_KEYS[slot] = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 					"key.sephiria_fantasy.artifact_skill_" + (slot + 1),
-					InputConstants.Type.KEYBOARD,
+					InputConstants.Type.KEYSYM,
 					InputConstants.UNKNOWN.getValue(),
 					KeyMapping.Category.GAMEPLAY));
 		}
@@ -226,14 +225,14 @@ public class SephiriaClient implements ClientModInitializer {
 			Minecraft client = Minecraft.getInstance();
 
 			if (!payload.open()) {
-				if (client.gui.screen() instanceof CardSelectionScreen screen) {
+				if (client.screen instanceof CardSelectionScreen screen) {
 					screen.onClose();
 				}
 
 				return;
 			}
 
-			if (client.gui.screen() instanceof CardSelectionScreen screen) {
+			if (client.screen instanceof CardSelectionScreen screen) {
 				screen.syncFromCache(false);
 				return;
 			}
@@ -282,8 +281,8 @@ public class SephiriaClient implements ClientModInitializer {
 			ClientSkills.accept(payload);
 
 			// 技能页开着就地重建，否则页面还显示旧内容（「切换不动」的观感来源之一）
-			// 26.2 的当前界面在 Minecraft.gui.screen() 上（Minecraft 自己已经没有 screen 字段）
-			if (Minecraft.getInstance().gui.screen() instanceof com.sephiria.client.skill.ArtifactSkillScreen screen) {
+			// 26.1.2 的当前界面是 Minecraft.screen 字段
+			if (Minecraft.getInstance().screen instanceof com.sephiria.client.skill.ArtifactSkillScreen screen) {
 				screen.refresh();
 			}
 		});
@@ -328,8 +327,8 @@ public class SephiriaClient implements ClientModInitializer {
 					// 丢弃剩余的点击次数
 				}
 
-				// 26.3 的 swing 需要动画组件；末参 true = 同步给自己（客户端本地挥动照旧传 true）
-				client.player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
+				// 26.1.2 的 swing(hand, true)：末参 true = 同步给自己（客户端本地挥动）
+				client.player.swing(InteractionHand.MAIN_HAND, true);
 				ClientPlayNetworking.send(ShieldSweepPayload.INSTANCE);
 			}
 		});

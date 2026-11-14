@@ -7,7 +7,7 @@ import com.sephiria.registry.ModItems;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.Unit;
@@ -349,7 +349,7 @@ public class PlitviceWaterDropItem extends ArtifactItem {
 	}
 
 	private static Display.ItemDisplay spawnArrowBody(ServerLevel level, Vec3 at, boolean flame) {
-		Display.ItemDisplay body = EntityTypes.ITEM_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+		Display.ItemDisplay body = EntityType.ITEM_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
 
 		if (body == null) {
 			return null;

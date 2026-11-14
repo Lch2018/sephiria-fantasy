@@ -9,7 +9,6 @@ import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Prediction;
 import net.minecraft.util.Unit;
 import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
@@ -512,11 +511,11 @@ public class EnchantMenu extends AbstractContainerMenu implements BackpackGridMe
 		}
 
 		if (!artifactLeft.isEmpty()) {
-			serverPlayer.getInventory().placeItemBackInInventory(artifactLeft, Prediction.SERVER_ONLY);
+			serverPlayer.getInventory().placeItemBackInInventory(artifactLeft);
 		}
 
 		if (!coinsLeft.isEmpty()) {
-			serverPlayer.getInventory().placeItemBackInInventory(coinsLeft, Prediction.SERVER_ONLY);
+			serverPlayer.getInventory().placeItemBackInInventory(coinsLeft);
 		}
 	}
 }

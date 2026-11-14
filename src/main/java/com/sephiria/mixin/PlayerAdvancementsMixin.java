@@ -45,6 +45,6 @@ public class PlayerAdvancementsMixin {
 
 	/** 会弹 toast 的成就才算（见类注释的两个反例）。 */
 	private static boolean countsAsAchievement(AdvancementHolder holder) {
-		return holder.value().display().filter(display -> !display.hidden() && display.showToast()).isPresent();
+		return holder.value().display().filter(display -> !display.isHidden() && display.shouldShowToast()).isPresent();
 	}
 }

@@ -1,5 +1,6 @@
 package com.sephiria.difficulty;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -30,6 +31,12 @@ import net.minecraft.world.phys.BlockHitResult;
 public class RootRetreatBlock extends HorizontalDirectionalBlock implements EntityBlock {
 	public RootRetreatBlock(Properties properties) {
 		super(properties);
+	}
+
+	/** 26.1.2 的 {@code HorizontalDirectionalBlock.codec()} 是抽象方法，必须给一个。 */
+	@Override
+	protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
+		return simpleCodec(RootRetreatBlock::new);
 	}
 
 	@Override

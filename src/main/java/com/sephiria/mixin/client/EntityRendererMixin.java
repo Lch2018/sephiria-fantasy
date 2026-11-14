@@ -76,7 +76,7 @@ public abstract class EntityRendererMixin {
 			// 多个减益时一行一个，从脚下往上排
 			Vec3 offset = LABEL_OFFSET.add(0.0D, index * LABEL_LINE_GAP, 0.0D);
 			collector.submitNameTag(pose, offset, 0, labels.get(index), true,
-					LightCoordsUtil.FULL_BRIGHT, camera);
+					LightCoordsUtil.FULL_BRIGHT, state.distanceToCameraSq, camera);
 		}
 
 		pose.popPose();
