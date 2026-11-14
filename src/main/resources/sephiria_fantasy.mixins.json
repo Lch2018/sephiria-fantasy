@@ -12,7 +12,9 @@
 		"InvulnerableGlowMixin",
 		"InvulnerableGlowColorMixin",
 		"MinecraftAttackMixin",
-		"OffHandHideMixin"
+		"OffHandHideMixin",
+		"CrossbowArmPoseMixin",
+		"EntityRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
@@ -28,6 +30,12 @@
 		"FishingHookMixin",
 		"FurnaceHeavenSlateMixin",
 		"EnchantmentHelperMixin",
-		"PlayerAdvancementsMixin"
+		"PlayerAdvancementsMixin",
+		"RootRetreatFallMixin",
+		"RootRetreatHealingMixin",
+		"RootRetreatNameMixin",
+		"RootRetreatDeathMixin",
+		"AnvilMenuMixin",
+		"ItemCombinerMenuAccessor"
 	]
 }

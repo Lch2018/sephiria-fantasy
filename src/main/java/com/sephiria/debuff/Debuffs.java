@@ -1,6 +1,8 @@
 package com.sephiria.debuff;
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import io.netty.buffer.Unpooled;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 import com.sephiria.Sephiria;
 import com.sephiria.compat.AttributeIds;
@@ -15,6 +17,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import com.sephiria.compat.DamageEvents;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -374,9 +377,13 @@ public final class Debuffs {
 			return;
 		}
 
+		FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+		com.sephiria.network.DebuffSyncPayload.write(buffer,
+				new com.sephiria.network.DebuffSyncPayload(debuff, entity.getId(), stacks));
+
 		for (ServerPlayer player : level.players()) {
 			if (player.distanceToSqr(entity) <= LABEL_RANGE * LABEL_RANGE) {
-
+				ServerPlayNetworking.send(player, com.sephiria.network.DebuffSyncPayload.CHANNEL, buffer);
 			}
 		}
 	}

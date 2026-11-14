@@ -15,6 +15,8 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -133,6 +135,42 @@ public class BookItem extends ArtifactItem {
 		double extra = Math.max(0.0D, PlayerStats.attackSpeedMultiplier(player) - 1.0D);
 		double progress = Math.min(level, MAX_EFFICIENCY_LEVEL) / (double) MAX_EFFICIENCY_LEVEL;
 		return (float) (1.0D + extra * progress);
+	}
+
+	/** 一次合并的结果：合好的附魔表 + 这一手要的经验等级。 */
+	public record Merge(Map<Enchantment, Integer> enchantments, int cost) {
+	}
+
+	/** 第二格那本附魔书能不能合上去：只带书上认识的四种附魔。 */
+	public static boolean canMerge(Map<Enchantment, Integer> addition) {
+		if (addition == null || addition.isEmpty()) {
+			return false;
+		}
+
+		for (Enchantment enchantment : addition.keySet()) {
+			if (enchantment != Enchantments.FIRE_ASPECT && enchantment != Enchantments.MOB_LOOTING
+					&& enchantment != Enchantments.SWEEPING_EDGE && enchantment != Enchantments.BLOCK_EFFICIENCY) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/** 合并后的附魔表：同种附魔等级相加，但不超过原版上限；经验 = 真正加上的等级数（最低 1）。 */
+	public static Merge merge(Map<Enchantment, Integer> current, Map<Enchantment, Integer> addition) {
+		Map<Enchantment, Integer> merged = new HashMap<>(current);
+		int cost = 0;
+
+		for (Map.Entry<Enchantment, Integer> entry : addition.entrySet()) {
+			Enchantment enchantment = entry.getKey();
+			int before = merged.getOrDefault(enchantment, 0);
+			int after = Math.min(before + entry.getValue(), enchantment.getMaxLevel());
+			merged.put(enchantment, after);
+			cost += after - before;
+		}
+
+		return new Merge(Map.copyOf(merged), Math.max(MIN_MERGE_COST, cost));
 	}
 
 	/** 取背包里「书」身上某个附魔的最高等级（【唯一】：多本书也只取最高那级）。 */

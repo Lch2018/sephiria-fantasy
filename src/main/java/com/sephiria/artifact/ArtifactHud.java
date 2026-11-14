@@ -69,7 +69,7 @@ public final class ArtifactHud {
 			}
 
 			entries.add(new HudSyncPayload.Entry(BuiltInRegistries.ITEM.getKey(resolved.item()),
-					ArtifactSkills.cooldownLeft(player, slot), resolved.skill().cooldownTicks(), -1));
+					ArtifactSkills.cooldownLeft(player, slot), ArtifactSkills.cooldownTicksFor(player, resolved), -1));
 		}
 
 		return entries;
@@ -107,6 +107,9 @@ public final class ArtifactHud {
 			entries.add(new HudSyncPayload.Entry(BuiltInRegistries.ITEM.getKey(ModItems.FLICKERING_EYE),
 					-1, -1, (int) Math.round(net.minecraft.util.Mth.clamp(charge / 100.0D, 0.0D, 1.0D) * 1000.0D)));
 		}
+
+		// 破碎的蓝宝石：帷幕充能（0..1000；已有帷幕 = 1000）
+		addCharge(entries, player, ModItems.BROKEN_SAPPHIRE, com.sephiria.artifact.BrokenSapphireItem.chargeProgress(player));
 
 		return entries;
 	}
