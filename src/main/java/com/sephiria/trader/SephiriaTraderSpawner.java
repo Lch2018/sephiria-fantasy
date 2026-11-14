@@ -60,6 +60,7 @@ public final class SephiriaTraderSpawner {
 	private static final int LLAMA_RADIUS = 4;
 	/** 出生后的离场倒计时（原版 48000 刻）与"家"的半径（原版 16）。 */
 	private static final int DESPAWN_DELAY = 48000;
+	/** 商人的「家」半径：别让他走太远，玩家回头还能找到。 */
 	private static final int HOME_RADIUS = 16;
 
 	/** 主世界那一份的状态（见类注释：不写存档）。 */

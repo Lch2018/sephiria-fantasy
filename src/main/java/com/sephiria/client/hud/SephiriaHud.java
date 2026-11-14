@@ -65,10 +65,13 @@ public final class SephiriaHud implements HudRenderCallback {
 	private static final int BAR_WIDTH = 60;
 	private static final int BAR_HEIGHT = 8;
 	private static final int BAR_TRACK_COLOR = 0xFF202020;
-	/** 武器面板里的蓄力条尺寸（剑意还没移植，暂时只有巨剑蓄力用得上）。 */
+	/** 武器面板里的蓄力条尺寸（巨剑蓄力与刀的剑意共用）。 */
 	private static final int CHARGE_BAR_WIDTH = 60;
 	private static final int CHARGE_BAR_HEIGHT = 4;
 	private static final int CHARGE_BAR_COLOR = 0xFFFFFFFF;
+	/** 刀的剑意条：未满冰蓝、满层金色。 */
+	private static final int INTENT_COLOR = 0xFF6FD8FF;
+	private static final int INTENT_FULL_COLOR = 0xFFFFD24A;
 	private static final int CHARGE_BAR_BACK_COLOR = 0x60000000;
 	/** 无敌条：真实高度 3px，布局框给 9px 好拖（见 {@link #INVULN_PREVIEW_HEIGHT}）。 */
 	private static final int INVULN_WIDTH = 60;
@@ -550,9 +553,19 @@ public final class SephiriaHud implements HudRenderCallback {
 					CHARGE_BAR_BACK_COLOR);
 
 			if (filled > 0) {
-				graphics.fill(barLeft, barTop, barLeft + filled, barTop + CHARGE_BAR_HEIGHT, CHARGE_BAR_COLOR);
+				graphics.fill(barLeft, barTop, barLeft + filled, barTop + CHARGE_BAR_HEIGHT,
+						propertyBarColor(view.stack(), view.bar()));
 			}
 		}
+	}
+
+	/** 进度条颜色：刀按剑意是否满层换色，其余武器沿用白色蓄力条。 */
+	private static int propertyBarColor(ItemStack stack, float fraction) {
+		if (stack.getItem() instanceof SephiriaKatanaItem) {
+			return fraction >= 1.0F ? INTENT_FULL_COLOR : INTENT_COLOR;
+		}
+
+		return CHARGE_BAR_COLOR;
 	}
 
 	/**
@@ -584,9 +597,10 @@ public final class SephiriaHud implements HudRenderCallback {
 	/** 武器的特有属性行；没有特有属性的武器返回 null（盾 / 长棍暂时不显示属性行）。 */
 	private static Component propertyLine(ItemStack stack) {
 		if (stack.getItem() instanceof SephiriaCrossbowItem) {
-			return Component.translatable("ui.sephiria_fantasy.magazine",
+			return Component.translatable("ui.sephiria_fantasy.magazine_reserve",
 					format(SkillClientData.current(SephiriaCrossbowItem.STORAGE)),
-					format(SkillClientData.max(SephiriaCrossbowItem.STORAGE)));
+					format(SkillClientData.max(SephiriaCrossbowItem.STORAGE)),
+					format(SkillClientData.current(SephiriaCrossbowItem.MAGAZINES)));
 		}
 
 		if (stack.getItem() instanceof SephiriaGreatswordItem) {
@@ -600,8 +614,8 @@ public final class SephiriaHud implements HudRenderCallback {
 		}
 
 		if (stack.getItem() instanceof SephiriaKatanaItem) {
-			// 1.20.1 的刀还没有剑意系统（26.3 的 SWORD_INTENT 未移植），所以只显示入鞘 / 拔刀
-			return Component.translatable("ui.sephiria_fantasy.katana_state",
+			// 状态 + 剑意：层数用进度条表示（和旋风同一种画法），满层条会转金色
+			return Component.translatable("ui.sephiria_fantasy.katana",
 					Component.translatable(SephiriaKatanaItem.isSheathed(stack)
 							? "ui.sephiria_fantasy.sheathed"
 							: "ui.sephiria_fantasy.unsheathed"));
@@ -613,10 +627,17 @@ public final class SephiriaHud implements HudRenderCallback {
 	/**
 	 * 进度条型特有属性的当前占比（0~1）；该武器没有进度条时返回 NaN。
 	 *
-	 * <p>巨剑的蓄力进度不需要任何同步包：客户端自己就知道有没有在使用、还剩多少使用刻。
-	 * 刀的剑意在 1.20.1 还没移植，所以这里不画条。
+	 * <p>巨剑的蓄力进度不需要任何同步包：客户端自己就知道有没有在使用、还剩多少使用刻；
+	 * 刀的剑意读 {@link SkillClientData} 的镜像。
 	 */
 	private static float propertyBar(Minecraft client, ItemStack stack) {
+		if (stack.getItem() instanceof SephiriaKatanaItem) {
+			double max = SkillClientData.max(SephiriaKatanaItem.SWORD_INTENT);
+			return max <= 0.0D
+					? 0.0F
+					: (float) Math.min(1.0D, SkillClientData.current(SephiriaKatanaItem.SWORD_INTENT) / max);
+		}
+
 		if (!(stack.getItem() instanceof SephiriaGreatswordItem) || client.player == null) {
 			return Float.NaN;
 		}

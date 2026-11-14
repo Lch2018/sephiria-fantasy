@@ -37,8 +37,15 @@ public class SephiriaBoltArrow extends Arrow implements SephiriaDamage.Source {
 	/** 已经命中过的目标 id：穿透时同一目标只结算一次。 */
 	private final Set<Integer> hitTargets = new HashSet<>();
 
+	/** 发射瞬间的「神射手的曲柄」弩伤害加成（%，含装填后 10 秒 buff）。 */
+	private final double crossbowDamageBonus;
+
 	public SephiriaBoltArrow(Level level, LivingEntity shooter) {
 		super(level, shooter);
+		// 在发射那一刻定格：飞行途中 BUFF 到期不应该让已经射出的箭变弱
+		this.crossbowDamageBonus = shooter instanceof ServerPlayer player
+				? SephiriaCrossbowItem.damageBonusPercent(player)
+				: 0.0D;
 	}
 
 	@Override
@@ -59,7 +66,8 @@ public class SephiriaBoltArrow extends Arrow implements SephiriaDamage.Source {
 		Entity owner = this.getOwner();
 		// 固定伤害指"不随飞行速度变化"，仍按物理强度换算（默认 20 时倍率 1.0，即 1.82）
 		float damage = owner instanceof ServerPlayer shooter
-				? (float) (FIXED_DAMAGE * PlayerStats.normalAttackMultiplier(shooter) * (1.0D + SephiriaCrossbowItem.damageBonusPercent(shooter) / 100.0D))
+				? (float) (FIXED_DAMAGE * PlayerStats.normalAttackMultiplier(shooter)
+						* (1.0D + this.crossbowDamageBonus / 100.0D))
 				: FIXED_DAMAGE;
 
 		// 与原版箭走同一条 hurtOrSimulate：末地水晶不是 LivingEntity，末影龙要靠部位转发给本体，

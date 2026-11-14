@@ -532,20 +532,20 @@ public final class DarkCloud {
 		if (blizzard) {
 			double lightning = PlayerStats.elementTotal(player, PlayerStats.Element.LIGHTNING);
 			double ice = PlayerStats.elementTotal(player, PlayerStats.Element.ICE);
-			boolean lightningHigher = lightning >= ice;
 			double higher = Math.max(lightning, ice);
 			double lower = Math.min(lightning, ice);
 
-			hasElectric = lightning > 0.0D;
-			hasIce = ice > 0.0D;
+			// 双属性：两段都同时带冰与电，不再一段电一段冰
+			hasElectric = true;
+			hasIce = true;
+			DamageSource source = SephiriaDamage.blizzard(level, player);
 
-			// 两段都先按普通乌云的 20% 折算，再分别 ×110% / ×15%。
-			// 较高属性那一行走它自己的元素类型；较低属性走另一边的元素类型。
-			// 两段各自清无敌帧，所以都会落地；各自也会触发对应元素的减益守门。
+			// 两段都先按普通乌云的 20% 折算，再分别 ×110% / ×15%；
+			// 各自清无敌帧，所以都会落地；红宝石胸针的灼伤只在第一段补一次。
 			hit |= hit(level, player, target,
-					higher * normalPercent * 1.10D * multiplier, lightningHigher);
+					higher * normalPercent * 1.10D * multiplier, source, true);
 			hit |= hit(level, player, target,
-					lower * normalPercent * 0.15D * multiplier, !lightningHigher);
+					lower * normalPercent * 0.15D * multiplier, source, false);
 		}
 		else {
 			hasElectric = true;
@@ -555,7 +555,7 @@ public final class DarkCloud {
 					* normalPercent * multiplier;
 
 			if (damage > 0.0D) {
-				hit = hit(level, player, target, damage, true);
+				hit = hit(level, player, target, damage, SephiriaDamage.electricAttack(level, player), true);
 			}
 		}
 
@@ -608,21 +608,18 @@ public final class DarkCloud {
 				SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, STRIKE_VOLUME, 1.4F);
 	}
 
-	/** 打一段伤害；{@code electric} 决定伤害类型与是否触发红宝石胸针的灼伤。 */
+	/** 打一段伤害；{@code applyBurn} 决定这一下是否触发红宝石胸针的灼伤。 */
 	private static boolean hit(ServerLevel level, ServerPlayer player, LivingEntity target,
-			double damage, boolean electric) {
+			double damage, DamageSource source, boolean applyBurn) {
 		if (damage <= 0.0D || !target.isAlive()) {
 			return false;
 		}
 
-		DamageSource source = electric
-				? SephiriaDamage.electricAttack(level, player)
-				: SephiriaDamage.iceAttack(level, player);
 		// 每段都要落地：清掉无敌帧（与触电结算同一套手法）
 		SephiriaDamage.clearDamageCooldown(target);
 		target.hurt(source, (float) damage);
 
-		if (electric && ArtifactEffects.cloudAppliesBurn(player) && target.isAlive()) {
+		if (applyBurn && ArtifactEffects.cloudAppliesBurn(player) && target.isAlive()) {
 			Debuffs.applyBurn(target, player);
 		}
 

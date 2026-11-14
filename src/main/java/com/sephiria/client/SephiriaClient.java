@@ -36,9 +36,12 @@ import net.minecraft.client.gui.screens.MenuScreens;
  * 1.20.1 客户端入口（核心版）。
  *
  * <p>目前注册容器界面与完整 HUD（武器 / 冲刺 / MP / 乌云 / 太阳剑 / 冰霜武具 / 无敌条 +
- * 技能 / 神器两排）：背包 / 附魔 / 石板合成 / 宝箱这几个已经换成自绘面板，HUD 的布局界面
- * 用 H 键打开。HUD 用到的各份客户端镜像（技能存储、乌云、太阳剑、冰霜武具、无敌窗口）
- * 都在这里注册接收；26.3 的无敌描边、ToroHealth 与 GeckoLib 刀动画还没有移植。
+ * 技能 / 神器两排）：背包 / 附魔 / 石板合成 / 宝箱这几个已经换成自绘面板，H 键打开
+ * 赛菲莉娅设置（HUD 布局 / 伤害显示）。HUD 用到的各份客户端镜像（技能存储、乌云、太阳剑、
+ * 冰霜武具、无敌窗口、护盾、魔法书、石板数）都在这里注册接收。
+ *
+ * <p>客户端功能已按 0.5.3.8 对齐：无敌描边、ToroHealth 数字、GeckoLib 刀动画与微光、
+ * 防御中左键横扫、光标保持、冰冻染色都在这里挂接。
  *
  * <p>1.20.1 的 {@code MenuScreens.register} 是包私有，靠访问拓宽打开
  * （见 {@code sephiria_fantasy.accesswidener}）。
@@ -259,15 +262,44 @@ public final class SephiriaClient implements ClientModInitializer {
 			SkillClientData.reset();
 			InvulnClientData.reset();
 			SephiriaHud.resetFlash();
+			// 减益标签 / 石板数量 / 魔法书快照 / 选卡三张卡 / 天赋页都不跨世界：
+			// 不清的话新服会先显示上个世界的数据一瞬，选卡还可能把上个服的卡弹出来
+			com.sephiria.client.ClientDebuffs.reset();
+			com.sephiria.client.ClientSlateCount.reset();
+			com.sephiria.client.ClientBookStats.reset();
+			com.sephiria.artifact.BookEffectData.reset();
+			com.sephiria.client.ClientTalents.reset();
+			com.sephiria.client.card.ClientCardSelection.clear();
 			// 换世界后别让上个世界残留的待匹配伤害串到新实体上
 			com.sephiria.compat.torohealth.ToroHealthCompatClient.reset();
 		});
 		HudRenderCallback.EVENT.register(new SephiriaHud());
 
+		// 防御中的左键：原版在使用物品期间会把左键整个吞掉（handleKeybinds 的 isUsingItem 分支
+		// 只 consumeClick、既不 startAttack 也不发包），所以这里抢在它前面把这次点击取走，
+		// 改成给服务端发一个「防御中横扫」的请求。START 刻在这个 tick 的按键处理之前，抢得到。
+		ClientTickEvents.START_CLIENT_TICK.register(client -> {
+			if (client.player == null || !com.sephiria.weapon.SephiriaShieldItem.isDefending(client.player)) {
+				return;
+			}
+
+			if (client.options.keyAttack.consumeClick()) {
+				// 这一 tick 里累积的连点只发一次：服务端有冷却，多发没有意义
+				while (client.options.keyAttack.consumeClick()) {
+					// 丢弃剩余的点击次数
+				}
+
+				client.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+				sendEmpty(com.sephiria.network.ShieldSweepPayload.CHANNEL);
+			}
+		});
+
 		// 神器 / 石板 / 药水的提示行：名称由原版画，这里补连击、唯一、词条、稀有度与描述
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			// 无敌窗口只在收到包时写入，之后由客户端自己每刻递减
 			InvulnClientData.tick();
+			// 实体死亡/卸载后服务端不会再发清除包，靠这里按「实体还在不在」清掉它的减益标签
+			com.sephiria.client.ClientDebuffs.prune(client.level);
 
 			while (DASH_KEY.consumeClick()) {
 				if (client.player != null) {
@@ -313,6 +345,30 @@ public final class SephiriaClient implements ClientModInitializer {
 		});
 
 		ItemTooltipCallback.EVENT.register((stack, flag, lines) -> {
+			// 赛菲莉娅额外背包栏：一行用途说明（「+1」绿色，其余灰色）
+			if (stack.getItem() == com.sephiria.registry.ModItems.EXTRA_BACKPACK_ROW) {
+				lines.add(net.minecraft.network.chat.Component.translatable(
+								"tooltip.sephiria_fantasy.extra_backpack_row",
+								net.minecraft.network.chat.Component.literal("+1")
+										.withStyle(net.minecraft.ChatFormatting.GREEN))
+						.withStyle(net.minecraft.ChatFormatting.GRAY));
+			}
+
+			// 弩：当前弹匣 / 上限（备用弹匣数）
+			if (stack.getItem() instanceof com.sephiria.weapon.SephiriaCrossbowItem) {
+				lines.add(net.minecraft.network.chat.Component.translatable(
+						"tooltip.sephiria_fantasy.magazine_reserve",
+						net.minecraft.network.chat.Component.literal(formatNumber(
+								com.sephiria.client.SkillClientData.current(
+										com.sephiria.weapon.SephiriaCrossbowItem.STORAGE))),
+						net.minecraft.network.chat.Component.literal(formatNumber(
+								com.sephiria.client.SkillClientData.max(
+										com.sephiria.weapon.SephiriaCrossbowItem.STORAGE))),
+						net.minecraft.network.chat.Component.literal(formatNumber(
+								com.sephiria.client.SkillClientData.current(
+										com.sephiria.weapon.SephiriaCrossbowItem.MAGAZINES)))));
+			}
+
 			java.util.List<net.minecraft.network.chat.Component> artifactLines =
 					com.sephiria.client.artifact.ArtifactTooltip.lines(stack);
 
@@ -321,6 +377,11 @@ public final class SephiriaClient implements ClientModInitializer {
 				lines.addAll(artifactLines);
 			}
 		});
+	}
+
+	private static String formatNumber(double value) {
+		int rounded = (int) Math.round(value);
+		return rounded < 0 ? "0" : String.valueOf(rounded);
 	}
 
 	private static void sendEmpty(net.minecraft.resources.ResourceLocation channel) {

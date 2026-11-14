@@ -161,7 +161,9 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 			}
 
 			if (victim.hurt(level.damageSources().playerAttack(player), sweepDamage)) {
-				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ());
+				// 走统一击退入口：本模组伤害每 10 刻最多推一次，避免高频横扫把敌人推飞
+				SephiriaDamage.knockback(victim, player, 0.4D,
+						level.damageSources().playerAttack(player));
 			}
 		}
 
@@ -298,8 +300,9 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 				return;
 			}
 
-			// 水平半径是固定值（4 格），再乘近战攻击范围属性
-			double reach = RING_RADIUS * PlayerStats.rangeMultiplier(player);
+			// 水平半径是固定值（4 格），再乘近战攻击范围与「特殊攻击范围」
+			double reach = RING_RADIUS * PlayerStats.rangeMultiplier(player)
+					* PlayerStats.skillRangeMultiplier(player);
 			AABB area = player.getBoundingBox().inflate(reach, height, reach);
 
 			for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {

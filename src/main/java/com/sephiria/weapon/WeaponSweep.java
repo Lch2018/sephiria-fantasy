@@ -1,6 +1,7 @@
 package com.sephiria.weapon;
 
 import com.sephiria.ability.SkillStorage;
+import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.core.particles.ParticleTypes;
@@ -73,7 +74,9 @@ public final class WeaponSweep {
 			}
 
 			if (victim.hurt(level.damageSources().playerAttack(player), sweepDamage)) {
-				victim.knockback(0.4D, player.getX() - victim.getX(), player.getZ() - victim.getZ());
+				// 走统一击退入口：本模组伤害每 10 刻最多推一次，避免高频横扫把敌人推飞
+				SephiriaDamage.knockback(victim, player, 0.4D,
+						level.damageSources().playerAttack(player));
 			}
 		}
 

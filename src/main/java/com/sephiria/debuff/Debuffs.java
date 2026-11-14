@@ -275,16 +275,20 @@ public final class Debuffs {
 					|| source.is(SephiriaDamage.ICE_SUN_SWORD);
 			// 酷寒断头台：冰 + 电双属性，两条之触都算
 			boolean cryoAttack = kind == SephiriaDamage.Kind.CRYO;
+			// 永恒蚀左半边：火 + 电双属性，触发灼伤与触电，不触发冻伤
+			boolean fireCryoAttack = kind == SephiriaDamage.Kind.CRYO_FIRE;
+			// 雷霜蝶暴风雪云：每一段都是冰 + 电双属性，两段都触发触电与冻伤
+			boolean blizzardAttack = kind == SephiriaDamage.Kind.BLIZZARD;
 
-			if (weaponOrArtifact || electricAttack || cryoAttack) {
+			if (weaponOrArtifact || electricAttack || cryoAttack || fireCryoAttack || blizzardAttack) {
 				tryApplyShock(entity, player);
 			}
 
-			if (weaponOrArtifact || fireAttack) {
+			if (weaponOrArtifact || fireAttack || fireCryoAttack) {
 				tryApplyBurn(entity, player);
 			}
 
-			if (weaponOrArtifact || iceAttack || cryoAttack) {
+			if (weaponOrArtifact || iceAttack || cryoAttack || blizzardAttack) {
 				tryApplyFrostbite(entity, player);
 			}
 		});

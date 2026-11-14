@@ -762,6 +762,11 @@ public final class FrostArmament {
 	 * 触发者掉线时 {@code owner} 可以是 null（伤害照打，只是没有归属）。
 	 */
 	private static DamageSource damageSource(ServerLevel level, ServerPlayer owner, boolean flame) {
+		if (owner != null) {
+			// 普利特维采的水滴：冰霜武具命中时消耗 MP 召唤旋转冰剑
+			com.sephiria.artifact.PlitviceWaterDropItem.onFrostArmamentHit(owner);
+		}
+
 		return flame ? SephiriaDamage.fireAttack(level, owner) : SephiriaDamage.iceAttack(level, owner);
 	}
 
