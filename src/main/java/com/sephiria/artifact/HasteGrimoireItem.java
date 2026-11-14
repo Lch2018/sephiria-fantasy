@@ -10,7 +10,7 @@ import net.minecraft.network.chat.Component;
  * <p>「获得技能」与「发动型神器」的区别只在数值与蓝耗：魔法书类的技能通常要花蓝，
  * 以后还会吃到「魔法书」相关属性（暂未实现）。技能本身在 {@code artifact.skill.HasteSkill}。
  */
-public class HasteGrimoireItem extends ArtifactItem {
+public class HasteGrimoireItem extends ArtifactItem implements MagicBook {
 	/** 各等级的蓝耗（点）。 */
 	private static final double[] MP_COST_BY_LEVEL = { 36.0D, 24.0D, 12.0D };
 	/** 词条数值的颜色：绿色。 */
@@ -57,8 +57,22 @@ public class HasteGrimoireItem extends ArtifactItem {
 
 	@Override
 	public java.util.List<Component> affixLines(int level) {
+		java.util.List<Component> lines = new java.util.ArrayList<>();
+		lines.add(dashed(skillTitle("haste")));
+		lines.addAll(dashedLines(descriptionLines(level)));
+		return java.util.List.copyOf(lines);
+	}
+
+	@Override
+	public java.util.List<Component> skillDescriptionLines(int level) {
+		return descriptionLines(level);
+	}
+
+	private java.util.List<Component> descriptionLines(int level) {
 		return java.util.List.of(
-				Component.translatable("artifact.sephiria_fantasy.affix.haste_skill",
-						Component.literal(Numbers.format(hasteMpCost(level))).withStyle(style -> style.withColor(COLOUR_BONUS))));
+				Component.translatable("artifact.sephiria_fantasy.affix.haste_effect"),
+				Component.translatable("artifact.sephiria_fantasy.affix.haste_duration"),
+				skillCooldown(38),
+				skillMp(hasteMpCost(level)));
 	}
 }

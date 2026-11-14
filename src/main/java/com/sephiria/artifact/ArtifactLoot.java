@@ -430,6 +430,17 @@ public final class ArtifactLoot {
 	 * 石板、石板却比格数少）就用另一侧补，别空着格子。
 	 */
 	public static List<ItemStack> rollMixed(RandomSource random, int count, double slatePercent, Weights weights) {
+		return rollMixed(random, count, slatePercent, weights, 1.0D);
+	}
+
+	/**
+	 * 同上，但同一个品质内部把「魔法书」的权重乘 {@code magicBookMultiplier}。
+	 *
+	 * <p>魔法师的硬币：奖励中出现魔法书的几率 ×(1 + 25%)；这里只改同一档里的相对权重，
+	 * 品质档位的概率不变。
+	 */
+	public static List<ItemStack> rollMixed(RandomSource random, int count, double slatePercent, Weights weights,
+			double magicBookMultiplier) {
 		List<Item> artifacts = new ArrayList<>(artifacts());
 		List<Item> slates = new ArrayList<>(slates());
 		List<ItemStack> result = new ArrayList<>();
@@ -446,7 +457,7 @@ public final class ArtifactLoot {
 				break;
 			}
 
-			Item picked = pickByRarity(random, pool, weights);
+			Item picked = pickByRarity(random, pool, weights, magicBookMultiplier);
 
 			if (picked == null) {
 				break;
@@ -466,11 +477,17 @@ public final class ArtifactLoot {
 
 	/** 从给定池子里按品质加权抽 {@code count} 件，互不重复。 */
 	public static List<ItemStack> rollFrom(RandomSource random, int count, List<Item> pool, Weights weights) {
+		return rollFrom(random, count, pool, weights, 1.0D);
+	}
+
+	/** 同上，但同品质内魔法书权重乘 {@code magicBookMultiplier}（魔法师的硬币）。 */
+	public static List<ItemStack> rollFrom(RandomSource random, int count, List<Item> pool, Weights weights,
+			double magicBookMultiplier) {
 		List<ItemStack> result = new ArrayList<>();
 		List<Item> remaining = new ArrayList<>(pool);
 
 		while (result.size() < count && !remaining.isEmpty()) {
-			Item picked = pickByRarity(random, remaining, weights);
+			Item picked = pickByRarity(random, remaining, weights, magicBookMultiplier);
 
 			if (picked == null) {
 				break;
@@ -485,6 +502,11 @@ public final class ArtifactLoot {
 
 	/** 先按品质权重抽一档，再从这一档里随机挑一件；这一档没有货就整体降级重试。 */
 	private static Item pickByRarity(RandomSource random, List<Item> candidates, Weights weights) {
+		return pickByRarity(random, candidates, weights, 1.0D);
+	}
+
+	private static Item pickByRarity(RandomSource random, List<Item> candidates, Weights weights,
+			double magicBookMultiplier) {
 		// 先掷「档位」（权重 = 这一档的概率份数，**不乘件数**），再在这一档里随机挑一件；
 		// 掷到的档没货就不会被掷到（归堆时就排掉了），等价于外层重试时整体降级
 		List<ArtifactRarity> available = new ArrayList<>();
@@ -517,8 +539,7 @@ public final class ArtifactLoot {
 			roll -= weights.weightOf(available.get(index));
 
 			if (roll < 0) {
-				List<Item> tier = tierItems.get(index);
-				return tier.get(random.nextInt(tier.size()));
+				return pickFromTier(random, tierItems.get(index), magicBookMultiplier);
 			}
 		}
 

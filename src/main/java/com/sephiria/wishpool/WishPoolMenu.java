@@ -257,8 +257,9 @@ public class WishPoolMenu extends AbstractContainerMenu {
 		}
 
 		int energyBefore = WishPool.energy(this.owner);
-		List<ItemStack> drawn = WishPool.draw(this.owner, slatePool, count);
-		int energyGained = Math.max(0, WishPool.energy(this.owner) - energyBefore);
+		WishPool.DrawResult result = WishPool.draw(this.owner, slatePool, count);
+		List<ItemStack> drawn = result.items();
+		int energyGained = result.energyGained();
 		scatter(drawn);
 
 		if (!drawn.isEmpty()) {

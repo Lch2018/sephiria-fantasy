@@ -15,6 +15,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -154,6 +155,36 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	private static float intentRatio() {
 		double max = SkillClientData.max(SWORD_INTENT);
 		return max <= 0.0D ? 0.0F : (float) (SkillClientData.current(SWORD_INTENT) / max);
+	}
+
+	/**
+	 * 提示框里的详细说明：两种状态的攻击数据 + 切换 / 剑意 / 强力斩三个技能。
+	 * 数值全部取自本类顶部的常量，改数值不用再动这里。
+	 */
+	@Override
+	public java.util.List<Component> detailLines(ItemStack stack) {
+		double sheathedSpeed = VANILLA_SWORD_ATTACK_SPEED * SHEATHED_CHARGE_SCALE;
+		double drawnSpeed = VANILLA_SWORD_ATTACK_SPEED * UNSHEATHED_CHARGE_SCALE;
+		double sheathedRange = VANILLA_SWEEP_RANGE * SHEATHED_SWEEP_RANGE;
+		double drawnRange = VANILLA_SWEEP_RANGE * UNSHEATHED_SWEEP_RANGE;
+
+		return java.util.List.of(
+				// 出鞘是默认状态，所以放在前面，和数据表一致
+				Line.attack("tooltip.sephiria_fantasy.katana.drawn", UNSHEATHED_DAMAGE, drawnSpeed, drawnRange).build(),
+				Line.attack("tooltip.sephiria_fantasy.katana.sheathed", SHEATHED_DAMAGE, sheathedSpeed, sheathedRange).build(),
+				Line.titled("tooltip.sephiria_fantasy.skill.toggle")
+						.cooldownTicks(SWITCH_TICKS)
+						.stat("tooltip.sephiria_fantasy.part.invuln", BLOCK_TICKS / 20.0D, COLOR_RANGE).build(),
+				desc("tooltip.sephiria_fantasy.skill.toggle", "tooltip.sephiria_fantasy.desc.toggle"),
+				Line.titled("tooltip.sephiria_fantasy.skill.intent")
+						.stat("tooltip.sephiria_fantasy.part.per_hit", INTENT_PER_HIT, COLOR_DAMAGE)
+						.stat("tooltip.sephiria_fantasy.part.max", INTENT_MAX, COLOR_RANGE)
+						.stat("tooltip.sephiria_fantasy.part.block_bonus", INTENT_SWITCH_BONUS, COLOR_DAMAGE).build(),
+				desc("tooltip.sephiria_fantasy.skill.intent", "tooltip.sephiria_fantasy.desc.intent"),
+				Line.titled("tooltip.sephiria_fantasy.skill.slash")
+						.skillDamage(POWERFUL_DAMAGE_AT_FULL).cooldownTicks(POWERFUL_COOLDOWN)
+						.range(POWERFUL_RANGE).distance(POWERFUL_DISTANCE).build(),
+				desc("tooltip.sephiria_fantasy.skill.slash", "tooltip.sephiria_fantasy.desc.slash"));
 	}
 
 	@Override

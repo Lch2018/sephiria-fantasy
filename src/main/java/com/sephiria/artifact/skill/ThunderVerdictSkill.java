@@ -27,8 +27,8 @@ import java.util.UUID;
  * 雷之裁决（魔法书「获得技能」）：向准星方向释放 8×8×30 的电击光束，攻击 10 次。
  *
  * <p>光束在释放那一刻定方向（跟着准星指的方向走，不追人），持续 20 刻、每 2 刻结算一击；
- * 每击对光束走廊里的每个敌人各打一次，单次伤害 = 6 + 触发者当前电元素强度面板值 ×
- * 50/70/80/90/90%（按神器等级）。
+ * 每击对光束走廊里的每个敌人各打一次，单次伤害 = 3 + 触发者当前电元素强度面板值 ×
+ * 20/24/28/32/36%（按神器等级）。
  *
  * <p>光束是<b>电属性伤害</b>（{@code Kind.ELECTRIC}）：吃麒麟的角的「电属性攻击的暴击几率」，
  * 也吃以后要做的魔法书加成；与其它电属性伤害一样，它不再触发电击之触、不吃减伤与黄金之手。
@@ -48,7 +48,7 @@ public final class ThunderVerdictSkill implements ArtifactSkill {
 	/** 光束半宽（格）：宽高 8 格 → 以射线为轴 ±4 格。 */
 	private static final double HALF_SIZE = 4.0D;
 	/** 单次伤害的固定部分（点）。 */
-	private static final double FLAT_DAMAGE = 6.0D;
+	private static final double FLAT_DAMAGE = 3.0D;
 
 	/** 一根正在释放的光束。 */
 	private static final class Beam {
@@ -137,8 +137,9 @@ public final class ThunderVerdictSkill implements ArtifactSkill {
 		}
 
 		double element = PlayerStats.elementTotal(player, PlayerStats.Element.LIGHTNING);
-		float damage = (float) (FLAT_DAMAGE + element * ThunderVerdictItem.damagePercent(beam.level) / 100.0D);
-		DamageSource source = SephiriaDamage.electricAttack(level, player);
+		float damage = (float) ((FLAT_DAMAGE + element * ThunderVerdictItem.damagePercent(beam.level) / 100.0D)
+				* com.sephiria.artifact.ArtifactEffects.magicBookSkillDamageMultiplier(player));
+		DamageSource source = SephiriaDamage.magicElectricAttack(level, player);
 		Vec3 origin = player.getEyePosition();
 		Set<LivingEntity> victims = new HashSet<>();
 
@@ -173,10 +174,14 @@ public final class ThunderVerdictSkill implements ArtifactSkill {
 
 		Vec3 origin = player.getEyePosition();
 
-		for (double step = 0.0D; step <= LENGTH; step += 2.0D) {
+		double spread = HALF_SIZE * 0.9D;
+
+		for (double step = 0.0D; step <= LENGTH; step += 3.0D) {
 			Vec3 point = origin.add(beam.direction.scale(step));
 			level.sendParticles(ParticleTypes.ELECTRIC_SPARK, point.x, point.y, point.z,
-					2, 0.35D, 0.35D, 0.35D, 0.02D);
+					14, spread, spread, spread, 0.05D);
+			level.sendParticles(ParticleTypes.CRIT, point.x, point.y, point.z,
+					6, spread * 0.8D, spread * 0.8D, spread * 0.8D, 0.02D);
 		}
 	}
 }

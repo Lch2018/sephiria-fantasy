@@ -18,15 +18,24 @@ import java.util.List;
 /**
  * 宝箱类道具（赛菲莉娅道具）：神器宝箱 / 石板宝箱 / 升级宝箱。
  *
- * <p>不可堆叠，手持右键打开「宝箱页面」：页面里有 {@value #REWARDS} 格随机奖励，选一件直接获得，
- * 宝箱本身消耗掉、那一栏被选中的东西填上。
+ * <p><b>没开过的箱子可以叠 16 个</b>（用户 2026-11-01 的口径：神器 / 升级 / 石板 / 稀有神器 / 稀有石板
+ * 五种宝箱都算）；一旦打开过（抽过奖励 / 用过免费刷新 / 带 {@link #OPENED} 标记）就恢复成一次一个。
+ *
+ * <p>1.20.1 没有 max_stack_size 数据组件，堆叠上限由 {@code ChestStackSizeMixin} 按这份物品的 NBT
+ * 动态返回：没开过 → 16，开过 → 1。合并判的是「同物品 + 同 NBT」，所以开过的也不会和没开过的并堆。
+ *
+ * <p>手持右键打开「宝箱页面」：页面里有 {@value #REWARDS} 格随机奖励，选一件直接获得，
+ * 宝箱本身消耗掉、那一栏被选中的东西填上。打开时从手里<b>取出一个</b>交给菜单持有，
+ * 剩下的同种箱子仍是没开过的。
  *
  * <p>三种箱子的区别只有奖池与权重：神器箱只出神器、石板箱只出石板、升级箱两者混着出且好东西更少。
  *
- * <p>奖励在<b>第一次打开时</b>抽好并写进物品组件（{@link #REWARDS}），之后关掉再打开还是同一批——
+ * <p>奖励在<b>第一次打开时</b>抽好并写进物品（{@link #ROLLED}），之后关掉再打开还是同一批——
  * 否则玩家可以反复开关界面刷奖池。
  */
 public class ChestItem extends Item {
+	/** 没开过的宝箱最多叠几个。 */
+	public static final int MAX_STACK = 16;
 	/** 宝箱页面的基础奖励格数。 */
 	public static final int REWARDS = 5;
 	/** 天赋「急智」二阶段之后的奖励格数上限（5 选 1 → 6 选 1）。 */
@@ -46,6 +55,14 @@ public class ChestItem extends Item {
 	 * <p>存在宝箱物品上而不是菜单里：关掉界面再打开不能把免费次数刷回来。
 	 */
 	public static final String FREE_REROLL_USED = "chest_free_reroll_used";
+
+	/**
+	 * 这一份宝箱「已经打开过」（不管选没选）。
+	 *
+	 * <p>为什么不只靠 {@link #ROLLED}：奖励为空时（池子异常）ROLLED 可能不写；而且老存档里
+	 * 已经开过的箱子也没有这个标记。打开时打上它，堆叠上限就按 1 算，开过的箱子永远和没开过的分开。
+	 */
+	public static final String OPENED = "chest_opened";
 
 	/**
 	 * 箱子种类：决定奖池，以及「混着出」时石板占几成。
@@ -99,8 +116,28 @@ public class ChestItem extends Item {
 			return InteractionResultHolder.consume(player.getItemInHand(hand));
 		}
 
-		serverPlayer.openMenu(ChestMenu.provider(serverPlayer, hand));
+		ItemStack held = serverPlayer.getItemInHand(hand);
+		ItemStack opened = held.copy();
+		opened.setCount(1);
+		// 先扣掉手里的这一份：菜单持有的是单独的一份，剩下的同种箱子仍是「没开过」、还能叠
+		held.shrink(1);
+		serverPlayer.getInventory().setChanged();
+		markOpened(opened);
+		serverPlayer.openMenu(ChestMenu.provider(serverPlayer, opened));
 		return InteractionResultHolder.consume(player.getItemInHand(hand));
+	}
+
+	/** 标记这一份宝箱已经打开（1.20.1 用 NBT；堆叠上限由 ChestStackSizeMixin 现算）。 */
+	public static ItemStack markOpened(ItemStack chest) {
+		ItemData.setBoolean(chest, OPENED, true);
+		return chest;
+	}
+
+	/** 这一份宝箱是否已经打开过（老存档没有 {@link #OPENED} 时，有奖励表或免费刷新标记也算）。 */
+	public static boolean opened(ItemStack chest) {
+		return ItemData.getBoolean(chest, OPENED, false)
+				|| ItemData.has(chest, ROLLED)
+				|| ItemData.getBoolean(chest, FREE_REROLL_USED, false);
 	}
 
 	/** 箱子名字按品质上色：普通箱稀有（黄），稀有箱传说（红）。 */

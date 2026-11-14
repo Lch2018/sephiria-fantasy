@@ -189,6 +189,17 @@ public final class RootRetreat {
 	}
 
 	/**
+	 * 「顽强之躯」的伤害倍率：1.0 = 没有这一项；等级越高越接近 0.1。
+	 *
+	 * <p>拆出来是因为 HP 偷取 / MP 吸收要把这一层单独加回去（见 {@code Lifesteal}），
+	 * 而「防护铠甲」那一层要保留在最终伤害里。
+	 */
+	public static double tenaciousBodyMultiplier(ServerPlayer player) {
+		return 1.0D - DifficultyOption.TENACIOUS_BODY.effectAt(
+				levelOf(player, DifficultyOption.TENACIOUS_BODY)) / 100.0D;
+	}
+
+	/**
 	 * 「顽强之躯」+「防护铠甲」：<b>自己打出去的伤害</b>被削多少（1.0 = 没有这两项）。
 	 *
 	 * <p>两层的口径不同（都是用户给的）：
@@ -209,15 +220,17 @@ public final class RootRetreat {
 			return 1.0F;
 		}
 
-		double tenacious = 1.0D - DifficultyOption.TENACIOUS_BODY.effectAt(
-				levelOf(attacker, DifficultyOption.TENACIOUS_BODY)) / 100.0D;
+		double tenacious = tenaciousBodyMultiplier(attacker);
 		double armor = 1.0D;
 
 		if (!trueDamage) {
 			double defence = DifficultyOption.PROTECTIVE_ARMOR.effectAt(
 					levelOf(attacker, DifficultyOption.PROTECTIVE_ARMOR));
+			// 防御穿透与「无视防御」乘算，且都只削「防御力」这一层
+			double remaining = (1.0D - com.sephiria.talent.Talents.defensePenetrationPercent(attacker) / 100.0D)
+					* (1.0D - com.sephiria.artifact.ArtifactEffects.defenseIgnorePercent(attacker) / 100.0D);
 			// 与玩家「防御力」同一条公式：x / (x + 80)
-			armor = 1.0D - com.sephiria.stats.PlayerStats.defenseReduction(defence);
+			armor = 1.0D - com.sephiria.stats.PlayerStats.defenseReduction(defence * remaining);
 		}
 
 		return (float) (tenacious * armor);

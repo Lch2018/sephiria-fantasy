@@ -5,32 +5,41 @@ import com.sephiria.damage.SephiriaDamage;
 import com.sephiria.stats.PlayerStats;
 import com.sephiria.util.Numbers;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
+import com.sephiria.weapon.SephiriaWeapon;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 特别神器「书」（稀有·【唯一】·无连击）：这是一本兼容性很好的书。
  *
- * <p>它身上挂的是**原版附魔组件**（{@code minecraft:enchantments}），所以只认两种附魔书：
- * 火焰附加与抢夺，铁砧里「书 + 附魔书」把等级**相加**上去——但不超过这两种附魔在原版里的
- * 上限（火焰附加 2、抢夺 3，用户 2026-10-18 定；到顶之后那一手铁砧不出结果）。见
+ * <p>它身上挂的是**原版附魔组件**（{@code minecraft:enchantments}），只认四种附魔书：
+ * 火焰附加、抢夺、横扫之刃与效率，铁砧里「书 + 附魔书」把等级**相加**上去——但不超过这些附魔
+ * 在原版里的上限（火焰附加 2、抢夺 3、横扫之刃 3、效率 5；到顶之后那一手铁砧不出结果）。见
  * {@code mixin/AnvilMenuMixin}，原版本来不认这种组合。
  *
- * <p>待在赛菲莉娅背包里时，书上的附魔对玩家的<b>神器与连击</b>产生影响：
+ * <p>待在赛菲莉娅背包里时，书上的附魔对玩家产生影响：
  * 火焰附加让神器 / 连击 / <b>减益</b>的伤害点燃目标（80 刻 × 等级 = 4 秒 × 级，与原版火焰附加同款；
  * 普攻不算，见 {@link #register()}）；抢夺的等级并进掉落结算（{@code mixin/EnchantmentHelperMixin}
  * 把它加在原版「抢夺等级」之上——原版所有按抢夺结算的掉落物都自动跟着涨）。
+ * 横扫之刃让<b>非赛菲莉娅武器</b>的攻击冷却恢复速度按「攻击速度超过 100% 的部分 × 附魔等级/3」
+ * 加快；效率让挖掘速度按「攻击速度超过 100% 的部分 × 附魔等级/5」加快。两者都不会在攻击速度
+ * 低于 100% 时把速度拖慢。
  *
  * <p>无连击：{@link #combos()} 返回空集——神器提示框不显示连击行；许愿池的筛选里归到
  * 「无连击」那一类（见 client/wishpool/WishPoolScreen）。
@@ -42,11 +51,21 @@ public class BookItem extends ArtifactItem {
 	/** 铁砧合并一次至少收的经验等级（原版铁砧最低也是 1 级）。 */
 	public static final int MIN_MERGE_COST = 1;
 
-	/** 「效率」的上限（原版效率 V）。 */
+	/** 横扫之刃 / 效率的原版最高等级：提示框里的 x/y 用它当分母。 */
+	private static final int MAX_SWEEPING_EDGE_LEVEL = 3;
 	private static final int MAX_EFFICIENCY_LEVEL = 5;
+
+	/** 非赛菲莉娅武器冷却加成的临时属性修饰符（1.20.1 的属性修饰符按 UUID 认）。 */
+	private static final UUID BOOK_SWEEPING_SPEED_ID =
+			UUID.fromString("8f2f6c48-6b1e-4a3e-9f0a-3d5d1b7c9e21");
+
+	/** 属性按 4 tick 对一次账：换武器 / 摘书后最多晚 4 tick 生效。 */
+	private static final int COOLDOWN_CHECK_INTERVAL = 4;
 
 	/** 词条数字的颜色：绿色（与其它神器一致）。 */
 	private static final int COLOUR_BONUS = 0xFF55FF55;
+
+	private static int cooldownTicker;
 
 	public BookItem(Item.Properties properties) {
 		super(properties);
@@ -121,19 +140,40 @@ public class BookItem extends ArtifactItem {
 		return backpackLevel(player, Enchantments.MOB_LOOTING);
 	}
 
-	/**
-	 * 书「效率」给当前玩家的挖掘速度倍率（客户端预测方块破坏进度用）：
-	 * 把攻速超过 100% 的部分按效率进度缩放。
-	 */
-	public static float miningSpeedFactor(ServerPlayer player) {
-		int level = backpackLevel(player, Enchantments.BLOCK_EFFICIENCY);
+	/** 背包里「书」的横扫之刃等级（0 = 没有；非赛菲莉娅武器冷却用）。 */
+	public static int sweepingEdgeLevel(ServerPlayer player) {
+		return backpackLevel(player, Enchantments.SWEEPING_EDGE);
+	}
 
-		if (level <= 0) {
+	/** 背包里「书」的效率等级（0 = 没有；挖掘速度用）。 */
+	public static int efficiencyLevel(ServerPlayer player) {
+		return backpackLevel(player, Enchantments.BLOCK_EFFICIENCY);
+	}
+
+	/**
+	 * 赛菲莉娅攻速给非赛菲莉娅武器冷却的恢复倍率。
+	 *
+	 * <p>公式取「攻击速度超过 100% 的部分 × 附魔等级 / 最高等级」，再加回 100%：
+	 * 满级横扫之刃且攻速 150% 时恰好是 1.5 倍（例子里的 1.5s → 1s）；低等级按比例拿一部分，
+	 * 攻速不到 100% 时倍率夹在 1.0，不会反过来减速。
+	 */
+	public static float cooldownRecoveryFactor(ServerPlayer player) {
+		return attackSpeedScale(player, sweepingEdgeLevel(player), MAX_SWEEPING_EDGE_LEVEL);
+	}
+
+	/** 效率给挖掘速度的倍率，口径与 {@link #cooldownRecoveryFactor} 相同（满级效率 1.5s → 1s）。 */
+	public static float miningSpeedFactor(ServerPlayer player) {
+		return attackSpeedScale(player, efficiencyLevel(player), MAX_EFFICIENCY_LEVEL);
+	}
+
+	/** 把「攻速超过 100% 的部分」按附魔进度缩放；没有附魔 / 攻速不足 100% 时返回 1。 */
+	private static float attackSpeedScale(ServerPlayer player, int level, int maxLevel) {
+		if (level <= 0 || maxLevel <= 0) {
 			return 1.0F;
 		}
 
 		double extra = Math.max(0.0D, PlayerStats.attackSpeedMultiplier(player) - 1.0D);
-		double progress = Math.min(level, MAX_EFFICIENCY_LEVEL) / (double) MAX_EFFICIENCY_LEVEL;
+		double progress = Math.min(level, maxLevel) / (double) maxLevel;
 		return (float) (1.0D + extra * progress);
 	}
 
@@ -207,6 +247,24 @@ public class BookItem extends ArtifactItem {
 					Component.literal(Numbers.format(looting)).withStyle(style -> style.withColor(COLOUR_BONUS))));
 		}
 
+		int sweeping = levelOf(stack, Enchantments.SWEEPING_EDGE);
+
+		if (sweeping > 0) {
+			lines.add(Component.translatable("artifact.sephiria_fantasy.affix.book_sweeping_edge",
+					Component.literal(Numbers.format(sweeping)).withStyle(style -> style.withColor(COLOUR_BONUS)),
+					Component.literal(sweeping + "/" + MAX_SWEEPING_EDGE_LEVEL)
+							.withStyle(style -> style.withColor(COLOUR_BONUS))));
+		}
+
+		int efficiency = levelOf(stack, Enchantments.BLOCK_EFFICIENCY);
+
+		if (efficiency > 0) {
+			lines.add(Component.translatable("artifact.sephiria_fantasy.affix.book_efficiency",
+					Component.literal(Numbers.format(efficiency)).withStyle(style -> style.withColor(COLOUR_BONUS)),
+					Component.literal(efficiency + "/" + MAX_EFFICIENCY_LEVEL)
+							.withStyle(style -> style.withColor(COLOUR_BONUS))));
+		}
+
 		return lines;
 	}
 
@@ -242,6 +300,76 @@ public class BookItem extends ArtifactItem {
 			// 与原版火焰附加同款：4 秒 × 等级
 			entity.setSecondsOnFire(FIRE_TICKS_PER_LEVEL * level / 20);
 		});
+
+		// 横扫之刃给非赛菲莉娅武器加快冷却：属性修饰符要跟着「手里拿的是什么」变，
+		// 所以每 4 tick 对一次账；摘书 / 换回赛菲莉娅武器时下一次对账就会撤掉。
+		ServerTickEvents.END_SERVER_TICK.register(BookItem::tick);
+	}
+
+	private static void tick(net.minecraft.server.MinecraftServer server) {
+		if (++cooldownTicker % COOLDOWN_CHECK_INTERVAL != 0) {
+			return;
+		}
+
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			applyCooldownModifier(player);
+		}
+	}
+
+	/**
+	 * 把「横扫之刃 + 赛菲莉娅攻速」写成 ATTACK_SPEED 的 ADD_MULTIPLIED_TOTAL 修饰符。
+	 *
+	 * <p>只在手持<b>非赛菲莉娅武器</b>时挂：赛菲莉娅武器本来就走 {@code WeaponStats} 的攻速，
+	 * 再乘一次会双份。非赛菲莉娅武器按「有 ATTACK_SPEED 条目的物品」判断，空手 / 方块不触发。
+	 */
+	private static void applyCooldownModifier(ServerPlayer player) {
+		AttributeInstance instance = player.getAttribute(Attributes.ATTACK_SPEED);
+
+		if (instance == null) {
+			return;
+		}
+
+		double amount = 0.0D;
+
+		if (isNonSephiriaWeapon(player.getMainHandItem())) {
+			float factor = cooldownRecoveryFactor(player);
+
+			if (factor > 1.0F) {
+				amount = factor - 1.0D;
+			}
+		}
+
+		AttributeModifier current = instance.getModifier(BOOK_SWEEPING_SPEED_ID);
+
+		if (amount == 0.0D) {
+			if (current != null) {
+				instance.removeModifier(BOOK_SWEEPING_SPEED_ID);
+			}
+
+			return;
+		}
+
+		// 1.20.1 没有 addOrUpdateTransientModifier：数值变了就删掉重加
+		if (current == null || current.getAmount() != amount) {
+			if (current != null) {
+				instance.removeModifier(BOOK_SWEEPING_SPEED_ID);
+			}
+
+			instance.addTransientModifier(new AttributeModifier(BOOK_SWEEPING_SPEED_ID,
+					"sephiria_book_sweeping_speed", amount,
+					AttributeModifier.Operation.MULTIPLY_TOTAL));
+		}
+	}
+
+	/** 非赛菲莉娅武器：不是本模组武器，但物品自己的属性里有攻击速度条目。 */
+	private static boolean isNonSephiriaWeapon(ItemStack stack) {
+		if (stack.isEmpty() || stack.getItem() instanceof SephiriaWeapon) {
+			return false;
+		}
+
+		// 1.20.1 没有数据组件：直接问物品在当前槽位下会不会给出攻击速度修饰符
+		return !stack.getAttributeModifiers(net.minecraft.world.entity.EquipmentSlot.MAINHAND)
+				.get(Attributes.ATTACK_SPEED).isEmpty();
 	}
 
 	/** 这一发伤害算不算「神器 / 连击 / 减益的伤害」（见 {@link #register()}）。 */

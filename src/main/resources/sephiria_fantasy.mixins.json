@@ -43,6 +43,7 @@
     "AnvilMenuMixin",
     "ItemCombinerMenuAccessor",
     "KatanaAttributesMixin",
-    "SephiriaDamageFramesMixin"
+    "SephiriaDamageFramesMixin",
+    "ChestStackSizeMixin"
   ]
 }

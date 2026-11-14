@@ -145,8 +145,14 @@ public final class ArtifactSkills {
 			return null;
 		}
 
+		// 旧技能栏可能存着超过神器上限的等级（格子等级曾经把它顶上去）；按上限匹配，
+		// 这样旧栏位仍然能解析到那件神器，只是结算和显示都用封顶后的等级。
+		int maxLevel = item instanceof com.sephiria.artifact.SephiriaArtifact artifact
+				? artifact.maxLevel() : Integer.MAX_VALUE;
+		int wanted = Math.min(level, maxLevel);
+
 		for (Available available : available(player)) {
-			if (available.item() == item && available.level() == level) {
+			if (available.item() == item && available.level() == wanted) {
 				return available;
 			}
 		}
@@ -284,17 +290,17 @@ public final class ArtifactSkills {
 			return;
 		}
 
-		if (!resolved.skill().canCast(player, resolved.level())) {
-			refuse(player);
-			return;
-		}
-
 		if (cooldownLeft(player, slot) > 0) {
 			refuse(player);
 			return;
 		}
 
-		if (!PlayerStats.spendMp(player, resolved.skill().mpCost(player, resolved.level()))) {
+		if (!resolved.skill().canCast(player, resolved.level())) {
+			refuse(player);
+			return;
+		}
+
+		if (!PlayerStats.spendMp(player, mpCostFor(player, resolved))) {
 			refuse(player);
 			return;
 		}
@@ -313,7 +319,7 @@ public final class ArtifactSkills {
 			com.sephiria.artifact.TuningFork.onMagicBookCast(player);
 		}
 		COOLDOWNS.computeIfAbsent(player.getUUID(), uuid -> new long[SkillSlots.COUNT])[slot] =
-				player.level().getGameTime() + resolved.skill().cooldownTicks(player, resolved.level());
+				player.level().getGameTime() + cooldownTicksFor(player, resolved);
 		// 冷却刚上：立刻推一次 HUD，别等下一个 10 刻周期
 		com.sephiria.artifact.ArtifactHud.send(player);
 	}

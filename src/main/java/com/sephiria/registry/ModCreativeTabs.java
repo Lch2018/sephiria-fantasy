@@ -19,7 +19,7 @@ public final class ModCreativeTabs {
 	public static final CreativeModeTab WEAPONS = Registry.register(
 			BuiltInRegistries.CREATIVE_MODE_TAB,
 			WEAPONS_KEY,
-			// 26.2 的 Fabric API 里这个模块叫 fabric-creative-tab-api-v1（老的 item-group-api 已改名）。
+			// 1.20.1 的 Fabric API 用的是 item-group-api（26.x 才改名 creative-tab-api）。
 			FabricItemGroup.builder()
 					.title(Component.translatable("itemGroup.sephiria_fantasy.weapons"))
 					.icon(() -> new ItemStack(ModItems.DEFAULT_SWORD_AND_SHIELD))
@@ -53,6 +53,49 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.SILVER_PLATE);
 						output.accept(ModItems.ENCOURAGEMENT_BANNER);
 						output.accept(ModItems.HASTE_GRIMOIRE);
+						output.accept(ModItems.FIRE_BOLT);
+						output.accept(ModItems.ICE_BOLT);
+						output.accept(ModItems.LIGHTNING_BOLT);
+						output.accept(ModItems.FLAME_ARROW);
+						output.accept(ModItems.FROST_KNIFE);
+						output.accept(ModItems.LIGHTNING_BOOMERANG);
+						output.accept(ModItems.FIRE_CIRCUS);
+						output.accept(ModItems.ARROW_RAIN);
+						output.accept(ModItems.THUNDER_ARMOR);
+						output.accept(ModItems.METEOR_SHOWER);
+						output.accept(ModItems.ICE_STORM);
+						output.accept(ModItems.MAGICIANS_COIN);
+						output.accept(ModItems.RAY_STAR_FRAGMENT);
+						output.accept(ModItems.MOUSE_MAGICIAN_PENDANT);
+						output.accept(ModItems.PEARL_POWDER);
+						output.accept(ModItems.ORB_OF_DESIRE);
+						output.accept(ModItems.CRABAPPLE);
+						output.accept(ModItems.DOUBLE_HORN_PIPE);
+						output.accept(ModItems.TUNING_FORK);
+						output.accept(ModItems.JEWEL_ARMOR);
+						output.accept(ModItems.GLOWING_HOURGLASS);
+						output.accept(ModItems.BATTLE_MAGE_GLOVES);
+						output.accept(ModItems.MEDITATION_BOOK);
+						output.accept(ModItems.ACADEMY_PEN);
+						output.accept(ModItems.LIBRARY_SUN);
+						output.accept(ModItems.EMPTY_HILT);
+						output.accept(ModItems.LEILIS_POCKET_WATCH);
+						output.accept(ModItems.WILTED_FLOWER);
+						output.accept(ModItems.ENDODITE_PAPERWEIGHT);
+						output.accept(ModItems.SCARECROW_DOLL);
+						output.accept(ModItems.STAR_RUBY);
+						output.accept(ModItems.STAR_SEA_SAPPHIRE);
+						output.accept(ModItems.WATER_BAG);
+						output.accept(ModItems.LURE_BAIT);
+						output.accept(ModItems.OBRAS_BLOOD);
+						output.accept(ModItems.BROKEN_ROOT);
+						output.accept(ModItems.HEART_CARROT);
+						output.accept(ModItems.WHITE_BRANCH);
+						output.accept(ModItems.STONE_SPINDLE);
+						output.accept(ModItems.FULL_FRUIT_BUCKET);
+						output.accept(ModItems.JOLO_WATERING_CAN);
+						output.accept(ModItems.WATER_SPIRIT);
+						output.accept(ModItems.PRITVICE_WATER_DROP);
 						output.accept(ModItems.RED_DEW);
 						output.accept(ModItems.LONGING_AMULET);
 						output.accept(ModItems.FAULT_PROBE);
@@ -113,6 +156,16 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.ETERNAL_WINTER);
 						output.accept(ModItems.CRYO_GUILLOTINE);
 						output.accept(ModItems.FLICKERING_EYE);
+						output.accept(ModItems.BROKEN_SAPPHIRE);
+						output.accept(ModItems.SHARPSHOOTER_CRANK);
+						output.accept(ModItems.STURDY_RELOAD_CRATE);
+						output.accept(ModItems.MASTERS_SWORD_GUARD);
+						output.accept(ModItems.RAINBOW_FEATHER);
+						output.accept(ModItems.ABSOLUTE_RING);
+						output.accept(ModItems.WINGS);
+						output.accept(ModItems.BEIRUTS_SCYTHE);
+						output.accept(ModItems.BARTS_MONOCLE);
+						output.accept(ModItems.BLACK_SCALE);
 						output.accept(ModItems.ETERNAL_ECLIPSE);
 						output.accept(ModItems.EXORCISM_SCABBARD);
 						output.accept(ModItems.BLIZZARD_HAMMER);
@@ -121,6 +174,20 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.FROZEN_HEART);
 						output.accept(ModItems.VOLSPA);
 						output.accept(ModItems.ICE_BOW);
+						output.accept(ModItems.CLOTH_ARMOR);
+						output.accept(ModItems.SHIELD_BOOK);
+						output.accept(ModItems.SHIELD_EARRING);
+						output.accept(ModItems.BROKEN_MIRROR);
+						output.accept(ModItems.THORN_SHELL);
+						output.accept(ModItems.SERENS_LETTER);
+						output.accept(ModItems.POT_LID);
+						output.accept(ModItems.ACADEMY_CHAINMAIL);
+						output.accept(ModItems.LIZARD_PLATE_ARMOR);
+						output.accept(ModItems.SMALL_MIRROR);
+						output.accept(ModItems.WHITE_EDGE_BREAD);
+						output.accept(ModItems.BEAST_HEART);
+						output.accept(ModItems.SHIELD_BAG);
+						output.accept(ModItems.ROCK_ELEPHANT);
 						output.accept(ModItems.BOOK);
 						output.accept(ModItems.SIX_LEAF_CLOVER);
 					})
