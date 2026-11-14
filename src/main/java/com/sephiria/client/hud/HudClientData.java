@@ -19,6 +19,7 @@ import java.util.List;
 public final class HudClientData {
 	private static List<HudSyncPayload.Entry> skills = List.of();
 	private static List<HudSyncPayload.Entry> artifacts = List.of();
+	private static int shield;
 	private static long receivedAt;
 
 	private HudClientData() {
@@ -27,11 +28,17 @@ public final class HudClientData {
 	public static void accept(HudSyncPayload payload) {
 		skills = payload.skills();
 		artifacts = payload.artifacts();
+		shield = payload.shield();
 		receivedAt = gameTime();
 	}
 
 	public static List<HudSyncPayload.Entry> skills() {
 		return skills;
+	}
+
+	/** 当前护盾（点）：0 表示不画护盾 HUD。 */
+	public static int shield() {
+		return shield;
 	}
 
 	public static List<HudSyncPayload.Entry> artifacts() {
@@ -71,6 +78,7 @@ public final class HudClientData {
 	public static void reset() {
 		skills = List.of();
 		artifacts = List.of();
+		shield = 0;
 		receivedAt = 0L;
 	}
 

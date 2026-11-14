@@ -71,6 +71,7 @@ public final class ScreenTabs {
 			case TALENT -> TabButton.texture(x, y, TabButton.TALENT_ICON, tab.title(), active, press);
 			case ARTIFACT_SKILLS -> TabButton.texture(x, y, TabButton.SKILLS_ICON, tab.title(), active, press);
 			case SHOP -> TabButton.texture(x, y, TabButton.SHOP_ICON, tab.title(), active, press);
+			case CARD -> TabButton.texture(x, y, TabButton.CARD_ICON, tab.title(), active, press);
 		};
 	}
 

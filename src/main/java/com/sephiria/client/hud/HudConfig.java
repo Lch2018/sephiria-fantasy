@@ -37,6 +37,8 @@ public final class HudConfig {
 	public static final String DASH = "dash";
 	/** MP 条（左下角，默认在冲刺上方）。 */
 	public static final String MP = "mp";
+	/** 护盾（MP 正下方；护盾量 > 0 时显示）。 */
+	public static final String SHIELD = "shield";
 	/** 乌云容量条（左下角，默认在 MP 上方；只在乌云激活时显示）。 */
 	public static final String CLOUD = "cloud";
 	/** 太阳剑数量条（左下角，默认在乌云上方；只在太阳剑激活时显示）。 */
@@ -49,10 +51,12 @@ public final class HudConfig {
 	public static final String SKILLS = "skills";
 	/** 神器 HUD（右下，技能 HUD 与武器 UI 之间；有冷却 / 充能的神器图标）。 */
 	public static final String ARTIFACTS = "artifacts";
+	/** 经验加加（EXP++）点数（默认关闭）。内部键仍用 fatigue。 */
+	public static final String FATIGUE = "fatigue";
 
 	/** 全部可调的 HUD 模块，顺序即设置界面里的顺序；新增模块在这里登记。 */
-	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, CLOUD, SUN_SWORD, FROST, INVULN,
-			SKILLS, ARTIFACTS);
+	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, SHIELD, CLOUD, SUN_SWORD, FROST, INVULN,
+			SKILLS, ARTIFACTS, FATIGUE);
 
 	public static final double SCALE_MIN = 0.5D;
 	public static final double SCALE_MAX = 2.0D;
@@ -80,6 +84,7 @@ public final class HudConfig {
 	private static final int CLOUD_BOTTOM = 88;
 	private static final int SUN_SWORD_BOTTOM = 112;
 	private static final int FROST_BOTTOM = 136;
+	private static final int FATIGUE_BOTTOM = 160;
 	/** 右下三行从下往上的默认高度：武器、神器、技能。 */
 	private static final int WEAPON_BOTTOM = 40;
 	private static final int ARTIFACTS_BOTTOM = 64;
@@ -130,6 +135,11 @@ public final class HudConfig {
 				case INVULN -> {
 					this.x = screenWidth / 2.0D - DEFAULT_INVULN_WIDTH / 2.0D;
 					this.y = screenHeight / 2.0D + 18.0D;
+				}
+				case SHIELD -> {
+					Element mp = element(MP);
+					this.x = mp.x;
+					this.y = mp.y + 24.0D - extra;
 				}
 				default -> {
 					this.x = MARGIN + legacyOffsetX;
@@ -275,6 +285,7 @@ public final class HudConfig {
 			case CLOUD -> CLOUD_BOTTOM;
 			case SUN_SWORD -> SUN_SWORD_BOTTOM;
 			case FROST -> FROST_BOTTOM;
+			case FATIGUE -> FATIGUE_BOTTOM;
 			default -> DASH_BOTTOM;
 		};
 	}

@@ -388,6 +388,10 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 	}
 
 	/** 鼠标下的背包格子的格子等级；不在背包格子上时返回 -1。 */
+	public net.minecraft.world.inventory.Slot tooltipBackpackSlot() {
+		return this.hoveredSlot;
+	}
+
 	private int hoveredSlotLevel(int mouseX, int mouseY) {
 		for (Slot slot : this.menu.slots) {
 			if (!this.menu.isBackpackSlot(slot) || !this.menu.backpackSlotExists(slot)) {

@@ -371,6 +371,18 @@ if ((Test-Path $clientJar) -and (Test-Path $serverJar)) {
 # Returns the problem with one ingredient ("minecraft:iron_ingot" or "#minecraft:saplings"),
 # or $null when it resolves.
 function Test-Ingredient($value) {
+    # 1.20.1 的配方写成 {"item": ...} / {"tag": ...} 对象，1.21+ 才用裸字符串；
+    # 两种形状都接受，统一转成 "namespace:path" / "#namespace:path"。
+    if ($value -isnot [string]) {
+        if ($null -ne $value.item) {
+            $value = $value.item
+        } elseif ($null -ne $value.tag) {
+            $value = '#' + $value.tag
+        } else {
+            return "unknown ingredient object"
+        }
+    }
+
     $tagged = $value.StartsWith('#')
     if ($tagged) { $value = $value.Substring(1) }
 

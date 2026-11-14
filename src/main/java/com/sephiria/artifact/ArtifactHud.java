@@ -51,7 +51,7 @@ public final class ArtifactHud {
 
 	/** 立刻给一个玩家推一份（施放技能 / 改技能栏 / 进服时用）。 */
 	public static void send(ServerPlayer player) {
-		HudSyncPayload payload = new HudSyncPayload(skills(player), artifacts(player));
+		HudSyncPayload payload = new HudSyncPayload(skills(player), artifacts(player), com.sephiria.stats.ShieldSystem.hudAmount(player));
 		FriendlyByteBuf buffer = new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
 		HudSyncPayload.write(buffer, payload);
 		ServerPlayNetworking.send(player, HudSyncPayload.CHANNEL, buffer);

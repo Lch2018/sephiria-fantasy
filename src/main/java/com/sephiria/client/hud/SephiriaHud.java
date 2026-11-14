@@ -368,6 +368,14 @@ public final class SephiriaHud implements HudRenderCallback {
 			case HudConfig.WEAPON -> weaponPanel(client, preview);
 			case HudConfig.DASH -> textPanel(font, dashText(preview));
 			case HudConfig.MP -> barPanel(font, mpText(), font.width("MP"));
+			case HudConfig.SHIELD -> {
+				if (!preview && HudClientData.shield() <= 0) {
+					yield new Panel(0, 0, false);
+				}
+
+				yield textPanel(font, shieldText());
+			}
+			case HudConfig.FATIGUE -> textPanel(font, fatigueText());
 			case HudConfig.CLOUD -> {
 				if (!preview && !CloudClientData.active()) {
 					yield new Panel(0, 0, false);
@@ -424,6 +432,8 @@ public final class SephiriaHud implements HudRenderCallback {
 			case HudConfig.DASH -> drawTextPanel(graphics, client.font, panel, dashText(preview));
 			case HudConfig.MP -> drawBarPanel(graphics, client.font, panel, mpText(), client.font.width("MP"),
 					mpFraction(), MP_BAR_COLOR);
+			case HudConfig.SHIELD -> drawTextPanel(graphics, client.font, panel, shieldText());
+			case HudConfig.FATIGUE -> drawTextPanel(graphics, client.font, panel, fatigueText());
 			case HudConfig.CLOUD -> drawBarPanel(graphics, client.font, panel, cloudText(preview), 0,
 					cloudFraction(preview), CLOUD_BAR_COLOR);
 			case HudConfig.SUN_SWORD -> drawBarPanel(graphics, client.font, panel, sunSwordText(preview), 0,
@@ -433,6 +443,16 @@ public final class SephiriaHud implements HudRenderCallback {
 			default -> {
 			}
 		}
+	}
+
+	private static Component shieldText() {
+		return Component.translatable("ui.sephiria_fantasy.shield",
+				Component.literal(String.valueOf(HudClientData.shield())));
+	}
+
+	private static Component fatigueText() {
+		return Component.translatable("ui.sephiria_fantasy.fatigue",
+				com.sephiria.client.FatigueClientData.points(), 6000);
 	}
 
 	private static void drawTextPanel(GuiGraphics graphics, Font font, Panel panel, Component text) {

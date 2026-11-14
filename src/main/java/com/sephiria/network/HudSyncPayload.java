@@ -13,7 +13,7 @@ import java.util.List;
  * <p>1.20.1 没有 CustomPacketPayload / StreamCodec，所以这里用固定的 channel id
  * 加一对 write/read；字段含义与 1.21.1 的 payload 完全相同。
  */
-public record HudSyncPayload(List<Entry> skills, List<Entry> artifacts) {
+public record HudSyncPayload(List<Entry> skills, List<Entry> artifacts, int shield) {
 	public static final ResourceLocation CHANNEL =
 			new ResourceLocation(Sephiria.MOD_ID, "hud_sync");
 
@@ -26,10 +26,11 @@ public record HudSyncPayload(List<Entry> skills, List<Entry> artifacts) {
 	public static void write(FriendlyByteBuf buffer, HudSyncPayload payload) {
 		writeEntries(buffer, payload.skills());
 		writeEntries(buffer, payload.artifacts());
+		buffer.writeVarInt(Math.max(0, payload.shield()));
 	}
 
 	public static HudSyncPayload read(FriendlyByteBuf buffer) {
-		return new HudSyncPayload(readEntries(buffer), readEntries(buffer));
+		return new HudSyncPayload(readEntries(buffer), readEntries(buffer), buffer.readVarInt());
 	}
 
 	private static void writeEntries(FriendlyByteBuf buffer, List<Entry> entries) {

@@ -9,7 +9,9 @@ public enum SephiriaTab {
 	ATTRIBUTES("screen.sephiria_fantasy.stats"),
 	TALENT("screen.sephiria_fantasy.tab.talent"),
 	ARTIFACT_SKILLS("screen.sephiria_fantasy.artifact_skills"),
-	SHOP("screen.sephiria_fantasy.shop");
+	SHOP("screen.sephiria_fantasy.shop"),
+	/** 选卡：服务端掷三张卡推过来，客户端收到才打开界面。 */
+	CARD("screen.sephiria_fantasy.tab.card");
 
 	private final String titleKey;
 

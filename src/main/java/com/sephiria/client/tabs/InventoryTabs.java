@@ -32,6 +32,13 @@ public final class InventoryTabs {
 		Screens.getButtons(screen).add(new TabButton(x + 88, top, TabButton.SHOP_ICON,
 				Component.translatable("screen.sephiria_fantasy.shop"),
 				button -> ClientPlayNetworking.send(OpenShopPayload.CHANNEL, new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer()))));
+		Screens.getButtons(screen).add(new TabButton(x + 110, top, TabButton.CARD_ICON,
+				Component.translatable("screen.sephiria_fantasy.tab.card"),
+				button -> {
+					com.sephiria.client.card.ClientCardSelection.clearSuppress();
+					ClientPlayNetworking.send(com.sephiria.network.CardOpenPayload.CHANNEL,
+							new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer()));
+				}));
 	}
 
 	public static boolean applies(Screen screen) {

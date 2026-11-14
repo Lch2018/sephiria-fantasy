@@ -20,6 +20,7 @@ public class TabButton extends Button {
 	public static final ResourceLocation TALENT_ICON = new ResourceLocation(Sephiria.MOD_ID, "textures/gui/talent_tab.png");
 	public static final ResourceLocation SKILLS_ICON = new ResourceLocation(Sephiria.MOD_ID, "textures/item/haste_grimoire.png");
 	public static final ResourceLocation SHOP_ICON = new ResourceLocation(Sephiria.MOD_ID, "textures/gui/shop_tab.png");
+	public static final ResourceLocation CARD_ICON = new ResourceLocation(Sephiria.MOD_ID, "textures/gui/card_tab.png");
 	public static final int SIZE = 20;
 
 	private static final int ICON_SIZE = 18;

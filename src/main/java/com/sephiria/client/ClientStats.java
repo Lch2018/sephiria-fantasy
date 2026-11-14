@@ -40,6 +40,9 @@ public final class ClientStats {
 	private static double shopDiscount = 0.0D;
 	private static double leafGainPercent = PlayerStats.DEFAULT_LEAF_GAIN;
 	private static double xpDropPercent = PlayerStats.DEFAULT_XP_DROP;
+	private static double magicBookHaste;
+	private static double magicBookMpReduction;
+	private static double magicBoltMpCostIncrease;
 	private static PlayerStats.PhysicalBreakdown attackBreakdown = new PlayerStats.PhysicalBreakdown(
 			PlayerStats.DEFAULT_ATTACK_SPEED, 0.0D, 0.0D, 0.0D, 0.0D);
 	private static PlayerStats.PhysicalBreakdown breakdown = new PlayerStats.PhysicalBreakdown(
@@ -77,12 +80,27 @@ public final class ClientStats {
 		shopDiscount = payload.shopDiscount();
 		leafGainPercent = payload.leafGainPercent();
 		xpDropPercent = payload.xpDropPercent();
+		magicBookHaste = payload.magicBookHaste();
+		magicBookMpReduction = payload.magicBookMpReduction();
+		magicBoltMpCostIncrease = payload.magicBoltMpCostIncrease();
 		breakdown = new PlayerStats.PhysicalBreakdown(payload.physicalBase(), payload.artifactFlat(),
 				payload.potionFlat(), payload.artifactPercent(), payload.potionPercent());
 		attackBreakdown = new PlayerStats.PhysicalBreakdown(payload.attackBase(), payload.attackArtifactFlat(),
 				payload.attackPotionFlat(), payload.attackArtifactPercent(), payload.attackPotionPercent());
 	}
 
+
+	public static double magicBookHaste() {
+		return magicBookHaste;
+	}
+
+	public static double magicBookMpReduction() {
+		return magicBookMpReduction;
+	}
+
+	public static double magicBoltMpCostIncrease() {
+		return magicBoltMpCostIncrease;
+	}
 
 	/** 普通攻击倍率：与服务端公式一致（物理强度 ×（1 + 物理伤害增幅）× 武器伤害 × 普通攻击伤害）。 */
 	public static double damageMultiplier() {
