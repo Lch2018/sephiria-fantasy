@@ -37,29 +37,7 @@ public abstract class HealthChangeParticleMixin implements ToroHealthCritAccess 
 	@Shadow
 	@Final
 	private int value;
-	/** 粒子的上一帧 / 当前帧位置与透明度（继承自 {@code Particle}）。 */
-	@Shadow
-	protected double xo;
-	@Shadow
-	protected double yo;
-	@Shadow
-	protected double zo;
-	@Shadow
-	protected double x;
-	@Shadow
-	protected double y;
-	@Shadow
-	protected double z;
-	@Shadow
-	protected float rCol;
-	@Shadow
-	protected float gCol;
-	@Shadow
-	protected float bCol;
-	@Shadow
-	protected float alpha;
-	@Shadow
-	protected abstract int getLightColor(float partialTick);
+
 
 	@Unique
 	private boolean sephiria$custom;
@@ -122,21 +100,21 @@ public abstract class HealthChangeParticleMixin implements ToroHealthCritAccess 
 				? Integer.toString(this.sephiria$displayValue)
 				: Integer.toString(this.value);
 		// 颜色：RGB 由工厂混入写入的元素色，alpha 跟随粒子淡出。
-		int alphaBits = ((int) (this.alpha * 255.0F) & 0xFF) << 24;
+		int alphaBits = ((int) (((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$alpha() * 255.0F) & 0xFF) << 24;
 		int color = alphaBits
-				| (((int) (this.rCol * 255.0F) & 0xFF) << 16)
-				| (((int) (this.gCol * 255.0F) & 0xFF) << 8)
-				| ((int) (this.bCol * 255.0F) & 0xFF);
+				| (((int) (((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$red() * 255.0F) & 0xFF) << 16)
+				| (((int) (((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$green() * 255.0F) & 0xFF) << 8)
+				| ((int) (((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$blue() * 255.0F) & 0xFF);
 		color = ToroHealthTextRenderer.brighten(color, ToroHealthTextRenderer.DEFAULT_BRIGHTNESS);
 		int light = ToroHealth.getConfig().particleOptions.particleLightMode
 				== ModConfig.ParticleLightMode.FULL_BRIGHT
 						? 0xF000F0
-						: this.getLightColor(partialTick);
+						: ((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$getLightColor(partialTick);
 
 		// 与 ToroHealth 原渲染相同的插值位置（粒子在实体半身高处）
-		float px = (float) (Mth.lerp(partialTick, this.xo, this.x) - camera.getPosition().x);
-		float py = (float) (Mth.lerp(partialTick, this.yo, this.y) - camera.getPosition().y);
-		float pz = (float) (Mth.lerp(partialTick, this.zo, this.z) - camera.getPosition().z);
+		float px = (float) (Mth.lerp(partialTick, ((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$xo(), ((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$x()) - camera.getPosition().x);
+		float py = (float) (Mth.lerp(partialTick, ((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$yo(), ((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$y()) - camera.getPosition().y);
+		float pz = (float) (Mth.lerp(partialTick, ((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$zo(), ((com.sephiria.mixin.client.ParticleAccessor) (Object) this).sephiria$z()) - camera.getPosition().z);
 
 		// 原渲染器同样自建一个 BufferBuilder（不复用 Tesselator 的共享 builder，避免与粒子引擎打架）
 		MultiBufferSource.BufferSource buffers = MultiBufferSource.immediate(new BufferBuilder(256));

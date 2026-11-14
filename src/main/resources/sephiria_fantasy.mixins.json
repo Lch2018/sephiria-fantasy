@@ -6,6 +6,7 @@
 	"client": [
 		"HealthChangeFactoryMixin",
 		"HealthChangeParticleMixin",
+		"ParticleAccessor",
 		"LivingEntitySyncMixin",
 		"ToroHealthHudMixin",
 		"InvulnerableGlowMixin",
