@@ -83,6 +83,10 @@ public final class SephiriaClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		com.sephiria.client.particle.SephiriaParticles.register();
+		// 赛菲莉娅流浪商人走原版模型，只换红袍贴图；不注册就没有渲染器
+		net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+				com.sephiria.registry.ModEntities.SEPHIRIA_WANDERING_TRADER,
+				com.sephiria.client.trader.SephiriaTraderRenderer::new);
 		com.sephiria.client.hud.HudConfig.load();
 
 		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.ArtifactBackpackScreen>register(
@@ -192,7 +196,7 @@ public final class SephiriaClient implements ClientModInitializer {
 						if (client.screen instanceof com.sephiria.client.card.CardSelectionScreen screen) {
 							screen.syncFromCache(false);
 						} else {
-							client.setScreen(new com.sephiria.client.card.CardSelectionScreen());
+							com.sephiria.client.CursorKeeper.show(client, new com.sephiria.client.card.CardSelectionScreen());
 						}
 					});
 				});
@@ -278,7 +282,7 @@ public final class SephiriaClient implements ClientModInitializer {
 			// H 打开 HUD 布局：和属性 / 天赋页一样只在没有界面开着时响应，避免在聊天里误触
 			while (HUD_KEY.consumeClick()) {
 				if (client.player != null && client.screen == null) {
-					client.setScreen(new com.sephiria.client.hud.HudConfigScreen(null));
+					client.setScreen(new com.sephiria.client.config.SephiriaSettingsScreen(null));
 				}
 			}
 

@@ -7,21 +7,14 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * HUD 布局设置的一级界面：每个模块一行「显示开关」+「布局」。
+ * HUD 布局设置的一级界面：列出所有 HUD 模块，点进去才是该模块自己的设置界面。
  *
- * <p>模块清单在 {@link HudConfig#MODULES} 统一登记，所以这个界面不需要因为新增模块而改动；
- * 点「布局」进 {@link HudModuleScreen}，在那里拖动预览调整位置、用 - / + 调缩放。
- *
- * <p>模块到 9 个以后单列放不下 240 高的 GUI，所以超过 5 行时自动排两列。
+ * <p>模块清单在 {@link HudConfig#MODULES} 统一登记，所以这个界面和模块界面都不需要
+ * 因为新增模块而改动——模块变多也只是这里多一行按钮。
  */
 public class HudConfigScreen extends Screen {
-	private static final int ROW_WIDTH = 280;
 	private static final int ROW_HEIGHT = 20;
-	private static final int ROW_GAP = 4;
-	private static final int BUTTON_GAP = 8;
-	private static final int LAYOUT_WIDTH = 52;
-	/** 超过这个行数就排两列，免得在 240 高的 GUI 上把「完成」按钮挤出屏幕。 */
-	private static final int SINGLE_COLUMN_ROWS = 5;
+	private static final int COLUMN_GAP = 8;
 
 	private final Screen parent;
 
@@ -32,49 +25,47 @@ public class HudConfigScreen extends Screen {
 
 	@Override
 	protected void init() {
-		int count = HudConfig.MODULES.size();
-		int columns = count > SINGLE_COLUMN_ROWS ? 2 : 1;
-		// GUI 宽度最小 320，但留一点余量，别在极端分辨率下把按钮挤出屏幕
-		int columnWidth = Math.min(ROW_WIDTH, (this.width - 16 - BUTTON_GAP * (columns - 1)) / columns);
-		int toggleWidth = Math.max(40, columnWidth - LAYOUT_WIDTH - BUTTON_GAP);
-		int left = (this.width - (columnWidth * columns + BUTTON_GAP * (columns - 1))) / 2;
-		int top = 52;
+		// 最上方是「统一调整」：一次改所有模块的缩放；下面是各模块自己的位置 / 缩放。
+		addRenderableWidget(Button.builder(Component.translatable("screen.sephiria_fantasy.hud.uniform"),
+						button -> Minecraft.getInstance().setScreen(new HudUniformScaleScreen(this)))
+				.bounds(this.width / 2 - 100, 30, 200, ROW_HEIGHT)
+				.build());
 
-		for (int index = 0; index < count; index++) {
-			String module = HudConfig.MODULES.get(index);
-			HudConfig.Element element = HudConfig.element(module);
+		// 模块到 11 个以后单列放不下：超过 7 个就自动排两列
+		int columns = HudConfig.MODULES.size() > 7 ? 2 : 1;
+		int width = columns == 1 ? 200 : 150;
+		int left = Math.max(8, this.width / 2 - (columns * width + (columns - 1) * COLUMN_GAP) / 2);
+		int y = 56;
+
+		for (int index = 0; index < HudConfig.MODULES.size(); index++) {
+			String key = HudConfig.MODULES.get(index);
 			int column = index % columns;
 			int row = index / columns;
-			int rowX = left + column * (columnWidth + BUTTON_GAP);
-			int y = top + row * (ROW_HEIGHT + ROW_GAP);
-
-			addRenderableWidget(Button.builder(toggleLabel(module, element), button -> {
-						element.visible = !element.visible;
-						button.setMessage(toggleLabel(module, element));
-						HudConfig.save();
-					})
-					.bounds(rowX, y, toggleWidth, ROW_HEIGHT)
-					.build());
-
-			addRenderableWidget(Button.builder(Component.translatable("screen.sephiria_fantasy.hud.layout"),
-							button -> Minecraft.getInstance().setScreen(new HudModuleScreen(this, module)))
-					.bounds(rowX + toggleWidth + BUTTON_GAP, y, LAYOUT_WIDTH, ROW_HEIGHT)
+			int x = left + column * (width + COLUMN_GAP);
+			int top = y + row * 24;
+			addRenderableWidget(Button.builder(Component.translatable("screen.sephiria_fantasy.hud." + key),
+							button -> Minecraft.getInstance().setScreen(new HudModuleScreen(this, key)))
+					.bounds(x, top, width, ROW_HEIGHT)
 					.build());
 		}
 
+		int bottom = this.height - 40;
+		int half = 98;
+		addRenderableWidget(Button.builder(Component.translatable("screen.sephiria_fantasy.hud.reset"),
+						button -> HudConfig.resetAll())
+				.bounds(this.width / 2 - 100, bottom, half, ROW_HEIGHT)
+				.build());
 		addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> onClose())
-				.bounds(this.width / 2 - 100, this.height - 32, 200, ROW_HEIGHT)
+				.bounds(this.width / 2 - 100 + half + 4, bottom, half, ROW_HEIGHT)
 				.build());
 	}
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-		// 1.20.1 的 renderBackground 只收 GuiGraphics 一个参数
+		// 1.20.1 的 Screen 不会自动画标题，26.x 那套是基类画的
 		this.renderBackground(graphics);
 		super.render(graphics, mouseX, mouseY, partialTick);
-		graphics.drawCenteredString(this.font, this.title, this.width / 2, 20, 0xFFFFFFFF);
-		graphics.drawCenteredString(this.font, Component.translatable("screen.sephiria_fantasy.hud.list_hint"),
-				this.width / 2, 34, 0xFFB0B0B0);
+		graphics.drawCenteredString(this.font, this.title, this.width / 2, 12, 0xFFFFFFFF);
 	}
 
 	@Override
@@ -83,8 +74,7 @@ public class HudConfigScreen extends Screen {
 
 		if (this.parent != null) {
 			Minecraft.getInstance().setScreen(this.parent);
-		}
-		else {
+		} else {
 			super.onClose();
 		}
 	}
@@ -93,11 +83,5 @@ public class HudConfigScreen extends Screen {
 	public boolean isPauseScreen() {
 		// 布局时要能看见 HUD 实时更新，而且多人游戏里不该把世界冻住
 		return false;
-	}
-
-	private static Component toggleLabel(String module, HudConfig.Element element) {
-		return Component.translatable("screen.sephiria_fantasy.hud.toggle",
-				Component.translatable("screen.sephiria_fantasy.hud." + module),
-				Component.translatable(element.visible ? "gui.yes" : "gui.no"));
 	}
 }

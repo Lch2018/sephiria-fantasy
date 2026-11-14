@@ -1,47 +1,84 @@
 package com.sephiria.client.trader;
 
-import com.sephiria.client.menu.SephiriaMenuScreen;
 import com.sephiria.network.OpenSlateFusionPayload;
 import com.sephiria.trader.SephiriaTraderMenu;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.Slot;
 
-/** 商人界面：通用面板 + 左下角「石板合成」按钮。 */
-public class TraderScreen extends SephiriaMenuScreen<SephiriaTraderMenu> {
+/**
+ * 赛菲莉娅流浪商人的交易界面（自定义，和宝箱页同一套画法）：一排 9 格商品 + 玩家背包。
+ *
+ * <p>商品格只是展示，点哪一格服务端就把那件货免费塞进背包；卖掉的格子会变空，不会补货。
+ * 与 26.x 的差别只有背景：1.20.1 没有菜单虚化，用原版那层暗色渐变再加同样的自绘面板。
+ */
+public class TraderScreen extends AbstractContainerScreen<SephiriaTraderMenu> {
+	private static final int PANEL_COLOR = 0xC0101010;
+	private static final int BORDER_LIGHT = 0xFF4A4A52;
+	private static final int BORDER_DARK = 0xFF1A1A1E;
+	private static final int SLOT_COLOR = 0xFF2A2A30;
+	private static final int SLOT_EDGE = 0xFF15151A;
+
+	/** 「石板合成」按钮：这个玩家在这只商人身上用过之后就置灰。 */
+	private Button fusionButton;
+
 	public TraderScreen(SephiriaTraderMenu menu, Inventory inventory, Component title) {
-		super(menu, inventory, title, SephiriaTraderMenu.IMAGE_WIDTH, SephiriaTraderMenu.imageHeight(), true);
+		super(menu, inventory, title);
+		// 1.20.1 的容器界面没有「宽高构造参数」，尺寸靠这两个保护字段
+		this.imageWidth = SephiriaTraderMenu.IMAGE_WIDTH;
+		this.imageHeight = SephiriaTraderMenu.imageHeight();
+		this.inventoryLabelY = SephiriaTraderMenu.playerRowsY() - 11;
 	}
 
 	@Override
 	protected void init() {
 		super.init();
-		this.addRenderableWidget(Button.builder(
-				Component.translatable("screen.sephiria_fantasy.trader.slate_fusion"),
-				button -> ClientPlayNetworking.send(OpenSlateFusionPayload.CHANNEL,
-						new FriendlyByteBuf(Unpooled.buffer())))
+		// 面板左下角的「石板合成」：容器菜单必须由服务端打开，所以这里只发一个请求包
+		this.fusionButton = Button.builder(
+						Component.translatable("screen.sephiria_fantasy.trader.slate_fusion"),
+						pressed -> ClientPlayNetworking.send(OpenSlateFusionPayload.CHANNEL,
+								new FriendlyByteBuf(Unpooled.buffer())))
 				.bounds(this.leftPos + SephiriaTraderMenu.FUSION_BUTTON_X,
 						this.topPos + SephiriaTraderMenu.fusionButtonY(),
-						SephiriaTraderMenu.FUSION_BUTTON_WIDTH, SephiriaTraderMenu.FUSION_BUTTON_HEIGHT).build());
+						SephiriaTraderMenu.FUSION_BUTTON_WIDTH, SephiriaTraderMenu.FUSION_BUTTON_HEIGHT)
+				.build();
+		addRenderableWidget(this.fusionButton);
 	}
 
 	@Override
-	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-		super.renderLabels(graphics, mouseX, mouseY);
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		if (this.fusionButton != null) {
+			// 每个商人每个玩家一次：服务端把「用没用过」同步在数据槽里，用过就灰掉
+			this.fusionButton.active = !this.menu.fusionUsed();
+		}
 
-		for (int index = 0; index < SephiriaTraderMenu.SLOTS; index++) {
-			ItemStack stack = this.menu.getSlot(index).getItem();
+		super.render(graphics, mouseX, mouseY, partialTick);
+	}
 
-			if (!stack.isEmpty()) {
-				graphics.drawString(this.font, stack.getHoverName(),
-						SephiriaTraderMenu.SLOT_X + index * 18, SephiriaTraderMenu.SLOT_Y + 18,
-						0xFFD0D0D0, false);
+	@Override
+	protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+		int left = this.leftPos;
+		int top = this.topPos;
+
+		graphics.fill(left - 1, top - 1, left + this.imageWidth + 1, top + this.imageHeight + 1, BORDER_DARK);
+		graphics.fill(left, top, left + this.imageWidth, top + this.imageHeight, PANEL_COLOR);
+		graphics.fill(left, top, left + this.imageWidth, top + 1, BORDER_LIGHT);
+
+		for (Slot slot : this.menu.slots) {
+			if (this.menu.slots.indexOf(slot) >= SephiriaTraderMenu.SLOTS) {
+				continue;
 			}
+
+			int x = left + slot.x;
+			int y = top + slot.y;
+			graphics.fill(x - 1, y - 1, x + 17, y + 17, SLOT_EDGE);
+			graphics.fill(x, y, x + 16, y + 16, SLOT_COLOR);
 		}
 	}
 }

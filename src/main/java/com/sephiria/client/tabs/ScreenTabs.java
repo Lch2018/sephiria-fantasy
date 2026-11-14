@@ -92,24 +92,33 @@ public final class ScreenTabs {
 		// 目标是容器菜单（背包 / 商店）时不用先关：服务端会用 openMenu 顶掉当前那个
 		boolean containerTarget = tab == SephiriaTab.BACKPACK || tab == SephiriaTab.SHOP;
 
+		// 容器目标也要记：服务端回包后才 setScreen，位置一直保留到目标界面开出来；
+		// 中途的 setScreen(null) 由 afterSetScreen 跳过。
+		com.sephiria.client.CursorKeeper.capture(client);
+
 		if (!containerTarget && client.player.containerMenu != client.player.inventoryMenu) {
 			// closeContainer() 会发关闭包、顺手关掉当前界面，下面再切到目标界面
 			client.player.closeContainer();
 		}
 
 		switch (tab) {
-			case VANILLA -> client.setScreen(client.player.isCreative()
+			case VANILLA -> com.sephiria.client.CursorKeeper.show(client, client.player.isCreative()
 					? new CreativeModeInventoryScreen(client.player,
 							client.player.connection.enabledFeatures(), false)
 					: new InventoryScreen(client.player));
 			// 背包与商店都是容器菜单，只能由服务端打开，所以这里发包
 			case BACKPACK -> sendEmpty(OpenBackpackPayload.CHANNEL);
-			case ATTRIBUTES -> client.setScreen(new StatsScreen());
-			case TALENT -> client.setScreen(new TalentScreen());
+			case ATTRIBUTES -> com.sephiria.client.CursorKeeper.show(client, new StatsScreen());
+			case TALENT -> com.sephiria.client.CursorKeeper.show(client, new TalentScreen());
 			// 技能列表由服务端算（客户端没有背包内容）；ArtifactSkillScreen.init() 会发
 			// OpenArtifactSkillsPayload，这里只负责开页面，别重复发
-			case ARTIFACT_SKILLS -> client.setScreen(new ArtifactSkillScreen());
+			case ARTIFACT_SKILLS -> com.sephiria.client.CursorKeeper.show(client, new ArtifactSkillScreen());
 			case SHOP -> sendEmpty(OpenShopPayload.CHANNEL);
+			// 选卡不是容器菜单：清掉「刚关掉」的静默期，让服务端掷好三张卡再推回来打开界面
+			case CARD -> {
+				com.sephiria.client.card.ClientCardSelection.clearSuppress();
+				sendEmpty(com.sephiria.network.CardOpenPayload.CHANNEL);
+			}
 		}
 	}
 

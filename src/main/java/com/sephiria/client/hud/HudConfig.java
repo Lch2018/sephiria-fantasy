@@ -178,6 +178,45 @@ public final class HudConfig {
 		return Mth.clamp(scale, SCALE_MIN, SCALE_MAX);
 	}
 
+	/** 「统一调整」：把所有模块的缩放设成同一个值。 */
+	public static void applyScaleToAll(double scale) {
+		double clamped = clampScale(scale);
+		Element invuln = ELEMENTS.get(INVULN);
+		double invulnCenter = invuln == null ? Double.NaN
+				: invuln.x + DEFAULT_INVULN_WIDTH * invuln.scale / 2.0D;
+
+		for (String module : MODULES) {
+			element(module).scale = clamped;
+		}
+
+		// 无敌条缩放时保持中心不动（渲染时还会再按屏幕中心校一次）
+		Element current = ELEMENTS.get(INVULN);
+
+		if (current != null && !Double.isNaN(invulnCenter)) {
+			current.x = invulnCenter - DEFAULT_INVULN_WIDTH * clamped / 2.0D;
+		}
+	}
+
+	/** 所有 HUD 缩放的算术平均，作为「统一调整」滑块的初始位置。 */
+	public static double averageScale() {
+		double total = 0.0D;
+
+		for (String module : MODULES) {
+			total += element(module).scale;
+		}
+
+		return total / MODULES.size();
+	}
+
+	/** 重置所有 HUD：回到默认位置、缩放 1.0、默认显示状态。 */
+	public static void resetAll() {
+		ELEMENTS.clear();
+
+		for (String module : MODULES) {
+			element(module);
+		}
+	}
+
 	public static void load() {
 		if (loaded) {
 			return;

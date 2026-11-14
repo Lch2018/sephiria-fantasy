@@ -1,42 +1,48 @@
 {
-	"required": false,
-	"minVersion": "0.8",
-	"package": "com.sephiria.mixin.client",
-	"compatibilityLevel": "JAVA_17",
-	"client": [
-		"HealthChangeFactoryMixin",
-		"HealthChangeParticleMixin",
-		"ParticleAccessor",
-		"LivingEntitySyncMixin",
-		"ToroHealthHudMixin",
-		"InvulnerableGlowMixin",
-		"InvulnerableGlowColorMixin",
-		"MinecraftAttackMixin",
-		"OffHandHideMixin",
-		"CrossbowArmPoseMixin",
-		"EntityRendererMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	},
-	"mixins": [
-		"DamageReductionMixin",
-		"DebuffTickMixin",
-		"MirageDodgeMixin",
-		"MobStunMixin",
-		"FrozenMotionMixin",
-		"LeafExperienceMixin",
-		"PlayerMiningSpeedMixin",
-		"FishingHookMixin",
-		"FurnaceHeavenSlateMixin",
-		"EnchantmentHelperMixin",
-		"PlayerAdvancementsMixin",
-		"RootRetreatFallMixin",
-		"RootRetreatHealingMixin",
-		"RootRetreatNameMixin",
-		"RootRetreatDeathMixin",
-		"AnvilMenuMixin",
-		"ItemCombinerMenuAccessor",
-		"KatanaAttributesMixin"
-	]
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.sephiria.mixin.client",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "HealthChangeFactoryMixin",
+    "HealthChangeParticleMixin",
+    "ParticleAccessor",
+    "LivingEntitySyncMixin",
+    "ToroHealthHudMixin",
+    "InvulnerableGlowMixin",
+    "InvulnerableGlowColorMixin",
+    "MinecraftAttackMixin",
+    "OffHandHideMixin",
+    "CrossbowArmPoseMixin",
+    "EntityRendererMixin",
+    "CursorRestoreMixin",
+    "MouseHandlerAccessor",
+    "FrozenTintMixin",
+    "WeaponGlintMixin",
+    "ShopSlotOverlayMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "DamageReductionMixin",
+    "DebuffTickMixin",
+    "MirageDodgeMixin",
+    "MobStunMixin",
+    "FrozenMotionMixin",
+    "LeafExperienceMixin",
+    "PlayerMiningSpeedMixin",
+    "FishingHookMixin",
+    "FurnaceHeavenSlateMixin",
+    "EnchantmentHelperMixin",
+    "PlayerAdvancementsMixin",
+    "RootRetreatFallMixin",
+    "RootRetreatHealingMixin",
+    "RootRetreatNameMixin",
+    "RootRetreatDeathMixin",
+    "AnvilMenuMixin",
+    "ItemCombinerMenuAccessor",
+    "KatanaAttributesMixin",
+    "SephiriaDamageFramesMixin"
+  ]
 }

@@ -41,6 +41,21 @@
   GeckoLib 4 控制器与 `to_sheathed` / `to_unsheathered` / `attack_sheathed` 动画
 - 弩完整 0.5.x 弹匣系统：多弹匣 + 备用弹匣、换弹 BUFF（10 秒伤害加成）、
   弹匣耗尽自动切换备用、HUD 同步；弩箭伤害吃神器伤害加成
+- 0.5.x 设置链路：H 键 → 赛菲莉娅设置（HUD 设置 / 伤害显示）、HUD 统一缩放与重置、
+  伤害显示亮度/大小/税前开关
+- 光标保持：`CursorKeeper` + `CursorRestoreMixin` + `MouseHandlerAccessor`，
+  切标签页不再被原版拉回屏幕中心；选卡页也走同一条还原链
+- 冰冻染色：`FrozenTintMixin` 在 `LivingEntityRenderer.render` 前后压/还原
+  `RenderSystem` 着色（1.20.1 没有 render state / model tint）
+- 流浪商人红袍渲染器（原先没注册渲染器），交易界面换成 0.5.x 自绘面板 + 售罄/石板合成置灰
+- 伤害无视无敌帧与击退冷却：`SephiriaDamageFramesMixin` 挂在 1.20.1 `LivingEntity.hurt`
+- 根之退界面 0.5.x 全量：两列方案、阶段/祝福、滚动列表、悬停说明与浮窗
+- 商店界面 0.5.x 全量：自绘面板、格下价格（买得起黄 / 买不起红）、售罄蒙层、
+  宝箱剩余次数、骰子/出售说明、悬停购买提示、顶部余额
+- 粒子逐类还原：BlueSpark / Plasma / Snowfall / IceGlint / SunSlash / IceSlash /
+  FrostQi / FlameQi（FrostQi 按飞行方向自定义四元数摆面，SunSlash 满亮 + 淡出）
+- 匕首 / 刀在物品栏、地面、展示框的自定义微光（`WeaponGlint` + 原版包内
+  `SephiriaGlintRenderTypes`）；刀拿在手里的 GeckoLib 那一遍仍未接
 
 ## 实测记录
 
@@ -48,21 +63,21 @@
 - `gradlew runServer`：`Done (6.956s)`，无注册表 / 数据包 / mixin 应用错误
 - 已加载 7 张配方、1271 个进度；赛菲莉娅概率覆盖正常载入
 
-### 客户端（1.20.1-Fabric 0.20.1 实例，2026-11-15 02:54 / 02:55）
-- 02:54 用实例的 1.20.1 classpath + Java 21 冷启动到主菜单，日志到
-  `Sound engine started`、全部原版 atlas 创建完成
-- 02:55 追加 `--quickPlaySingleplayer 新的世界` 直接进存档：`Preparing start region`、
-  加载 7 张配方 / 1271 个进度，窗口标题进入「单人游戏」，世界内运行约 1 分钟
-- **无 Mixin apply 失败、无模型加载失败、无运行时异常**；主动关窗后所有维度正常存盘退出
+### 客户端（1.20.1-Fabric 0.20.1 实例）
+- 2026-11-15 02:54 / 02:55：冷启动到主菜单，再 `--quickPlaySingleplayer 新的世界` 进存档，
+  世界内运行约 1 分钟，主动关窗后正常存盘退出
+- 2026-11-15 03:09 / 03:11：补齐设置界面、光标、冰冻染色、商人、商店、根之退、
+  粒子、微光与伤害帧 mixin 后再次进存档；另用 SendKeys 按 H 打开设置页再 Esc 返回
+- 两次都**无 Mixin apply 失败、无模型加载失败、无运行时异常**
 - 仅有的日志异常是离线启动的认证 401、自定义实体 data fixer 警告、
   两张贴图尺寸非 2 的幂导致的 mip 警告（与本模组功能无关）
 
 ## 仍未完成
 
-- 属性页 / 天赋页 / 背包页的 0.5.x 全量视觉与交互（当前是 1.20.1 已有版本）
-- 新粒子类（BlueSpark / FrostQi / IceGlint / Plasma / Snowfall / SunSlash）的逐类视觉还原；
-  目前新粒子统一走 `SephiriaParticle` 通用实现
-- GeckoLib 4 下武器的自定义 glint（26.x 的 `WeaponGlint` 管线）
-- 设置 / 伤害显示 / HUD 统一缩放三个 0.5.x 配置界面，以及 `CursorKeeper` 光标保持
-- 冰冻染色、配方书页签（1.20.1 的配方书 API 与 26.x 差别较大）
-- 尚未在游戏内逐项操作许愿池 / 技能页 / 新神器（启动与进存档已通过，交互未逐项点过）
+- 属性页 / 天赋页 / 背包页的 0.5.x 全量视觉与交互（1.20.1 已有功能，但排版未逐像素对齐）
+- 刀的 GeckoLib 手持模型那一遍自定义 glint（物品栏 / 地面 / 展示框已覆盖）
+- 配方书独立的「赛菲莉娅」页签：1.20.1 没有 `RecipeBookCategory` 注册表，
+  配方书页签是写死的枚举（`RecipeBookCategories`），做不到 26.x 的数据驱动自定义分类；
+  本模组配方仍按 JSON 的 `CraftingBookCategory` 落在原版「装备 / 杂物」页里
+- 尚未在游戏内逐项操作许愿池 / 技能页 / 新神器（启动、进存档、打开设置页已通过，
+  商店 / 根之退 / 商人 / 许愿池的鼠标交互未逐项点过）
