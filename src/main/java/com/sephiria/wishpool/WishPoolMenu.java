@@ -1,6 +1,12 @@
 package com.sephiria.wishpool;
 
 import com.sephiria.registry.ModMenus;
+import com.sephiria.network.WishPoolResultPayload;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.Items;
+import net.minecraft.network.FriendlyByteBuf;
+import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -18,6 +24,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -352,6 +360,75 @@ public class WishPoolMenu extends AbstractContainerMenu {
 		scatter(forged);
 
 		this.broadcastChanges();
+	}
+
+	/** 批量神铸：客户端只发物品数字 id，服务端重新查表、判价、一次扣费。 */
+	public void forgeIds(List<Integer> itemIds) {
+		if (this.owner == null || itemIds == null || itemIds.isEmpty()) {
+			return;
+		}
+
+		List<Item> items = new ArrayList<>(itemIds.size());
+
+		for (int id : itemIds) {
+			if (id <= 0) {
+				continue;
+			}
+
+			Item item = BuiltInRegistries.ITEM.byId(id);
+
+			if (item != Items.AIR) {
+				items.add(item);
+			}
+		}
+
+		forgeItems(items);
+	}
+
+	/** 批量神铸：同一件只算一次；总价 = 各件品质价格之和，一次扣、一次发结果。 */
+	public void forgeItems(List<Item> items) {
+		if (this.owner == null || items == null || items.isEmpty()) {
+			return;
+		}
+
+		LinkedHashSet<Item> unique = new LinkedHashSet<>(items);
+		List<Item> forgeable = new ArrayList<>(unique.size());
+		int total = 0;
+
+		for (Item item : unique) {
+			int cost = WishPool.forgeCost(com.sephiria.artifact.ArtifactLoot.rarityOf(item));
+
+			if (cost > 0) {
+				total += cost;
+				forgeable.add(item);
+			}
+		}
+
+		if (forgeable.isEmpty() || WishPool.energy(this.owner) < total) {
+			return;
+		}
+
+		WishPool.addEnergy(this.owner, -total);
+		List<ItemStack> forged = new ArrayList<>(forgeable.size());
+
+		for (Item item : forgeable) {
+			forged.add(new ItemStack(item));
+		}
+
+		scatter(forged);
+		sendResult(forged);
+		this.broadcastChanges();
+	}
+
+	private void sendResult(List<ItemStack> forged) {
+		if (this.owner == null) {
+			return;
+		}
+
+		WishPoolResultPayload payload = new WishPoolResultPayload(forged);
+		FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+		WishPoolResultPayload.write(buffer, payload);
+		ServerPlayNetworking.send(this.owner, WishPoolResultPayload.CHANNEL, buffer);
 	}
 
 	/** 这个界面不碰物品：Shift 点击一律不搬东西。 */

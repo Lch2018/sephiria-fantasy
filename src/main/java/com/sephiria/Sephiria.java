@@ -93,6 +93,8 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.difficulty.RootRetreatBlessings.register();
 		// 许愿池：能量与锚定也是每玩家一份的数据附件（方块只是入口 + 吸升级宝箱）
 		com.sephiria.wishpool.WishPool.register();
+		// 选卡：每 2 个游戏日攒一次机会（玩家附件）
+		com.sephiria.card.CardSelection.register();
 		// 天赋：成就是四叶草之外再 +1 天赋点，击杀 BOSS 也 +1（见 talent/Talents）
 		com.sephiria.talent.Talents.register();
 		// 天赋「耐心」：第一行格子等级、低血回复、十日复活
@@ -102,6 +104,7 @@ public class Sephiria implements ModInitializer {
 		// 商店货架的内容与限购次数存在玩家附件里：跨会话保留，重登/重启不会换一批货
 		com.sephiria.shop.ShopStock.register();
 		PlayerStats.register();
+		com.sephiria.stats.Fatigue.register();
 		OffHandGuard.register();
 		SephiriaKatanaItem.registerEvents();
 		SephiriaKatanaItem.register();
@@ -140,6 +143,17 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.artifact.FireflyItem.register();
 		com.sephiria.artifact.SandeEarringsItem.registerTicker();
 		com.sephiria.artifact.skill.ThunderVerdictSkill.register();
+		com.sephiria.artifact.skill.MagicBoltSkill.register();
+		com.sephiria.artifact.skill.FlameArrowSkill.register();
+		com.sephiria.artifact.skill.FrostKnifeSkill.register();
+		com.sephiria.artifact.skill.LightningBoomerangSkill.register();
+		com.sephiria.artifact.skill.FireCircusSkill.register();
+		com.sephiria.artifact.skill.ArrowRainSkill.register();
+		com.sephiria.artifact.skill.ThunderArmorSkill.register();
+		com.sephiria.artifact.skill.MeteorShowerSkill.register();
+		com.sephiria.artifact.skill.IceStormSkill.register();
+		com.sephiria.artifact.skill.WaterGrabSkill.register();
+		com.sephiria.artifact.BrokenSapphireItem.register();
 		// 脱战/战斗状态（乌云容量回复用）与「乌云」连击（头顶乌云 + 周期雷击）；台风的武器附加闪电
 		CombatState.register();
 		com.sephiria.cloud.DarkCloud.registerTicker();
@@ -161,6 +175,13 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.artifact.ArtifactHud.registerTicker();
 		// 特别神器「书」：书上附了火焰附加时，神器 / 连击的伤害点燃目标（抢夺在掉落结算那一侧接入）
 		com.sephiria.artifact.BookItem.register();
+		com.sephiria.artifact.TuningFork.register();
+		com.sephiria.artifact.PlitviceWaterDropItem.registerTicker();
+		com.sephiria.stats.ShieldSystem.register();
+		com.sephiria.artifact.BrokenMirrorItem.register();
+		com.sephiria.artifact.ThornShellItem.register();
+		com.sephiria.artifact.WhiteEdgeBreadItem.register();
+		com.sephiria.artifact.skill.RockElephantSkill.register();
 
 
 
@@ -265,6 +286,73 @@ public class Sephiria implements ModInitializer {
 		com.sephiria.compat.torohealth.ToroHealthDamagePayload.register();
 
 		// 1.20.1 旧 channel：客户端按键只发一个空包，实际判定全在服务端
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.FrostQiPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(
+						() -> com.sephiria.frost.FrostArmament.onSwing(player)));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.ShieldSweepPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(
+						() -> SephiriaShieldItem.tryDefendSweep(player)));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.CardOpenPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(
+						() -> com.sephiria.card.CardSelection.open(player)));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.CardRefreshPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					com.sephiria.network.CardRefreshPayload payload =
+							com.sephiria.network.CardRefreshPayload.read(buffer);
+					server.execute(() -> com.sephiria.card.CardSelection.refresh(player, payload.index()));
+				});
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.CardSelectPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					com.sephiria.network.CardSelectPayload payload =
+							com.sephiria.network.CardSelectPayload.read(buffer);
+					server.execute(() -> com.sephiria.card.CardSelection.select(player, payload.index()));
+				});
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.WishPoolForgePayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					com.sephiria.network.WishPoolForgePayload payload =
+							com.sephiria.network.WishPoolForgePayload.read(buffer);
+					server.execute(() -> {
+						if (player.containerMenu instanceof com.sephiria.wishpool.WishPoolMenu menu) {
+							menu.forgeIds(payload.itemIds());
+						}
+					});
+				});
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.SlateImprintPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> {
+					com.sephiria.network.SlateImprintPayload payload =
+							com.sephiria.network.SlateImprintPayload.read(buffer);
+					server.execute(() -> {
+						if (!(player.containerMenu instanceof com.sephiria.backpack.BackpackGridMenu grid)
+								|| com.sephiria.talent.Talents.stage(player,
+										com.sephiria.talent.Talent.SURVIVAL) < 3) {
+							return;
+						}
+
+						AbstractContainerMenu menu = player.containerMenu;
+
+						if (payload.slot() < 0 || payload.slot() >= menu.slots.size()) {
+							return;
+						}
+
+						Slot slot = menu.getSlot(payload.slot());
+						int real = grid.backpackIndex(slot);
+
+						if (real < 0 || !(slot.getItem().getItem() instanceof SlateItem)) {
+							return;
+						}
+
+						ItemStack imprinted = slot.getItem().copy();
+						com.sephiria.backpack.ArtifactBackpack backpack =
+								com.sephiria.backpack.ArtifactBackpack.of(player);
+						backpack.setItem(real, ItemStack.EMPTY);
+						com.sephiria.talent.SlateImprint.imprint(player, real, imprinted);
+						backpack.setChanged();
+						player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+								SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.8F, 1.4F);
+						player.sendSystemMessage(Component.translatable(
+								"message.sephiria_fantasy.slate_imprinted", imprinted.getHoverName()), true);
+					});
+				});
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.DashPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> server.execute(() -> DashSkill.perform(player)));
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.ReloadPayload.CHANNEL,

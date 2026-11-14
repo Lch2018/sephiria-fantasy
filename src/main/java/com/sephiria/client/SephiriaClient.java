@@ -140,6 +140,36 @@ public final class SephiriaClient implements ClientModInitializer {
 							com.sephiria.network.StatsSyncPayload.read(buffer);
 					client.execute(() -> ClientStats.accept(payload));
 				});
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.MagicBookStatsPayload.CHANNEL,
+				(client, handler, buffer, sender) -> {
+					com.sephiria.network.MagicBookStatsPayload payload =
+							com.sephiria.network.MagicBookStatsPayload.read(buffer);
+					client.execute(() -> ClientBookStats.accept(payload));
+				});
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.SlateCountPayload.CHANNEL,
+				(client, handler, buffer, sender) -> {
+					com.sephiria.network.SlateCountPayload payload =
+							com.sephiria.network.SlateCountPayload.read(buffer);
+					client.execute(() -> ClientSlateCount.accept(payload));
+				});
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.BookEffectPayload.CHANNEL,
+				(client, handler, buffer, sender) -> {
+					com.sephiria.network.BookEffectPayload payload =
+							com.sephiria.network.BookEffectPayload.read(buffer);
+					client.execute(() -> com.sephiria.artifact.BookEffectData.accept(payload));
+				});
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.FatigueSyncPayload.CHANNEL,
+				(client, handler, buffer, sender) -> {
+					com.sephiria.network.FatigueSyncPayload payload =
+							com.sephiria.network.FatigueSyncPayload.read(buffer);
+					client.execute(() -> FatigueClientData.accept(payload.points()));
+				});
+		ClientPlayNetworking.registerGlobalReceiver(com.sephiria.network.DebuffSyncPayload.CHANNEL,
+				(client, handler, buffer, sender) -> {
+					com.sephiria.network.DebuffSyncPayload payload =
+							com.sephiria.network.DebuffSyncPayload.read(buffer);
+					client.execute(() -> ClientDebuffs.accept(payload));
+				});
 		ClientPlayNetworking.registerGlobalReceiver(HudSyncPayload.CHANNEL,
 				(client, handler, buffer, sender) -> {
 					HudSyncPayload payload = HudSyncPayload.read(buffer);

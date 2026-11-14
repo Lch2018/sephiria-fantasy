@@ -4,6 +4,8 @@ import com.sephiria.backpack.ArtifactBackpack;
 import com.sephiria.stats.PlayerStats;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -33,6 +35,10 @@ public final class ArtifactSkills {
 	private static final Map<String, ArtifactSkill> BY_ID = new LinkedHashMap<>();
 	/** 每个玩家 6 个栏位的冷却结束时间（tick）。 */
 	private static final Map<UUID, long[]> COOLDOWNS = new HashMap<>();
+	/** 乔洛的浇水壶延迟 0.5 秒的额外施放。 */
+	private static final List<ExtraCast> EXTRA_CASTS = new ArrayList<>();
+	private record ExtraCast(UUID ownerId, ArtifactSkill skill, int level, long dueTick) {
+	}
 
 	private ArtifactSkills() {
 	}
@@ -48,6 +54,22 @@ public final class ArtifactSkills {
 		register(HasteSkill.INSTANCE);
 		register(ThunderVerdictSkill.INSTANCE);
 		register(IceBowSkill.INSTANCE);
+		register(MagicBoltSkill.FIRE);
+		register(MagicBoltSkill.ICE);
+		register(MagicBoltSkill.LIGHTNING);
+		register(FlameArrowSkill.INSTANCE);
+		register(FrostKnifeSkill.INSTANCE);
+		register(LightningBoomerangSkill.INSTANCE);
+		register(FireCircusSkill.INSTANCE);
+		register(ArrowRainSkill.INSTANCE);
+		register(ThunderArmorSkill.INSTANCE);
+		register(MeteorShowerSkill.INSTANCE);
+		register(IceStormSkill.INSTANCE);
+		register(FullFruitBucketSkill.INSTANCE);
+		register(WaterGrabSkill.INSTANCE);
+		register(ShieldSkill.INSTANCE);
+		register(RockElephantSkill.INSTANCE);
+		ServerTickEvents.END_SERVER_TICK.register(ArtifactSkills::tickExtraCasts);
 	}
 
 	public static ArtifactSkill byId(String id) {
@@ -278,15 +300,53 @@ public final class ArtifactSkills {
 		}
 
 		resolved.skill().cast(player, resolved.level());
+
+		// 乔洛的浇水壶：最大 MP 达到门槛时，0.5 秒后额外无蓝耗再放一次（伤害独立）
+		if (resolved.item() instanceof com.sephiria.artifact.MagicBook
+				&& com.sephiria.artifact.ArtifactEffects.wateringCanExtraCast(player)) {
+			EXTRA_CASTS.add(new ExtraCast(player.getUUID(), resolved.skill(), resolved.level(),
+					player.level().getGameTime() + 10L));
+		}
+
+		// 音叉：成功施放魔法书后攒一层「声波」
+		if (resolved.item() instanceof com.sephiria.artifact.MagicBook) {
+			com.sephiria.artifact.TuningFork.onMagicBookCast(player);
+		}
 		COOLDOWNS.computeIfAbsent(player.getUUID(), uuid -> new long[SkillSlots.COUNT])[slot] =
 				player.level().getGameTime() + resolved.skill().cooldownTicks(player, resolved.level());
 		// 冷却刚上：立刻推一次 HUD，别等下一个 10 刻周期
 		com.sephiria.artifact.ArtifactHud.send(player);
 	}
 
+	private static void tickExtraCasts(MinecraftServer server) {
+		if (EXTRA_CASTS.isEmpty()) {
+			return;
+		}
+
+		long now = server.overworld().getGameTime();
+		List<ExtraCast> pending = new ArrayList<>(EXTRA_CASTS);
+		EXTRA_CASTS.clear();
+
+		for (ExtraCast extra : pending) {
+			if (extra.dueTick() > now) {
+				EXTRA_CASTS.add(extra);
+				continue;
+			}
+
+			ServerPlayer player = server.getPlayerList().getPlayer(extra.ownerId());
+
+			if (player == null || !player.isAlive()) {
+				continue;
+			}
+
+			extra.skill().cast(player, extra.level());
+		}
+	}
+
 	/** 玩家退出时清掉冷却表。 */
 	public static void forget(ServerPlayer player) {
 		COOLDOWNS.remove(player.getUUID());
+		EXTRA_CASTS.removeIf(extra -> extra.ownerId().equals(player.getUUID()));
 	}
 
 	private static void refuse(ServerPlayer player) {
