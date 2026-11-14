@@ -13,6 +13,7 @@ public final class SephiriaParticles {
 		registry.register(ModParticleTypes.BLUE_SPARK, SephiriaParticle::simple);
 		registry.register(ModParticleTypes.SNOWFALL, SephiriaParticle::simple);
 		registry.register(ModParticleTypes.PLASMA, SephiriaParticle::simple);
+		registry.register(ModParticleTypes.ICE_GLINT, SephiriaParticle::simple);
 		registry.register(ModParticleTypes.SUN_SLASH, SephiriaParticle::sunSlash);
 		registry.register(ModParticleTypes.FROST_QI, SephiriaParticle::frostQi);
 		registry.register(ModParticleTypes.FLAME_QI, SephiriaParticle::flameQi);

@@ -23,6 +23,11 @@
 		"MirageDodgeMixin",
 		"MobStunMixin",
 		"FrozenMotionMixin",
-		"LeafExperienceMixin"
+		"LeafExperienceMixin",
+		"PlayerMiningSpeedMixin",
+		"FishingHookMixin",
+		"FurnaceHeavenSlateMixin",
+		"EnchantmentHelperMixin",
+		"PlayerAdvancementsMixin"
 	]
 }
