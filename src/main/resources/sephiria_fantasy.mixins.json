@@ -13,7 +13,11 @@
 		"defaultRequire": 1
 	},
 	"mixins": [
-		"CriticalDamageMixin",
+		"DamageReductionMixin",
+		"DebuffTickMixin",
+		"MirageDodgeMixin",
+		"MobStunMixin",
+		"FrozenMotionMixin",
 		"LeafExperienceMixin"
 	]
 }
