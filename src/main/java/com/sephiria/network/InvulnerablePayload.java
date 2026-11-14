@@ -12,16 +12,17 @@ import net.minecraft.resources.ResourceLocation;
  *
  * <p>1.20.1 沿用旧 channel 写法：固定 channel id + 一对 write/read。
  */
-public record InvulnerablePayload(int entityId, int ticks) {
+public record InvulnerablePayload(int entityId, int ticks, int color) {
 	public static final ResourceLocation CHANNEL =
 			new ResourceLocation(Sephiria.MOD_ID, "invulnerable");
 
 	public static void write(FriendlyByteBuf buffer, InvulnerablePayload payload) {
 		buffer.writeVarInt(payload.entityId());
 		buffer.writeVarInt(payload.ticks());
+		buffer.writeVarInt(payload.color());
 	}
 
 	public static InvulnerablePayload read(FriendlyByteBuf buffer) {
-		return new InvulnerablePayload(buffer.readVarInt(), buffer.readVarInt());
+		return new InvulnerablePayload(buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt());
 	}
 }

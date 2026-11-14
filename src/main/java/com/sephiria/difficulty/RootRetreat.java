@@ -231,6 +231,10 @@ public final class RootRetreat {
 	public static final int STRENGTH_STAGE = 30;
 	/** 「勇气」祝福的激活阶段。 */
 	public static final int COURAGE_STAGE = 40;
+	/** 40 阶段金色、50 阶段红色：无敌描边随阶段换色。 */
+	public static final int COURAGE_RED_STAGE = 50;
+	public static final int COURAGE_GOLD_COLOR = 0xFFFFD24A;
+	public static final int COURAGE_RED_COLOR = 0xFFFF5555;
 
 	/**
 	 * 「衰退」+「紧张」：玩家这次治疗实际拿到的比例（1.0 = 全额，0 = 完全不回）。

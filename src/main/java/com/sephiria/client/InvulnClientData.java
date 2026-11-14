@@ -23,7 +23,7 @@ public final class InvulnClientData {
 	}
 
 	public static void accept(InvulnerablePayload payload) {
-		TIMERS.put(payload.entityId(), new int[]{payload.ticks(), payload.ticks()});
+		TIMERS.put(payload.entityId(), new int[]{payload.ticks(), payload.ticks(), payload.color()});
 	}
 
 	/** 每客户端刻递减一次（由 SephiriaClient 的 tick 回调调用）。 */
@@ -33,6 +33,12 @@ public final class InvulnClientData {
 			timer[0]--;
 			return timer;
 		});
+	}
+
+	/** 无敌描边颜色（根之退阶段色；默认白色）。 */
+	public static int color(Entity entity) {
+		int[] timer = TIMERS.get(entity.getId());
+		return timer != null && timer.length > 2 ? timer[2] : 0xFFFFFFFF;
 	}
 
 	public static boolean isActive(Entity entity) {
