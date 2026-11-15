@@ -1,6 +1,5 @@
 package com.sephiria.client.gui;
 
-import com.sephiria.Sephiria;
 import com.sephiria.artifact.ArtifactLoot;
 import com.sephiria.client.ClientStats;
 import com.sephiria.client.tabs.ScreenTabs;
@@ -10,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /**
@@ -26,10 +24,6 @@ import net.minecraft.util.Mth;
  */
 public class StatsScreen extends Screen {
 	private static final int ROW_HEIGHT = 14;
-	/** 叶子（货币）的图标。 */
-	private static final ResourceLocation LEAF_ICON =
-			new ResourceLocation(Sephiria.MOD_ID, "textures/gui/leaf.png");
-
 	/** 两列的 x：屏幕中心左右各 210（列宽 200、列间 10）。 */
 	private static final int COLUMN_OFFSET = 210;
 	private static final int COLUMN_WIDTH = 200;
@@ -137,12 +131,11 @@ public class StatsScreen extends Screen {
 			return;
 		}
 
-		// 叶子：图标在文字左边，数值黄色
-		graphics.blit(LEAF_ICON, this.rowsLeft, this.leafRowY, 0.0F, 0.0F, 12, 12, 16, 16);
+		// 叶子只显示文字与数值（26.x 在 2026-11-01 去掉了图标，这里跟着对齐）
 		graphics.drawString(this.font, Component.translatable("screen.sephiria_fantasy.stats.leaves",
 						Component.literal(format(ClientStats.leaves())).withStyle(
 								style -> style.withColor(LEAF_YELLOW))),
-				this.rowsLeft + 15, this.leafRowY + 2, WHITE, false);
+				this.rowsLeft, this.leafRowY + 2, WHITE, false);
 	}
 
 	private void drawLeftColumn(GuiGraphics graphics) {
@@ -196,8 +189,9 @@ public class StatsScreen extends Screen {
 		row(graphics, right, row++, "screen.sephiria_fantasy.stats.dodge", format(ClientStats.dodge()));
 		row(graphics, right, row++, "screen.sephiria_fantasy.stats.lifesteal", format(ClientStats.lifesteal()));
 		this.negotiationRowY = rowTop(row);
+		// 与 26.x 一致：谈判力行里直接带出折算后的商店折扣，悬停里再给公式
 		row(graphics, right, row++, "screen.sephiria_fantasy.stats.negotiation",
-				format(ClientStats.negotiation()));
+				format(ClientStats.negotiation()) + "（折扣：" + formatDecimal(ClientStats.shopDiscount()) + "%）");
 		this.luckRowY = rowTop(row);
 		row(graphics, right, row++, "screen.sephiria_fantasy.stats.luck", format(ClientStats.luck()));
 		row(graphics, right, row++, "screen.sephiria_fantasy.stats.leaf_gain",

@@ -35,7 +35,7 @@ public class TabButton extends Button {
 	private final ItemStack stack;
 	private final boolean active;
 
-	/** 贴图图标（保留旧构造：InventoryTabs 等现有调用点用）。 */
+	/** 贴图图标（保留旧构造：现有调用点用）。 */
 	public TabButton(int x, int y, ResourceLocation icon, Component title, OnPress press) {
 		this(x, y, icon, null, title, false, press);
 	}

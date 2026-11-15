@@ -117,14 +117,12 @@ public final class SephiriaClient implements ClientModInitializer {
 				ModMenus.SEPHIRIA_BEACON, com.sephiria.client.beacon.SephiriaBeaconScreen::new);
 
 		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
-			if (!com.sephiria.client.tabs.InventoryTabs.applies(screen)) {
-				return;
+			if (screen instanceof InventoryScreen || screen instanceof CreativeModeInventoryScreen) {
+				// 与 26.x 一致：原版背包也用同一排七个标签（含高亮的「原版背包」木箱），
+				// 位置由 ScreenTabs 统一钉在屏幕顶部居中
+				com.sephiria.client.tabs.ScreenTabs.add(screen,
+						com.sephiria.client.tabs.SephiriaTab.VANILLA);
 			}
-
-			int left = (scaledWidth - 176) / 2;
-			int top = (scaledHeight - 166) / 2;
-			int rowY = screen instanceof CreativeModeInventoryScreen ? top - 48 : top - 22;
-			com.sephiria.client.tabs.InventoryTabs.add(screen, left, rowY);
 		});
 
 		// 服务端每 5 刻推一次 HUD 状态；老版网络包在客户端线程外到达，切回主线程再写镜像

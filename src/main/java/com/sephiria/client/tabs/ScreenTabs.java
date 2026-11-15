@@ -41,15 +41,23 @@ public final class ScreenTabs {
 		add(screen, (screen.width - width()) / 2, TOP_MARGIN, current);
 	}
 
-	/** 在 (x, y) 处画一排标签；{@code current} 传 null 表示都不高亮。 */
+	/**
+	 * 画一排标签；{@code current} 传 null 表示都不高亮。
+	 *
+	 * <p>与 26.x 的 {@code SephiriaTabs} 一致：**忽略传进来的 x/y**，永远在屏幕顶部居中。
+	 * 26.x 的辅助类就是这么写死的，背包 / 商店这类调用方虽然传了面板坐标，参考界面里
+	 * 标签仍然在屏幕顶端（不在面板上沿）。
+	 */
 	public static void add(Screen screen, int x, int y, SephiriaTab current) {
+		x = (screen.width - width()) / 2;
+		y = TOP_MARGIN;
 		int slot = 0;
 
 		for (SephiriaTab tab : SephiriaTab.values()) {
 			int tabX = x + slot * (TabButton.SIZE + GAP);
 			boolean active = current != null && tab == current;
 			// 用 Fabric 的 getButtons 而不是 addRenderableWidget：后者是 protected，
-			// 这个辅助类不在 Screen 的子类里调不到（与 InventoryTabs 同一做法）。
+			// 这个辅助类不在 Screen 的子类里调不到。
 			Screens.getButtons(screen).add(create(tabX, y, tab, active));
 			slot++;
 		}

@@ -69,20 +69,32 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 				ArtifactBackpackMenu.imageHeight(BackpackWindow.ROWS), true);
 	}
 
+	/** 与 26.x 背包页完全一致的底板配色：外层深边 + 半透明黑底 + 顶部亮线。 */
+	private static final int PANEL_COLOR = 0xC0101010;
+	private static final int PANEL_OUTER = 0xFF1A1A1E;
+
 	/**
 	 * 面板自绘：背包格区只画真正存在的格子（背包按「一次 +1 格」长，末尾那几个位置不是格子），
 	 * 右侧画翻页滚动条，左侧画连击栏。
 	 */
 	@Override
 	protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-		drawPanel(graphics);
+		int left = this.leftPos;
+		int top = this.topPos;
 
-		// 连击栏与容器区之间的分隔线（26.3 的背包页同款）
-		int divider = this.leftPos + ArtifactBackpackMenu.COMBO_PANEL_WIDTH;
-		graphics.fill(divider - 2, this.topPos + 4, divider - 1, this.topPos + this.imageHeight - 4, BORDER);
+		// 26.x 的背包页是自绘面板：外侧 1px 深边、半透明黑底、顶部一条亮线；
+		// 玩家背包格**不画格底**（26.x 也不画，空背包时只看到底板），只有背包格才有格底。
+		graphics.fill(left - 1, top - 1, left + this.imageWidth + 1, top + this.imageHeight + 1, PANEL_OUTER);
+		graphics.fill(left, top, left + this.imageWidth, top + this.imageHeight, PANEL_COLOR);
+		graphics.fill(left, top, left + this.imageWidth, top + 1, BORDER);
+
+		// 连击栏与容器区之间的分隔线（26.x 的背包页同款）
+		int divider = left + ArtifactBackpackMenu.COMBO_PANEL_WIDTH;
+		graphics.fill(divider - 2, top + 4, divider - 1, top + this.imageHeight - 4, BORDER);
 
 		for (Slot slot : this.menu.slots) {
-			if (this.menu.isBackpackSlot(slot) && !this.menu.backpackSlotExists(slot)) {
+			// 只有「真正的背包格」画格底：末尾多出来的位置与玩家背包格都不画
+			if (!this.menu.isBackpackSlot(slot) || !this.menu.backpackSlotExists(slot)) {
 				continue;
 			}
 
