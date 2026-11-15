@@ -11,7 +11,6 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -81,16 +80,6 @@ public class ArtifactSkillScreen extends Screen {
 
 		this.entries.addAll(all);
 
-		addRenderableWidget(new StringWidget(LIST_X, TOP - 16, 150, 12,
-				Component.translatable("screen.sephiria_fantasy.artifact_skills.available"), this.font));
-		addRenderableWidget(new StringWidget(SLOT_X, TOP - 16, 150, 12,
-				Component.translatable("screen.sephiria_fantasy.artifact_skills.slots"), this.font));
-
-		if (this.entries.isEmpty()) {
-			addRenderableWidget(new StringWidget(LIST_X, TOP, 150, 12,
-					Component.translatable("screen.sephiria_fantasy.artifact_skills.none"), this.font));
-		}
-
 		// 现有技能格：一行 3 个，技能多了往下长（3x3 → 3x4 → …）
 		for (int index = 0; index < this.entries.size(); index++) {
 			this.listRects.add(new int[]{ LIST_X + (index % 3) * ROW, TOP + (index / 3) * ROW });
@@ -120,6 +109,18 @@ public class ArtifactSkillScreen extends Screen {
 
 		super.render(extractor, mouseX, mouseY, partialTick);
 
+		// 26.x 的列头是左对齐的（StringWidget 默认居中，1.20.1 里会偏到列中间），
+		// 这里直接按 LIST_X / SLOT_X 画，和参考客户端同一条竖线
+		extractor.drawString(this.font, Component.translatable("screen.sephiria_fantasy.artifact_skills.available"),
+				LIST_X, TOP - 16, 0xFFFFFFFF, false);
+		extractor.drawString(this.font, Component.translatable("screen.sephiria_fantasy.artifact_skills.slots"),
+				SLOT_X, TOP - 16, 0xFFFFFFFF, false);
+
+		if (this.entries.isEmpty()) {
+			extractor.drawString(this.font, Component.translatable("screen.sephiria_fantasy.artifact_skills.none"),
+					LIST_X, TOP, 0xFFFFFFFF, false);
+		}
+
 		for (int index = 0; index < this.listRects.size(); index++) {
 			String entry = this.entries.get(index);
 			// 已经放进某个栏位的技能格底色变绿
@@ -142,10 +143,23 @@ public class ArtifactSkillScreen extends Screen {
 			drawIcon(extractor, ClientSkills.itemOf(this.held), mouseX - 7, mouseY - 7);
 		}
 
-		// 操作说明：StringWidget 不会换行，1.20.1 里长句会被居中裁掉；这里手动折行画
-		int hintY = Math.min(TOP + SkillSlots.COUNT * ROW + 18, this.height - 52);
-		extractor.drawWordWrap(this.font, Component.translatable("screen.sephiria_fantasy.artifact_skills.hint"),
+		// 操作说明：26.x 的 StringWidget 是单行、超宽截断加「...」，这里照做
+		// （1.20.1 的 drawWordWrap 会折成三行，和参考界面不一致）
+		int hintY = TOP + SkillSlots.COUNT * ROW + 18;
+		drawClipped(extractor, Component.translatable("screen.sephiria_fantasy.artifact_skills.hint"),
 				LIST_X, hintY, this.width - 2 * LIST_X, 0xFFAAAAAA);
+	}
+
+	/** 单行画文字：超出宽度就截断并补「...」，与 26.x 的 StringWidget 观感一致。 */
+	private void drawClipped(GuiGraphics graphics, Component text, int x, int y, int maxWidth, int colour) {
+		String plain = text.getString();
+
+		if (this.font.width(plain) > maxWidth) {
+			int ellipsis = this.font.width("...");
+			plain = this.font.plainSubstrByWidth(plain, Math.max(0, maxWidth - ellipsis)) + "...";
+		}
+
+		graphics.drawString(this.font, plain, x, y, colour, false);
 	}
 
 	/** 鼠标下的技能栏字符串；没悬停在技能图标上返回 null。 */

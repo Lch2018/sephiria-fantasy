@@ -25,7 +25,9 @@ import net.minecraft.world.inventory.Slot;
  * </ul>
  */
 public class SephiriaMenuScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
-	protected static final int PANEL = 0xF0101014;
+	/** 底板 / 描边对齐 26.x 的所有自绘容器界面：半透明黑底 + 外侧深边 + 顶部亮线。 */
+	protected static final int PANEL = 0xC0101010;
+	protected static final int PANEL_OUTER = 0xFF1A1A1E;
 	protected static final int BORDER = 0xFF4A4A52;
 	protected static final int SLOT = 0xFF2A2A30;
 	protected static final int SLOT_EDGE = 0xFF15151A;
@@ -69,6 +71,11 @@ public class SephiriaMenuScreen<T extends AbstractContainerMenu> extends Abstrac
 		drawPanel(graphics);
 
 		for (Slot slot : this.menu.slots) {
+			// 26.x 的容器界面只给「功能格」画格底；玩家背包格不画，空背包时只看到底板
+			if (slot.container instanceof Inventory) {
+				continue;
+			}
+
 			drawSlotBackground(graphics, slot);
 		}
 	}
@@ -77,16 +84,14 @@ public class SephiriaMenuScreen<T extends AbstractContainerMenu> extends Abstrac
 	protected void renderSlotOverlays(GuiGraphics graphics) {
 	}
 
-	/** 面板底色与四边描边（界面自绘时先调它，再往上画内容）。 */
+	/** 面板底色与 26.x 同款描边：外侧 1px 深边 + 半透明底 + 顶部一条亮线。 */
 	protected void drawPanel(GuiGraphics graphics) {
 		int left = this.leftPos;
 		int top = this.topPos;
 
+		graphics.fill(left - 1, top - 1, left + this.imageWidth + 1, top + this.imageHeight + 1, PANEL_OUTER);
 		graphics.fill(left, top, left + this.imageWidth, top + this.imageHeight, PANEL);
 		graphics.fill(left, top, left + this.imageWidth, top + 1, BORDER);
-		graphics.fill(left, top + this.imageHeight - 1, left + this.imageWidth, top + this.imageHeight, BORDER);
-		graphics.fill(left, top, left + 1, top + this.imageHeight, BORDER);
-		graphics.fill(left + this.imageWidth - 1, top, left + this.imageWidth, top + this.imageHeight, BORDER);
 	}
 
 	/** 一格槽位的底（外描边 + 内格）：槽位坐标是面板内坐标，这里补 leftPos / topPos。 */

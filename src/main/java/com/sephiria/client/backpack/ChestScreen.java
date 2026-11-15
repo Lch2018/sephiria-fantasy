@@ -58,9 +58,10 @@ public class ChestScreen extends SephiriaMenuScreen<ChestMenu> {
 	protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
 		drawPanel(graphics);
 
-		for (int index = 0; index < this.menu.slots.size(); index++) {
-			// 这一箱没开到的奖励格不画（天赋没点亮时就是 5 格而不是 6 格）
-			if (index < ChestMenu.REWARD_SLOTS && index >= this.menu.rewardCount()) {
+		for (int index = 0; index < ChestMenu.REWARD_SLOTS && index < this.menu.slots.size(); index++) {
+			// 这一箱没开到的奖励格不画（天赋没点亮时就是 5 格而不是 6 格）；
+			// 玩家背包格不画格底（与 26.x 一致）
+			if (index >= this.menu.rewardCount()) {
 				continue;
 			}
 
