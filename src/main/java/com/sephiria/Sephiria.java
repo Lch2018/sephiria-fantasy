@@ -72,7 +72,7 @@ public class Sephiria implements ModInitializer {
 		ModBlockEntities.initialize();
 		// 赛菲莉娅宝藏：结构类型与结构片段类型（内容由 worldgen JSON 驱动）
 		ModStructures.initialize();
-		// 配方书多一页「赛菲莉娅」：分类登记（配方 JSON 的 category 指向它）
+		// 创造模式物品栏里的「赛菲莉娅幻想」页
 		ModCreativeTabs.initialize();
 		ModMenus.initialize();
 		ModSounds.initialize();
