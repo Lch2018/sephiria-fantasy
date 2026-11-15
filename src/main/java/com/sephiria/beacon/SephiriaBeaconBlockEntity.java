@@ -18,9 +18,9 @@ import net.minecraft.world.level.block.state.BlockState;
 /**
  * 赛菲莉娅信标：单格容器 + 一条与原版信标同款的光柱。
  *
- * <p>光柱不是自己画的：方块实体实现 {@link BeaconBeamOwner}，客户端直接复用原版
- * {@code BeaconRenderer}。所以这里只需要给出「颜色」这一件事——颜色取容器里那件物品的品质色，
- * 容器空了就返回空列表，光柱自然消失。
+ * <p>光柱不是自己画的：1.20.1 没有 26.x 的 {@code BeaconBeamOwner}，客户端由
+ * {@code SephiriaBeaconRenderer} 复用原版 {@code BeaconRenderer.renderBeaconBeam} 绘制；
+ * 颜色取容器里那件物品的品质色，容器空了光柱就不画。
  *
  * <p>物品变化后必须让客户端重新拿到方块实体数据，否则光柱颜色会停在旧值：
  * {@link #setChanged()} 里额外发一次方块更新（原版 ChunkHolder 会顺带广播

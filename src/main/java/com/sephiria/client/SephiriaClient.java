@@ -95,6 +95,11 @@ public final class SephiriaClient implements ClientModInitializer {
 				com.sephiria.registry.ModEntities.SEPHIRIA_TRADER_LLAMA,
 				context -> new net.minecraft.client.renderer.entity.LlamaRenderer(context,
 						net.minecraft.client.model.geom.ModelLayers.TRADER_LLAMA));
+		// 赛菲莉娅信标的光柱：1.20.1 的原版 BeaconRenderer 只认 BeaconBlockEntity，
+		// 给自己的方块实体挂一个复用原版光柱绘制的 BER
+		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+				com.sephiria.registry.ModBlockEntities.SEPHIRIA_BEACON,
+				com.sephiria.client.beacon.SephiriaBeaconRenderer::new);
 		com.sephiria.client.hud.HudConfig.load();
 
 		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.ArtifactBackpackScreen>register(
