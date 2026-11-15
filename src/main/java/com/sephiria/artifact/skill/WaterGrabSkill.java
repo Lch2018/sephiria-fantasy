@@ -29,7 +29,7 @@ public final class WaterGrabSkill implements ArtifactSkill {
 
 	private static final int COOLDOWN_TICKS = 160;
 	private static final int CHARGE_TICKS = 20;
-	private static final double MAX_RANGE = 24.0D;
+	private static final double MAX_RANGE = 24.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double RADIUS = 8.0D;
 	private static final double MP_PERCENT = 30.0D;
 	private static final double[] DAMAGE_PERCENT_BY_LEVEL = { 32.0D, 48.0D, 64.0D, 80.0D, 100.0D };

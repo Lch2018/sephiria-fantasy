@@ -315,7 +315,7 @@ public class RootRetreatScreen extends AbstractContainerScreen<RootRetreatMenu> 
 
 		for (int index = 0; index < 3; index++) {
 			Component name = blessingName(index);
-			int color = stage >= blessingStage(index) ? blessingColor(index) : blessingDimColor(index);
+			int color = stage >= blessingStage(index) ? blessingColor(index, stage) : blessingDimColor(index);
 			extractor.text(font, name.copy().withColor(color), x, y, color);
 			x += font.width(name) + 4;
 		}
@@ -323,31 +323,39 @@ public class RootRetreatScreen extends AbstractContainerScreen<RootRetreatMenu> 
 
 	private static Component blessingName(int index) {
 		return Component.translatable(switch (index) {
-			case 0 -> "screen.sephiria_fantasy.root_retreat.blessing.strength";
-			case 1 -> "screen.sephiria_fantasy.root_retreat.blessing.lightness";
+			case 0 -> "screen.sephiria_fantasy.root_retreat.blessing.lightness";
+			case 1 -> "screen.sephiria_fantasy.root_retreat.blessing.strength";
 			default -> "screen.sephiria_fantasy.root_retreat.blessing.courage";
 		});
 	}
 
 	private static int blessingStage(int index) {
 		return switch (index) {
-			case 0 -> RootRetreat.STRENGTH_STAGE;
-			case 1 -> RootRetreat.LIGHTNESS_STAGE;
+			case 0 -> RootRetreat.LIGHTNESS_STAGE;
+			case 1 -> RootRetreat.STRENGTH_STAGE;
 			default -> RootRetreat.COURAGE_STAGE;
 		};
 	}
 
-	/** 勇气没有描述（用户口径），返回 null。 */
-	private static String blessingDescKey(int index) {
+	/** 勇气在 40 阶段显示「你的勇气值得赞赏」，50 阶段换成「你强的可怕！」。 */
+	private static String blessingDescKey(int index, int stage) {
 		return switch (index) {
-			case 0 -> "screen.sephiria_fantasy.root_retreat.blessing.strength.desc";
-			case 1 -> "screen.sephiria_fantasy.root_retreat.blessing.lightness.desc";
-			default -> null;
+			case 0 -> "screen.sephiria_fantasy.root_retreat.blessing.lightness.desc";
+			case 1 -> "screen.sephiria_fantasy.root_retreat.blessing.strength.desc";
+			default -> stage >= RootRetreat.COURAGE_RED_STAGE
+					? "screen.sephiria_fantasy.root_retreat.blessing.courage.desc50"
+					: "screen.sephiria_fantasy.root_retreat.blessing.courage.desc";
 		};
 	}
 
-	private static int blessingColor(int index) {
-		return index == 2 ? STAGE_COLOR : BLESSING_COLOR;
+	private static int blessingColor(int index, int stage) {
+		if (index != 2) {
+			return BLESSING_COLOR;
+		}
+
+		return stage >= RootRetreat.COURAGE_RED_STAGE
+				? RootRetreat.COURAGE_RED_COLOR
+				: RootRetreat.COURAGE_GOLD_COLOR;
 	}
 
 	private static int blessingDimColor(int index) {
@@ -373,7 +381,7 @@ public class RootRetreatScreen extends AbstractContainerScreen<RootRetreatMenu> 
 		return x;
 	}
 
-	/** 鼠标下的祝福（0 力量 / 1 轻盈 / 2 勇气），不在那一行返回 -1。 */
+	/** 鼠标下的祝福（0 轻盈 / 1 力量 / 2 勇气），不在那一行返回 -1。 */
 	private int hoveredBlessing(int mouseX, int mouseY) {
 		int y = blessingRowY();
 
@@ -438,7 +446,7 @@ public class RootRetreatScreen extends AbstractContainerScreen<RootRetreatMenu> 
 			List<Component> lines = new ArrayList<>();
 			lines.add(Component.translatable("screen.sephiria_fantasy.root_retreat.blessing.activate",
 					blessingStage(blessing)).withColor(STAGE_COLOR));
-			String desc = blessingDescKey(blessing);
+			String desc = blessingDescKey(blessing, this.menu.blockStage());
 
 			if (desc != null) {
 				lines.add(Component.translatable(desc).withColor(HEADER_COLOR));

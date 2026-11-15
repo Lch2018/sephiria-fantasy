@@ -23,6 +23,7 @@ import com.sephiria.network.UpgradeArtifactPayload;
 import com.sephiria.network.RefreshShopPayload;
 import com.sephiria.network.ReloadPayload;
 import com.sephiria.network.SellItemPayload;
+import com.sephiria.network.KatanaSlashPayload;
 import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.StatsSyncPayload;
@@ -223,6 +224,7 @@ public class Sephiria implements ModInitializer {
 				com.sephiria.network.FrostQiPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ReloadPayload.TYPE, ReloadPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ShieldSweepPayload.TYPE, ShieldSweepPayload.STREAM_CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(KatanaSlashPayload.TYPE, KatanaSlashPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(OpenShopPayload.TYPE, OpenShopPayload.STREAM_CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(SellItemPayload.TYPE, SellItemPayload.STREAM_CODEC);
@@ -292,6 +294,8 @@ public class Sephiria implements ModInitializer {
 				(payload, context) -> SephiriaCrossbowItem.tryReload(context.player()));
 		ServerPlayNetworking.registerGlobalReceiver(ShieldSweepPayload.TYPE,
 				(payload, context) -> SephiriaShieldItem.tryDefendSweep(context.player()));
+		ServerPlayNetworking.registerGlobalReceiver(KatanaSlashPayload.TYPE,
+				(payload, context) -> com.sephiria.weapon.SephiriaKatanaItem.tryPowerfulSlash(context.player()));
 		// 赛菲莉娅背包是容器菜单，必须由服务端打开（客户端只负责画那个标签页按钮）
 		ServerPlayNetworking.registerGlobalReceiver(OpenBackpackPayload.TYPE,
 				(payload, context) -> context.player().openMenu(ArtifactBackpackMenu.provider(context.player())));
@@ -381,7 +385,17 @@ public class Sephiria implements ModInitializer {
 		ServerPlayNetworking.registerGlobalReceiver(UpgradeArtifactPayload.TYPE,
 				(payload, context) -> {
 					if (context.player().containerMenu instanceof EnchantMenu menu) {
-						menu.upgrade(payload.levels());
+						net.minecraft.world.item.ItemStack stack = menu.artifactStack();
+						int oldLevel = com.sephiria.artifact.ArtifactItem.levelOf(stack);
+
+						if (menu.upgrade(payload.levels())) {
+							// 技能栏存的是「物品 id @ 等级」；升级后按旧等级精确改到新等级，
+							// 玩家不用再去技能页重新拖一次。
+							com.sephiria.artifact.skill.ArtifactSkills.retarget(context.player(),
+									stack.getItem(), oldLevel, com.sephiria.artifact.ArtifactItem.levelOf(stack));
+							syncArtifactSkills(context.player());
+							com.sephiria.artifact.ArtifactHud.send(context.player());
+						}
 					}
 				});
 		// 许愿池界面里的按钮：抽卡 / 锚定 / 神铸 / 溢出转化开关——够不够四叶草与能量、
@@ -588,7 +602,10 @@ public class Sephiria implements ModInitializer {
 				WeaponBranch.values().length, ModItems.BASE_WEAPONS.size());
 	}
 	/** 把神器技能页需要的数据推给客户端（可用技能 + 6 个栏位）。 */
-	private static void syncArtifactSkills(ServerPlayer player) {
+	public static void syncArtifactSkills(ServerPlayer player) {
+		// 顺手把旧存档 / 等级变化后对不上的栏位改成当前等级；同种神器只有一份时才改，
+		// 多份的情况由升级入口的 retarget 精确处理。
+		com.sephiria.artifact.skill.ArtifactSkills.refreshSlots(player);
 		java.util.List<ArtifactSkillsPayload.Entry> skills = new java.util.ArrayList<>();
 
 		for (ArtifactSkills.Available available : ArtifactSkills.available(player)) {

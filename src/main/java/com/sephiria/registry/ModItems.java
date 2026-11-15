@@ -177,7 +177,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.util.Unit;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EquipmentSlotGroup;
@@ -191,6 +190,7 @@ import net.minecraft.world.item.component.BlocksAttacks;
 import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.UseEffects;
+import net.minecraft.world.item.component.Weapon;
 
 import java.util.List;
 import java.util.Optional;
@@ -221,8 +221,7 @@ public final class ModItems {
 					// 原版使用物品期间会把人拖到 20% 移速（UseEffects.DEFAULT 的 speed_multiplier=0.2）。
 					// 防御是持续按住的姿态，被拖慢会让"举盾走位"完全没法玩，所以这里显式改成不减速、
 					// 也允许疾跑——这是原版给的开关，不用去 mixin 里改移动逻辑。
-					.component(DataComponents.USE_EFFECTS, new UseEffects(true, true, 1.0F))
-					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
+					.component(DataComponents.USE_EFFECTS, new UseEffects(true, true, 1.0F)));
 	/** 钢铁巨剑：左键横扫 + 右键蓄力「旋风」（见 {@link SephiriaGreatswordItem}）。 */
 	public static final Item STEEL_GREATSWORD = register(key("steel_greatsword"),
 			p -> new SephiriaGreatswordItem(WeaponBranch.GREATSWORD, p),
@@ -230,8 +229,10 @@ public final class ModItems {
 					.sword(ToolMaterial.IRON,
 							SephiriaGreatswordItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
 							SephiriaGreatswordItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
-					.durability(600)
-					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
+					.durability(250)
+					// 蓄力保留 20% 移速，但允许保持疾跑：默认 UseEffects 会强制退出疾跑，
+					// 只有第一次蓄力会掉一次动态 FOV，之后就没有这个变化，看起来像镜头畸变。
+					.component(DataComponents.USE_EFFECTS, new UseEffects(true, true, 0.2F)));
 	/** 匕首：右键是招架/狂怒两段技能（见 {@link SephiriaDaggerItem}）。 */
 	public static final Item DAGGER = register(key("dagger"),
 			p -> new SephiriaDaggerItem(WeaponBranch.DAGGER, p),
@@ -239,9 +240,8 @@ public final class ModItems {
 					.sword(ToolMaterial.IRON,
 							SephiriaDaggerItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
 							SephiriaDaggerItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
-					.durability(160)
-					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
-	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, SephiriaCrossbowItem.MAGAZINE_SIZE);
+					.durability(250));
+	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, 250);
 	/** 重型弩的专用弹药：弩矢。弩不消耗、也不需要背包里有原版箭矢。 */
 	public static final Item CROSSBOW_BOLT = Registry.register(
 			BuiltInRegistries.ITEM,
@@ -254,8 +254,7 @@ public final class ModItems {
 					// sword() 只是为了拿到 Tool 组件（切蛛网、剑类方块加速）和通用属性；
 					// 它写的攻击力/攻速随后被下面按状态的修饰符覆盖，所以这里传 0。
 					.sword(ToolMaterial.IRON, 0.0F, 0.0F)
-					.durability(320)
-					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+					.durability(250)
 					.component(DataComponents.ATTRIBUTE_MODIFIERS, SephiriaKatanaItem.attributeModifiers(false))
 					.component(SephiriaKatanaItem.SHEATHED, Boolean.FALSE));
 	/** 长棍：左键横扫 + 右键两段「回击」（见 {@link SephiriaStaffItem}）。 */
@@ -265,8 +264,7 @@ public final class ModItems {
 					.sword(ToolMaterial.IRON,
 							SephiriaStaffItem.ATTACK_DAMAGE - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
 							SephiriaStaffItem.ATTACK_SPEED - (float) Attributes.DEFAULT_ATTACK_SPEED)
-					.durability(300)
-					.component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
+					.durability(250));
 
 	/** 全部基础武器，顺序即创造模式标签页里的顺序。 */
 	public static final List<BaseWeapon> BASE_WEAPONS = List.of(
@@ -1478,8 +1476,7 @@ public final class ModItems {
 				.sword(ToolMaterial.IRON,
 						attackDamage - PLAYER_BASE_ATTACK_DAMAGE - ToolMaterial.IRON.attackDamageBonus(),
 						attackSpeed - (float) Attributes.DEFAULT_ATTACK_SPEED)
-				.durability(durability)
-				.component(DataComponents.UNBREAKABLE, Unit.INSTANCE);
+				.durability(durability);
 
 		if (blocks) {
 			// 剑盾的格挡参数：90° 格挡角、满减伤、按格挡次数掉耐久。
@@ -1505,7 +1502,8 @@ public final class ModItems {
 		Item.Properties properties = new Item.Properties()
 				.stacksTo(1)
 				.durability(durability)
-				.component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+				// 普攻统一按原版每次 1 点耐久；弩的近战左键也套用这条
+				.component(DataComponents.WEAPON, new Weapon(1, 0.0F))
 				.component(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.EMPTY)
 				.component(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
 						.add(Attributes.ATTACK_SPEED,

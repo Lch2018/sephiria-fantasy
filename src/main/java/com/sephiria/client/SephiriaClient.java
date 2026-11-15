@@ -24,6 +24,7 @@ import com.sephiria.network.DashPayload;
 import com.sephiria.network.InvulnerablePayload;
 import com.sephiria.network.StatsSyncPayload;
 import com.sephiria.network.ReloadPayload;
+import com.sephiria.network.KatanaSlashPayload;
 import com.sephiria.network.ShieldSweepPayload;
 import com.sephiria.network.SkillSyncPayload;
 import com.sephiria.network.SunSwordSyncPayload;
@@ -55,6 +56,7 @@ import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -331,6 +333,37 @@ public class SephiriaClient implements ClientModInitializer {
 				// 26.3 的 swing 需要动画组件；末参 true = 同步给自己（客户端本地挥动照旧传 true）
 				client.player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
 				ClientPlayNetworking.send(ShieldSweepPayload.INSTANCE);
+			}
+		});
+
+		// 刀满剑意时的左键：强力斩击可以空放（用户 2026-11-15 要求类似匕首的狂怒）。
+		// 原版攻击回调只有打到实体才触发，所以这里抢下点击，改发一个服务端请求；
+		// 服务端会重新验入鞘状态、剑意层数与冷却，客户端镜像只决定要不要抢。
+		ClientTickEvents.START_CLIENT_TICK.register(client -> {
+			if (client.player == null || client.gui.screen() != null) {
+				return;
+			}
+
+			ItemStack mainHand = client.player.getMainHandItem();
+
+			if (!(mainHand.getItem() instanceof SephiriaKatanaItem) || !SephiriaKatanaItem.isSheathed(mainHand)) {
+				return;
+			}
+
+			double intentMax = SkillClientData.max(SephiriaKatanaItem.SWORD_INTENT);
+
+			if (intentMax <= 0.0D || SkillClientData.current(SephiriaKatanaItem.SWORD_INTENT) < intentMax) {
+				return;
+			}
+
+			if (client.options.keyAttack.consumeClick()) {
+				// 这一 tick 里累积的连点只发一次：服务端有冷却，多发没有意义
+				while (client.options.keyAttack.consumeClick()) {
+					// 丢弃剩余的点击次数
+				}
+
+				client.player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
+				ClientPlayNetworking.send(KatanaSlashPayload.INSTANCE);
 			}
 		});
 

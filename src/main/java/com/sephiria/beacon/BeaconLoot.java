@@ -52,25 +52,30 @@ public final class BeaconLoot {
 			line(c(ArtifactCombo.EMBER, 5), c(ArtifactCombo.SUN_SWORD, 5), c(ArtifactCombo.ELEMENT, 1)),
 			elements(e(PotionEffect.Kind.FIRE, 60)));
 	private static final Profile ICE = profile(
-			line(c(ArtifactCombo.FROST_ARMAMENT, 5), c(ArtifactCombo.GLACIER, 5), c(ArtifactCombo.ELEMENT, 1)),
+			line(c(ArtifactCombo.FROST_ARMAMENT, 5), c(ArtifactCombo.GLACIER, 5), c(ArtifactCombo.ELEMENT, 1),
+					c(ArtifactCombo.LAKE, 1)),
 			elements(e(PotionEffect.Kind.ICE, 60)));
 	private static final Profile BAMBOO = profile(
 			line(c(ArtifactCombo.SHADOW, 7), c(ArtifactCombo.WIND_SONG, 3), c(ArtifactCombo.PRECISION, 3)),
 			List.of());
 	private static final Profile JAGGED_PEAKS = profile(
 			line(c(ArtifactCombo.DARK_CLOUD, 5), c(ArtifactCombo.MAGIC_TECH, 5),
-					c(ArtifactCombo.FROST_ARMAMENT, 1), c(ArtifactCombo.GLACIER, 1), c(ArtifactCombo.ELEMENT, 1)),
+					c(ArtifactCombo.FROST_ARMAMENT, 1), c(ArtifactCombo.GLACIER, 1), c(ArtifactCombo.ELEMENT, 1),
+					c(ArtifactCombo.GUARD, 3)),
 			elements(e(PotionEffect.Kind.LIGHTNING, 30), e(PotionEffect.Kind.PHYSICAL, 30)));
 	private static final Profile FROZEN_PEAKS = profile(
 			line(c(ArtifactCombo.DARK_CLOUD, 1), c(ArtifactCombo.MAGIC_TECH, 1),
-					c(ArtifactCombo.FROST_ARMAMENT, 1), c(ArtifactCombo.GLACIER, 1), c(ArtifactCombo.ELEMENT, 1)),
+					c(ArtifactCombo.FROST_ARMAMENT, 1), c(ArtifactCombo.GLACIER, 1), c(ArtifactCombo.ELEMENT, 1),
+					c(ArtifactCombo.GUARD, 3)),
 			elements(e(PotionEffect.Kind.LIGHTNING, 30), e(PotionEffect.Kind.ICE, 30)));
 	private static final Profile STONY_PEAKS = profile(
 			line(c(ArtifactCombo.DARK_CLOUD, 5), c(ArtifactCombo.MAGIC_TECH, 5), c(ArtifactCombo.STURDY, 5),
-					c(ArtifactCombo.ELEMENT, 1)),
+					c(ArtifactCombo.ELEMENT, 1), c(ArtifactCombo.GUARD, 4)),
 			elements(e(PotionEffect.Kind.LIGHTNING, 30), e(PotionEffect.Kind.PHYSICAL, 30)));
-	private static final Profile WIND = profile(line(c(ArtifactCombo.WIND_SONG, 1)), List.of());
-	private static final Profile PRECISION = profile(line(c(ArtifactCombo.PRECISION, 1)), List.of());
+	private static final Profile WIND = profile(
+			line(c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.ACADEMY, 1), c(ArtifactCombo.GUARD, 1)), List.of());
+	private static final Profile PRECISION = profile(
+			line(c(ArtifactCombo.PRECISION, 1), c(ArtifactCombo.ACADEMY, 2)), List.of());
 	private static final Profile GROVE = profile(
 			line(c(ArtifactCombo.GLACIER, 2), c(ArtifactCombo.WIND_SONG, 2), c(ArtifactCombo.SHADOW, 2),
 					c(ArtifactCombo.ELEMENT, 1)),
@@ -79,13 +84,15 @@ public final class BeaconLoot {
 			line(c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.SHADOW, 1)), List.of());
 	private static final Profile SHADOW = profile(line(c(ArtifactCombo.SHADOW, 1)), List.of());
 	private static final Profile TAIGA = profile(
-			line(c(ArtifactCombo.SHADOW, 2), c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.STURDY, 1)), List.of());
+			line(c(ArtifactCombo.SHADOW, 2), c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.STURDY, 1),
+					c(ArtifactCombo.GUARD, 2)), List.of());
 	private static final Profile SNOWY_TAIGA = profile(
 			line(c(ArtifactCombo.GLACIER, 2), c(ArtifactCombo.SHADOW, 2), c(ArtifactCombo.WIND_SONG, 1),
-					c(ArtifactCombo.STURDY, 1)),
+					c(ArtifactCombo.STURDY, 1), c(ArtifactCombo.GUARD, 2)),
 			elements(e(PotionEffect.Kind.ICE, 30), e(PotionEffect.Kind.PHYSICAL, 30)));
 	private static final Profile FLOWER = profile(
-			line(c(ArtifactCombo.PRECISION, 1), c(ArtifactCombo.SHADOW, 1), c(ArtifactCombo.WIND_SONG, 1)),
+			line(c(ArtifactCombo.PRECISION, 1), c(ArtifactCombo.SHADOW, 1), c(ArtifactCombo.WIND_SONG, 1),
+					c(ArtifactCombo.ACADEMY, 2)),
 			List.of());
 	private static final Profile SPARSE_JUNGLE = profile(
 			line(c(ArtifactCombo.SHADOW, 5), c(ArtifactCombo.WIND_SONG, 5), c(ArtifactCombo.ELEMENT, 1)), List.of());
@@ -93,21 +100,24 @@ public final class BeaconLoot {
 			line(c(ArtifactCombo.SHADOW, 1), c(ArtifactCombo.PRECISION, 1), c(ArtifactCombo.WIND_SONG, 1)),
 			List.of());
 	private static final Profile SWAMP = profile(
-			line(c(ArtifactCombo.SHADOW, 1), c(ArtifactCombo.PRECISION, 1)), List.of());
-	private static final Profile PLAINS = profile(line(c(ArtifactCombo.WIND_SONG, 1)), List.of());
+			line(c(ArtifactCombo.SHADOW, 1), c(ArtifactCombo.PRECISION, 1), c(ArtifactCombo.LAKE, 4)), List.of());
+	private static final Profile PLAINS = profile(
+			line(c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.ACADEMY, 2), c(ArtifactCombo.LAKE, 2)), List.of());
 	private static final Profile SNOWY = profile(
-			line(c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.GLACIER, 1)),
+			line(c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.GLACIER, 1), c(ArtifactCombo.LAKE, 1)),
 			elements(e(PotionEffect.Kind.ICE, 60)));
 	private static final Profile STONY_SHORE = profile(
-			line(c(ArtifactCombo.STURDY, 1)), elements(e(PotionEffect.Kind.PHYSICAL, 60)));
+			line(c(ArtifactCombo.STURDY, 1), c(ArtifactCombo.LAKE, 3), c(ArtifactCombo.GUARD, 2)),
+			elements(e(PotionEffect.Kind.PHYSICAL, 60)));
 	private static final Profile SAVANNA = profile(
 			line(c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.EMBER, 1)),
 			elements(e(PotionEffect.Kind.FIRE, 60)));
 	private static final Profile BADLANDS = profile(
-			line(c(ArtifactCombo.STURDY, 1), c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.EMBER, 1)),
+			line(c(ArtifactCombo.STURDY, 1), c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.EMBER, 1),
+					c(ArtifactCombo.GUARD, 2)),
 			elements(e(PotionEffect.Kind.FIRE, 30), e(PotionEffect.Kind.PHYSICAL, 30)));
 	private static final Profile ERODED_BADLANDS = profile(
-			line(c(ArtifactCombo.STURDY, 1), c(ArtifactCombo.WIND_SONG, 1)),
+			line(c(ArtifactCombo.STURDY, 1), c(ArtifactCombo.WIND_SONG, 1), c(ArtifactCombo.GUARD, 2)),
 			elements(e(PotionEffect.Kind.PHYSICAL, 60)));
 	private static final Profile DEFAULT = profile(line(c(ArtifactCombo.SHADOW, 1)), List.of());
 

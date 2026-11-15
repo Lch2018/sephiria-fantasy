@@ -176,7 +176,7 @@ public final class FrostArmament {
 	/** 冰弓箭矢的速度（格/刻）：比长矛再快一点，箭该是「嗖」的一下。 */
 	private static final double ARROW_SPEED = 3.0D;
 	/** 冰弓箭矢的飞行距离（格）：2026-10-13 用户定为 36。 */
-	private static final double ARROW_DISTANCE = 36.0D;
+	private static final double ARROW_DISTANCE = 36.0D * com.sephiria.artifact.skill.ArtifactSkill.RANGE_MULTIPLIER;
 	/** 冰弓箭矢的判定半径（格）：细一点（箭是点状的）；2026-10-13 用户要求「变大 30%」（0.6 → 0.78）。 */
 	private static final double ARROW_RADIUS = 0.6D * 1.3D;
 	/** 一次打空时每发箭的随机偏角（度）：7 发不会连成一条直线。 */

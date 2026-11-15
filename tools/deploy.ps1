@@ -13,10 +13,13 @@ param(
 )
 
 $root = Split-Path -Parent $PSScriptRoot
-$instance = '26.3-Fabric 0.19.5'
-$mods = 'D:\PCL\.minecraft\versions\' + $instance + '\mods'
+# 26.3 的两个 PCL 实例都要实装（用户 2026-11-15 明确要求下次也同时更新 0.20.1）
+$instances = @('26.3-Fabric 0.19.5', '26.3-Fabric 0.20.1')
+$modsFolders = $instances | ForEach-Object { 'D:\PCL\.minecraft\versions\' + $_ + '\mods' }
 
-if (-not (Test-Path $mods)) { throw "mods folder not found: $mods" }
+foreach ($mods in $modsFolders) {
+    if (-not (Test-Path $mods)) { throw "mods folder not found: $mods" }
+}
 
 # Do not deploy while the game is running. Copy-Item -Force overwrites the jar in place, and the
 # loader reads classes lazily, so a game that is already up reads its next class out of the
@@ -28,14 +31,24 @@ if (-not (Test-Path $mods)) { throw "mods folder not found: $mods" }
 $game = @(Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe' OR Name = 'java.exe'" `
         -ErrorAction SilentlyContinue |
     Where-Object {
-        $_.CommandLine -and ($_.CommandLine -like ('*' + $instance + '*') -or
-            $_.CommandLine -like '*-Dminecraft.launcher.brand=PCL*')
+        if (-not $_.CommandLine) {
+            $false
+        }
+        else {
+            $running = $false
+
+            foreach ($instance in $instances) {
+                if ($_.CommandLine -like ('*' + $instance + '*')) { $running = $true }
+            }
+
+            $running
+        }
     })
 
 if ($game.Count -gt 0 -and -not $Force) {
-    throw ("Minecraft is still running (" + $game.Count + " java process(es) for '" + $instance +
-        "') - close the game first: replacing the jar underneath it makes the running game die " +
-        "with 'ZipFile invalid LOC header'. Pass -Force only if that instance truly is not in use.")
+    throw ("Minecraft is still running (" + $game.Count + " java process(es) for " +
+        ($instances -join ' / ') + ") - close the game first: replacing the jar underneath it makes " +
+        "the running game die with 'ZipFile invalid LOC header'. Pass -Force only if that instance truly is not in use.")
 }
 
 # jar name = <project name>-<version>.jar, same as gradle builds it
@@ -57,21 +70,23 @@ finally {
 $jar = Join-Path $root ('build\libs\' + $name)
 if (-not (Test-Path $jar)) { throw "built jar not found: $jar" }
 
-# 旧名字的 jar 要清掉：mods 目录里同时存在两个同 mod id 的 jar，进游戏会报重复 mod
-Get-ChildItem $mods -Filter 'sephiria*.jar' | Where-Object { $_.Name -ne $name } | ForEach-Object {
-    Remove-Item $_.FullName -Force
-    Write-Output ("removed stale " + $_.Name)
+foreach ($mods in $modsFolders) {
+    # 旧名字的 jar 要清掉：mods 目录里同时存在两个同 mod id 的 jar，进游戏会报重复 mod
+    Get-ChildItem $mods -Filter 'sephiria*.jar' | Where-Object { $_.Name -ne $name } | ForEach-Object {
+        Remove-Item $_.FullName -Force
+        Write-Output ("removed stale " + $_.Name + "  from " + $mods)
+    }
+
+    $target = Join-Path $mods $name
+    Copy-Item $jar $target -Force
+
+    # A truncated copy would look "deployed" but crash the game at class-load time (same symptom as
+    # above), so check the byte count landed.
+    $copied = Get-Item $target
+    if ($copied.Length -ne (Get-Item $jar).Length) {
+        throw ("copy is incomplete: " + $copied.Length + " B at " + $target + " vs " +
+            (Get-Item $jar).Length + " B built - deploy again")
+    }
+
+    Write-Output ("deployed " + $copied.Length + " B  " + $copied.LastWriteTime.ToString('HH:mm:ss') + "  -> " + $target)
 }
-
-$target = Join-Path $mods $name
-Copy-Item $jar $target -Force
-
-# A truncated copy would look "deployed" but crash the game at class-load time (same symptom as
-# above), so check the byte count landed.
-$copied = Get-Item $target
-if ($copied.Length -ne (Get-Item $jar).Length) {
-    throw ("copy is incomplete: " + $copied.Length + " B at " + $target + " vs " +
-        (Get-Item $jar).Length + " B built - deploy again")
-}
-
-Write-Output ("deployed " + $copied.Length + " B  " + $copied.LastWriteTime.ToString('HH:mm:ss') + "  -> " + $target)

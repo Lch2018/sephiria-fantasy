@@ -13,14 +13,17 @@ import net.minecraft.resources.Identifier;
  * <p>用途是<b>视觉</b>——无敌期间玩家的模型要描一圈白光。原版描边由
  * {@code Minecraft#shouldEntityAppearGlowing} 决定（发光效果/幽灵箭），而这个状态只有
  * 服务端知道，所以授予无敌时广播一次，客户端按刻数自己倒计时。
+ *
+ * <p>{@code color} 是描边颜色：根之退 40 阶段金色、50 阶段红色，其余白色。
  */
-public record InvulnerablePayload(int entityId, int ticks) implements CustomPacketPayload {
+public record InvulnerablePayload(int entityId, int ticks, int color) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<InvulnerablePayload> TYPE =
 			new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(Sephiria.MOD_ID, "invulnerable"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, InvulnerablePayload> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.VAR_INT, InvulnerablePayload::entityId,
 			ByteBufCodecs.VAR_INT, InvulnerablePayload::ticks,
+			ByteBufCodecs.INT, InvulnerablePayload::color,
 			InvulnerablePayload::new);
 
 	@Override

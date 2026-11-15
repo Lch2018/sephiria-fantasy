@@ -4,7 +4,7 @@
 
 **赛菲莉娅幻想**：把《SEPHIRIA（赛菲莉娅）》的**构筑**搬进 Minecraft 的同人模组——选择并组合你自己的神器、石板与连击。本项目**大量使用 AI 生成代码**，仅供学习与个人游玩，**禁止商业行为**。
 
-> A 测阶段：内容已经不少，但大部分还没有经过充分实测，数值与手感仍在调整。当前版本 **0.5.3-a**，对应 **Minecraft 26.3**；1.20.1 / 1.21.1 移植分支不在本说明范围内。
+> A 测阶段：内容已经不少，但大部分还没有经过充分实测，数值与手感仍在调整。当前版本 **0.6.0-a**，同一版本号提供 **Minecraft 26.3 / 26.1.2 / 1.20.1** 三个构建；1.21.1 不包含。
 
 ### 主要内容
 
@@ -19,7 +19,7 @@
 - **刀**：右键切换出鞘 / 入鞘；入鞘重击慢、出鞘快斩；切换瞬间短暂无敌，命中积攒剑意，满层入鞘时打出强力斩击。
 - **长棍**：右键两段回击，自动衔接；完美防御会改为回击 3。
 
-六把武器都**不可损坏**；刀使用 GeckoLib 骨骼动画。
+六把武器都有 **250 点耐久**（等同原版铁剑），普通攻击与技能会消耗耐久；耐久条显示真实耐久，不再显示剑意 / 弹匣。刀使用 GeckoLib 骨骼动画。
 
 ![武器](图片占位)
 
@@ -161,7 +161,7 @@
 
 **Sephiria Fantasy** is an **unofficial fan mod** that brings the **Construct/Constructed buildcraft** of *SEPHIRIA* into Minecraft — choosing and combining your own artifacts, slates and combos. This project makes **heavy use of AI-generated code**; it is shared for learning and personal play only, and **commercial use is not allowed**.
 
-> Alpha stage: there is a decent amount of content, but most of it has not been playtested thoroughly yet — numbers and feel are still being tuned. Current version: **0.5.3-a** for **Minecraft 26.3**. The 1.20.1 / 1.21.1 port branches are not covered by this description.
+> Alpha stage: there is a decent amount of content, but most of it has not been playtested thoroughly yet — numbers and feel are still being tuned. Current version: **0.6.0-a**, with three builds for **Minecraft 26.3 / 26.1.2 / 1.20.1** under the same version number; 1.21.1 is not included.
 
 ### Main Content
 
@@ -176,7 +176,7 @@ Six base weapons: **Default Sword and Shield, Steel Greatsword, Dagger, Colossal
 - **Blade**: right-click to toggle sheathed / unsheathed; sheathed hits are heavy and slow, unsheathed hits are fast; switching grants brief invulnerability, hits build Sword Intent, and a full-intent sheathed strike becomes a powerful slash.
 - **Quarterstaff**: right-click performs a two-stage Riposte that chains automatically; a Perfect Guard upgrades it to Riposte 3.
 
-All six weapons are **unbreakable**; the Blade uses GeckoLib skeletal animation.
+All six weapons have **250 durability** like a vanilla iron sword; normal attacks and skills consume durability, and the vanilla durability bar replaces the Sword Intent / magazine bar. The Blade uses GeckoLib skeletal animation.
 
 ![Weapons](image-placeholder)
 

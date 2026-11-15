@@ -36,7 +36,7 @@ public final class ThunderArmorSkill implements ArtifactSkill {
 	private static final int COOLDOWN_TICKS = 500;
 	private static final int DURATION_TICKS = 200;
 	private static final int INTERVAL_TICKS = 7;
-	private static final double LOCK_RADIUS = 8.0D;
+	private static final double LOCK_RADIUS = 8.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final int TARGETS = 3;
 
 	private static final Map<UUID, Armor> ARMORS = new HashMap<>();
