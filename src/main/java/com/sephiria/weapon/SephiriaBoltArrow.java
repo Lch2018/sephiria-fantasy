@@ -40,6 +40,23 @@ public class SephiriaBoltArrow extends Arrow implements SephiriaDamage.Source {
 	/** 发射瞬间的「神射手的曲柄」弩伤害加成（%，含装填后 10 秒 buff）。 */
 	private final double crossbowDamageBonus;
 
+	/**
+	 * 发射这一箭的弩（发射时定格）。
+	 *
+	 * <p>1.20.1 的 {@code DamageSource} 没有 {@code getWeaponItem}，击杀进度又需要知道
+	 * 「这一箭是哪把武器射的」——飞行途中切手 / 换武器不该把击杀算到新主手上，所以在
+	 * 发射时把弩栈记下来，由 {@code Progress} 读取。只影响模组弩矢；原版箭仍按主手。
+	 */
+	private ItemStack weapon = ItemStack.EMPTY;
+
+	public void setWeapon(ItemStack stack) {
+		this.weapon = stack.copy();
+	}
+
+	public ItemStack weapon() {
+		return this.weapon;
+	}
+
 	public SephiriaBoltArrow(Level level, LivingEntity shooter) {
 		super(level, shooter);
 		// 在发射那一刻定格：飞行途中 BUFF 到期不应该让已经射出的箭变弱

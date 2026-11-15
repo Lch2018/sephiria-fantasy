@@ -53,8 +53,29 @@ public class SephiriaWanderingTrader extends WanderingTrader {
 	/** 每笔交易给商人的经验（原版流浪商人也给一点）。 */
 	private static final int TRADE_XP = 1;
 
+	/** 游荡的「家」：离它超过 {@link #homeRadius} 格就把游荡目标拉回来（对应 26.x 的 setHomeTo）。 */
+	private net.minecraft.core.BlockPos home;
+	private int homeRadius = 16;
+
 	public SephiriaWanderingTrader(EntityType<? extends WanderingTrader> entityType, Level level) {
 		super(entityType, level);
+	}
+
+	/** 把集会点设成它的家；1.20.1 的 WanderingTrader 没有 setHomeTo，这里用游荡目标近似。 */
+	public void setHomeTo(net.minecraft.core.BlockPos pos, int radius) {
+		this.home = pos.immutable();
+		this.homeRadius = Math.max(1, radius);
+	}
+
+	@Override
+	public void aiStep() {
+		super.aiStep();
+
+		// 每秒检查一次：走远了就把游荡目标重新指回家，避免像原版那样越走越远
+		if (!this.level().isClientSide && this.home != null && this.tickCount % 20 == 0
+				&& this.blockPosition().distSqr(this.home) > (double) this.homeRadius * this.homeRadius) {
+			this.setWanderTarget(this.home);
+		}
 	}
 
 	/**

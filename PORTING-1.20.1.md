@@ -147,6 +147,9 @@
 - 2026-11-15 07:30：参考客户端与 1.20.1 各拿一把刀对照：第一人称入鞘/出鞘、
   第三人称持刀与拔刀过渡姿态一致；两边的 `katana.geo.json` 与
   `katana.animation.json` 内容逐项相同（仅文件位置/格式不同），动画节奏由同一份数据驱动
+- 弩矢击杀归属：发射时把弩栈记在 `SephiriaBoltArrow` 上，`Progress` 击杀结算读它，
+  不再依赖「击杀瞬间的主手」；流浪商人补 `setHomeTo`（1.20.1 没有原版方法，用
+  每秒检查 + 重新指定游荡目标把商人拉回集会点 16 格内）
 - 上述交互过程中修掉一个真实崩溃：流浪商人羊驼没注册渲染器导致进世界 NPE
   （`LlamaRenderer` + `ModelLayers.TRADER_LLAMA`）
 - 本轮多次启动都**无 Mixin apply 失败、无模型加载失败、无运行时异常**
@@ -160,10 +163,5 @@
 - 配方书独立的「赛菲莉娅」页签：1.20.1 没有 `RecipeBookCategory` 注册表，
   配方书页签是写死的枚举（`RecipeBookCategories`），做不到 26.x 的数据驱动自定义分类；
   本模组配方仍按 JSON 的 `CraftingBookCategory` 落在原版「装备 / 杂物」页里
-- ToroHealth 1.5.1 的伤害数字是单色粒子：双属性的副色虽然已经在客户端镜像里，
-  渲染端还没有上下半双色（26.x 的 TextParticleRenderer 才有这个能力）；
-  1.20.1 的 FLASH 粒子也不能染成火/冰色（没有 `ColorParticleOption`）
-- 击杀进度的武器归属：1.20.1 的 `DamageSource` 没有 `getWeaponItem`，
-  弩矢等投射物击杀按主手武器算（通常就是那把弩；近战 / 技能不受影响）
-- 流浪商人没有 26.x 的 `setHomeTo`（1.20.1 实体 API 没有这个限制），
-  只在出生点附近游荡，走远后需要玩家自己找
+- 原版弓箭等非模组投射物击杀仍按主手武器算（1.20.1 的 `DamageSource` 没有
+  `getWeaponItem`；模组弩矢已在发射时记录弩栈，击杀归属与 26.x 一致）

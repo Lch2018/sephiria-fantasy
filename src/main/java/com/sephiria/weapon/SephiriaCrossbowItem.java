@@ -311,6 +311,12 @@ public class SephiriaCrossbowItem extends CrossbowItem implements SephiriaWeapon
 		AbstractArrow arrow = arrowItem.createArrow(level, projectileStack, player);
 		arrow.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, ARROW_SPEED, 1.0F);
 		arrow.setCritArrow(true);
+
+		// 1.20.1 的 DamageSource 不记武器：在发射时把弩记在弩矢上，击杀时按它算武器归属
+		if (arrow instanceof SephiriaBoltArrow bolt) {
+			bolt.setWeapon(crossbow);
+		}
+
 		level.addFreshEntity(arrow);
 	}
 

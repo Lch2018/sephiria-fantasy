@@ -167,6 +167,7 @@ public final class SephiriaTraderSpawner {
 
 		trader.setDespawnDelay(DESPAWN_DELAY);
 		trader.setWanderTarget(anchor);
+		trader.setHomeTo(anchor, HOME_RADIUS);
 		return true;
 	}
 

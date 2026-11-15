@@ -163,8 +163,12 @@ public final class Progress {
 			saved.snipeKills++;
 		}
 
-		// 1.20.1 的 DamageSource 不记武器；弩矢击杀时退回主手也够用（主手通常就是那把弩）
-		ItemStack weapon = player.getMainHandItem();
+		// 1.20.1 的 DamageSource 不记武器：模组弩矢在发射时把弩记在自己身上，击杀时读它；
+		// 其它来源（近战 / 原版投射物）退回主手
+		ItemStack weapon = source.getDirectEntity() instanceof com.sephiria.weapon.SephiriaBoltArrow bolt
+				&& !bolt.weapon().isEmpty()
+						? bolt.weapon()
+						: player.getMainHandItem();
 
 		boolean zombie = victim.getType() == net.minecraft.world.entity.EntityType.ZOMBIE
 				|| victim.getType() == net.minecraft.world.entity.EntityType.HUSK
