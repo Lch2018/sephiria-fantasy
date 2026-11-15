@@ -45,7 +45,7 @@ public final class ThunderVerdictSkill implements ArtifactSkill {
 	/** 每几刻结算一击（10 击 × 2 刻 = 光束持续 20 刻）。 */
 	private static final int TICKS_PER_HIT = 2;
 	/** 光束长度（格）。 */
-	private static final double LENGTH = 30.0D;
+	private static final double LENGTH = 30.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	/** 光束半宽（格）：宽高 8 格 → 以射线为轴 ±4 格。 */
 	private static final double HALF_SIZE = 4.0D;
 	/** 单次伤害的固定部分（点）。 */

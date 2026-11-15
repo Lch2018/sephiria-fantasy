@@ -9,12 +9,16 @@
 
 ## 26.1.2（完整移植，已构建并实装；待进游戏实测）
 
-- 构建：Minecraft `26.1.2` + Fabric Loader `0.20.1` + Loom `1.17.21` +
-  Fabric API `0.155.3+26.1.2`，Java 25；GeckoLib `5.5.2` / ModMenu `18.0.2` /
-  ToroHealth `1.5.1` 从 `libs/` 引入，与 PCL 实例里的 mods 版本一致。
-- 版本号 `0.5.3-a-mc26.1.2`；jar 已实装到
-  `D:\PCL\.minecraft\versions\26.1.2-Fabric 0.20.1\mods\sephiria-fantasy-0.5.3-a-mc26.1.2.jar`
-  （1773956 B）。
+- 构建：Minecraft `26.1.2` + Fabric Loader `0.19.3`（编译用最低；暮色森林实际需 0.19.5+）+
+  Loom `1.17.21` + Fabric API `0.155.3+26.1.2`，Java 25；GeckoLib `5.5.2` /
+  ModMenu `18.0.2` / ToroHealth `1.5.1` 从 `libs/` 引入，与 PCL 实例里的 mods 版本一致。
+- 版本号 `0.6.0-a`；jar 已实装到
+  `26.1.2-Fabric 0.19.3`、`26.1.2-Fabric 0.19.5` 与 `26.1.2-Fabric 0.20.1` 的 mods 目录
+  （1786490 B）；`tools/deploy.ps1` 自动扫描并部署所有 `26.1.2-Fabric*` 实例。
+- ⚠ **暮色森林最低实际 Loader**：其元数据写 `fabricloader >=0.19.0`，但 `carminite-lib`
+  依赖 Mixin 0.17.4+ 的默认方法。`0.19.3` 带 Mixin 0.17.3，会报
+  `CarminiteMixinPlugin ... AbstractMethodError`；**`0.19.5` 带 Mixin 0.17.4 +
+  MixinExtras 0.5.5，是本机实际最低可用版本**，`0.20.1` 也正常。0.19.3 实例 JSON 保持原始。
 - `compileJava` / `build` / `validateAccessWidener` / `modelDecodeCheck` /
   `tools/check-resources.ps1` 全部通过。
 - 26.3 → 26.1.2 的主要改动：

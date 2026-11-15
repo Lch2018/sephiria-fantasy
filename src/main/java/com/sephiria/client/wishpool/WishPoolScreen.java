@@ -33,9 +33,9 @@ import java.util.List;
  *  ┌──────┬──────────────────────┐    ┌────────────────────────────┐   ┌──────────────────┐
  *  │神器池│      [锚定物品]      │    │ 锚定神器 / 神铸            │   │   [物品] [物品]  │
  *  │石板池│      [ 锚定 ]        │    │ [全部][普通][高级][稀有]…  │   │   一张张亮出来    │
- *  │      │                      │    │ [连击图标 ×7 ×2 行]        │   │   +x 能量         │
+ *  │      │                      │    │ [连击图标 ×8 ×2 行]        │   │   +x 能量         │
  *  │许愿池│  [单抽] [十连]       │    │ ┌────────────────────────┐ │   │                  │
- *  │      │           [ 神铸 ]   │    │ │  物品网格（7×4，分页） │ │   │                  │
+ *  │      │           [ 神铸 ]   │    │ │  物品网格（8×3，分页） │ │   │                  │
  *  │      │  能量：12            │    │ └────────────────────────┘ │   │                  │
  *  └──────┴──────────────────────┘    │ [返回][取消锚定] [◀][▶]    │   └──────────────────┘
  * </pre>
@@ -69,13 +69,14 @@ public class WishPoolScreen extends AbstractContainerScreen<WishPoolMenu> {
 	private static final int ANCHOR_SLOT_SIZE = 20;
 	private static final int ANCHOR_SLOT_GAP = 4;
 
-	/** 选择页的物品网格：7 列 × 4 行，每格 20。 */
-	private static final int GRID_COLS = 7;
-	private static final int GRID_ROWS = 4;
+	/** 选择页的物品网格：8 列 × 3 行，每格 20（连击筛选也按 8 列排，正好两行）。 */
+	private static final int GRID_COLS = 8;
+	private static final int GRID_ROWS = 3;
 	private static final int CELL = 20;
 	private static final int GRID_WIDTH = GRID_COLS * CELL;
 	private static final int GRID_X = (WishPoolMenu.IMAGE_WIDTH - GRID_WIDTH) / 2;
-	private static final int GRID_Y = 100;
+	/** 去掉原来的第一行，整块向下挪一格。 */
+	private static final int GRID_Y = 120;
 	/** 品质筛选那一行的 y 与连击筛选两行的 y。 */
 	private static final int RARITY_ROW_Y = 26;
 	private static final int COMBO_ROW_Y = 52;

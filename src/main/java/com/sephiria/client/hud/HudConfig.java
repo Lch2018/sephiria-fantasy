@@ -62,6 +62,10 @@ public final class HudConfig {
 	public static final List<String> MODULES = List.of(WEAPON, DASH, MP, SHIELD, CLOUD, SUN_SWORD, FROST, INVULN,
 			SKILLS, ARTIFACTS, FATIGUE);
 
+	/** 配置版本：2 起 EXP++ / 无敌条默认关闭；旧文件升级时也强制关这两项一次。 */
+	private static final int LAYOUT_VERSION = 2;
+	private static final String VERSION_KEY = "layout_version";
+
 	/** 一个界面元素的位置与缩放。 */
 	public static final class Element {
 		public double x;
@@ -158,11 +162,8 @@ public final class HudConfig {
 
 		Element element = ELEMENTS.computeIfAbsent(key, k -> {
 			Element created = new Element();
-
-			if (FATIGUE.equals(k)) {
-				created.visible = false;
-			}
-
+			// EXP++ 与无敌条默认关闭（用户 2026-11-15 的口径），其余模块默认显示。
+			created.visible = !FATIGUE.equals(k) && !INVULN.equals(k);
 			return created;
 		});
 		Minecraft client = Minecraft.getInstance();
@@ -189,8 +190,15 @@ public final class HudConfig {
 
 		try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
 			JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+			int layoutVersion = root.has(VERSION_KEY) ? root.get(VERSION_KEY).getAsInt() : 1;
+			boolean migrated = layoutVersion < LAYOUT_VERSION;
 
 			for (Map.Entry<String, com.google.gson.JsonElement> entry : root.entrySet()) {
+				// layout_version 是配置版本号，不是 HUD 模块
+				if (VERSION_KEY.equals(entry.getKey())) {
+					continue;
+				}
+
 				JsonObject object = entry.getValue().getAsJsonObject();
 				Element element = new Element();
 				element.x = object.get("x").getAsDouble();
@@ -201,8 +209,19 @@ public final class HudConfig {
 				element.centered = object.has("centered")
 						? object.get("centered").getAsBoolean()
 						: INVULN.equals(entry.getKey());
+
+				// 版本 2 迁移：EXP++ / 无敌条以前默认开，旧配置里会写着 true；
+				// 这两项现在要求默认关闭，升级时强制关一次。
+				if (migrated && (FATIGUE.equals(entry.getKey()) || INVULN.equals(entry.getKey()))) {
+					element.visible = false;
+				}
+
 				element.placed = true;
 				ELEMENTS.put(entry.getKey(), element);
+			}
+
+			if (migrated) {
+				save();
 			}
 
 			// 旧版护盾 HUD 默认在 MP 正下方；用户 2026-11-14 改成冲刺右侧，启动时把
@@ -245,6 +264,14 @@ public final class HudConfig {
 		}
 	}
 
+	/** 把模块夹在屏幕内（拖拽 / 滑块共用；宽高按缩放后的实际尺寸算）。 */
+	public static void clamp(Element element, int screenWidth, int screenHeight, double width, double height) {
+		double maxX = Math.max(0.0D, screenWidth - width * element.scale);
+		double maxY = Math.max(0.0D, screenHeight - height * element.scale);
+		element.x = Math.max(0.0D, Math.min(element.x, maxX));
+		element.y = Math.max(0.0D, Math.min(element.y, maxY));
+	}
+
 	/** 所有 HUD 缩放的算术平均，作为「统一调整」滑块的初始位置。 */
 	public static double averageScale() {
 		double total = 0.0D;
@@ -273,6 +300,7 @@ public final class HudConfig {
 
 	public static void save() {
 		JsonObject root = new JsonObject();
+		root.addProperty(VERSION_KEY, LAYOUT_VERSION);
 
 		for (Map.Entry<String, Element> entry : ELEMENTS.entrySet()) {
 			JsonObject object = new JsonObject();

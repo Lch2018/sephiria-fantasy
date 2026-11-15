@@ -330,6 +330,10 @@ public final class ArtifactBackpack extends SimpleContainer {
 		// 神器会影响物理强度与冲刺上限，属性面板和 HUD 各刷新一次
 		PlayerStats.sync(this.owner);
 		SkillStorage.syncAll(this.owner);
+		// 神器等级 / 数量变化后，技能栏里的「物品 id @ 等级」跟着更新；同种神器只有一份时
+		// refreshSlots 会直接改栏位，免去玩家去技能页重新装备。
+		com.sephiria.artifact.skill.ArtifactSkills.refreshSlots(this.owner);
+		com.sephiria.Sephiria.syncArtifactSkills(this.owner);
 	}
 
 	/** 保存用快照：物品 + 格子等级 + 格子数（数组按上限开，多出来的位置是空的那份）。 */

@@ -96,14 +96,11 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
-				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, WeaponSweep.RANGE).build(),
-				Line.titled("tooltip.sephiria_fantasy.skill.defend")
-						.stat("tooltip.sephiria_fantasy.part.reduction", DEFEND_REDUCTION * 100.0F, COLOR_RANGE).build(),
-				desc("tooltip.sephiria_fantasy.skill.defend", "tooltip.sephiria_fantasy.desc.defend"),
-				Line.titled("tooltip.sephiria_fantasy.skill.shield_sweep")
-						.skillDamage(PlayerStats.DEFAULT_STRENGTH * SWEEP_DAMAGE_RATIO)
-						.cooldownTicks(SWEEP_COOLDOWN_TICKS).range(SWEEP_RANGE).build(),
-				desc("tooltip.sephiria_fantasy.skill.shield_sweep", "tooltip.sephiria_fantasy.desc.shield_sweep"));
+				skillLine("tooltip.sephiria_fantasy.tip.attack", tag("damage", TAG_PHYSICAL)),
+				skillLine("tooltip.sephiria_fantasy.skill.defend",
+						tag("reduction", TAG_YELLOW), tag("immunity", TAG_YELLOW), hint("hold_right")),
+				skillLine("tooltip.sephiria_fantasy.skill.shield_sweep",
+						tag("damage", TAG_PHYSICAL), tag("mana", TAG_BLUE), hint("shield_sweep")));
 	}
 
 	/** 某玩家此刻是否在用它防御（右键按住期间，原版的使用状态就是判据）。 */
@@ -167,6 +164,11 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 			return 1.0F;
 		}
 
+		// 每次真正挡下伤害都消耗 1x 耐久（完美防御也一样；创造/无敌窗口在上面已经提前返回）
+		ItemStack shield = player.getUseItem();
+		WeaponDurability.hurt(shield, player, player.getUsedItemHand(),
+				WeaponDurability.SKILL_COST);
+
 		if (perfect) {
 			// 一次完美防御只发一次奖励：把窗口清掉，接着挨的那几下按普通防御算
 			PERFECT_GUARD_UNTIL.remove(player.getUUID());
@@ -211,6 +213,9 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 			return;
 		}
 
+		// 横扫是 2x；完美防御只免蓝，不免耐久
+		WeaponDurability.hurt(stack, player, player.getUsedItemHand(),
+				WeaponDurability.SKILL_COST);
 		sweep(player, level, stack);
 		// 和普通攻击一样把充能清零：不然充能这一条判定等于没写
 		player.resetAttackStrengthTicker();

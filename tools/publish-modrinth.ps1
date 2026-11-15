@@ -41,6 +41,7 @@ if (-not $Token) {
 $version = (Select-String -Path (Join-Path $root 'gradle.properties') -Pattern '^version=' |
     Select-Object -First 1).Line.Split('=')[1].Trim()
 $jar = Join-Path $root ("build\libs\sephiria-fantasy-$version.jar")
+$gameVersion = '26.1.2'
 
 if (-not (Test-Path $jar)) {
     throw "没找到构建产物 $jar —— 先跑 tools\deploy.ps1。"
@@ -181,7 +182,7 @@ try {
         $payload = $projectPayload + @{
             slug             = $Slug
             project_type     = 'mod'
-            game_versions    = @('26.3')
+            game_versions    = @($gameVersion)
             loaders          = @('fabric')
             is_draft         = $false
             initial_versions = @()   # 必填字段：建项目时本可顺手带一个版本，这里留空、随后单独传
@@ -262,7 +263,7 @@ try {
 
     if ($existingVersions.status -eq 200) {
         $already = ($existingVersions.body | ConvertFrom-Json) |
-            Where-Object { $_.version_number -eq $version } | Select-Object -First 1
+            Where-Object { $_.version_number -eq $version -and ($_.game_versions -contains $gameVersion) } | Select-Object -First 1
 
         if ($already -and $Force) {
             Write-Output "已有同名版本（id $($already.id)），-Force：继续上传一份新的，传完记得删旧的。"
@@ -303,7 +304,7 @@ try {
             @{ project_id = 'P7dR8mSH'; dependency_type = 'required' }   # Fabric API
             @{ project_id = '8BmcQJ2H'; dependency_type = 'required' }   # GeckoLib
         )
-        game_versions  = @('26.3')
+        game_versions  = @($gameVersion)
         version_type   = 'alpha'
         loaders        = @('fabric')
         featured       = $true

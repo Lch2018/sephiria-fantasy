@@ -48,7 +48,7 @@ public final class MeteorShowerSkill implements ArtifactSkill {
 	private static final double RAIN_RADIUS = 18.0D;
 	private static final double HIT_RADIUS = 4.0D;
 	private static final double AOE_RADIUS = 6.0D;
-	private static final double MAX_RANGE = 48.0D;
+	private static final double MAX_RANGE = 48.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double SPAWN_HEIGHT = 30.0D;
 	/** 落到落点平面 1 格以内才开始检测墙体；更上面属于“可穿墙”的下落段。 */
 	private static final double WALL_CHECK_HEIGHT = 1.0D;

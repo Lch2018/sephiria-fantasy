@@ -6,6 +6,7 @@
 	"client": [
 		"OffHandHideMixin",
 		"InvulnerableGlowMixin",
+		"InvulnerableGlowColorMixin",
 		"ParticleResourcesMixin",
 		"FrozenTintMixin",
 		"EntityRendererMixin",

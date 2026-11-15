@@ -22,9 +22,7 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -40,9 +38,9 @@ public final class IceStormSkill implements ArtifactSkill {
 	private static final int COOLDOWN_TICKS = 440;
 	private static final int DURATION_TICKS = 160;
 	private static final int INTERVAL_TICKS = 5;
-	private static final double MAX_RANGE = 48.0D;
+	private static final double MAX_RANGE = 48.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double RADIUS = 12.0D;
-	private static final double TRACK_RANGE = 48.0D;
+	private static final double TRACK_RANGE = 48.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double MOVE_SPEED = 0.1D;
 	/** 绕 Y 轴转一圈的时间（40 刻 = 2 秒）。 */
 	private static final int ROTATION_TICKS = 40;
@@ -57,7 +55,7 @@ public final class IceStormSkill implements ArtifactSkill {
 	private static final int BLIZZARD_GROUND_INTERVAL = 100;
 	private static final double TWO_PI = Math.PI * 2.0D;
 
-	private static final Map<UUID, Storm> STORMS = new HashMap<>();
+	private static final List<Storm> STORMS = new ArrayList<>();
 
 	private IceStormSkill() {
 	}
@@ -107,7 +105,7 @@ public final class IceStormSkill implements ArtifactSkill {
 				+ PlayerStats.elementTotal(player, PlayerStats.Element.ICE) * IceStormItem.percentAt(level) / 100.0D)
 				* ArtifactEffects.magicBookSkillDamageMultiplier(player);
 		long now = serverLevel.getGameTime();
-		STORMS.put(player.getUUID(), new Storm(serverLevel, player, center, (float) damage, level,
+		STORMS.add(new Storm(serverLevel, player, center, (float) damage, level,
 				now + DURATION_TICKS, now));
 
 		serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -124,22 +122,18 @@ public final class IceStormSkill implements ArtifactSkill {
 		}
 
 		long now = server.overworld().getGameTime();
+		// 每个玩家的风暴各自独立：乔洛的浇水壶额外施放会再放一个，不能覆盖原来的
+		List<Storm> inFlight = new ArrayList<>(STORMS);
+		STORMS.clear();
 
-		STORMS.entrySet().removeIf(entry -> {
-			ServerPlayer owner = server.getPlayerList().getPlayer(entry.getKey());
+		for (Storm storm : inFlight) {
+			ServerPlayer owner = server.getPlayerList().getPlayer(storm.owner.getUUID());
 
-			if (owner == null || !owner.isAlive() || now >= entry.getValue().endTick) {
-				return true;
+			if (owner == null || !owner.isAlive() || now >= storm.endTick || owner.level() != storm.level) {
+				continue;
 			}
 
-			Storm storm = entry.getValue();
-
-			if (owner.level() != storm.level) {
-				// 玩家换维度：旧风暴留在原维度没有意义
-				return true;
-			}
-
-			track(storm);
+			track(storm, owner);
 			visual(storm);
 
 			if (now >= storm.nextGround) {
@@ -156,14 +150,14 @@ public final class IceStormSkill implements ArtifactSkill {
 				storm.nextAttack = now + INTERVAL_TICKS;
 			}
 
-			return false;
-		});
+			STORMS.add(storm);
+		}
 	}
 
-	private static void track(Storm storm) {
+	private static void track(Storm storm, ServerPlayer owner) {
 		LivingEntity target = storm.level.getEntitiesOfClass(LivingEntity.class,
 						new AABB(storm.center, storm.center).inflate(TRACK_RANGE)).stream()
-				.filter(victim -> SephiriaDamage.autoTargetable(victim, storm.owner))
+				.filter(victim -> SephiriaDamage.autoTargetable(victim, owner))
 				.min(Comparator.comparingDouble(victim -> victim.position().distanceToSqr(storm.center)))
 				.orElse(null);
 

@@ -27,7 +27,9 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 钢铁巨剑：慢速重击 + 右键蓄力的「旋风」。
@@ -67,12 +69,12 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 
 	/** 蓄力满所需 tick（1.5 秒）；蓄力上限就是它，按住更久不会更强。 */
 	public static final int CHARGE_TICKS = 30;
-	/** 释放时的位移与耗时。 */
-	private static final double DASH_DISTANCE = 5.0D;
+	/** 释放时的位移与耗时。用户 2026-11-15 要求位移 +50%（5.0 → 7.5）、伤害半径 +50%（4.0 → 6.0）。 */
+	private static final double DASH_DISTANCE = 5.0D * 1.5D;
 	private static final int DASH_TICKS = 4;
-	/** 环形斩击的垂直半径（水平半径取玩家的实体交互距离）。 */
-	private static final double RING_RADIUS = 4.0D;
-	private static final double RING_HEIGHT = 1.5D;
+	/** 斩击的水平半径（伤害半径）；垂直半径同比例放大。 */
+	private static final double RING_RADIUS = 4.0D * 1.5D;
+	private static final double RING_HEIGHT = 1.5D * 1.5D;
 	/** 蓄力期间每隔这么多 tick 响一声蓄力音。 */
 	private static final int CHARGE_SOUND_INTERVAL = 6;
 	/** 横扫触发的充能门槛，与原版一致。 */
@@ -99,12 +101,10 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
-				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, KATANA_SHEATHED_SWEEP_RANGE * SWEEP_RANGE_SCALE).build(),
-				Line.titled("tooltip.sephiria_fantasy.skill.whirlwind")
-						.skillDamage(WHIRLWIND_DAMAGE)
-						.stat("tooltip.sephiria_fantasy.part.charge", CHARGE_TICKS / 20.0D, COLOR_COOLDOWN)
-						.range(RING_RADIUS).distance(DASH_DISTANCE).build(),
-				desc("tooltip.sephiria_fantasy.skill.whirlwind", "tooltip.sephiria_fantasy.desc.whirlwind"));
+				skillLine("tooltip.sephiria_fantasy.tip.attack", tag("damage", TAG_PHYSICAL)),
+				skillLine("tooltip.sephiria_fantasy.skill.whirlwind",
+						tag("damage", TAG_PHYSICAL), tag("displacement", TAG_CYAN),
+						tag("charge", TAG_BLUE), hint("whirlwind")));
 	}
 
 
@@ -222,11 +222,16 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 			return false;
 		}
 
+		// 旋风 3x 耐久；蓝够才收，和技能是否真正发动保持一致
+		WeaponDurability.hurt(stack, player, player.getUsedItemHand(),
+				WeaponDurability.SKILL_COST);
+
 		Vec3 direction = player.getLookAngle();
 		Dash.startVertical(player, direction, DASH_DISTANCE, DASH_TICKS, Dash.DEFAULT_DECAY);
 		serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2F, 0.7F);
-		PENDING.add(Pending.ring(player, DASH_TICKS, (float) (WHIRLWIND_DAMAGE * PlayerStats.skillDamageMultiplier(player)), RING_HEIGHT));
+		PENDING.add(Pending.ring(player, direction, DASH_DISTANCE, DASH_TICKS,
+				(float) (WHIRLWIND_DAMAGE * PlayerStats.skillDamageMultiplier(player)), RING_HEIGHT));
 		return true;
 	}
 
@@ -269,16 +274,23 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 		private final long dueTick;
 		private final float damage;
 		private final double height;
+		/** 释放瞬间的起点与预计落点：路径伤害按这条线段框出来。 */
+		private final Vec3 start;
+		private final Vec3 end;
 
-		private Pending(ServerPlayer player, long dueTick, float damage, double height) {
+		private Pending(ServerPlayer player, long dueTick, float damage, double height, Vec3 start, Vec3 end) {
 			this.player = player;
 			this.dueTick = dueTick;
 			this.damage = damage;
 			this.height = height;
+			this.start = start;
+			this.end = end;
 		}
 
-		static Pending ring(ServerPlayer player, int delay, float damage, double height) {
-			return new Pending(player, player.level().getGameTime() + delay, damage, height);
+		static Pending ring(ServerPlayer player, Vec3 direction, double distance, int delay, float damage, double height) {
+			Vec3 start = player.position();
+			return new Pending(player, player.level().getGameTime() + delay, damage, height,
+					start, start.add(direction.scale(distance)));
 		}
 
 		void resolve() {
@@ -286,12 +298,16 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 				return;
 			}
 
-			// 水平半径是固定值（4 格），再乘近战攻击范围与「特殊攻击范围」
+			// 水平半径是固定值（6 格），再乘近战攻击范围与「特殊攻击范围」
 			double reach = RING_RADIUS * PlayerStats.rangeMultiplier(player)
 					* PlayerStats.skillRangeMultiplier(player);
-			AABB area = player.getBoundingBox().inflate(reach, height, reach);
+			// 落点圆环 + 整条突进路径：路径用释放时定格的线段，位移被挡住也不影响判定
+			AABB landing = player.getBoundingBox().inflate(reach, height, reach);
+			AABB path = new AABB(this.start, this.end).inflate(reach, height, reach);
+			Set<LivingEntity> victims = new HashSet<>(level.getEntitiesOfClass(LivingEntity.class, landing));
+			victims.addAll(level.getEntitiesOfClass(LivingEntity.class, path));
 
-			for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {
+			for (LivingEntity victim : victims) {
 				// 技能范围大：只打有威胁的生物，和平生物不误伤（见 SephiriaDamage.strikeable）
 				if (!SephiriaDamage.strikeable(victim, player)) {
 					continue;
@@ -301,6 +317,10 @@ public class SephiriaGreatswordItem extends Item implements SephiriaWeapon {
 				SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
 				victim.hurtServer(level, level.damageSources().playerAttack(player), damage);
 			}
+
+			// TNT 爆炸观感：按实际伤害盒铺粒子，只放粒子、不放声音
+			WeaponExplosionFx.box(level, path);
+			WeaponExplosionFx.box(level, landing);
 
 			level.playSound(null, player.getX(), player.getY(), player.getZ(),
 					SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2F, 0.9F);
