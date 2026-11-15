@@ -57,6 +57,13 @@ public class ChestMenu extends AbstractContainerMenu {
 	private final Container rewards;
 	private final Container dice;
 	private final ItemStack chest;
+	/**
+	 * 打开界面时是否真的从背包里扣掉了这一份宝箱。
+	 *
+	 * <p>创造模式为 {@code false}：手里的宝箱没被拿走（游戏会恢复数量），关界面时不能再归还，
+	 * 否则每开关一次就多出一个。
+	 */
+	private final boolean chestTaken;
 	/** 这一箱实际开几格（5 或 6）+ 剩余免费刷新：服务端写、客户端读。 */
 	private final ContainerData data;
 	/** 服务端：开箱的玩家（客户端为 null）。筛奖励 / 刷新要用随机、幸运与天赋。 */
@@ -67,20 +74,22 @@ public class ChestMenu extends AbstractContainerMenu {
 	/** 客户端用的构造：奖励格数先按 5，服务端打开菜单时会把真实值同步过来。 */
 	public ChestMenu(int containerId, Inventory playerInventory) {
 		this(containerId, playerInventory, new SimpleContainer(ChestItem.MAX_REWARDS), new SimpleContainer(1),
-				ItemStack.EMPTY, ChestItem.REWARDS, null);
+				ItemStack.EMPTY, ChestItem.REWARDS, null, false);
 	}
 
 	public ChestMenu(int containerId, Inventory playerInventory, Container rewards, ItemStack chest,
-			int rewardCount, ServerPlayer owner) {
-		this(containerId, playerInventory, rewards, new SimpleContainer(1), chest, rewardCount, owner);
+			int rewardCount, ServerPlayer owner, boolean chestTaken) {
+		this(containerId, playerInventory, rewards, new SimpleContainer(1), chest, rewardCount, owner,
+				chestTaken);
 	}
 
 	private ChestMenu(int containerId, Inventory playerInventory, Container rewards, Container dice,
-			ItemStack chest, int rewardCount, ServerPlayer owner) {
+			ItemStack chest, int rewardCount, ServerPlayer owner, boolean chestTaken) {
 		super(ModMenus.CHEST, containerId);
 		this.rewards = rewards;
 		this.dice = dice;
 		this.chest = chest;
+		this.chestTaken = chestTaken;
 		this.owner = owner;
 		this.data = new SimpleContainerData(DATA_COUNT);
 		this.data.set(DATA_REWARDS, rewardCount);
@@ -160,7 +169,7 @@ public class ChestMenu extends AbstractContainerMenu {
 	 * <p>菜单持有的是「从手里取出来的那一份」，不再回头读手里现在拿的是什么——
 	 * 否则叠着多个时关掉再开、或者中途换手，读到的会是另一份没开过的箱子。
 	 */
-	public static MenuProvider provider(ServerPlayer player, ItemStack chest) {
+	public static MenuProvider provider(ServerPlayer player, ItemStack chest, boolean chestTaken) {
 		ChestItem.Kind kind = chest.getItem() instanceof ChestItem item ? item.kind() : ChestItem.Kind.ARTIFACT;
 		Container rewards = new SimpleContainer(ChestItem.MAX_REWARDS);
 		int choices = ChestItem.choicesFor(player);
@@ -188,7 +197,8 @@ public class ChestMenu extends AbstractContainerMenu {
 
 				@Override
 				public AbstractContainerMenu createMenu(int containerId, Inventory inventory, Player opener) {
-					return new ChestMenu(containerId, inventory, rewards, chest, rewardCount, player);
+					return new ChestMenu(containerId, inventory, rewards, chest, rewardCount, player,
+							chestTaken);
 				}
 		};
 	}
@@ -309,7 +319,10 @@ public class ChestMenu extends AbstractContainerMenu {
 
 		// 没选就关界面：把这一份宝箱还给玩家。它带着 OPENED 标记，回去以后不会和没开过的箱子并堆；
 		// 选过的（claimed）直接作废
-		if (!this.claimed && !this.chest.isEmpty() && player instanceof ServerPlayer serverPlayer) {
+		// 创造模式没从背包取过这一份（游戏恢复的是手里那叠的数量），再归还就是复制；
+		// 生存模式才需要把没选就关掉的箱子还回去
+		if (this.chestTaken && !this.claimed && !this.chest.isEmpty()
+				&& player instanceof ServerPlayer serverPlayer) {
 			ItemStack returned = this.chest.copy();
 			this.chest.setCount(0);
 			com.sephiria.util.PlayerItems.give(serverPlayer, returned);

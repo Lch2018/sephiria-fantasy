@@ -100,6 +100,38 @@ public final class SephiriaClient implements ClientModInitializer {
 		net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
 				com.sephiria.registry.ModBlockEntities.SEPHIRIA_BEACON,
 				com.sephiria.client.beacon.SephiriaBeaconRenderer::new);
+		// 许愿池的四叶草靠贴图 alpha 镂空。26.x 在模型 JSON 里写 render_type: cutout，
+		// 但 1.20.1 不认这个字段；不在这里显式设成 cutout 的话，透明像素会按实心渲染，
+		// 四叶草周围会出一圈黑色（用户 2026-11-15 报的「边框不透明」）。
+		net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(
+				com.sephiria.registry.ModBlocks.WISH_POOL,
+				net.minecraft.client.renderer.RenderType.cutout());
+		// 手持 3D 模型不再被物品模型引用，主动交给模型加载器烘焙
+		net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin.register(context -> {
+			for (String name : com.sephiria.client.render.WeaponHandModels.MODEL_NAMES) {
+				context.addModels(com.sephiria.client.render.WeaponHandModels.location(name));
+			}
+
+			// 永恒蚀的火焰 / 冰霜图标：EclipseModelMixin 按 NBT 直接取这两份烘焙模型。
+			// 它们虽然被 eternal_eclipse.json 的 overrides 引用，但不一定以
+			// ModelResourceLocation 的形式进 ModelManager 的缓存；像手持模型一样显式注册，
+			// 否则 getModel 会返回 missing，左右两边都退回基础图标。
+			context.addModels(com.sephiria.client.render.WeaponHandModels.location("eternal_eclipse_flame"));
+			context.addModels(com.sephiria.client.render.WeaponHandModels.location("eternal_eclipse_frost"));
+		});
+
+		// 1.20.1 没有数据组件：冰霜武具按 NBT 换火焰贴图走自定义模型谓词。
+		// 永恒蚀不走谓词——1.20.1 的 overrides 在模型烘焙时就把谓词解析死了，注册时机
+		// 一旦错过就永久失效；改由 EclipseModelMixin 在 ItemRenderer.getModel 里直接换模型。
+		for (net.minecraft.world.item.Item tool : new net.minecraft.world.item.Item[] {
+				com.sephiria.registry.ModItems.ICE_HAMMER, com.sephiria.registry.ModItems.ICE_SPEAR,
+				com.sephiria.registry.ModItems.ICE_ARROW }) {
+			net.minecraft.client.renderer.item.ItemProperties.register(tool,
+					new net.minecraft.resources.ResourceLocation(com.sephiria.Sephiria.MOD_ID, "flame_tool"),
+					(stack, level, entity, seed) -> com.sephiria.compat.ItemData.has(
+							stack, com.sephiria.frost.FrostArmament.FLAME_TOOL) ? 1.0F : 0.0F);
+		}
+
 		com.sephiria.client.hud.HudConfig.load();
 
 		MenuScreens.<ArtifactBackpackMenu, com.sephiria.client.backpack.ArtifactBackpackScreen>register(
@@ -298,6 +330,40 @@ public final class SephiriaClient implements ClientModInitializer {
 				return;
 			}
 
+				if (client.options.keyAttack.consumeClick()) {
+					// 这一 tick 里累积的连点只发一次：服务端有冷却，多发没有意义
+					while (client.options.keyAttack.consumeClick()) {
+						// 丢弃剩余的点击次数
+					}
+
+					client.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+					sendEmpty(com.sephiria.network.ShieldSweepPayload.CHANNEL);
+				}
+		});
+
+		// 刀满剑意时的左键：强力斩击可以空放（用户 2026-11-15 要求类似匕首的狂怒）。
+		// 原版攻击回调只有打到实体才触发，所以这里抢下点击，改发一个服务端请求；
+		// 服务端会重新验入鞘状态、剑意层数与冷却，客户端镜像只决定要不要抢。
+		ClientTickEvents.START_CLIENT_TICK.register(client -> {
+			if (client.player == null || client.screen != null) {
+				return;
+			}
+
+			net.minecraft.world.item.ItemStack mainHand = client.player.getMainHandItem();
+
+			if (!(mainHand.getItem() instanceof com.sephiria.weapon.SephiriaKatanaItem)
+					|| !com.sephiria.weapon.SephiriaKatanaItem.isSheathed(mainHand)) {
+				return;
+			}
+
+			double intentMax = com.sephiria.client.SkillClientData.max(
+					com.sephiria.weapon.SephiriaKatanaItem.SWORD_INTENT);
+
+			if (intentMax <= 0.0D || com.sephiria.client.SkillClientData.current(
+					com.sephiria.weapon.SephiriaKatanaItem.SWORD_INTENT) < intentMax) {
+				return;
+			}
+
 			if (client.options.keyAttack.consumeClick()) {
 				// 这一 tick 里累积的连点只发一次：服务端有冷却，多发没有意义
 				while (client.options.keyAttack.consumeClick()) {
@@ -305,7 +371,7 @@ public final class SephiriaClient implements ClientModInitializer {
 				}
 
 				client.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-				sendEmpty(com.sephiria.network.ShieldSweepPayload.CHANNEL);
+				sendEmpty(com.sephiria.network.KatanaSlashPayload.CHANNEL);
 			}
 		});
 
@@ -397,6 +463,31 @@ public final class SephiriaClient implements ClientModInitializer {
 		});
 
 		ItemTooltipCallback.EVENT.register((stack, flag, lines) -> {
+			// 武器详细描述：空行分隔，逐条显示。外层套灰，行内标签用自己的颜色覆盖它。
+			// 数值按玩家当前属性换算（武器类里存的是基准值），拼完立刻清掉倍率。
+			if (stack.getItem() instanceof com.sephiria.weapon.SephiriaWeapon detail) {
+				java.util.List<net.minecraft.network.chat.Component> detailLines;
+
+				try {
+					com.sephiria.weapon.TooltipScale.set(
+							com.sephiria.client.ClientStats.damageMultiplier(),
+							com.sephiria.client.ClientStats.skillDamageMultiplier(),
+							com.sephiria.client.ClientStats.attackSpeedMultiplier(),
+							com.sephiria.client.ClientStats.rangeMultiplier());
+					detailLines = detail.detailLines(stack);
+				} finally {
+					com.sephiria.weapon.TooltipScale.reset();
+				}
+
+				if (!detailLines.isEmpty()) {
+					lines.add(net.minecraft.network.chat.Component.empty());
+
+					for (net.minecraft.network.chat.Component line : detailLines) {
+						lines.add(line.copy().withStyle(net.minecraft.ChatFormatting.GRAY));
+					}
+				}
+			}
+
 			// 赛菲莉娅额外背包栏：一行用途说明（「+1」绿色，其余灰色）
 			if (stack.getItem() == com.sephiria.registry.ModItems.EXTRA_BACKPACK_ROW) {
 				lines.add(net.minecraft.network.chat.Component.translatable(

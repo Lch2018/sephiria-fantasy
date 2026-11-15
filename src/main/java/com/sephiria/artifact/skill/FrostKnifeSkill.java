@@ -36,8 +36,8 @@ public final class FrostKnifeSkill implements ArtifactSkill {
 	private static final int COUNT = 4;
 	private static final int DELAY_TICKS = 20;
 	private static final double SPEED = 1.0D;
-	private static final double FALLBACK_DISTANCE = 36.0D;
-	private static final double LOCK_RANGE = 28.0D;
+	private static final double FALLBACK_DISTANCE = 36.0D * ArtifactSkill.RANGE_MULTIPLIER;
+	private static final double LOCK_RANGE = 28.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double AOE_RADIUS = 3.0D;
 
 	private static final List<Knife> KNIVES = new ArrayList<>();

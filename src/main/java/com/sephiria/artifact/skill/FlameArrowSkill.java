@@ -34,7 +34,7 @@ public final class FlameArrowSkill implements ArtifactSkill {
 
 	private static final int COOLDOWN_TICKS = 180;
 	private static final double SPEED = 1.0D;
-	private static final double DISTANCE = 36.0D;
+	private static final double DISTANCE = 36.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double AOE_RADIUS = 3.0D;
 	private static final float[] ANGLES = { -12.0F, -4.0F, 4.0F, 12.0F };
 

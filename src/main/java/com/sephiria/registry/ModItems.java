@@ -210,13 +210,13 @@ public final class ModItems {
 	public static final Item STEEL_GREATSWORD = register(key("steel_greatsword"),
 			p -> new SephiriaGreatswordItem(WeaponBranch.GREATSWORD, p),
 			new Item.Properties()
-					.durability(600));
+					.durability(250));
 	/** 匕首：右键是招架/狂怒两段技能（见 {@link SephiriaDaggerItem}）。 */
 	public static final Item DAGGER = register(key("dagger"),
 			p -> new SephiriaDaggerItem(WeaponBranch.DAGGER, p),
 			new Item.Properties()
-					.durability(160));
-	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, SephiriaCrossbowItem.MAGAZINE_SIZE);
+					.durability(250));
+	public static final Item COLOSSAL_CROSSBOW = crossbow("colossal_crossbow", WeaponBranch.CROSSBOW, 250);
 	/** 重型弩的专用弹药：弩矢。弩不消耗、也不需要背包里有原版箭矢。 */
 	public static final Item CROSSBOW_BOLT = Registry.register(
 			BuiltInRegistries.ITEM,
@@ -228,12 +228,12 @@ public final class ModItems {
 			new Item.Properties()
 					// sword() 只是为了拿到 Tool 组件（切蛛网、剑类方块加速）和通用属性；
 					// 它写的攻击力/攻速随后被下面按状态的修饰符覆盖，所以这里传 0。
-					.durability(320));
+					.durability(250));
 	/** 长棍：左键横扫 + 右键两段「回击」（见 {@link SephiriaStaffItem}）。 */
 	public static final Item QUARTERSTAFF = register(key("quarterstaff"),
 			p -> new SephiriaStaffItem(WeaponBranch.STAFF, p),
 			new Item.Properties()
-					.durability(300));
+					.durability(250));
 
 	/** 全部基础武器，顺序即创造模式标签页里的顺序。 */
 	public static final List<BaseWeapon> BASE_WEAPONS = List.of(

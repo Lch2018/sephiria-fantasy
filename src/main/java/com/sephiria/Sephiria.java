@@ -47,6 +47,7 @@ import com.sephiria.slate.SlateFusionMenu;
 import com.sephiria.slate.SlateItem;
 import com.sephiria.trader.SephiriaTraderMenu;
 import com.sephiria.weapon.WeaponSweep;
+import com.sephiria.weapon.WeaponDurability;
 import com.sephiria.weapon.SephiriaKatanaItem;
 import com.sephiria.weapon.WeaponBranch;
 import net.fabricmc.api.ModInitializer;
@@ -115,6 +116,7 @@ public class Sephiria implements ModInitializer {
 		SephiriaGreatswordItem.register();
 		SephiriaStaffItem.register();
 		WeaponSweep.register();
+		WeaponDurability.register();
 		SephiriaShieldItem.register();
 		// 注意注册顺序：ALLOW_DAMAGE 的调用器是"第一个返回 false 的处理器直接短路"，
 		// 所以各武器自己的格挡窗口（刀的切换、匕首的招架、长棍的回击）必须排在
@@ -295,6 +297,9 @@ public class Sephiria implements ModInitializer {
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.ShieldSweepPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> server.execute(
 						() -> SephiriaShieldItem.tryDefendSweep(player)));
+		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.KatanaSlashPayload.CHANNEL,
+				(server, player, handler, buffer, sender) -> server.execute(
+						() -> com.sephiria.weapon.SephiriaKatanaItem.tryPowerfulSlash(player)));
 		ServerPlayNetworking.registerGlobalReceiver(com.sephiria.network.CardOpenPayload.CHANNEL,
 				(server, player, handler, buffer, sender) -> server.execute(
 						() -> com.sephiria.card.CardSelection.open(player)));
@@ -480,7 +485,17 @@ public class Sephiria implements ModInitializer {
 					int levels = com.sephiria.network.UpgradeArtifactPayload.read(buffer).levels();
 					server.execute(() -> {
 						if (player.containerMenu instanceof EnchantMenu menu) {
-							menu.upgrade(levels);
+							net.minecraft.world.item.ItemStack stack = menu.artifactStack();
+							int oldLevel = com.sephiria.artifact.ArtifactItem.levelOf(stack);
+
+							if (menu.upgrade(levels)) {
+								// 技能栏里存的是「物品 id @ 等级」；神器升级后按旧等级精确改到新等级，
+								// 玩家不用再去技能页重新拖一次。
+								com.sephiria.artifact.skill.ArtifactSkills.retarget(player, stack.getItem(),
+										oldLevel, com.sephiria.artifact.ArtifactItem.levelOf(stack));
+								syncArtifactSkills(player);
+								com.sephiria.artifact.ArtifactHud.send(player);
+							}
 						}
 					});
 				});
@@ -602,7 +617,10 @@ public class Sephiria implements ModInitializer {
 				WeaponBranch.values().length, ModItems.BASE_WEAPONS.size());
 	}
 	/** 把神器技能页需要的数据推给客户端（可用技能 + 6 个栏位）。 */
-	private static void syncArtifactSkills(ServerPlayer player) {
+	public static void syncArtifactSkills(ServerPlayer player) {
+		// 顺手把旧存档 / 等级变化后对不上的栏位改成当前等级；同种神器只有一份时才改，
+		// 多份的情况由升级入口的 retarget 精确处理。
+		com.sephiria.artifact.skill.ArtifactSkills.refreshSlots(player);
 		java.util.List<ArtifactSkillsPayload.Entry> skills = new java.util.ArrayList<>();
 
 		for (ArtifactSkills.Available available : ArtifactSkills.available(player)) {

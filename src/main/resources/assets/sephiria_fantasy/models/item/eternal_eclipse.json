@@ -2,5 +2,19 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "sephiria_fantasy:item/eternal_eclipse"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "sephiria_fantasy:eclipse_side": 2
+      },
+      "model": "sephiria_fantasy:item/eternal_eclipse_frost"
+    },
+    {
+      "predicate": {
+        "sephiria_fantasy:eclipse_side": 1
+      },
+      "model": "sephiria_fantasy:item/eternal_eclipse_flame"
+    }
+  ]
 }

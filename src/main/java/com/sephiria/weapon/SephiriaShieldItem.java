@@ -66,9 +66,6 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	private static final int SWEEP_COOLDOWN_TICKS = 20;
 	private static final double SWEEP_RANGE = 3.3D;
 	private static final double SWEEP_HEIGHT = 0.825D;
-	/** 攻击充能下限：与普通攻击同一套判据（原版横扫之刃也是 0.9）。 */
-	private static final float SWEEP_CHARGE_THRESHOLD = 0.9F;
-
 	/**
 	 * 防御挨打时的蓝耗：普通 10、完美防御 5（半价）。
 	 *
@@ -109,14 +106,11 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
-				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, WeaponSweep.RANGE).build(),
-				Line.titled("tooltip.sephiria_fantasy.skill.defend")
-						.stat("tooltip.sephiria_fantasy.part.reduction", DEFEND_REDUCTION * 100.0F, COLOR_RANGE).build(),
-				desc("tooltip.sephiria_fantasy.skill.defend", "tooltip.sephiria_fantasy.desc.defend"),
-				Line.titled("tooltip.sephiria_fantasy.skill.shield_sweep")
-						.skillDamage(PlayerStats.DEFAULT_STRENGTH * SWEEP_DAMAGE_RATIO)
-						.cooldownTicks(SWEEP_COOLDOWN_TICKS).range(SWEEP_RANGE).build(),
-				desc("tooltip.sephiria_fantasy.skill.shield_sweep", "tooltip.sephiria_fantasy.desc.shield_sweep"));
+				skillLine("tooltip.sephiria_fantasy.tip.attack", tag("damage", TAG_PHYSICAL)),
+				skillLine("tooltip.sephiria_fantasy.skill.defend",
+						tag("reduction", TAG_YELLOW), tag("immunity", TAG_YELLOW), hint("hold_right")),
+				skillLine("tooltip.sephiria_fantasy.skill.shield_sweep",
+						tag("damage", TAG_PHYSICAL), tag("mana", TAG_BLUE), hint("shield_sweep")));
 	}
 
 	/** 某玩家此刻是否在用它防御（右键按住期间，原版的使用状态就是判据）。 */
@@ -180,6 +174,11 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 			return 1.0F;
 		}
 
+		// 每次真正挡下伤害都消耗 1x 耐久（完美防御也一样；创造/无敌窗口在上面已经提前返回）
+		ItemStack shield = player.getUseItem();
+		WeaponDurability.hurt(shield, player, player.getUsedItemHand(),
+				WeaponDurability.SKILL_COST);
+
 		if (perfect) {
 			// 一次完美防御只发一次奖励：把窗口清掉，接着挨的那几下按普通防御算
 			PERFECT_GUARD_UNTIL.remove(player.getUUID());
@@ -200,7 +199,13 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 	/**
 	 * 防御中按左键 → 横扫。由客户端按键包（{@link com.sephiria.network.ShieldSweepPayload}）驱动。
 	 *
-	 * <p>冷却是 1 秒；攻击充能没满或不在防御状态就直接不作数（客户端可能连点，服务端每次都要重新判定）。
+	 * <p>冷却是 1 秒；不在防御状态就直接不作数（客户端可能连点，服务端每次都要重新判定）。
+	 *
+	 * <p><b>不能检查攻击充能</b>：举盾（使用物品）期间 1.20.1 的
+	 * {@code Player.attackStrengthTicker} 被原版冻在 0，{@code getAttackStrengthScale}
+	 * 永远只有 0.08 左右，原来那条 {@code <= 0.9} 的判定会把防御中的横扫整个卡死
+	 * （用户 2026-11-15 报的「按住右键按左键无效果」）。横扫自己已有 1 秒冷却 + 15 MP
+	 * 两道限制，充能这一条对防御玩法没有意义。
 	 */
 	public static void tryDefendSweep(ServerPlayer player) {
 		if (!(player.level() instanceof ServerLevel level) || !isDefending(player)) {
@@ -212,8 +217,7 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 				: player.getOffhandItem();
 
 		if (!(stack.getItem() instanceof SephiriaShieldItem)
-				|| player.getCooldowns().isOnCooldown(stack.getItem())
-				|| player.getAttackStrengthScale(0.5F) <= SWEEP_CHARGE_THRESHOLD) {
+				|| player.getCooldowns().isOnCooldown(stack.getItem())) {
 			return;
 		}
 
@@ -224,6 +228,9 @@ public class SephiriaShieldItem extends Item implements SephiriaWeapon {
 			return;
 		}
 
+		// 横扫是 2x；完美防御只免蓝，不免耐久
+		WeaponDurability.hurt(stack, player, player.getUsedItemHand(),
+				WeaponDurability.SKILL_COST);
 		sweep(player, level, stack);
 		// 和普通攻击一样把充能清零：不然充能这一条判定等于没写
 		player.resetAttackStrengthTicker();

@@ -160,6 +160,100 @@ public final class ArtifactSkills {
 		return null;
 	}
 
+	/**
+	 * 神器升级后把技能栏里的「物品 id @ 等级」改成新等级，不需要玩家重新拖一次。
+	 *
+	 * <p>只改同一件物品、且旧等级匹配的栏位；同种神器的第二份不会被误改。
+	 * 由附魔升级入口在升级成功后调用（那时神器还在附魔槽里，{@link #available} 看不到它）。
+	 */
+	public static void retarget(ServerPlayer player, Item item, int oldLevel, int newLevel) {
+		List<String> slots = SkillSlots.of(player);
+		int maxLevel = item instanceof com.sephiria.artifact.SephiriaArtifact artifact
+				? artifact.maxLevel() : newLevel;
+		int cappedNew = Math.min(newLevel, maxLevel);
+
+		for (int index = 0; index < slots.size(); index++) {
+			String entry = slots.get(index);
+
+			if (entry == null || entry.isEmpty()) {
+				continue;
+			}
+
+			Item entryItem = itemOf(entry);
+
+			if (entryItem != item || Math.min(levelOf(entry), maxLevel) != Math.min(oldLevel, maxLevel)) {
+				continue;
+			}
+
+			SkillSlots.set(player, index, encode(item, cappedNew));
+		}
+	}
+
+	/**
+	 * 按当前背包状态刷新技能栏等级：同一件物品在背包里只有一份时，直接把栏位改成它现在的等级。
+	 *
+	 * <p>由背包内容变化与技能页同步入口调用；同种神器有多份时保持原样（避免把另一份的栏位
+	 * 接到升级过的那一份上），交给 {@link #retarget} 精确处理。
+	 */
+	public static void refreshSlots(ServerPlayer player) {
+		List<String> slots = SkillSlots.of(player);
+		List<Available> available = available(player);
+
+		for (int index = 0; index < slots.size(); index++) {
+			String entry = slots.get(index);
+
+			if (entry == null || entry.isEmpty()) {
+				continue;
+			}
+
+			Item item = itemOf(entry);
+
+			if (item == null) {
+				continue;
+			}
+
+			List<Available> matches = available.stream().filter(value -> value.item() == item).toList();
+
+			if (matches.size() != 1) {
+				continue;
+			}
+
+			Available only = matches.get(0);
+			String updated = encode(item, only.level());
+
+			if (!updated.equals(entry)) {
+				SkillSlots.set(player, index, updated);
+			}
+		}
+	}
+
+	/** 技能栏字符串里的物品；解析失败返回 null。 */
+	private static Item itemOf(String entry) {
+		int at = entry.lastIndexOf('@');
+
+		if (at <= 0) {
+			return null;
+		}
+
+		ResourceLocation id = ResourceLocation.tryParse(entry.substring(0, at));
+		return id == null ? null : BuiltInRegistries.ITEM.getOptional(id).orElse(null);
+	}
+
+	/** 技能栏字符串里的等级；解析失败返回 0。 */
+	private static int levelOf(String entry) {
+		int at = entry.lastIndexOf('@');
+
+		if (at <= 0) {
+			return 0;
+		}
+
+		try {
+			return Integer.parseInt(entry.substring(at + 1));
+		} catch (NumberFormatException exception) {
+			return 0;
+		}
+	}
+
 	/** 某个栏位还要等多少 tick 才能再放（0 = 可以放）。 */
 	public static int cooldownLeft(ServerPlayer player, int slot) {
 		long[] slots = COOLDOWNS.get(player.getUUID());

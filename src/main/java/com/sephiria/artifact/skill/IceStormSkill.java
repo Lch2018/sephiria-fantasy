@@ -38,9 +38,9 @@ public final class IceStormSkill implements ArtifactSkill {
 	private static final int COOLDOWN_TICKS = 440;
 	private static final int DURATION_TICKS = 160;
 	private static final int INTERVAL_TICKS = 5;
-	private static final double MAX_RANGE = 48.0D;
+	private static final double MAX_RANGE = 48.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double RADIUS = 12.0D;
-	private static final double TRACK_RANGE = 48.0D;
+	private static final double TRACK_RANGE = 48.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double MOVE_SPEED = 0.1D;
 	/** 绕 Y 轴转一圈的时间（40 刻 = 2 秒）。 */
 	private static final int ROTATION_TICKS = 40;

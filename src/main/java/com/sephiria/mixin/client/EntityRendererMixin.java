@@ -47,7 +47,7 @@ public class EntityRendererMixin {
 			return;
 		}
 
-		List<Component> labels = ClientDebuffs.labelsFor(entity.getId());
+		List<ClientDebuffs.DebuffLabel> labels = ClientDebuffs.labelsFor(entity.getId());
 
 		if (labels.isEmpty()) {
 			return;
@@ -61,8 +61,9 @@ public class EntityRendererMixin {
 		pose.scale(-LABEL_SCALE, -LABEL_SCALE, LABEL_SCALE);
 
 		for (int index = 0; index < labels.size(); index++) {
-			Component label = labels.get(index);
-			font.drawInBatch(label, -font.width(label) / 2.0F, -index * 10.0F, 0xFFFF7777, false,
+			ClientDebuffs.DebuffLabel label = labels.get(index);
+			Component text = label.text();
+			font.drawInBatch(text, -font.width(text) / 2.0F, -index * 10.0F, label.color(), false,
 					pose.last().pose(), buffer, Font.DisplayMode.NORMAL, 0x40000000,
 					LightTexture.FULL_BRIGHT);
 		}

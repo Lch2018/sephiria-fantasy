@@ -119,12 +119,20 @@ public class ChestItem extends Item {
 		ItemStack held = serverPlayer.getItemInHand(hand);
 		ItemStack opened = held.copy();
 		opened.setCount(1);
-		// 先扣掉手里的这一份：菜单持有的是单独的一份，剩下的同种箱子仍是「没开过」、还能叠
-		held.shrink(1);
-		serverPlayer.getInventory().setChanged();
+		// 先扣掉手里的这一份：菜单持有的是单独的一份，剩下的同种箱子仍是「没开过」、还能叠。
+		// 创造模式除外——ServerPlayerGameMode.useItem 会在消耗动作后把数量改回原值，
+		// 这里再扣一次、关界面时菜单又归还一份，就会「开一次多一个」；创造模式不从背包取，
+		// 菜单也不归还（见 ChestMenu#removed）。
+		boolean takenFromInventory = !serverPlayer.isCreative();
+
+		if (takenFromInventory) {
+			held.shrink(1);
+			serverPlayer.getInventory().setChanged();
+		}
+
 		markOpened(opened);
-		serverPlayer.openMenu(ChestMenu.provider(serverPlayer, opened));
-		return InteractionResultHolder.consume(player.getItemInHand(hand));
+		serverPlayer.openMenu(ChestMenu.provider(serverPlayer, opened, takenFromInventory));
+		return InteractionResultHolder.consume(serverPlayer.getItemInHand(hand));
 	}
 
 	/** 标记这一份宝箱已经打开（1.20.1 用 NBT；堆叠上限由 ChestStackSizeMixin 现算）。 */

@@ -37,15 +37,16 @@ public final class ToroHealthTextRenderer {
 			float x, float y, float z, String text, int color, int light, boolean crit) {
 		Font font = Minecraft.getInstance().font;
 		float scale = TOROHEALTH_BASE_SCALE * (float) DamageDisplayConfig.size() * (crit ? 2.0F : 1.0F);
+		int width = font.width(text);
 		PoseStack matrices = new PoseStack();
 		matrices.translate(x, y, z);
 		matrices.mulPose(cameraRotation);
-		// ToroHealth 1.20.1 原渲染器用的是负 X 缩放 + 左对齐；这里改成正 X 缩放 + 居中，
-		// 与 26.3 版的自定义渲染一致。
-		matrices.scale(scale, -scale, scale);
-		matrices.translate(-font.width(text) / 2.0F, -font.lineHeight / 2.0F, 0.0F);
-
-		font.drawInBatch(text, 0.0F, 0.0F, color, false,
+		// 必须与 ToroHealth 原渲染一样用「X、Y 两个负缩放」：只翻 Y 会把三角形的绕序反掉，
+		// 文字被背面剔除，看起来就是「伤害数字跳不出来」。X 正缩放 + 居中是 26.x 的写法，
+		// 1.20.1 的 Font 批渲染不是那套状态。
+		matrices.scale(-scale, -scale, scale);
+		matrices.translate(-width, -3.0F, 0.0F);
+		font.drawInBatch(text, -width / 2.0F, -3.0F, color, false,
 				matrices.last().pose(), buffers, Font.DisplayMode.NORMAL, 0, light);
 	}
 

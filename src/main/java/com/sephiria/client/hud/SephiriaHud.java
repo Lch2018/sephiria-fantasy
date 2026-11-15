@@ -145,10 +145,12 @@ public final class SephiriaHud implements HudRenderCallback {
 		renderPanel(graphics, HudConfig.WEAPON, client);
 		renderPanel(graphics, HudConfig.DASH, client);
 		renderPanel(graphics, HudConfig.MP, client);
+		renderPanel(graphics, HudConfig.SHIELD, client);
 		renderPanel(graphics, HudConfig.CLOUD, client);
 		renderPanel(graphics, HudConfig.SUN_SWORD, client);
 		renderPanel(graphics, HudConfig.FROST, client);
 		renderPanel(graphics, HudConfig.INVULN, client);
+		renderPanel(graphics, HudConfig.FATIGUE, client);
 	}
 
 	// ------------------------------------------------------------------ 技能 / 神器图标行
@@ -199,6 +201,10 @@ public final class SephiriaHud implements HudRenderCallback {
 				FLASH_UNTIL.put(key, now + FLASH_MILLIS);
 			}
 
+			// 原版 renderItem 把物品画在 z=100；冷却罩必须再往上抬，否则大图标会把
+			// 扇形罩盖住，看起来像「冷却进度不显示」。发热完成那圈白光同理。
+			graphics.pose().pushPose();
+			graphics.pose().translate(0.0F, 0.0F, 200.0F);
 			drawCooldownWedge(graphics, x, ICON_OFFSET, ICON, progress);
 
 			Long flash = FLASH_UNTIL.get(key);
@@ -211,6 +217,8 @@ public final class SephiriaHud implements HudRenderCallback {
 					drawCircleOverlay(graphics, x, ICON_OFFSET, ICON, FLASH_COLOR);
 				}
 			}
+
+			graphics.pose().popPose();
 
 			x += STEP;
 		}

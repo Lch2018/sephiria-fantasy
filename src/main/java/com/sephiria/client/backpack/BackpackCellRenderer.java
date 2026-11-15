@@ -38,12 +38,14 @@ public final class BackpackCellRenderer {
 	/**
 	 * 旋转的石板：绕着格子中心 (x+8, y+8) 把图标转过来。
 	 *
-	 * <p>调用方必须先擦掉原版画的没旋转的图标（见 {@code SephiriaMenuScreen#redrawSlot}），
-	 * 否则两张图标会叠在一起。物品数量/耐久条由这里补画，原版的装饰一起被擦掉了。
+	 * <p>调用方（{@code RotatedSlateScreen} 的实现）已经在原版 {@code renderSlot} 的 HEAD
+	 * 把这一格取消了，所以这里不会再和未旋转的图标叠在一起。物品数量/耐久条由这里补画。
 	 */
 	public static void drawRotatedItem(GuiGraphics graphics, Font font, int x, int y, ItemStack stack) {
 		PoseStack pose = graphics.pose();
 		pose.pushPose();
+		// 原版 renderSlot 把物品画在 z=100；旋转后的图标要压在它上面，否则旧图标会盖住新图标
+		pose.translate(0.0F, 0.0F, 200.0F);
 		pose.translate(x + 8.0F, y + 8.0F, 0.0F);
 		// 屏幕坐标 y 向下：负角度才是视觉上的逆时针，与 SlateItem#rotate 的方向一致
 		pose.mulPose(Axis.ZP.rotation(-SlateItem.rotationOf(stack) * ((float) Math.PI / 2.0F)));

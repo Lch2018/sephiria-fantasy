@@ -445,7 +445,7 @@
           7.25391
         ],
         "axis": "y",
-        "angle": 22.5
+        "angle": 20
       },
       "faces": {
         "north": {
@@ -522,7 +522,7 @@
           7.25391
         ],
         "axis": "y",
-        "angle": -22.5
+        "angle": -20
       },
       "faces": {
         "north": {

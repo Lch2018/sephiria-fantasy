@@ -140,6 +140,8 @@ public final class SunSword {
 	 */
 	private static final List<PendingHit> PENDING = new ArrayList<>();
 	private static int triggerLogs;
+	/** 书库之阳诊断日志的条数上限（确认魔法书伤害有没有走到这个分支、extra 是几）。 */
+	private static int magicLogs;
 
 	private record PendingHit(ServerLevel level, UUID ownerId, UUID targetId, float damage, boolean ice,
 			long dueTick) {
@@ -184,6 +186,13 @@ public final class SunSword {
 				}
 
 				int extra = ArtifactEffects.librarySunExtraTriggers(player);
+
+				if (magicLogs < 10) {
+					magicLogs++;
+					Sephiria.LOGGER.info("[SEPHIRIA] SunSword magic hit: extra={}, librarySun={}, state={}",
+							extra, ArtifactEffects.librarySunEnabled(player),
+							STATES.containsKey(player.getUUID()));
+				}
 
 				for (int index = 0; index < extra; index++) {
 					if (!throwSword(player, entity)) {

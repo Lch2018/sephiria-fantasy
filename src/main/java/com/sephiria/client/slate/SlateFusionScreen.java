@@ -3,6 +3,7 @@ package com.sephiria.client.slate;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.sephiria.Sephiria;
 import com.sephiria.client.backpack.BackpackCellRenderer;
+import com.sephiria.client.backpack.RotatedSlateScreen;
 import com.sephiria.client.menu.SephiriaMenuScreen;
 import com.sephiria.network.FuseSlatesPayload;
 import com.sephiria.network.RotateFusionSlatePayload;
@@ -37,7 +38,8 @@ import java.util.List;
  * <p>按 R 旋转鼠标下的输入石板（与服务端发来的朝向同步）；「合成」只在两块输入都在、
  * 输出格还空着且这一次还没合成过时可点。
  */
-public class SlateFusionScreen extends SephiriaMenuScreen<SlateFusionMenu> {
+public class SlateFusionScreen extends SephiriaMenuScreen<SlateFusionMenu>
+		implements RotatedSlateScreen {
 	private static final int LEVEL_POSITIVE = 0xFF55FF55;
 	private static final int LEVEL_NEGATIVE = 0xFFFF5555;
 	/** 预览格子的淡色底：正增量绿、负增量红（很低的不透明度，别盖住数字）。 */
@@ -162,6 +164,21 @@ public class SlateFusionScreen extends SephiriaMenuScreen<SlateFusionMenu> {
 				(this.imageWidth - hintWidth) / 2, SlateFusionMenu.HINT_Y, HINT, false);
 	}
 
+	/**
+	 * 只有两个输入格由本界面自己画；玩家背包里的旋转石板仍交给原版
+	 * （这一页的 renderSlotOverlays 不画背包格，不能把它们取消掉）。
+	 */
+	@Override
+	public boolean sephiria$handlesRotatedSlot(Slot slot) {
+		if (slot.index >= SlateFusionMenu.INPUT_COUNT) {
+			return false;
+		}
+
+		ItemStack stack = slot.getItem();
+
+		return stack.getItem() instanceof SlateItem && SlateItem.rotationOf(stack) != 0;
+	}
+
 	/** 输入格里的石板要按朝向转过来（与背包一致的显示）。 */
 	@Override
 	protected void renderSlotOverlays(GuiGraphics graphics) {
@@ -170,7 +187,7 @@ public class SlateFusionScreen extends SephiriaMenuScreen<SlateFusionMenu> {
 			ItemStack stack = slot.getItem();
 
 			if (stack.getItem() instanceof SlateItem && SlateItem.rotationOf(stack) != 0) {
-				redrawSlot(graphics, slot);
+				// 原版这一格被 RotatedSlateScreen 拦掉了，只补画旋转图标与悬停高亮
 				BackpackCellRenderer.drawRotatedItem(graphics, this.font,
 						this.leftPos + slot.x, this.topPos + slot.y, stack);
 				restoreSlotHighlight(graphics, slot);

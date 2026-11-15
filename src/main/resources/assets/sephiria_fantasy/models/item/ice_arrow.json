@@ -2,5 +2,13 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "sephiria_fantasy:item/ice_arrow"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "sephiria_fantasy:flame_tool": 1
+      },
+      "model": "sephiria_fantasy:item/flame_arrow_projectile"
+    }
+  ]
 }

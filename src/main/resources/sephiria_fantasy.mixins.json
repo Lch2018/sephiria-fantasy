@@ -18,9 +18,12 @@
     "CursorRestoreMixin",
     "MouseHandlerAccessor",
     "KatanaItemRendererMixin",
+    "WeaponHandRendererMixin",
     "FrozenTintMixin",
-    "WeaponGlintMixin",
-    "ShopSlotOverlayMixin"
+    "ShopSlotOverlayMixin",
+    "AbstractContainerScreenMixin",
+    "EclipseModelMixin",
+    "BlockElementDeserializerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

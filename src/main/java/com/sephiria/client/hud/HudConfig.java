@@ -93,6 +93,10 @@ public final class HudConfig {
 	/** 右下三行的默认左边缘：图标行的锚点宽 162px（9 格），加右侧 8px 边距。 */
 	private static final int RIGHT_STACK_X = 170;
 
+	/** 配置文件版本：2 起 EXP++ / 无敌条默认关闭；旧文件升级时也会关掉这两个模块一次。 */
+	private static final int LAYOUT_VERSION = 2;
+	private static final String VERSION_KEY = "layout_version";
+
 	private static final Path FILE = FabricLoader.getInstance().getConfigDir()
 			.resolve("sephiria-fantasy-hud.properties");
 	private static final Map<String, Element> ELEMENTS = new LinkedHashMap<>();
@@ -106,11 +110,15 @@ public final class HudConfig {
 
 	/** 一个 HUD 模块的位置与缩放。 */
 	public static final class Element {
-		public boolean visible = true;
+		public boolean visible;
 		public double x;
 		public double y;
 		public double scale = 1.0D;
 		public boolean placed;
+
+		private Element(boolean visible) {
+			this.visible = visible;
+		}
 
 		private void placeFrom(String module, int screenWidth, int screenHeight) {
 			if (this.placed) {
@@ -167,7 +175,7 @@ public final class HudConfig {
 	public static Element element(String module) {
 		load();
 
-		Element element = ELEMENTS.computeIfAbsent(module, key -> new Element());
+		Element element = ELEMENTS.computeIfAbsent(module, key -> new Element(defaultVisible(key)));
 		Minecraft client = Minecraft.getInstance();
 
 		if (!element.placed && client.getWindow() != null) {
@@ -256,15 +264,17 @@ public final class HudConfig {
 		double legacyScale = clampScale(parseDouble(properties, "scale", 1.0D));
 		legacyOffsetX = parseInt(properties, "offset_x", 0);
 		legacyOffsetY = parseInt(properties, "offset_y", 0);
+		int layoutVersion = parseInt(properties, VERSION_KEY, 1);
+		boolean migrated = layoutVersion < LAYOUT_VERSION;
 
 		for (String module : MODULES) {
-			Element element = new Element();
+			Element element = new Element(defaultVisible(module));
 
 			if (hasModuleKeys(properties, module)) {
 				element.x = parseDouble(properties, module + ".x", 0.0D);
 				element.y = parseDouble(properties, module + ".y", 0.0D);
 				element.scale = clampScale(parseDouble(properties, module + ".scale", 1.0D));
-				element.visible = parseBool(properties, module + ".visible", true);
+				element.visible = parseBool(properties, module + ".visible", defaultVisible(module));
 				// 只写了开关 / 缩放而没有坐标：位置仍按默认落位算
 				element.placed = properties.containsKey(module + ".x") || properties.containsKey(module + ".y");
 			}
@@ -280,14 +290,38 @@ public final class HudConfig {
 				element.placed = false;
 			}
 			else {
-				// 旧版没有这些模块：默认按 1.0 缩放、可见落位，不继承旧的全局缩放
-				element.visible = globalVisible;
+				// 旧版没有这些模块：默认按 1.0 缩放落位，不继承旧的全局缩放
+				element.visible = globalVisible && defaultVisible(module);
 				element.scale = 1.0D;
 				element.placed = false;
 			}
 
+			// 版本 2 迁移：EXP++ / 无敌条以前默认是开的，旧配置文件里会写着 true；
+			// 这两项是用户 2026-11-15 明确要求默认关闭的，升级时强制关一次。
+			if (migrated && (FATIGUE.equals(module) || INVULN.equals(module))) {
+				element.visible = false;
+			}
+
 			ELEMENTS.put(module, element);
 		}
+
+		// 迁移结果直接写回这份 Properties，不要调 save()：save() 会走 element()，
+		// 而 element() 要读 Minecraft.getInstance() 来落位；客户端初始化阶段实例还没建好，
+		// 会在启动时 NPE（2026-11-15 15:51 的启动崩溃）。
+		if (migrated) {
+			for (String module : MODULES) {
+				properties.setProperty(module + ".visible",
+						Boolean.toString(ELEMENTS.get(module).visible));
+			}
+
+			properties.setProperty(VERSION_KEY, Integer.toString(LAYOUT_VERSION));
+			store(properties);
+		}
+	}
+
+	/** 新配置的默认显示状态：EXP++ 与无敌条默认关闭，其余开启。 */
+	private static boolean defaultVisible(String module) {
+		return !FATIGUE.equals(module) && !INVULN.equals(module);
 	}
 
 	public static void save() {
@@ -315,7 +349,13 @@ public final class HudConfig {
 		properties.setProperty("show_artifacts", Boolean.toString(artifacts.visible));
 		properties.setProperty("offset_x", "0");
 		properties.setProperty("offset_y", "0");
+		properties.setProperty(VERSION_KEY, Integer.toString(LAYOUT_VERSION));
 
+		store(properties);
+	}
+
+	/** 把整份 Properties 写回配置文件；失败只影响下次启动的布局。 */
+	private static void store(Properties properties) {
 		try {
 			Files.createDirectories(FILE.getParent());
 

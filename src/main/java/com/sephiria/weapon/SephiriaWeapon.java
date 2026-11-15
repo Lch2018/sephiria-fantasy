@@ -25,6 +25,37 @@ public interface SephiriaWeapon {
 	int COLOR_RANGE = 0xFFFFFFFF;
 	int COLOR_COOLDOWN = 0xFF4DD8FF;
 
+	/** 精简描述里的标签配色：物理白灰、减伤/免疫/弹反黄、耗蓝/消耗/蓄力蓝、位移青、动作提示灰。 */
+	int TAG_PHYSICAL = 0xFFC0C0C0;
+	int TAG_YELLOW = 0xFFFFD24A;
+	int TAG_BLUE = 0xFF5AA9FF;
+	int TAG_CYAN = 0xFF4DD8FF;
+	int TAG_HINT = 0xFF9A9AA2;
+
+	/** 一个彩色标签（语言键里带方括号），用于精简后的技能描述。 */
+	default Component tag(String key, int color) {
+		return Component.translatable("tooltip.sephiria_fantasy.tag." + key)
+				.withStyle(style -> style.withColor(color));
+	}
+
+	/** 技能后面的灰色动作提示（语言键里带引号）。 */
+	default Component hint(String key) {
+		return Component.translatable("tooltip.sephiria_fantasy.hint." + key)
+				.withStyle(style -> style.withColor(TAG_HINT));
+	}
+
+	/** 一行精简技能描述：名称 + 冒号 + 若干标签 / 动作提示。 */
+	default Component skillLine(String labelKey, Component... parts) {
+		MutableComponent line = Component.translatable(labelKey)
+				.append(Component.translatable("tooltip.sephiria_fantasy.simple.separator"));
+
+		for (Component part : parts) {
+			line.append(part);
+		}
+
+		return line;
+	}
+
 	/**
 	 * 范围基准：原版铁剑的横扫（以命中目标为中心水平膨胀 1.0 格）= 100。
 	 *

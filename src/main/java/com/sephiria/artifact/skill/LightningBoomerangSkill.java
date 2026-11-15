@@ -33,7 +33,7 @@ public final class LightningBoomerangSkill implements ArtifactSkill {
 
 	private static final int COOLDOWN_TICKS = 200;
 	private static final double SPEED = 1.0D;
-	private static final double OUTBOUND_DISTANCE = 36.0D;
+	private static final double OUTBOUND_DISTANCE = 36.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double RETURN_EXTRA = 28.0D;
 	private static final double DAMAGE_RADIUS = 6.0D;
 	private static final double DAMAGE_HEIGHT = 3.0D;

@@ -35,7 +35,7 @@ import java.util.List;
  * 背包格区的画法（石板朝向、等级文字、悬停提示）与背包界面共用 {@link BackpackCellRenderer}，
  * 保证两边看起来一致。
  */
-public class EnchantScreen extends SephiriaMenuScreen<EnchantMenu> {
+public class EnchantScreen extends SephiriaMenuScreen<EnchantMenu> implements RotatedSlateScreen {
 	private static final int COIN_COLOR = 0xFFFFD24A;
 
 	private final List<Button> upgradeButtons = new ArrayList<>();
@@ -129,6 +129,14 @@ public class EnchantScreen extends SephiriaMenuScreen<EnchantMenu> {
 				EnchantMenu.BACKPACK_SLOT_X, EnchantMenu.BACKPACK_SLOT_Y - 12, HINT, false);
 	}
 
+	/** 旋转石板所在的格子交给本界面自己画（原版 renderSlot 不再画未旋转的图标）。 */
+	@Override
+	public boolean sephiria$handlesRotatedSlot(Slot slot) {
+		ItemStack stack = slot.getItem();
+
+		return stack.getItem() instanceof SlateItem && SlateItem.rotationOf(stack) != 0;
+	}
+
 	/** 背包格区里的显示与背包界面一致：石板按朝向转、左上角画等级文字。 */
 	@Override
 	protected void renderSlotOverlays(GuiGraphics graphics) {
@@ -142,7 +150,7 @@ public class EnchantScreen extends SephiriaMenuScreen<EnchantMenu> {
 			int y = this.topPos + slot.y;
 
 			if (shown.getItem() instanceof SlateItem && SlateItem.rotationOf(shown) != 0) {
-				redrawSlot(graphics, slot);
+				// 原版这一格被 RotatedSlateScreen 拦掉了，只补画旋转图标与悬停高亮
 				BackpackCellRenderer.drawRotatedItem(graphics, this.font, x, y, shown);
 				restoreSlotHighlight(graphics, slot);
 			}

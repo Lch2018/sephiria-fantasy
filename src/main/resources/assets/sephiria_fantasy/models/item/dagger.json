@@ -1,3 +1,6 @@
 {
-	"parent": "sephiria_fantasy:item/dagger_in_hand"
+	"parent": "sephiria_fantasy:item/weapon",
+	"textures": {
+		"layer0": "sephiria_fantasy:item/dagger"
+	}
 }

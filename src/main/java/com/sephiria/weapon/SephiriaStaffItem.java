@@ -157,16 +157,10 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
-				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, VANILLA_SWEEP_RANGE * SWEEP_RANGE_SCALE).build(),
-				Line.titled("tooltip.sephiria_fantasy.skill.riposte1")
-						.skillDamage(RIPOSTE1_DAMAGE).cooldownTicks(COOLDOWN_TICKS)
-						.range(PARRY_RANGE).distance(STEP1_DISTANCE).build(),
-				Line.titled("tooltip.sephiria_fantasy.skill.riposte2")
-						.skillDamage(RIPOSTE2_DAMAGE).cooldownSame()
-						.range(RIPOSTE2_RANGE).distance(STEP2_DISTANCE).build(),
-				Line.titled("tooltip.sephiria_fantasy.skill.riposte3")
-						.skillDamage(RIPOSTE3_DAMAGE).cooldownSame().range(RIPOSTE3_RANGE).build(),
-				desc("tooltip.sephiria_fantasy.skill.riposte", "tooltip.sephiria_fantasy.desc.riposte"));
+				skillLine("tooltip.sephiria_fantasy.tip.attack", tag("damage", TAG_PHYSICAL)),
+				skillLine("tooltip.sephiria_fantasy.skill.riposte",
+						tag("damage", TAG_PHYSICAL), tag("displacement", TAG_CYAN),
+						tag("immunity", TAG_YELLOW), tag("parry", TAG_YELLOW), hint("riposte")));
 	}
 
 
@@ -267,6 +261,9 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 		REDUCTION_UNTIL.put(serverPlayer.getUUID(), now + INVULNERABLE_TICKS + REDUCTION_TICKS);
 		Invulnerability.grant(serverPlayer, INVULNERABLE_TICKS);
 		player.getCooldowns().addCooldown(stack.getItem(), COOLDOWN_TICKS);
+		// 回击 1 是 3x 耐久；回击 2/3 在 secondStep 里再各收一次
+		WeaponDurability.hurt(stack, serverPlayer, hand,
+				WeaponDurability.SKILL_COST);
 
 		Vec3 direction = player.getLookAngle();
 		Dash.startVertical(serverPlayer, direction, STEP1_DISTANCE, STEP_DASH_TICKS, Dash.DEFAULT_DECAY);
@@ -391,6 +388,8 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 			}
 
 			AABB area = player.getBoundingBox().inflate(this.range, this.height, this.range);
+			// TNT 爆炸观感：三段回击共用这条结算路径，按实际伤害盒铺粒子，只放粒子、不放声音
+			WeaponExplosionFx.box(level, area);
 
 			for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {
 				// 技能范围大：只打有威胁的生物，和平生物不误伤（见 SephiriaDamage.strikeable）
@@ -417,6 +416,14 @@ public class SephiriaStaffItem extends Item implements SephiriaWeapon {
 					: RIPOSTE2_DAMAGE * damageMultiplier;
 			double range = perfect ? RIPOSTE3_RANGE : RIPOSTE2_RANGE;
 			double height = perfect ? RIPOSTE3_HEIGHT : RIPOSTE2_HEIGHT;
+
+			// 回击 2/3 各是 3x 耐久；拿着别的物品时就不扣（技能仍会结算）
+			ItemStack staff = player.getMainHandItem();
+
+			if (staff.getItem() instanceof SephiriaStaffItem) {
+				WeaponDurability.hurt(staff, player, InteractionHand.MAIN_HAND,
+						WeaponDurability.SKILL_COST);
+			}
 
 			Dash.startVertical(player, player.getLookAngle(), STEP2_DISTANCE, STEP_DASH_TICKS, Dash.DEFAULT_DECAY);
 			level.playSound(null, player.getX(), player.getY(), player.getZ(),

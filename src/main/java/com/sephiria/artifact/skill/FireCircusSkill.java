@@ -34,7 +34,7 @@ public final class FireCircusSkill implements ArtifactSkill {
 	private static final int COUNT = 8;
 	private static final int DELAY_TICKS = 20;
 	private static final double SPEED = 1.0D;
-	private static final double DISTANCE = 36.0D;
+	private static final double DISTANCE = 36.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double AOE_RADIUS = 3.0D;
 
 	private static final List<Fireball> FIREBALLS = new ArrayList<>();

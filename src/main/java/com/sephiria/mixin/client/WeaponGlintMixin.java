@@ -2,6 +2,7 @@ package com.sephiria.mixin.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexMultiConsumer;
 import com.sephiria.client.render.WeaponGlint;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -53,7 +54,10 @@ public class WeaponGlintMixin {
 	private static VertexConsumer sephiria$foilBuffer(MultiBufferSource buffers, RenderType type,
 			boolean isItem, boolean glint) {
 		RenderType custom = glint ? WeaponGlint.forStack(SEPHIRIA_CURRENT_STACK.get(), false) : null;
-		return custom != null ? buffers.getBuffer(custom)
+		// 光效层要和本体层拼成一个「多消费者」：只返回自定义 glint 的 buffer 会把本体模型也
+		// 画进 glint 管线（贴图对不上），剑意满层 / 匕首专注满时图标直接消失。
+		return custom != null
+				? VertexMultiConsumer.create(buffers.getBuffer(custom), buffers.getBuffer(type))
 				: ItemRenderer.getFoilBuffer(buffers, type, isItem, glint);
 	}
 
@@ -64,7 +68,8 @@ public class WeaponGlintMixin {
 	private static VertexConsumer sephiria$foilBufferDirect(MultiBufferSource buffers, RenderType type,
 			boolean isItem, boolean glint) {
 		RenderType custom = glint ? WeaponGlint.forStack(SEPHIRIA_CURRENT_STACK.get(), true) : null;
-		return custom != null ? buffers.getBuffer(custom)
+		return custom != null
+				? VertexMultiConsumer.create(buffers.getBuffer(custom), buffers.getBuffer(type))
 				: ItemRenderer.getFoilBufferDirect(buffers, type, isItem, glint);
 	}
 }

@@ -27,6 +27,23 @@ public final class ClientDebuffs {
 	 */
 	private static final Map<ResourceLocation, Map<Integer, Integer>> STACKS = new TreeMap<>();
 
+	/**
+	 * 减益标签的字色：跟伤害数字那套元素色保持一致（火 / 冰 / 电），
+	 * 等离子体是火 + 电的组合色，见 {@code ToroHealthCompat#colorForMask}。
+	 *
+	 * <p>用户 2026-11-15 的口径：脚下的减益字不该一律是红色，要按「基础元素」上色。
+	 * 这里只认减益 id，不看触发者的面板值——标签是给所有人看的，颜色要稳定。
+	 */
+	private static final int FIRE_COLOR = 0xEDB12E;
+	private static final int ICE_COLOR = 0x6499E8;
+	private static final int LIGHTNING_COLOR = 0x7EFAFF;
+	/** 火 + 电（等离子体）：与伤害数字的双属性组合色一致。 */
+	private static final int PLASMA_COLOR = 0xEE8AF8;
+
+	/** 一条减益标签：文字与字色分开存，绘制端不再自己猜颜色。 */
+	public record DebuffLabel(Component text, int color) {
+	}
+
 	private ClientDebuffs() {
 	}
 
@@ -60,18 +77,32 @@ public final class ClientDebuffs {
 	 *
 	 * <p>标签文字按减益 id 找 {@code ui.sephiria.debuff.<id>} 这个语言键。
 	 */
-	public static List<Component> labelsFor(int entityId) {
-		List<Component> labels = new ArrayList<>();
+	public static List<DebuffLabel> labelsFor(int entityId) {
+		List<DebuffLabel> labels = new ArrayList<>();
 
 		for (Map.Entry<ResourceLocation, Map<Integer, Integer>> entry : STACKS.entrySet()) {
 			Integer stacks = entry.getValue().get(entityId);
 
 			if (stacks != null) {
-				labels.add(Component.translatable("ui.sephiria_fantasy.debuff." + entry.getKey().getPath(), stacks));
+				String path = entry.getKey().getPath();
+				labels.add(new DebuffLabel(
+						Component.translatable("ui.sephiria_fantasy.debuff." + path, stacks),
+						colorOf(path)));
 			}
 		}
 
 		return labels;
+	}
+
+	/** 减益 id → 字色；未知减益退回原来的红色，至少不会看不见。 */
+	private static int colorOf(String debuffPath) {
+		return switch (debuffPath) {
+			case "electric_shocks" -> LIGHTNING_COLOR;
+			case "burns" -> FIRE_COLOR;
+			case "plasma" -> PLASMA_COLOR;
+			case "frostbites", "frozen" -> ICE_COLOR;
+			default -> 0xFFFF7777;
+		};
 	}
 
 	/**

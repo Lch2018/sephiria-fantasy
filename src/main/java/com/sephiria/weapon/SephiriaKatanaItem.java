@@ -40,6 +40,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.client.RenderProvider;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -49,6 +50,7 @@ import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,15 +89,21 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 	private static final double INTENT_PER_HIT = 12.0D;
 	private static final int INTENT_GAIN_TICKS = 6;
 	private static final double INTENT_SWITCH_BONUS = 50.0D;
-	private static final double POWERFUL_DISTANCE = 1.0D;
+	/**
+	 * 强力斩击：向准星突进 {@value #POWERFUL_DISTANCE} 格，落地后以自身为原点劈一圈，
+	 * 同时伤害整条突进路径上的敌人。
+	 *
+	 * <p>位移距离取狂怒的 80%（10.4 × 0.8 = 8.32）；伤害半径 +30%（5.5 → 7.15）。
+	 * 倍率 = 120% × (消耗的剑意 ÷ {@value #INTENT_MAX})，满层就是 24——
+	 * 也就是物理强度基准（20）的 120%，再乘物理强度换算。
+	 */
+	private static final double POWERFUL_DISTANCE = 10.4D * 0.8D;
 	private static final int POWERFUL_DASH_TICKS = 4;
 	private static final int POWERFUL_COOLDOWN = 4;
-	private static final double POWERFUL_RANGE = 5.5D;
-	private static final double POWERFUL_HEIGHT = 1.375D;
+	private static final double POWERFUL_RANGE = 5.5D * 1.3D;
+	private static final double POWERFUL_HEIGHT = 1.375D * 1.3D;
 	private static final float POWERFUL_DAMAGE_AT_FULL = 24.0F;
 	private static final double SHEATHED_ATTACK_MP_COST = 5.0D;
-	private static final int INTENT_BAR_COLOR = 0xFF6FD8FF;
-	private static final int INTENT_BAR_FULL_COLOR = 0xFFFFD24A;
 	private static final float INTENT_FULL_VOLUME = 0.9F;
 	private static final float INTENT_FULL_PITCH = 1.5F;
 
@@ -127,8 +135,8 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 
 	/** 某个状态下的攻击力/攻速（供 ItemStack 属性 mixin 使用）。 */
 	public static Multimap<Attribute, AttributeModifier> stateAttributes(boolean sheathed) {
-		float damage = sheathed ? SHEATHED_DAMAGE : UNSHEATHED_DAMAGE;
-		float speed = VANILLA_SWORD_ATTACK_SPEED * (sheathed ? SHEATHED_CHARGE_SCALE : UNSHEATHED_CHARGE_SCALE);
+		float damage = (float) baseAttackDamage(sheathed);
+		float speed = (float) baseAttackSpeed(sheathed);
 		return WeaponAttributes.of(damage, speed);
 	}
 
@@ -137,54 +145,20 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 		return this.branch;
 	}
 
-	@Override
-	public boolean isBarVisible(ItemStack stack) {
-		return intentRatio() > 0.0F;
-	}
-
-	@Override
-	public int getBarWidth(ItemStack stack) {
-		return Math.round(13.0F * intentRatio());
-	}
-
-	@Override
-	public int getBarColor(ItemStack stack) {
-		return intentRatio() >= 1.0F ? INTENT_BAR_FULL_COLOR : INTENT_BAR_COLOR;
-	}
-
-	private static float intentRatio() {
-		double max = SkillClientData.max(SWORD_INTENT);
-		return max <= 0.0D ? 0.0F : (float) (SkillClientData.current(SWORD_INTENT) / max);
-	}
-
 	/**
 	 * 提示框里的详细说明：两种状态的攻击数据 + 切换 / 剑意 / 强力斩三个技能。
 	 * 数值全部取自本类顶部的常量，改数值不用再动这里。
 	 */
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
-		double sheathedSpeed = VANILLA_SWORD_ATTACK_SPEED * SHEATHED_CHARGE_SCALE;
-		double drawnSpeed = VANILLA_SWORD_ATTACK_SPEED * UNSHEATHED_CHARGE_SCALE;
-		double sheathedRange = VANILLA_SWEEP_RANGE * SHEATHED_SWEEP_RANGE;
-		double drawnRange = VANILLA_SWEEP_RANGE * UNSHEATHED_SWEEP_RANGE;
-
 		return java.util.List.of(
-				// 出鞘是默认状态，所以放在前面，和数据表一致
-				Line.attack("tooltip.sephiria_fantasy.katana.drawn", UNSHEATHED_DAMAGE, drawnSpeed, drawnRange).build(),
-				Line.attack("tooltip.sephiria_fantasy.katana.sheathed", SHEATHED_DAMAGE, sheathedSpeed, sheathedRange).build(),
-				Line.titled("tooltip.sephiria_fantasy.skill.toggle")
-						.cooldownTicks(SWITCH_TICKS)
-						.stat("tooltip.sephiria_fantasy.part.invuln", BLOCK_TICKS / 20.0D, COLOR_RANGE).build(),
-				desc("tooltip.sephiria_fantasy.skill.toggle", "tooltip.sephiria_fantasy.desc.toggle"),
-				Line.titled("tooltip.sephiria_fantasy.skill.intent")
-						.stat("tooltip.sephiria_fantasy.part.per_hit", INTENT_PER_HIT, COLOR_DAMAGE)
-						.stat("tooltip.sephiria_fantasy.part.max", INTENT_MAX, COLOR_RANGE)
-						.stat("tooltip.sephiria_fantasy.part.block_bonus", INTENT_SWITCH_BONUS, COLOR_DAMAGE).build(),
-				desc("tooltip.sephiria_fantasy.skill.intent", "tooltip.sephiria_fantasy.desc.intent"),
-				Line.titled("tooltip.sephiria_fantasy.skill.slash")
-						.skillDamage(POWERFUL_DAMAGE_AT_FULL).cooldownTicks(POWERFUL_COOLDOWN)
-						.range(POWERFUL_RANGE).distance(POWERFUL_DISTANCE).build(),
-				desc("tooltip.sephiria_fantasy.skill.slash", "tooltip.sephiria_fantasy.desc.slash"));
+				skillLine("tooltip.sephiria_fantasy.tip.attack",
+						tag("damage", TAG_PHYSICAL), hint("gain_intent")),
+				skillLine("tooltip.sephiria_fantasy.skill.toggle",
+						tag("immunity", TAG_YELLOW), tag("parry", TAG_YELLOW), hint("katana_toggle")),
+				skillLine("tooltip.sephiria_fantasy.skill.slash",
+						tag("damage", TAG_PHYSICAL), tag("displacement", TAG_CYAN),
+						tag("consume", TAG_BLUE), hint("katana_slash")));
 	}
 
 	@Override
@@ -195,6 +169,16 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 
 	public static boolean isSheathed(ItemStack stack) {
 		return ItemData.getBoolean(stack, SHEATHED, false);
+	}
+
+	/** 当前形态的基础攻速（只用于耐久公式与属性注册，不含任何属性加成）。 */
+	public static double baseAttackSpeed(boolean sheathed) {
+		return VANILLA_SWORD_ATTACK_SPEED * (sheathed ? SHEATHED_CHARGE_SCALE : UNSHEATHED_CHARGE_SCALE);
+	}
+
+	/** 当前形态的基础攻击力（同上）。 */
+	public static double baseAttackDamage(boolean sheathed) {
+		return sheathed ? SHEATHED_DAMAGE : UNSHEATHED_DAMAGE;
 	}
 
 	private static int switchInvulnTicks(ServerPlayer player) {
@@ -287,6 +271,8 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 						GeoItem.getOrAssignId(stack, serverLevel), "main", "attack_sheathed");
 			}
 
+			// 入鞘且满层：正常情况下左键点击已被客户端按键包拦下（可以空放），
+			// 只有没装本模组客户端的攻击包会走到这里；两条路都靠层数与冷却互斥，不会重复放。
 			double intent = SkillStorage.current(serverPlayer, SWORD_INTENT);
 
 			if (isSheathed(stack) && intent >= INTENT_MAX) {
@@ -294,6 +280,9 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				powerfulSlash(serverPlayer, serverLevel, stack, intent);
 				return InteractionResult.FAIL;
 			}
+
+			// 普通命中按原版扣 1 点耐久（强力斩击那一刀在上面已按 3x 扣过并返回）
+			WeaponDurability.hurt(stack, serverPlayer, hand, WeaponDurability.NORMAL_ATTACK_COST);
 
 			if (isSheathed(stack) && !PlayerStats.spendMp(serverPlayer, SHEATHED_ATTACK_MP_COST)) {
 				bareHandedAttack(serverPlayer, serverLevel, entity);
@@ -375,15 +364,50 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				0, dx, 0.0D, dz, 0.0D);
 	}
 
+	/**
+	 * 客户端满层左键的请求入口：与狂怒一样可以空放，服务端重新验一遍手里是不是入鞘的满层刀。
+	 *
+	 * <p>层数和冷却都在服务端判定，客户端镜像只负责决定要不要抢这次点击；
+	 * 抢下后不会再发原版攻击包，所以不会和命中路径重复触发。
+	 */
+	public static void tryPowerfulSlash(ServerPlayer player) {
+		if (!(player.level() instanceof ServerLevel level)) {
+			return;
+		}
+
+		ItemStack stack = player.getMainHandItem();
+
+		if (!(stack.getItem() instanceof SephiriaKatanaItem) || !isSheathed(stack)
+				|| player.getCooldowns().isOnCooldown(stack.getItem())) {
+			return;
+		}
+
+		double intent = SkillStorage.current(player, SWORD_INTENT);
+
+		if (intent < INTENT_MAX) {
+			return;
+		}
+
+		SkillStorage.consume(player, SWORD_INTENT, intent);
+		powerfulSlash(player, level, stack, intent);
+	}
+
 	private static void powerfulSlash(ServerPlayer player, ServerLevel level, ItemStack stack, double intent) {
 		float damage = (float) (POWERFUL_DAMAGE_AT_FULL * (intent / INTENT_MAX)
 				* PlayerStats.skillDamageMultiplier(player));
 
-		Dash.startVertical(player, player.getLookAngle(), POWERFUL_DISTANCE, POWERFUL_DASH_TICKS, Dash.DEFAULT_DECAY);
+		// 强力斩击 3x 耐久（入鞘状态的基础值，见 WeaponDurability）
+		WeaponDurability.hurt(stack, player, InteractionHand.MAIN_HAND,
+				WeaponDurability.SKILL_COST);
+
+		// 突进走 3D 版本：准星朝上/朝下时也要能斜着窜出去
+		Vec3 direction = player.getLookAngle();
+		Dash.startVertical(player, direction, POWERFUL_DISTANCE, POWERFUL_DASH_TICKS, Dash.DEFAULT_DECAY);
 		player.getCooldowns().addCooldown(stack.getItem(), POWERFUL_COOLDOWN);
 		level.playSound(null, player.getX(), player.getY(), player.getZ(),
 				SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 0.6F);
-		PENDING.add(Pending.burst(player, POWERFUL_DASH_TICKS, damage, POWERFUL_RANGE, POWERFUL_HEIGHT));
+		PENDING.add(Pending.burst(player, direction, POWERFUL_DISTANCE, POWERFUL_DASH_TICKS,
+				damage, POWERFUL_RANGE, POWERFUL_HEIGHT));
 	}
 
 	private static void tick(MinecraftServer server) {
@@ -418,23 +442,32 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 		}
 	}
 
+	/** 一次待结算的斩击。落点范围在结算时按自身位置拼，路径范围用释放时定格的线段。 */
 	private static final class Pending {
 		private final ServerPlayer player;
 		private final long dueTick;
 		private final float damage;
 		private final double range;
 		private final double height;
+		private final Vec3 start;
+		private final Vec3 end;
 
-		private Pending(ServerPlayer player, long dueTick, float damage, double range, double height) {
+		private Pending(ServerPlayer player, long dueTick, float damage, double range, double height,
+				Vec3 start, Vec3 end) {
 			this.player = player;
 			this.dueTick = dueTick;
 			this.damage = damage;
 			this.range = range;
 			this.height = height;
+			this.start = start;
+			this.end = end;
 		}
 
-		static Pending burst(ServerPlayer player, int delay, float damage, double range, double height) {
-			return new Pending(player, player.level().getGameTime() + delay, damage, range, height);
+		static Pending burst(ServerPlayer player, Vec3 direction, double distance, int delay,
+				float damage, double range, double height) {
+			Vec3 start = player.position();
+			return new Pending(player, player.level().getGameTime() + delay, damage, range, height,
+					start, start.add(direction.scale(distance)));
 		}
 
 		void resolve() {
@@ -443,10 +476,15 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 			}
 
 			double mul = PlayerStats.rangeMultiplier(player) * PlayerStats.skillRangeMultiplier(player);
-			AABB area = player.getBoundingBox().inflate(range * mul, height * mul, range * mul);
+			// 落点一圈 + 整条突进路径：路径用释放时定格的线段，位移被挡住也不影响判定
+			AABB landing = player.getBoundingBox().inflate(range * mul, height * mul, range * mul);
+			AABB path = new AABB(this.start, this.end)
+					.inflate(range * mul, height * mul, range * mul);
+			Set<LivingEntity> victims = new HashSet<>(level.getEntitiesOfClass(LivingEntity.class, landing));
+			victims.addAll(level.getEntitiesOfClass(LivingEntity.class, path));
 			DamageSource source = level.damageSources().playerAttack(player);
 
-			for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area)) {
+			for (LivingEntity victim : victims) {
 				if (!SephiriaDamage.strikeable(victim, player)) {
 					continue;
 				}
@@ -454,6 +492,10 @@ public class SephiriaKatanaItem extends Item implements GeoItem, SephiriaWeapon 
 				SephiriaDamage.markSkill(player, PlayerStats.skillDamageMultiplier(player));
 				victim.hurt(source, damage);
 			}
+
+			// TNT 爆炸观感：按实际伤害盒铺粒子，只放粒子、不放声音
+			WeaponExplosionFx.box(level, path);
+			WeaponExplosionFx.box(level, landing);
 
 			level.playSound(null, player.getX(), player.getY(), player.getZ(),
 					SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.4F, 0.8F);

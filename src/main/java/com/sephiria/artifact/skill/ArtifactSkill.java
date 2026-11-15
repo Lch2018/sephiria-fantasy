@@ -11,6 +11,12 @@ import net.minecraft.server.level.ServerPlayer;
  * <p>冷却与蓝耗由 {@link ArtifactSkills} 统一处理，{@link #cast} 只负责效果本身。
  */
 public interface ArtifactSkill {
+	/**
+	 * 技能攻击 / 锁定距离的统一倍率：用户 2026-11-15 要求所有发动型神器与魔法书技能
+	 * 的射程 / 锁定距离提高到原来的 150%。只乘「能打多远 / 能锁多远」，不乘 AOE 半径。
+	 */
+	double RANGE_MULTIPLIER = 1.5D;
+
 	/** 技能 id：用来反查（技能栏里存的就是它）与拼名字键 {@code sephiria.artifact_skill.<id>}。 */
 	String id();
 

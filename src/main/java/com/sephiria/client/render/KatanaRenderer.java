@@ -21,9 +21,9 @@ import software.bernie.geckolib.renderer.GeoItemRenderer;
  * 1.20.1 的 {@link ItemTransform} 构造函数收的就是已经除过的值。
  */
 public class KatanaRenderer extends GeoItemRenderer<SephiriaKatanaItem> {
-	/** thirdperson_righthand：rotation [0,-90,0]、translation [0,-2.75,1.25]、scale 0.6。 */
+	/** thirdperson_righthand：rotation [0,0,0]（0.5.3.8 口径：刀刃朝前）、translation [0,-2.75,1.25]、scale 0.6。 */
 	private static final ItemTransform THIRD_PERSON_RIGHT = new ItemTransform(
-			new Vector3f(0.0F, -90.0F, 0.0F),
+			new Vector3f(0.0F, 0.0F, 0.0F),
 			new Vector3f(0.0F, -2.75F / 16.0F, 1.25F / 16.0F),
 			new Vector3f(0.6F, 0.6F, 0.6F));
 	/** thirdperson_lefthand：沿用 weapon.json 的 [0,90,-10] / [0,4,0.5] / 0.85。 */
@@ -31,9 +31,9 @@ public class KatanaRenderer extends GeoItemRenderer<SephiriaKatanaItem> {
 			new Vector3f(0.0F, 90.0F, -10.0F),
 			new Vector3f(0.0F, 4.0F / 16.0F, 0.5F / 16.0F),
 			new Vector3f(0.85F, 0.85F, 0.85F));
-	/** firstperson_righthand：rotation [0,-90,0]、translation [1.75,-2.5,0]、scale 0.75。 */
+	/** firstperson_righthand：rotation [0,0,0]（0.5.3.8 口径：刀刃朝前）、translation [1.75,-2.5,0]、scale 0.75。 */
 	private static final ItemTransform FIRST_PERSON_RIGHT = new ItemTransform(
-			new Vector3f(0.0F, -90.0F, 0.0F),
+			new Vector3f(0.0F, 0.0F, 0.0F),
 			new Vector3f(1.75F / 16.0F, -2.5F / 16.0F, 0.0F),
 			new Vector3f(0.75F, 0.75F, 0.75F));
 	/** firstperson_lefthand：rotation [0,90,0]、translation [4.5,-4.75,-2.5]、默认缩放。 */

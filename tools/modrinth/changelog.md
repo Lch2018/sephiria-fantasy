@@ -1,135 +1,87 @@
-版本 `0.4.3-a`：从 `0.4.2-a` 之后的全部改动。
+版本 `0.6.0-a`：从上一个发布版本 `0.5.3-a` 起的累积更新。26.3、26.1.2、1.20.1 三个分支统一使用 `0.6.0-a`，不再带 `-mc26.1.2` / `-mc1.20.1` 后缀；1.21.1 不包含。
 
-> 按约定，更新日志从**上一次上传并发布的版本**（`0.4.2-a`）开始写。
+> 按约定，更新日志从**上一次上传并发布的版本**（`0.5.3-a`）开始写。
 
 ## 这一版有什么
 
-### 七件新羁绊神器
+### 三个分支
+- **26.3（main）**、**26.1.2（port/26.1.2）**、**1.20.1（port/1.20.1-0.5.3.8）** 同时构建为 `0.6.0-a`，三者内容与数值按各自平台适配。
+- 1.20.1 移植补齐武器 / 神器 / 石板 / 商店 / 许愿池 / 角色界面等主体内容，并处理了 GeckoLib 4、旧式网络包、模型旋转限制等平台差异。
 
-- **红宝石胸针**（乌云 + 余烬，【唯一】）：乌云的闪电命中后附加灼伤；闪电 / 火焰属性伤害 +3/5/7/10。
-- **雷霜蝶**（乌云 + 冰川，【唯一】）：乌云变成**暴风雪云**——每次攻击拆成电 / 冰两段双属性伤害（较高一方按普通乌云 20% 折算后 ×110%，较低一方 ×15%），冰属性伤害 +2/4/6/8、乌云消耗速度 +6/12/18/24%。
-- **等离子头盔**（余烬 + 魔法科技，【唯一】）：把灼伤与触电合并成**等离子体**（层数 / 持续时间相加、叠层不刷新、结束清层），两路伤害按火 + 电结算；新伤害类型 `sephiria:plasma`。
-- **对立之秤**（冰川 + 余烬，【唯一】）：按赛菲莉娅背包左 / 右半边分配火 / 冰属性伤害加成。
-- **永恒的冬日**（冰川 + 坚固，【唯一】）：普通攻击命中时按概率追加「物理 + 冰」的额外伤害；新伤害类型 `sephiria:eternal_winter`。
-- **酷寒断头台**（冰霜武具 + 魔法科技，【唯一】）：定期召唤冰雷巨剑，冰 + 电双属性、触发触电与冻伤，触电伤害缩短冷却。
-- **闪烁的眼睛**（影子 + 精密，【唯一】）：暴击积攒「海市蜃楼」，满层后无条件闪避下一次伤害，并对周围造成该次税前伤害 ×150% 的混沌伤害。
+### 武器
+- **提示框精简**：六把武器的描述改为紧凑标签式（`[伤害]`、`[减伤]`、`[免疫]`、`[耗蓝]`、`[位移]`、`[蓄力]`、`[弹反]`、`[消耗]`、`[远程]`），动作提示改为灰色文本，不再重复大段数值说明。
+- **技能射程**：所有发动型神器和魔法书技能的射程 / 锁定距离提高到原来的 **150%**（AOE 半径不变）。
+- **匕首·狂怒**：位移距离 8 → **10.4** 格。
+- **钢铁巨剑·旋风**：位移 5 → **7.5** 格，伤害半径 4 → **6** 格（垂直 1.5 → 2.25），并伤害整条突进路径。
+- **刀·强力斩击**：改为类似狂怒的**空放**，朝准星方向突进 **8.32** 格，路径与落点都结算伤害，半径 5.5 → **7.15** 格。
+- **技能特效**：匕首招架/狂怒、巨剑旋风、刀强力斩击、长棍三段回击加入原版 TNT 的**部分爆炸粒子**（白爆点 + 烟，不用整段大爆炸动画），分层铺满实际伤害盒，浓度约为原来的 30%，无爆炸伤害与音效。
+- **武器耐久**：六把武器统一为原版铁剑的 **250** 点耐久，不再不可破坏；耐久条恢复原版，不再显示剑意 / 弹匣。普通攻击每次命中扣 1；射击扣 1；防御（每次挡下伤害）、横扫、旋风、招架、狂怒、强力斩击、回击 1/2/3 各扣 2。
+- **附魔限制**：赛菲莉娅武器不能再与任何原版附魔书在铁砧里合成（结果为空、费用 0）。
+- 刀的普通攻击提示去掉 `[充能]`，只保留 `[伤害]` + 「获得剑意」。
 
-### 冰霜武具与太阳剑
+### 背包、HUD 与界面
+- HUD 默认值调整：**经验加加（EXP++）**与**无敌条**默认关闭，**税前伤害**默认开启；旧配置会按 `layout_version=2` 迁移一次。
+- HUD 模块支持鼠标直接拖动；神器升级后技能栏自动同步等级。
+- 护盾 HUD 与无敌条、经验加加的显示与层级修正。
 
-- **酷寒断头台并入冰霜武具**：HUD 记作「斩」（同时保留原来的冷却图标），吃冰霜武具连击的伤害 / 额外触发 / 充能速度；冰之翼让它多落剑，冰封的心脏缩短冷却。
-- **永恒蚀会改变伤害类型**：
-  - 在背包左半边时，冰霜武具（剑 / 锤 / 矛 / 弓 / 斩）整套改成火属性，伤害类型换成 `sephiria:fire_attack`。
-  - 在背包右半边时，太阳剑改成冰属性，伤害类型换成 `sephiria:ice_sun_sword`。
-- **太阳剑触发收窄**：没有永恒蚀时，只有赛菲莉娅武器攻击（普通攻击 / 横扫 / 弩矢 / 武器技能）能触发；神器 / 魔法书 / 真实伤害 / 减益 / 永恒冬日不再触发。冰霜武具触发太阳剑必须带永恒蚀。
-
-### 减益与伤害
-
-- **触电重做**：持续 2 秒，默认 t=2s 单跳（每层 40% 电元素强度）；魔法科技 10 档变为 t=1s、t=2s 两跳；叠层不刷新持续时间，结束时清层。
-- **混沌伤害**：闪烁的眼睛闪避后的范围伤害，视为物理 / 火 / 冰 / 电四属性，吃物理增幅与所有元素提升。
-- **伤害显示元素集合**：武器 / 神器 = 物理；持续减益 = 单元素；带固定值的元素攻击 = 元素 + 物理；酷寒断头台 = 冰 + 电；等离子体 = 火 + 电；永恒冬日 = 物理 + 冰。
-
-### 暴风雪云
-
-- 云下持续下自定义 `snowfall` 粒子（从原版天气雪贴图裁切，行为继承雪花粒子）。
-- 地面效果每 5 秒触发：玩家周围 4 格随机挑 1 个露天水源结冰、3 个露天实心方块上方铺雪 / 叠雪（最多 8 层），只处理能看到天空的方块。
-- **红石检测**：玩家周围 20 格内有红石元件、箱子等容器或红石物品时，地面效果整段跳过；自动索敌排除船 / 矿车上的单位。
-
-### HUD 与设置
-
-- 新增**技能 HUD**（6 个技能栏图标、顺时针冷却扫光、完成闪光）与**神器 HUD**（冷却 / 充能图标）。
-- 两个 HUD 都从右向左排列、右边缘固定，新图标加在左边不挤动旧图标；所有模块支持 0.5~2.0 缩放，并按缩放后尺寸夹在屏幕内。
-- **H 键**打开「赛菲莉娅 Mod 设置」：内含 HUD 布局设置与伤害显示设置。
-- 伤害显示：亮度、大小、税前伤害；「发光」已移除。
-- 装了 **ModMenu** 时，也可以从模组列表的「配置」按钮打开同一个设置界面。
-
-### ToroHealth-Continued 兼容（可选）
-
-- 浮动伤害数字按元素集合显示单色：物理 `#C0C0C0`、火 `#EDB12E`、冰 `#6499E8`、电 `#7EFAFF`、混沌 `#741B7C`、真伤 `#FFFFFF`；
-  组合色：火电 `#EE8AF8`、冰物理 `#16417C`、冰电 `#3282F6`、火物理 `#F08784`、电物理 `#5A879E`、火冰 `#EF88BE`、冰火电 `#7F82BB`、火电物理 `#FFFD55`、冰电物理 `#3282F6`、火冰物理 `#EA3FF7`。
-- 暴击数字放大 2 倍；左上角 HUD 的血量变化数字使用同一套颜色。
-- 修了 26.3 里 ToroHealth 文字提交过晚的问题（在 `prepareFrame` 之前消费它的 `TextRenderQueue`）。
-- 兼容层完全可选：没装 ToroHealth 时不会加载相关类，也不会影响正常游戏。
-
-## 已知问题 / 未完成
-
-- A 测阶段，大部分内容仍未充分实测，数值与手感还会调整。
-- 部分旧武器 / 神器只有手持 3D 模型，背包图标仍是 2D。
-- 石板升级、锻造、同伴系统尚未实现。
-- ToroHealth 的数字渲染依赖它的内部类，升级 ToroHealth 大版本后可能需要重新核对。
+### 根之退与掉落
+- 根之退总阶段 ≥40 时，BOSS 掉落的稀有神器宝箱 / 稀有石板宝箱各 +1；≥50 时各 +2。
+- 宝箱打开再关闭后复制一份到背包的问题修复；创造模式取回与叠加规则同步。
 
 ## 运行环境
+- **26.3**：Minecraft 26.3 + Fabric Loader 0.19.5+ + Fabric API + GeckoLib（必需，客户端与服务端都要装）。
+- **26.1.2**：Minecraft 26.1.2 + Fabric Loader 0.19.5+ + 对应 Fabric API / GeckoLib。
+- **1.20.1**：Minecraft 1.20.1 + Fabric Loader 0.20.1 + Fabric API 0.92.x + GeckoLib 4.8.x。
+- ModMenu 与 ToroHealth-Continued 可选；伤害显示相关修正面向 ToroHealth-Continued。
 
-Minecraft 26.3 + Fabric Loader 0.19.5+ + Fabric API + GeckoLib（必需，客户端与服务端都要装）。ModMenu 与 ToroHealth-Continued 都是可选。
+## 已知问题 / 未完成
+- A 测阶段：内容量大，仍有部分系统没有经过完整实测，数值与手感会继续调整。
+- 26.1.2 / 1.20.1 是面向对应 Minecraft 版本的移植构建，个别第三方模组组合可能出现平台特有问题。
+- 永恒蚀与冰霜武具、书库之阳、伤害显示等联动仍在继续排查与完善。
 
 ## 声明
-
-同人模组、非官方作品；大量使用 AI 生成代码；**禁止任何商业行为**（详见项目正文与 LICENSE）。
+本模组是《SEPHIRIA（赛菲莉娅）》的**同人模组**，**大量使用 AI 生成代码**，仅供学习与个人游玩，**禁止任何商业行为**。
 
 ---
 
 ## English
 
-Version `0.4.3-a`: everything after `0.4.2-a`.
+Version `0.6.0-a`: cumulative update since the previous release `0.5.3-a`. The 26.3, 26.1.2 and 1.20.1 branches all use `0.6.0-a` with no `-mc26.1.2` / `-mc1.20.1` suffix; 1.21.1 is not included.
 
-> By convention this changelog starts from the previously uploaded and released version (`0.4.2-a`).
+### The three branches
+- **26.3 (main)**, **26.1.2 (port/26.1.2)** and **1.20.1 (port/1.20.1-0.5.3.8)** are all built as `0.6.0-a`, with content and numbers adapted to each platform.
+- The 1.20.1 port now covers weapons, artifacts, slates, shop, Wishing Pool and character screens, with adaptations for GeckoLib 4, legacy networking and model-rotation limits.
 
-### Seven new bond artifacts
+### Weapons
+- **Compact tooltips**: weapon descriptions now use colored tags (`[Damage]`, `[Reduction]`, `[Immunity]`, `[Mana]`, `[Displacement]`, `[Charge]`, `[Parry]`, `[Consume]`, `[Ranged]`) plus gray action hints instead of long numeric paragraphs.
+- **Skill range**: all activated artifact and magic-book skill range / lock-on distance increased to **150%** of the original (AOE radius unchanged).
+- **Dagger · Fury**: dash distance 8 → **10.4** blocks.
+- **Steel Greatsword · Whirlwind**: dash 5 → **7.5** blocks, damage radius 4 → **6** blocks (vertical 1.5 → 2.25), and enemies along the dash path are damaged too.
+- **Blade · Powerful Slash**: can now be cast with no target, dashing **8.32** blocks along the crosshair; both the path and landing area deal damage, radius 5.5 → **7.15** blocks.
+- **Skill effects**: Dagger Parry/Fury, Greatsword Whirlwind, Blade Powerful Slash and all three Quarterstaff Ripostes now use **part of the vanilla TNT explosion particles** (white puffs + smoke, not the full explosion animation), distributed across the actual damage box at about 30% of the previous density, with no explosion damage or sound.
+- **Durability**: all six weapons now have **250** durability like a vanilla iron sword and are no longer unbreakable. The vanilla durability bar replaces the Sword Intent / magazine bar. Normal attacks cost 1 per hit; firing costs 1; Defend (per blocked hit), Sweep, Whirlwind, Parry, Fury, Powerful Slash and Riposte 1/2/3 cost 2 each.
+- **Enchanting limit**: Sephiria weapons can no longer be combined with any vanilla enchanted book in an anvil (empty result, zero cost).
+- Blade normal-attack tooltip drops `[Charge]` and keeps `[Damage]` plus “Gain Sword Intent”.
 
-- **Ruby Brooch** (Dark Cloud + Embers, Unique): Dark Cloud lightning applies Burn; Lightning / Fire damage +3/5/7/10.
-- **Thunderfrost Butterfly** (Dark Cloud + Glacier, Unique): the cloud becomes a **Blizzard Cloud** — each attack is split into Electric and Ice damage (the higher element at 110% of 20% of a normal cloud strike, the lower at 15%), Ice damage +2/4/6/8, cloud consumption speed +6/12/18/24%.
-- **Plasma Helmet** (Embers + Magitech, Unique): Burn and Shock merge into **Plasma** (stacks / duration add, restacking does not refresh, cleared at the end); both damage paths use Fire + Lightning; new damage type `sephiria:plasma`.
-- **Scales of Opposition** (Glacier + Embers, Unique): Fire / Ice damage bonuses are assigned by which half of the Sephiria Backpack the artifact occupies.
-- **Eternal Winter** (Glacier + Sturdy, Unique): normal attacks have a chance to add Physical + Ice damage; new damage type `sephiria:eternal_winter`.
-- **Cryo Guillotine** (Frost Armament + Magitech, Unique): periodically summons an ice-lightning greatsword; Ice + Lightning damage, triggers Shock and Frostbite, and Shock damage shortens its cooldown.
-- **Flickering Eye** (Shadow + Precision, Unique): crits build Mirage; at full charge the next damage taken is dodged unconditionally and deals 150% of that pre-tax damage as Chaos damage around the player.
+### Backpack, HUD and UI
+- HUD defaults: **EXP++** and the **Invulnerability bar** are off by default, **Pre-tax Damage** is on; old configs migrate once via `layout_version=2`.
+- HUD modules can be dragged with the mouse; artifact skill slots now resync their levels after an upgrade.
+- Shield HUD, invulnerability bar and EXP++ display/layer fixes.
 
-### Frost Armament and Sun Sword
+### Root Retreat and loot
+- At total Root Retreat stage ≥40, BOSS rare artifact chests and rare slate chests each gain +1; at ≥50, each gains +2.
+- Fixed chests duplicating into the player inventory after opening and closing; creative retrieval and stacking rules synchronized.
 
-- **Cryo Guillotine now belongs to Frost Armament**: shown as "Slash" in the HUD (the original cooldown icon is kept), and it benefits from Frost Armament damage / extra triggers / charge speed; Ice Wings adds extra swords, Frozen Heart shortens the cooldown.
-- **Eternal Eclipse changes damage types**:
-  - In the left half of the backpack, Frost Armament (sword / hammer / spear / bow / slash) becomes Fire and uses `sephiria:fire_attack`.
-  - In the right half, the Sun Sword becomes Ice and uses `sephiria:ice_sun_sword`.
-- **Sun Sword trigger narrowed**: without Eternal Eclipse only Sephiria weapon attacks (normal attack / sweep / crossbow bolt / weapon skills) trigger it; artifacts, books, true damage, debuffs and Eternal Winter no longer trigger it. Frost Armament triggers the Sun Sword only while Eternal Eclipse is carried.
+## Environment
+- **26.3**: Minecraft 26.3 + Fabric Loader 0.19.5+ + Fabric API + GeckoLib (required on both client and server).
+- **26.1.2**: Minecraft 26.1.2 + Fabric Loader 0.19.5+ + matching Fabric API / GeckoLib.
+- **1.20.1**: Minecraft 1.20.1 + Fabric Loader 0.20.1 + Fabric API 0.92.x + GeckoLib 4.8.x.
+- ModMenu and ToroHealth-Continued are optional; damage-display fixes target ToroHealth-Continued.
 
-### Debuffs and damage
+## Known issues / unfinished
+- Alpha stage: a large amount of content still needs thorough playtesting; numbers and feel will keep changing.
+- 26.1.2 / 1.20.1 are ports for their respective Minecraft versions; some third-party mod combinations may expose platform-specific issues.
+- Eternal Eclipse / Frost Armament, Sun Sword Library and damage-display interactions are still being investigated.
 
-- **Shock reworked**: lasts 2 s, one tick at t=2s by default (40% Lightning element per stack); Magitech tier 10 changes it to ticks at t=1s and t=2s; restacking does not refresh duration and stacks clear at the end.
-- **Chaos damage**: the Flickering Eye's dodge retaliation counts as Physical / Fire / Ice / Lightning, benefiting from Physical amplification and all-element bonuses.
-- **Damage element sets**: weapons / artifacts = Physical; periodic debuffs = one element; flat elemental attacks = element + Physical; Cryo Guillotine = Ice + Lightning; Plasma = Fire + Lightning; Eternal Winter = Physical + Ice.
-
-### Blizzard Cloud
-
-- Custom `snowfall` particles fall under the cloud (cut from the vanilla weather snow texture, inheriting snowflake particle behavior).
-- Ground effects every 5 s: within 4 blocks of the player, freeze 1 exposed water source and place / stack snow on 3 exposed solid blocks (up to 8 layers), only on blocks that can see the sky.
-- **Redstone detection**: if any redstone component, chest-like container or redstone item is within 20 blocks, ground effects are skipped entirely; auto-targeting ignores entities in boats / minecarts.
-
-### HUD and settings
-
-- New **skill HUD** (6 skill slots, clockwise cooldown sweep, completion flash) and **artifact HUD** (cooldown / charge icons).
-- Both HUDs are right-aligned and fill right-to-left: new icons appear to the left without moving existing ones. Every module supports 0.5–2.0 scaling and is clamped inside the screen after scaling.
-- **H** opens "Sephiria Mod Settings", containing HUD layout and Damage Display settings.
-- Damage Display: brightness, size, pre-tax damage; the "glow" option was removed.
-- With **ModMenu** installed, the same settings screen can be opened from the mod list's "Config" button.
-
-### ToroHealth-Continued compatibility (optional)
-
-- Floating damage numbers use a single color chosen from the element set: Physical `#C0C0C0`, Fire `#EDB12E`, Ice `#6499E8`, Lightning `#7EFAFF`, Chaos `#741B7C`, True `#FFFFFF`;
-  combinations: Fire+Lightning `#EE8AF8`, Ice+Physical `#16417C`, Ice+Lightning `#3282F6`, Fire+Physical `#F08784`, Lightning+Physical `#5A879E`, Fire+Ice `#EF88BE`, Ice+Fire+Lightning `#7F82BB`, Fire+Lightning+Physical `#FFFD55`, Ice+Lightning+Physical `#3282F6`, Fire+Ice+Physical `#EA3FF7`.
-- Critical hits are drawn at 2× size; the top-left HUD health-change number uses the same colors.
-- Fixed ToroHealth's text being submitted too late on 26.3 (its `TextRenderQueue` is now consumed before `prepareFrame`).
-- Completely optional: no ToroHealth classes are loaded when it is absent, and normal gameplay is unaffected.
-
-### Known issues / not done yet
-
-- Alpha stage: most content has not been playtested thoroughly; numbers and feel are still being tuned.
-- Some older weapons / artifacts only have new in-hand 3D models; inventory icons are still 2D.
-- Slate upgrades, forging and the companion system are not implemented yet.
-- Damage-number rendering depends on ToroHealth internals; a major ToroHealth update may require re-checking the hooks.
-
-### Requirements
-
-Minecraft 26.3 + Fabric Loader 0.19.5+ + Fabric API + GeckoLib (required on both client and server). ModMenu and ToroHealth-Continued are optional.
-
-### Notice
-
-Unofficial fan mod; heavy use of AI-generated code; **commercial use is not allowed** (see the project description and LICENSE).
+## Disclaimer
+This is an **unofficial fan mod** for *SEPHIRIA*. It makes **heavy use of AI-generated code**, is shared for learning and personal play only, and **commercial use is not allowed**.

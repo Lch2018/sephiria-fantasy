@@ -21,7 +21,8 @@ import net.minecraft.world.inventory.Slot;
  *   <li>{@code Screen.render} 不铺背景——容器界面要自己调 {@link #renderBackground}；</li>
  *   <li>{@code AbstractContainerScreen.render} 不画悬停提示——要自己调 {@link #renderTooltip}；</li>
  *   <li>{@code renderSlot} 是 private，没法重写——专属界面在 {@link #renderSlotOverlays} 里
- *       物品画完之后补画（旋转石板、格子等级），提示框仍压在最上面。</li>
+ *       物品画完之后补画（旋转石板、格子等级），提示框仍压在最上面；旋转石板那一格由
+ *       {@code AbstractContainerScreenMixin} + {@code RotatedSlateScreen} 提前取消原版绘制。</li>
  * </ul>
  */
 public class SephiriaMenuScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
@@ -102,17 +103,7 @@ public class SephiriaMenuScreen<T extends AbstractContainerMenu> extends Abstrac
 		graphics.fill(x, y, x + 16, y + 16, SLOT);
 	}
 
-	/**
-	 * 重画一格的底（把原版画好的没旋转的图标擦掉）。
-	 *
-	 * <p>1.20.1 的 {@code renderSlot} 是 private：想把石板图标转过来，只能等原版画完后
-	 * 用格底盖掉再重画。悬停高亮要等重画过物品之后再补，见 {@link #restoreSlotHighlight}。
-	 */
-	protected void redrawSlot(GuiGraphics graphics, Slot slot) {
-		drawSlotBackground(graphics, slot);
-	}
-
-	/** 原版是在物品画完之后才叠悬停高亮；重画过图标的格子按同样顺序补一次。 */
+	/** 原版是在物品画完之后才叠悬停高亮；被 {@code RotatedSlateScreen} 取消的那几格按同样顺序补一次。 */
 	protected void restoreSlotHighlight(GuiGraphics graphics, Slot slot) {
 		if (slot == this.hoveredSlot) {
 			AbstractContainerScreen.renderSlotHighlight(graphics, this.leftPos + slot.x, this.topPos + slot.y, 0);

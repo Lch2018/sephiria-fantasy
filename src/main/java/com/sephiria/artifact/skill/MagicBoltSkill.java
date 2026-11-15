@@ -43,7 +43,7 @@ public final class MagicBoltSkill implements ArtifactSkill {
 	/** 投射物每刻飞多少格。 */
 	private static final double SPEED = 3.0D;
 	/** 飞行距离（格）：与冰弓一致。 */
-	private static final double DISTANCE = 36.0D;
+	private static final double DISTANCE = 36.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	/** 单发命中判定半径（格）。 */
 	private static final double HIT_RADIUS = 0.8D;
 	/** 闪电魔弹的 AOE 半径（格）。 */

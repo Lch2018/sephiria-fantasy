@@ -43,7 +43,8 @@ import java.util.Map;
  * <p>交互保持移植版原来的样子：滚轮翻背包的页、悬停石板按 R 旋转；连击栏自己也能滚，
  * 鼠标停在连击栏上时滚轮先滚它（装得下就不拦，避免误滚背包）。
  */
-public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackMenu> {
+public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackMenu>
+		implements RotatedSlateScreen {
 	private static final int HEADER_COLOR = 0xFFFFD24A;
 	private static final int TEXT_COLOR = 0xFFFFFFFF;
 
@@ -125,8 +126,8 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 			int y = this.topPos + slot.y;
 
 			if (shown.getItem() instanceof SlateItem && SlateItem.rotationOf(shown) != 0) {
-				// 石板：擦掉原版没旋转的图标，按朝向重画（绕着格子中心转），一眼能看出它朝哪边
-				redrawSlot(graphics, slot);
+				// 石板：原版这一格已经被 RotatedSlateScreen 拦掉，这里只画旋转后的图标；
+				// 悬停高亮要补回来（取消 renderSlot 时一起被取消了）
 				BackpackCellRenderer.drawRotatedItem(graphics, this.font, x, y, shown);
 				restoreSlotHighlight(graphics, slot);
 			}
@@ -147,7 +148,6 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 				InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), InputConstants.KEY_F));
 		ArtifactTooltip.setSlotLevelHint(hoveredSlotLevel(mouseX, mouseY));
 		super.render(graphics, mouseX, mouseY, partialTick);
-		this.sephiria$redrawBackpackTop(graphics);
 		SlateImprintController.drawBar(graphics, this.leftPos, this.topPos);
 		ArtifactTooltip.clearSlotLevelHint();
 
@@ -353,29 +353,12 @@ public class ArtifactBackpackScreen extends SephiriaMenuScreen<ArtifactBackpackM
 		return super.mouseScrolled(mouseX, mouseY, delta);
 	}
 
-	/** 最后再画一遍背包格：清掉石板旧图标，再画旋转图标与等级文字，保证它们在最上层。 */
-	private void sephiria$redrawBackpackTop(GuiGraphics graphics) {
-		for (net.minecraft.world.inventory.Slot slot : this.menu.slots) {
-			if (!this.menu.isBackpackSlot(slot) || !this.menu.backpackSlotExists(slot)) {
-				continue;
-			}
+	/** 旋转石板所在的格子交给本界面自己画（原版 renderSlot 不再画未旋转的图标）。 */
+	@Override
+	public boolean sephiria$handlesRotatedSlot(Slot slot) {
+		ItemStack stack = slot.getItem();
 
-			net.minecraft.world.item.ItemStack shown = slot.getItem();
-			int x = this.leftPos + slot.x;
-			int y = this.topPos + slot.y;
-			graphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF15151A);
-			graphics.fill(x, y, x + 16, y + 16, 0xFF2A2A30);
-
-			if (shown.getItem() instanceof com.sephiria.slate.SlateItem
-					&& com.sephiria.slate.SlateItem.rotationOf(shown) != 0) {
-				BackpackCellRenderer.drawRotatedItem(graphics, this.font, x, y, shown);
-			} else if (!shown.isEmpty()) {
-				graphics.renderItem(shown, x, y);
-			}
-
-			BackpackCellRenderer.drawLevelText(graphics, this.font, x, y, shown,
-					this.menu.slotLevelOf(slot));
-		}
+		return stack.getItem() instanceof SlateItem && SlateItem.rotationOf(stack) != 0;
 	}
 
 	/** 悬停石板按 R 旋转（保持移植版原来的行为：只要指着格子就发，服务端自己校验）。 */

@@ -45,7 +45,7 @@ public final class RockElephantSkill implements ArtifactSkill {
 	private static final int BASE_SPEARS = 3;
 	private static final double ATTACK_SPEED_PER_SPEAR = 15.0D;
 	private static final double SPEED = 3.0D;
-	private static final double DISTANCE = 36.0D;
+	private static final double DISTANCE = 36.0D * ArtifactSkill.RANGE_MULTIPLIER;
 	private static final double HIT_RADIUS = 1.5D;
 	private static final double SPAWN_RANGE = 3.0D;
 	private static final double SPAWN_MIN = 2.0D;

@@ -85,7 +85,8 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 
 	/** 招架：突进距离、范围、伤害。 */
 	private static final double PARRY_DISTANCE = 1.5D;
-	private static final double FURY_DISTANCE = 8.0D;
+	/** 狂怒位移：用户 2026-11-15 要求 +30%（8.0 → 10.4）。 */
+	private static final double FURY_DISTANCE = 8.0D * 1.3D;
 	private static final int DASH_TICKS = 4;
 	private static final int INVULNERABLE_TICKS = 6;
 
@@ -133,17 +134,16 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 	@Override
 	public java.util.List<Component> detailLines(ItemStack stack) {
 		return java.util.List.of(
-				Line.attack(ATTACK_DAMAGE, ATTACK_SPEED, WeaponSweep.RANGE).build(),
-				Line.titled("tooltip.sephiria_fantasy.skill.parry")
-						.skillDamage(PARRY_DAMAGE).cooldownTicks(PARRY_COOLDOWN)
-						.range(PARRY_RANGE).distance(PARRY_DISTANCE).build(),
-				desc("tooltip.sephiria_fantasy.skill.parry", "tooltip.sephiria_fantasy.desc.parry"),
-				Line.titled("tooltip.sephiria_fantasy.skill.fury")
-						.skillDamage(FURY_DAMAGE).cooldownTicks(FURY_COOLDOWN)
-						.range(FURY_PATH_RADIUS).distance(FURY_DISTANCE).build(),
-				desc("tooltip.sephiria_fantasy.skill.fury", "tooltip.sephiria_fantasy.desc.fury"),
-				Line.titled("tooltip.sephiria_fantasy.skill.focus")
-						.stat("tooltip.sephiria_fantasy.part.max", FOCUS_MAX, COLOR_RANGE).build());
+				skillLine("tooltip.sephiria_fantasy.tip.attack", tag("damage", TAG_PHYSICAL)),
+				skillLine("tooltip.sephiria_fantasy.skill.parry",
+						tag("damage", TAG_PHYSICAL), tag("immunity", TAG_YELLOW),
+						tag("displacement", TAG_CYAN), tag("parry", TAG_YELLOW), hint("parry")),
+				skillLine("tooltip.sephiria_fantasy.skill.fury",
+						tag("damage", TAG_PHYSICAL), tag("immunity", TAG_YELLOW),
+						tag("displacement", TAG_CYAN), tag("consume", TAG_BLUE), hint("fury")),
+				skillLine("tooltip.sephiria_fantasy.skill.focus",
+						Component.translatable("tooltip.sephiria_fantasy.part.max",
+								Component.literal(format(FOCUS_MAX)))));
 	}
 
 	/**
@@ -199,7 +199,7 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 
 		if (SkillStorage.current(serverPlayer, FOCUS) >= 1.0D) {
 			// 狂怒 0 蓝耗
-			fury(serverPlayer, stack);
+			fury(serverPlayer, stack, hand);
 		}
 		else {
 			// 招架先收 7 点；完美招架（真的挡到攻击）在 rewardParry 里退 2 点
@@ -207,29 +207,31 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 				return InteractionResultHolder.fail(player.getItemInHand(hand));
 			}
 
-			parry(serverPlayer, stack);
+			parry(serverPlayer, stack, hand);
 		}
 
 		return InteractionResultHolder.consume(player.getItemInHand(hand));
 	}
 
 	/** 招架：短突进 + 无敌，落地后以自身为中心结算范围伤害。 */
-	private static void parry(ServerPlayer player, ItemStack stack) {
+	private static void parry(ServerPlayer player, ItemStack stack, InteractionHand hand) {
 		Vec3 direction = lookDirection(player);
 		Invulnerability.grant(player, INVULNERABLE_TICKS);
 		PARRY_UNTIL.put(player.getUUID(), player.level().getGameTime() + INVULNERABLE_TICKS);
 		Dash.startVertical(player, direction, PARRY_DISTANCE, DASH_TICKS, Dash.DEFAULT_DECAY);
 		player.getCooldowns().addCooldown(stack.getItem(), PARRY_COOLDOWN);
+		WeaponDurability.hurt(stack, player, hand, WeaponDurability.SKILL_COST);
 
 		PENDING.add(Pending.aura(player, DASH_TICKS, (float) (PARRY_DAMAGE * PlayerStats.skillDamageMultiplier(player)), PARRY_RANGE, PARRY_HEIGHT));
 	}
 
 	/** 狂怒：长突进 + 无敌，落地后结算突进路径上的范围伤害，并消耗一层专注。 */
-	private static void fury(ServerPlayer player, ItemStack stack) {
+	private static void fury(ServerPlayer player, ItemStack stack, InteractionHand hand) {
 		Vec3 direction = lookDirection(player);
 		Invulnerability.grant(player, INVULNERABLE_TICKS);
 		Dash.startVertical(player, direction, FURY_DISTANCE, DASH_TICKS, Dash.DEFAULT_DECAY);
 		player.getCooldowns().addCooldown(stack.getItem(), FURY_COOLDOWN);
+		WeaponDurability.hurt(stack, player, hand, WeaponDurability.SKILL_COST);
 
 		SkillStorage.consume(player, FOCUS, 1.0D);
 		PENDING.add(Pending.path(player, direction, FURY_DISTANCE, DASH_TICKS, (float) (FURY_DAMAGE * PlayerStats.skillDamageMultiplier(player)), FURY_PATH_RADIUS));
@@ -361,6 +363,8 @@ public class SephiriaDaggerItem extends Item implements SephiriaWeapon {
 			AABB box = this.followsPlayer
 					? player.getBoundingBox().inflate(this.range, this.height, this.range)
 					: this.area;
+			// TNT 爆炸观感：按实际伤害盒铺粒子（招架是自身范围、狂怒是整条路径），只放粒子、不放声音
+			WeaponExplosionFx.box(level, box);
 			List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, box);
 			boolean hitAnyone = false;
 

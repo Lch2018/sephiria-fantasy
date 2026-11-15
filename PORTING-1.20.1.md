@@ -1,7 +1,7 @@
 # 1.20.1 移植状态（目标：0.5.3.8-a-mc26.1.2）
 
 - 分支：`port/1.20.1-0.5.3.8`（从 `port/1.20.1` 拉出，原分支保留为基线）
-- 版本：`0.5.3.8-a-mc1.20.1`
+- 版本：`0.6.0-a`
 - 实例：`D:\PCL\.minecraft\versions\1.20.1-Fabric 0.20.1`
 - 构建：Minecraft 1.20.1 + Fabric Loader 0.20.1 + Fabric API 0.92.12 +
   GeckoLib 4.8.4 + ModMenu 7.2.2 + ToroHealth 1.5.1
@@ -64,6 +64,46 @@
 - 无敌描边（含根之退阶段色）、副手隐藏、左键挥击包
 - ToroHealth 粒子 mixin 改用 `ParticleAccessor`，不再报 `@Shadow` 失败
 - 客户端补：减益脚下层数标签、赛菲莉娅弩第三人称姿势、根之退轻盈/治疗/名字/心之重担
+- 2026-11-15 下午这一批（已构建 + 实装，待用户实测）：
+  · 旋转石板不再用「z=150 格底盖旧图标」那套：`AbstractContainerScreenMixin` 在
+    `renderSlot` HEAD 取消该格 + `RotatedSlateScreen` 标记接口，旧图标根本不进缓冲区；
+    背包 / 附魔 / 石板融合三页都接上（融合页只接管两个输入格，玩家背包格保持原版）
+  · 基础武器 GUI 平面图标 + 手持 3D 模型桥：`WeaponHandModels` / `WeaponHandRendererMixin` /
+    `ModelLoadingPlugin`；`default_sword_and_shield` 右手剑、左手盾，与 26.x 的
+    `display_context` 分流一致
+  · 永恒蚀左右图标：1.20.1 的 `overrides` 谓词在模型烘焙时就解析死了，`ItemProperties`
+    注册稍晚就会让覆盖项永久失效；改为 `EclipseModelMixin` 在 `ItemRenderer.getModel`
+    返回前按 NBT 直接换已烘好的火焰 / 冰霜模型（GUI / 地面 / 手持都生效）。另需在
+    `ModelLoadingPlugin` 里显式 `addModels` 这两个图标模型，否则 `getModel` 返回 missing，
+    mixin 会静默退回基础图标（左右都变成原图）
+  · 剑意满 / 匕首专注满时图标消失：`WeaponGlintMixin` 把 `getFoilBuffer` 整个换成自定义
+    glint buffer，本体模型也跟着进 glint 管线；先改 `VertexMultiConsumer` 又触发 1.20.1
+    的 `BufferBuilder not started` 崩溃（14:06 报告）。**已把 `WeaponGlintMixin` 从客户端
+    mixin 列表移除**：物品栏 / 地面回退原版 glint（图标可见、不崩），刀的手持 GeckoLib
+    微光仍由 `WeaponGlintLayer` 负责
+  · 1.20.1 的模型反序列化器有角度白名单（`Invalid rotation ...`），但旋转数学支持任意角度：
+    `BlockElementDeserializerMixin` 在 `BlockElement$Deserializer#getAngle` 头部直接返回
+    JSON 里的 angle，绕开白名单。匕首刃尖恢复 **-58**、盾角恢复 **-135**、弩恢复 **20**，
+    与 0.5.3.8 的轮廓一致；`check-resources.ps1` 的角度守卫已删除
+  · 创造模式宝箱复制：`ServerPlayerGameMode.useItem` 会把消耗动作后的数量恢复原值，
+    所以创造模式不再从背包扣、`ChestMenu#removed` 也不再归还；生存模式保持原逻辑
+  · 减益标签字色：触电 #7EFAFF、灼伤 #EDB12E、冻伤/冰冻 #6499E8、等离子体 #EE8AF8
+  · ToroHealth 自定义数字：必须照抄原渲染的 X/Y **两个负缩放**，只翻 Y 会反绕序、被背面剔除，
+    数字看起来就是「跳不出来」
+  · 许愿池四叶草透明边：1.20.1 不读模型 JSON 的 `render_type`，在 `SephiriaClient` 里给
+    `WISH_POOL` 显式注册 `RenderType.cutout()`；贴图本身与参考 jar 逐字节相同
+  · 技能 / 神器 HUD 冷却：图标在原版 `renderItem` 的 z=100，冷却扇形与完成闪光要
+    `pose.translate(0,0,200)` 后再画，否则大图标会把黑色冷却罩盖住
+  · HUD 默认值：EXP++（内部键 `fatigue`）与无敌条默认关闭；配置加 `layout_version=2`，
+    旧配置文件升级时强关这两项一次并写回，之后用户在 HUD 设置里手动打开会保留
+  · 神器升级后技能栏自动换等级：技能栏存的是「物品 id @ 等级」，附魔升级成功后按
+    「同物品 + 旧等级」精确 `retarget` 到新等级；背包内容变化 / 打开技能页时也会
+    `refreshSlots`（同种神器只有一份时才自动改），不再需要把技能重新拖进栏位
+  · 伤害显示「税前伤害」默认开启（`sephiria-fantasy-damage.json` 缺字段时按 true；
+    旧配置里显式写了 false 的仍尊重玩家选择）
+  · 剑盾防御中左键横扫：1.20.1 举盾时 `attackStrengthTicker` 被原版冻在 0，
+    `getAttackStrengthScale` 恒为 ~0.08，原来照抄 26.x 的 `<= 0.9` 充能判定会把横扫
+    永远卡掉；已删掉该判定（保留 1 秒冷却 + 15 MP 限制）
 - 服务端补：铁砧「书 + 附魔书」合并（1.20.1 NBT 版）、书效率/抢夺、鱼饵、天国石板、成就四叶草
 - 0.5.x HUD：魔法书实际冷却、破碎蓝宝石帷幕充能进入神器 HUD
 - 背包 / 附魔页长按 F 石板刻印（客户端 NBT 进度 + 服务端接收）
@@ -144,6 +184,25 @@
   「（折扣：x%）」；背包页改为 26.x 的自绘面板（外深边 + 半透明底 + 顶部亮线，
   玩家背包格不画格底）；标签栏统一钉在屏幕顶部居中（原版背包也走同一排七个标签，
   含高亮的「原版背包」木箱，旧的 `InventoryTabs` 六格辅助类删除）；天赋页原本已一致
+- 2026-11-15 17:59：武器提示框改为紧凑标签式（`[伤害]` 物理灰、`[减伤]/[免疫]/[弹反]` 黄、
+  `[耗蓝]/[消耗]/[蓄力]` 蓝、`[位移]` 青、动作提示灰）；所有发动型神器与魔法书技能的
+  射程 / 锁定距离按 `ArtifactSkill.RANGE_MULTIPLIER = 1.5` 放大（AOE 半径不变），
+  雷之裁决说明同步为长 45 格 / 范围 4500。
+- 2026-11-15 15:51：启动阶段崩溃（无 Java 崩溃报告，日志停在 LWJGL 初始化后）。原因是
+  HUD 配置 `layout_version=2` 迁移在 `load()` 里调了 `save()`，`save()` 又走 `element()`
+  读 `Minecraft.getInstance()` 落位，而客户端初始化阶段实例还没建好。改为迁移时直接写
+  当前 `Properties`（`store`），不经过 `element()`；15:53 重新构建实装。
+- 2026-11-15 14:06：用户实例在渲染「剑意满」的刀图标时崩溃：
+  `java.lang.IllegalStateException: BufferBuilder not started`，堆栈落在
+  `VertexMultiConsumer` → 自定义 glint buffer。确认是 14:02 那版把 `getFoilBuffer`
+  换成「自定义 glint + 本体 type」的组合消费者后，1.20.1 的 `BufferSource` 不认这套
+  自定义 `RenderType` 的缓冲生命周期；14:17 已把 `WeaponGlintMixin` 从客户端 mixin
+  列表移除，物品栏 / 地面回退原版 glint，先保证不崩、图标可见。
+- 2026-11-15 13:13：新构建进存档，日志暴露 1.20.1 的模型角度白名单：`colossal_crossbow_in_hand`
+  与 `colossal_crossbow_reload_0..10`（20°）、`dagger_in_hand`（-58°）、`shield_in_hand`
+  （-135°）全部加载失败（`Invalid rotation ... only -45/-22.5/0/22.5/45 allowed`）。
+  13:30 把弩 20→22.5、匕首 -58→-45，盾两角用 **+45 等价替代 -135**（轮廓相同）后重新构建、
+  实装，`tools/check-resources.ps1` 新增同样的角度守卫（方块与物品模型都查），资源检查通过。
 - 2026-11-15 07:30：参考客户端与 1.20.1 各拿一把刀对照：第一人称入鞘/出鞘、
   第三人称持刀与拔刀过渡姿态一致；两边的 `katana.geo.json` 与
   `katana.animation.json` 内容逐项相同（仅文件位置/格式不同），动画节奏由同一份数据驱动
@@ -194,3 +253,11 @@
   画在面板右上角（标题行右侧），不复制这个偏移
 - **【观感差异】技能页底部提示**：26.x 的 `StringWidget` 截断更早（约 790px 就出现
   「...」），1.20.1 用单行截断会多显示一截；两者都是单行不折行
+- **【待确认】书库之阳「没有效果」不是代码失效**：额外触发表是 `{0,0,1,1,2}`（0 级就是
+  0 次）；反编译参考 jar 的 `LibrarySunItem` 静态数组同样是 `{0,0,1,1,2}`，`SunSword` 的
+  魔法书分支也是 `for (index < extra)`（没有额外的「基础触发」）。实测存档里的书库之阳是
+  0 级，所以魔法书伤害不会多投太阳剑，升到 2 级才会 +1 次。26.x 的 `LibrarySunItem` 也是
+  这张表，属于设计口径
+- **【待确认】巨剑图标**：1.20.1 的 `models/item/steel_greatsword.json`、父模型 `item/weapon.json`
+  与贴图 `textures/item/steel_greatsword.png` 都与 0.5.3.8 参考 jar 逐字节相同；如果游戏里仍
+  显示不对，需要一张截图确认是物品栏图标、掉落物还是手持模型，再定位

@@ -31,7 +31,8 @@ public final class DamageDisplayConfig {
 	private static boolean loaded;
 	private static double brightness = 1.0D;
 	private static double size = 1.0D;
-	private static boolean preTax;
+	/** 税前伤害默认开启（用户 2026-11-15 的口径）。 */
+	private static boolean preTax = true;
 
 	private DamageDisplayConfig() {
 	}
@@ -83,13 +84,13 @@ public final class DamageDisplayConfig {
 					BRIGHTNESS_MIN, BRIGHTNESS_MAX);
 			size = clamp(root.has("size") ? root.get("size").getAsDouble() : 1.0D,
 					SIZE_MIN, SIZE_MAX);
-			preTax = root.has("pre_tax") && root.get("pre_tax").getAsBoolean();
+			preTax = root.has("pre_tax") ? root.get("pre_tax").getAsBoolean() : true;
 		}
 		catch (IOException | RuntimeException exception) {
 			// 配置坏了就退回默认值，不让伤害数字因为一个文件读不动而崩掉
 			brightness = 1.0D;
 			size = 1.0D;
-			preTax = false;
+			preTax = true;
 		}
 	}
 
